@@ -159,6 +159,27 @@
   try{
     const nameEl = document.querySelector('.recipient-name');
     const subEl = document.querySelector('.recipient-sub');
+    // debug banner to show detection status on mobile
+    function ensureDebugBanner(){
+      if(document.getElementById('tg-debug-banner')) return;
+      const b = document.createElement('div');
+      b.id = 'tg-debug-banner';
+      b.style.position = 'fixed';
+      b.style.left = '8px';
+      b.style.right = '8px';
+      b.style.bottom = '86px';
+      b.style.zIndex = 9999;
+      b.style.background = 'rgba(0,0,0,0.5)';
+      b.style.color = '#fff';
+      b.style.fontSize = '12px';
+      b.style.padding = '8px';
+      b.style.borderRadius = '8px';
+      b.style.textAlign = 'center';
+      b.style.pointerEvents = 'none';
+      b.textContent = 'TG debug: initializing...';
+      document.body.appendChild(b);
+    }
+    function setDebug(msg){ const b = document.getElementById('tg-debug-banner'); if(b) b.textContent = 'TG debug: ' + msg; }
     function fillFromUser(user){
       if(!user) return false;
       if(nameEl) nameEl.textContent = ((user.first_name||'') + (user.last_name ? (' ' + user.last_name) : '') ).trim() || (user.username || '');
@@ -179,39 +200,62 @@
           })
         }).catch(()=>{});
       }catch(e){}
+      setDebug('filled: ' + ((user.username || user.first_name || '') + ' / ' + (user.id||'')));
       return true;
     }
 
     function tryFill(){
+      ensureDebugBanner();
+      setDebug('searching...');
       try{
         const tg = window.Telegram && window.Telegram.WebApp;
         if(tg){
+          setDebug('Telegram.WebApp present');
           // try several common locations
           const u1 = tg.initDataUnsafe && tg.initDataUnsafe.user;
-          if(fillFromUser(u1)) return;
+          if(u1){ setDebug('found initDataUnsafe.user'); if(fillFromUser(u1)) return; }
           const u2 = tg.initData && tg.initData.user;
-          if(fillFromUser(u2)) return;
+          if(u2){ setDebug('found initData.user'); if(fillFromUser(u2)) return; }
           const u3 = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.user;
-          if(fillFromUser(u3)) return;
+          if(u3){ setDebug('found WebApp.user'); if(fillFromUser(u3)) return; }
+        } else {
+          setDebug('Telegram.WebApp not present');
         }
         // fallback: try global initData parse (if available)
-        if(window.__tg_user){ fillFromUser(window.__tg_user); return }
+        if(window.__tg_user){ setDebug('found __tg_user'); fillFromUser(window.__tg_user); return }
         // additional fallback: try reading saved user from localStorage
         try{
           const maybe = localStorage.getItem('tg_user') || localStorage.getItem('mc_user') || localStorage.getItem('user');
           if(maybe){
             let parsed = null;
             try{ parsed = JSON.parse(maybe); }catch(e){}
-            if(parsed) { fillFromUser(parsed); return }
+            if(parsed) { setDebug('found localStorage user'); fillFromUser(parsed); return }
           }
         }catch(e){}
-      }catch(e){/*ignore*/}
+        // final attempt: if local id stored, GET from local API
+        try{
+          const saved = localStorage.getItem('tg_user');
+          if(saved){
+            const parsed = JSON.parse(saved);
+            if(parsed && parsed.id){
+              fetch('/api/users/' + parsed.id).then(r=>r.json()).then(data=>{ if(data && data.id) { setDebug('fetched from API'); fillFromUser(data); } }).catch(()=>{});
+            }
+          }
+        }catch(e){}
+      }catch(e){ setDebug('error during tryFill'); }
     }
 
     // attempt multiple times in case WebApp initializes slightly later
     tryFill();
     let attempts = 0;
-    const t = setInterval(()=>{ attempts++; tryFill(); if(attempts>6) clearInterval(t); }, 500);
+    const t = setInterval(()=>{ attempts++; tryFill(); if(attempts>12) clearInterval(t); }, 500);
+
+    // re-run tryFill when user navigates or opens wallet links
+    document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) tryFill(); });
+    // click handlers for common wallet links/buttons
+    document.querySelectorAll('a[href="wallet.html"], .balance-pill, .wallet-link, .btn-wallet').forEach(el=>{
+      el.addEventListener('click', ()=> setTimeout(tryFill, 300));
+    });
   }catch(e){
     // ignore if WebApp not present
   }
