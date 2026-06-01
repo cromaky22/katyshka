@@ -203,6 +203,43 @@
       });
     });
   })();
+
+  // Page loader overlay: inject DOM node and handle navigation transitions
+  (function(){
+    // create loader element
+    const loader = document.createElement('div');
+    loader.className = 'page-loader';
+    loader.innerHTML = '<div class="loader-box"><div class="loader-spinner" aria-hidden="true"></div><div class="loader-text" id="loaderText">ЗАГРУЗКА...</div></div>';
+    document.body.appendChild(loader);
+
+    function showLoader(text){
+      const t = document.getElementById('loaderText');
+      if(t && text) t.textContent = text;
+      loader.classList.add('active');
+    }
+    function hideLoader(){ loader.classList.remove('active'); }
+
+    // show brief loader on initial page load for polish
+    setTimeout(()=>{ hideLoader(); }, 350);
+
+    // Intercept bottom-nav and top nav clicks to show loader before navigation
+    document.querySelectorAll('a').forEach(a=>{
+      a.addEventListener('click', (e)=>{
+        const href = a.getAttribute('href') || '';
+        // ignore anchors that are just hashes or on-page links
+        if(href.startsWith('#') || href === '' ) return;
+        // allow in-page hash navigation without loader when target is same page
+        const current = location.pathname.split('/').pop() || 'home.html';
+        const targetPath = href.split('#')[0] || '';
+        if(targetPath === '' || targetPath === current) return;
+        // otherwise show loader and navigate after short delay
+        e.preventDefault();
+        showLoader('ЗАГРУЖАЕМ…');
+        setTimeout(()=>{ location.href = href; }, 260);
+      });
+    });
+
+  })();
 })();
 
 // Populate recipient info from Telegram WebApp when available

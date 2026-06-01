@@ -154,6 +154,13 @@ html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;back
 /* Ensure main UI sits above hearts */
 .app-header,.content,.site-footer{position:relative;z-index:1}
 
+/* Page loader overlay */
+.page-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(11,12,20,0.6), rgba(11,6,25,0.6));backdrop-filter:blur(6px);z-index:9999;opacity:0;pointer-events:none;transition:opacity .28s ease}
+.page-loader.active{opacity:1;pointer-events:auto}
+.page-loader .loader-box{display:flex;flex-direction:column;align-items:center;gap:18px;padding:16px}
+.page-loader .loader-text{color:var(--muted);font-weight:700;letter-spacing:1px}
+.page-loader .loader-spinner{width:86px;height:86px;border-radius:50%;border:6px solid rgba(255,255,255,0.04);border-top-color:var(--accent);animation:spin 1s linear infinite}
+
 /* Wallet modal styles */
 .wallet-section{display:flex;justify-content:center;padding:18px 0}
 .wallet-modal{width:100%;max-width:420px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:16px;padding:12px 14px;color:var(--text);box-shadow:0 18px 40px rgba(2,6,23,0.6)}
