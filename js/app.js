@@ -227,9 +227,7 @@
     }
     function hideLoader(){ loader.classList.remove('active'); loader.classList.remove('startup','nav'); }
 
-    // show loader on app start (slower, longer)
-    showLoader('ЗАГРУЗКА...', 'startup');
-    setTimeout(()=>{ hideLoader(); }, 1200);
+    // startup loader disabled — keep nav loader behavior intact
 
     // Intercept bottom-nav and top nav clicks to show loader before navigation
     document.querySelectorAll('a').forEach(a=>{
