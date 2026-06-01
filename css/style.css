@@ -147,8 +147,9 @@ html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;back
 /* Wallet modal styles */
 .wallet-section{display:flex;justify-content:center;padding:18px 0}
 .wallet-modal{width:100%;max-width:420px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:16px;padding:12px 14px;color:var(--text);box-shadow:0 18px 40px rgba(2,6,23,0.6)}
-.wallet-tabs{display:flex;align-items:center;gap:8px;position:relative}
-.wallet-tabs .tab{background:transparent;border:none;color:var(--muted);padding:8px 10px;border-radius:10px;font-weight:700}
+.wallet-tabs{display:flex;align-items:center;gap:8px;position:relative;flex-wrap:wrap}
+.wallet-tabs .tab{display:inline-flex;align-items:center;justify-content:center;gap:6px;appearance:none;-webkit-appearance:none;border:none;background:transparent;color:var(--muted);padding:8px 10px;border-radius:10px;font-weight:700;font-size:13px;line-height:1}
+.wallet-tabs .tab:focus{outline:2px solid rgba(46,227,107,0.08);outline-offset:2px}
 .wallet-tabs .tab.active{background:linear-gradient(180deg, rgba(46,227,107,0.06), rgba(21,97,255,0.04));color:var(--text)}
 .wallet-tabs .close-modal{margin-left:auto;background:transparent;border:none;color:var(--muted);font-size:18px}
 .wallet-body{padding:12px 4px}
