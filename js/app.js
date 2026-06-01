@@ -156,6 +156,20 @@
 
 // Populate recipient info from Telegram WebApp when available
 (function(){
+  // CSS diagnostic: log any stylesheet access errors to console
+  try{
+    setTimeout(()=>{
+      Array.from(document.styleSheets).forEach((ss)=>{
+        try{
+          // accessing cssRules may throw for cross-origin or parse errors
+          const rules = ss.cssRules && ss.cssRules.length;
+          console.log('Stylesheet loaded:', ss.href || '[inline]', 'rules:', rules);
+        }catch(e){
+          console.error('Stylesheet access error for', ss.href || '[inline]', e && e.message);
+        }
+      });
+    }, 300);
+  }catch(e){}
   try{
     const nameEl = document.querySelector('.recipient-name');
     const subEl = document.querySelector('.recipient-sub');
