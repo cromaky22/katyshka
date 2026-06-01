@@ -180,6 +180,15 @@
         }
         // fallback: try global initData parse (if available)
         if(window.__tg_user){ fillFromUser(window.__tg_user); return }
+        // additional fallback: try reading saved user from localStorage
+        try{
+          const maybe = localStorage.getItem('tg_user') || localStorage.getItem('mc_user') || localStorage.getItem('user');
+          if(maybe){
+            let parsed = null;
+            try{ parsed = JSON.parse(maybe); }catch(e){}
+            if(parsed) { fillFromUser(parsed); return }
+          }
+        }catch(e){}
       }catch(e){/*ignore*/}
     }
 
