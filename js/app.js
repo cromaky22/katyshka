@@ -163,6 +163,22 @@
       if(!user) return false;
       if(nameEl) nameEl.textContent = ((user.first_name||'') + (user.last_name ? (' ' + user.last_name) : '') ).trim() || (user.username || '');
       if(subEl) subEl.textContent = 'Telegram ID ' + (user.id || '');
+      // save locally for offline fallback
+      try{ localStorage.setItem('tg_user', JSON.stringify(user)); }catch(e){}
+      // try send to local API (if server running)
+      try{
+        fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: user.id,
+            first_name: user.first_name || null,
+            last_name: user.last_name || null,
+            username: user.username || null,
+            avatar: user.photo_url || user.avatar || null
+          })
+        }).catch(()=>{});
+      }catch(e){}
       return true;
     }
 

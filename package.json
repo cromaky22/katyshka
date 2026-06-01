@@ -1,0 +1,13 @@
+{
+  "name": "mini-local-server",
+  "version": "1.0.0",
+  "description": "Local Express + SQLite server for Mini project (user storage)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6"
+  }
+}
