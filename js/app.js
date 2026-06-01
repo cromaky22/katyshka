@@ -251,6 +251,9 @@
         const href = a.getAttribute('href') || '';
         // ignore anchors that are just hashes or on-page links
         if(href.startsWith('#') || href === '' ) return;
+        // don't show loader for menu action buttons or elements opting out
+        if(a.closest && a.closest('.menu-actions')) return;
+        if(a.classList && (a.classList.contains('no-loader') || a.dataset && a.dataset.noLoader)) return;
         // allow in-page hash navigation without loader when target is same page
         const current = location.pathname.split('/').pop() || 'home.html';
         const targetPath = href.split('#')[0] || '';
