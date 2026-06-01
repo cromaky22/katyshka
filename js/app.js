@@ -222,7 +222,11 @@
         const angle = (360 / count) * i;
         const span = document.createElement('span');
         span.className = 'heart';
-        span.innerText = '❤';
+        // inner element will receive pulse animation so the outer span keeps positional transform stable
+        const inner = document.createElement('span');
+        inner.className = 'heart-inner';
+        inner.innerText = '❤';
+        span.appendChild(inner);
         // store angle and radius in CSS variables so animations can preserve placement
         span.style.setProperty('--angle', angle + 'deg');
         span.style.setProperty('--r', '-' + radius + 'px');
@@ -239,7 +243,17 @@
     }
     function hideLoader(){ loader.classList.remove('active'); loader.classList.remove('startup','nav'); }
 
-    // startup loader disabled — keep nav loader behavior intact
+    // show startup loader on first entry to games page only
+    try{
+      const path = location.pathname.split('/').pop() || 'home.html';
+      const isGames = path === 'games.html' || location.hash.replace('#','') === 'games' || !!document.getElementById('games');
+      if(isGames && !sessionStorage.getItem('startupLoaderShown')){
+        sessionStorage.setItem('startupLoaderShown','1');
+        showLoader('ЗАГРУЗКА...', 'startup');
+        // удлиним показ стартового лоадера на 2 секунды
+        setTimeout(hideLoader, 3400);
+      }
+    }catch(e){/*ignore*/}
 
     // Intercept bottom-nav and top nav clicks to show loader before navigation
     document.querySelectorAll('a').forEach(a=>{
