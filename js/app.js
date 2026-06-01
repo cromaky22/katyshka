@@ -239,8 +239,9 @@
     }
     function hideLoader(){ loader.classList.remove('active'); }
 
-    // show brief loader on initial page load for polish
-    setTimeout(()=>{ hideLoader(); }, 350);
+    // show loader briefly on initial page load for polish — a bit longer
+    showLoader('ЗАГРУЗКА...');
+    setTimeout(()=>{ hideLoader(); }, 900);
 
     // Intercept bottom-nav and top nav clicks to show loader before navigation
     document.querySelectorAll('a').forEach(a=>{
