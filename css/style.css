@@ -170,8 +170,8 @@ html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;back
 .page-loader .loader-text{color:var(--muted);font-weight:700;letter-spacing:1px}
 
 /* ring of hearts loader */
-.page-loader .loader-ring{position:relative;width:140px;height:140px;display:block}
-.page-loader .loader-ring .heart{position:absolute;left:50%;top:50%;display:block;color:#ff6b9a;opacity:0.95;transition:transform .28s ease,color .28s ease;font-size:18px}
+.page-loader .loader-ring{position:relative;width:140px;height:140px;display:block;transform-origin:center center;will-change:transform}
+.page-loader .loader-ring .heart{position:absolute;left:50%;top:50%;display:block;color:#ff6b9a;opacity:0.95;font-size:18px;transition: none}
 .page-loader .loader-ring .heart:nth-child(odd){color:#ff9ab0}
 .page-loader .loader-ring{animation:ringSpin var(--ring-duration,2.2s) linear infinite}
 .page-loader .loader-ring .heart{animation:heartPulse var(--pulse-duration,1.0s) ease-in-out infinite}
