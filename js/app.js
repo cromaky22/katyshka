@@ -226,8 +226,8 @@
         // store angle and radius in CSS variables so animations can preserve placement
         span.style.setProperty('--angle', angle + 'deg');
         span.style.setProperty('--r', '-' + radius + 'px');
-        // stagger animation delay for nicer effect (slightly faster)
-        span.style.animationDelay = (i * 0.035) + 's';
+        // no per-heart stagger to keep startup/nav modes consistent
+        // (stagger removed to avoid mixed-speed appearance on reload)
         ring.appendChild(span);
       }
     })();
