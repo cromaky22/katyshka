@@ -271,8 +271,8 @@
         // otherwise show loader and navigate after a slightly longer delay
         e.preventDefault();
         showLoader('ЗАГРУЖАЕМ…', 'nav');
-        // увеличиваем задержку перехода на ~1s (было 200ms -> стало 1200ms)
-        setTimeout(()=>{ location.href = href; }, 1200);
+        // устанавливаем задержку перехода в 1000ms
+        setTimeout(()=>{ location.href = href; }, 1000);
       });
     });
 
