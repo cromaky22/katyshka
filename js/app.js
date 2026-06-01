@@ -232,16 +232,18 @@
       }
     })();
 
-    function showLoader(text){
+    function showLoader(text, mode){
       const t = document.getElementById('loaderText');
       if(t && text) t.textContent = text;
+      loader.classList.remove('startup','nav');
+      if(mode) loader.classList.add(mode);
       loader.classList.add('active');
     }
-    function hideLoader(){ loader.classList.remove('active'); }
+    function hideLoader(){ loader.classList.remove('active'); loader.classList.remove('startup','nav'); }
 
-    // show loader briefly on initial page load (slightly faster)
-    showLoader('ЗАГРУЗКА...');
-    setTimeout(()=>{ hideLoader(); }, 600);
+    // show loader on app start (slower, longer)
+    showLoader('ЗАГРУЗКА...', 'startup');
+    setTimeout(()=>{ hideLoader(); }, 1200);
 
     // Intercept bottom-nav and top nav clicks to show loader before navigation
     document.querySelectorAll('a').forEach(a=>{
@@ -253,10 +255,10 @@
         const current = location.pathname.split('/').pop() || 'home.html';
         const targetPath = href.split('#')[0] || '';
         if(targetPath === '' || targetPath === current) return;
-        // otherwise show loader and navigate after short delay
+        // otherwise show faster loader and navigate after short delay
         e.preventDefault();
-        showLoader('ЗАГРУЖАЕМ…');
-        setTimeout(()=>{ location.href = href; }, 260);
+        showLoader('ЗАГРУЖАЕМ…', 'nav');
+        setTimeout(()=>{ location.href = href; }, 200);
       });
     });
 
