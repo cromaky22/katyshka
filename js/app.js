@@ -167,7 +167,7 @@
       try{
         const profileImg = document.querySelector('.app-header .profile img');
         if(profileImg){
-          const candidate = user.photo_url || user.avatar || (user.id ? ('https://t.me/i/userpic/320/' + user.id + '.jpg') : null);
+          const candidate = user.photo_url || user.avatar || (user.id ? ('/api/tg-photo/' + user.id) : null);
           if(candidate){
             profileImg.src = candidate;
             profileImg.style.display = '';
