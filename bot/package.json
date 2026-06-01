@@ -1,0 +1,12 @@
+{
+  "name": "katyshka-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot to open KATYSHKA Web App",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "dependencies": {
+    "telegraf": "^4.12.3"
+  }
+}
