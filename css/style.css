@@ -171,14 +171,15 @@ html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;back
 
 /* ring of hearts loader */
 .page-loader .loader-ring{position:relative;width:140px;height:140px;display:block;transform-origin:center center;will-change:transform}
-.page-loader .loader-ring .heart{position:absolute;left:50%;top:50%;display:block;color:#ff6b9a;opacity:0.95;font-size:18px;transition: none}
+.page-loader .loader-ring .heart{position:absolute;left:50%;top:50%;display:block;color:#ff6b9a;opacity:0.95;font-size:18px;transition: none;transform-origin:center center}
 .page-loader .loader-ring .heart:nth-child(odd){color:#ff9ab0}
-.page-loader .loader-ring{animation:ringSpin var(--ring-duration,2.2s) linear infinite}
-.page-loader .loader-ring .heart{animation:heartPulse var(--pulse-duration,1.0s) ease-in-out infinite}
+.page-loader .loader-ring{animation:ringSpin var(--ring-duration,6s) linear infinite;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+/* pulse animation is applied to inner element so positioning of the heart stays stable */
+.page-loader .loader-ring .heart .heart-inner{display:inline-block;animation:heartPulse var(--pulse-duration,1.0s) ease-in-out infinite;transform-origin:center center;line-height:1}
 
 /* mode overrides: slower on app startup, faster on navigation */
-.page-loader.startup{ --ring-duration: 3s; --pulse-duration: 1.6s }
-.page-loader.nav{ --ring-duration: 1.2s; --pulse-duration: 0.8s }
+.page-loader.startup{ --ring-duration: 8s; --pulse-duration: 1.4s }
+.page-loader.nav{ --ring-duration: 4s; --pulse-duration: 0.9s }
 
 /* each heart keeps its angular position via --angle and radius via --r */
 .page-loader .loader-ring .heart{
@@ -187,10 +188,16 @@ html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;back
 
 @keyframes ringSpin{ to{ transform: rotate(360deg) } }
 @keyframes heartPulse{
-  0%{ transform: rotate(var(--angle,0deg)) translateY(var(--r,-52px)) translate(-50%,-50%) scale(0.92) }
-  50%{ transform: rotate(var(--angle,0deg)) translateY(var(--r,-52px)) translate(-50%,-50%) scale(1.12) }
-  100%{ transform: rotate(var(--angle,0deg)) translateY(var(--r,-52px)) translate(-50%,-50%) scale(0.92) }
+  0%{ transform: scale(0.96) }
+  50%{ transform: scale(1.06) }
+  100%{ transform: scale(0.96) }
 }
+
+.page-loader .loader-ring .heart .heart-inner{will-change:transform;backface-visibility:hidden}
+
+/* make startup loader a bit larger and more prominent */
+.page-loader.startup .loader-ring{width:180px;height:180px}
+.page-loader.startup .loader-ring .heart{font-size:22px}
 
 /* Wallet modal styles */
 .wallet-section{display:flex;justify-content:center;padding:18px 0}
