@@ -268,10 +268,11 @@
         const current = location.pathname.split('/').pop() || 'home.html';
         const targetPath = href.split('#')[0] || '';
         if(targetPath === '' || targetPath === current) return;
-        // otherwise show faster loader and navigate after short delay
+        // otherwise show loader and navigate after a slightly longer delay
         e.preventDefault();
         showLoader('ЗАГРУЖАЕМ…', 'nav');
-        setTimeout(()=>{ location.href = href; }, 200);
+        // увеличиваем задержку перехода на ~1s (было 200ms -> стало 1200ms)
+        setTimeout(()=>{ location.href = href; }, 1200);
       });
     });
 
