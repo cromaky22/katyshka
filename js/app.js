@@ -226,8 +226,8 @@
         // store angle and radius in CSS variables so animations can preserve placement
         span.style.setProperty('--angle', angle + 'deg');
         span.style.setProperty('--r', '-' + radius + 'px');
-        // stagger animation delay for nicer effect
-        span.style.animationDelay = (i * 0.06) + 's';
+        // stagger animation delay for nicer effect (slightly faster)
+        span.style.animationDelay = (i * 0.035) + 's';
         ring.appendChild(span);
       }
     })();
@@ -239,9 +239,9 @@
     }
     function hideLoader(){ loader.classList.remove('active'); }
 
-    // show loader briefly on initial page load for polish — a bit longer
+    // show loader briefly on initial page load (slightly faster)
     showLoader('ЗАГРУЗКА...');
-    setTimeout(()=>{ hideLoader(); }, 900);
+    setTimeout(()=>{ hideLoader(); }, 600);
 
     // Intercept bottom-nav and top nav clicks to show loader before navigation
     document.querySelectorAll('a').forEach(a=>{
