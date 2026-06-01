@@ -154,6 +154,118 @@
   })();
 })();
 
+// Populate recipient info from Telegram WebApp when available
+(function(){
+  try{
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if(tg && tg.initDataUnsafe && tg.initDataUnsafe.user){
+      const user = tg.initDataUnsafe.user;
+      const nameEl = document.querySelector('.recipient-name');
+      const subEl = document.querySelector('.recipient-sub');
+      if(nameEl) nameEl.textContent = (user.first_name || '') + (user.last_name ? (' ' + user.last_name) : '');
+      if(subEl) subEl.textContent = 'Telegram ID ' + (user.id || '');
+    }
+  }catch(e){
+    // ignore if WebApp not present
+  }
+})();
+
+// Wallet UI interactions
+(function(){
+  const modal = document.querySelector('.wallet-modal');
+  if(!modal) return;
+
+  // tabs
+  function showPanel(name){
+    modal.querySelectorAll('.panel').forEach(p=>{ p.style.display = (p.dataset.panel===name) ? '' : 'none' });
+  }
+
+  modal.querySelectorAll('.wallet-tabs .tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      modal.querySelectorAll('.wallet-tabs .tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      const target = tab.dataset.target || tab.textContent.trim().toLowerCase();
+      showPanel(target);
+    });
+  });
+
+  // initial panels
+  showPanel('topup');
+
+  // close
+  const closeBtn = modal.querySelector('.close-modal');
+  if(closeBtn) closeBtn.addEventListener('click', ()=>{ modal.style.display='none' });
+
+  // methods
+  modal.querySelectorAll('.method').forEach(m=>{
+    m.addEventListener('click', ()=>{
+      modal.querySelectorAll('.method').forEach(x=>x.classList.remove('selected'));
+      m.classList.add('selected');
+    });
+  });
+
+  // quick amount buttons
+  const amountInput = modal.querySelector('.amount-input input');
+  modal.querySelectorAll('.quick-buttons .chip').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const v = parseFloat(b.textContent.replace('$','').trim()) || 0;
+      amountInput.value = v.toFixed(0);
+    });
+  });
+
+  // pay button (placeholder)
+  const pay = modal.querySelector('.pay-btn');
+  if(pay) pay.addEventListener('click', ()=>{
+    const val = parseFloat(amountInput.value)||0;
+    if(val <= 0){ alert('Введите сумму пополнения'); return; }
+    alert('Перейти к оплате: $' + val);
+  });
+
+  // history sub-tabs
+  modal.querySelectorAll('.history-tab').forEach(ht=>{
+    ht.addEventListener('click', ()=>{
+      modal.querySelectorAll('.history-tab').forEach(h=>h.classList.remove('active'));
+      ht.classList.add('active');
+      const target = ht.dataset.h;
+      modal.querySelectorAll('.history-panel').forEach(p=>{ p.style.display = (p.dataset.hpanel===target) ? '' : 'none' });
+    });
+  });
+
+  // Withdraw calculations
+  (function(){
+    const withdrawInput = modal.querySelector('.withdraw-input');
+    const receiveAmountEl = modal.querySelector('.receive-amount .amount');
+    const commissionValueEl = modal.querySelector('.commission-value');
+    const commissionRateEl = modal.querySelector('.commission-rate');
+    const minAmountEl = modal.querySelector('.min-amount');
+    const withdrawBtn = modal.querySelector('.withdraw-btn');
+
+    const COMM_RATE = parseFloat((commissionRateEl && commissionRateEl.textContent) ? commissionRateEl.textContent.replace('%','') : 3) / 100;
+    const MIN_WITHDRAW = parseFloat((minAmountEl && minAmountEl.textContent) ? minAmountEl.textContent.replace('$','') : 1.05);
+
+    function format(n){ return Number(n).toFixed(2) }
+
+    function update(){
+      const val = parseFloat(withdrawInput.value) || 0;
+      const fee = +(val * COMM_RATE);
+      const received = Math.max(0, val - fee);
+      receiveAmountEl.textContent = format(received);
+      commissionValueEl.textContent = format(fee);
+      // disable button if below min
+      if(withdrawBtn){
+        if(val < MIN_WITHDRAW) withdrawBtn.disabled = true;
+        else withdrawBtn.disabled = false;
+      }
+    }
+
+    if(withdrawInput){
+      withdrawInput.addEventListener('input', update);
+      // initialize
+      update();
+    }
+  })();
+})();
+
 // Background floating hearts
 (function(){
   const MAX = 28;

@@ -24,10 +24,100 @@
     </div>
   </header>
   <main class="content">
-    <section>
-      <h3>Баланс</h3>
-      <p>Текущий баланс: <strong>0.00</strong></p>
-      <button class="btn">Пополнить</button>
+    <section class="wallet-section">
+      <div class="wallet-modal">
+        <div class="wallet-tabs">
+          <button class="tab active" data-target="topup">ПОПОЛНЕНИЕ</button>
+          <button class="tab" data-target="withdraw">ВЫВОД</button>
+          <button class="tab" data-target="history">ИСТОРИЯ</button>
+          <button class="close-modal" aria-label="close">✕</button>
+        </div>
+        <div class="wallet-body">
+          <div class="panel" data-panel="topup">
+            <div class="balance-box">
+              <div class="balance-label">Текущий баланс</div>
+              <div class="balance-amount"><span class="currency-sign">$</span><span class="amount">0.00</span></div>
+            </div>
+
+            <div class="methods">
+              <div class="method selected">
+                <img src="assets/cryptobot.jpg" class="round" alt="Cryptobot" onerror="this.style.display='none'">
+                <span>Cryptobot</span>
+              </div>
+              <div class="method">
+                <img src="assets/xrocket.jpg" class="round" alt="xRocket" onerror="this.style.display='none'">
+                <span>xRocket</span>
+              </div>
+            </div>
+
+            <label class="amount-label">Сумма пополнения</label>
+            <div class="amount-input"><span class="currency-sign-green">$</span><input type="number" min="0" step="1" value="0" aria-label="amount"></div>
+
+            <div class="quick-buttons">
+              <button class="chip">10 $</button>
+              <button class="chip">25 $</button>
+              <button class="chip">50 $</button>
+              <button class="chip">100 $</button>
+              <button class="chip">250 $</button>
+            </div>
+
+            <button class="pay-btn">Перейти к оплате</button>
+          </div>
+
+          <div class="panel" data-panel="withdraw" style="display:none">
+            <div class="label-muted">Доступно к выводу</div>
+            <div class="summary-box"><span class="currency-sign-green">$</span><span class="amount">0.00</span></div>
+            <div class="hint">Основной баланс без бонусных средств</div>
+
+            <div class="label-muted" style="margin-top:10px">Выберите способ</div>
+            <div class="methods" style="margin-top:8px">
+              <div class="method selected">
+                <img src="assets/cryptobot.jpg" class="round" alt="Cryptobot" onerror="this.style.display='none'">
+                <span>Cryptobot</span>
+              </div>
+              <div class="method">
+                <img src="assets/xrocket.jpg" class="round" alt="xRocket" onerror="this.style.display='none'">
+                <span>xRocket</span>
+              </div>
+            </div>
+
+            <div class="recipient">
+              <img class="recipient-av" src="assets/avatar.png" onerror="this.style.display='none'">
+              <div class="recipient-info">
+                <div class="recipient-name">RED</div>
+                <div class="recipient-sub">Telegram ID 7239160695</div>
+              </div>
+            </div>
+
+            <div class="label-muted">Сумма вывода</div>
+            <div class="withdraw-amount"><span class="currency-sign-green">$</span><input type="number" min="0" step="0.01" value="0.00" class="withdraw-input" aria-label="withdraw-amount"></div>
+
+            <div class="label-muted">К получению</div>
+            <div class="receive-amount"><span class="currency-sign-green">$</span><span class="amount">0.00</span></div>
+
+            <div class="withdraw-info">Мин. вывод: <strong class="min-amount">1.05 $</strong> &nbsp; Комиссия: <strong class="commission-rate">3.00%</strong> (<span class="commission-value">0.00</span> $)</div>
+            <div class="withdraw-info">Лимит с бонуса: <strong class="bonus-limit">300 $</strong></div>
+
+            <button class="withdraw-btn">Заказать вывод</button>
+          </div>
+
+          <div class="panel" data-panel="history" style="display:none">
+              <div class="history-tabs">
+                <button class="history-tab active" data-h="topups">＋ ПОПОЛНЕНИЯ</button>
+                <button class="history-tab" data-h="withdraws">— ВЫВОДЫ</button>
+              </div>
+              <div class="history-body">
+                <div class="history-panel" data-hpanel="topups">
+                  <div class="history-empty">История пополнений пока пуста.</div>
+                </div>
+                <div class="history-panel" data-hpanel="withdraws" style="display:none">
+                  <div class="history-empty">История выводов пока пуста.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
   <nav class="bottom-nav">
