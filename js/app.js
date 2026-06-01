@@ -216,17 +216,18 @@
     (function createHearts(){
       const ring = document.getElementById('loaderRing');
       if(!ring) return;
-      const count = 14;
-      const radius = 42; // px
+      const count = 24;
+      const radius = 56; // px
       for(let i=0;i<count;i++){
         const angle = (360 / count) * i;
         const span = document.createElement('span');
         span.className = 'heart';
         span.innerText = '❤';
-        // set transform to place heart on circle; translate(-50%,-50%) will be applied in animation
-        span.style.transform = `translate(-50%,-50%) rotate(${angle}deg) translateY(-${radius}px)`;
+        // store angle and radius in CSS variables so animations can preserve placement
+        span.style.setProperty('--angle', angle + 'deg');
+        span.style.setProperty('--r', '-' + radius + 'px');
         // stagger animation delay for nicer effect
-        span.style.animationDelay = (i * 0.08) + 's';
+        span.style.animationDelay = (i * 0.06) + 's';
         ring.appendChild(span);
       }
     })();
