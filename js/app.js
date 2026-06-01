@@ -19,6 +19,57 @@
       });
     }
 
+      // Games search: filter tiles and highlight matches
+      (function(){
+        const input = document.getElementById('gameSearch');
+        const grid = document.querySelector('.games-grid');
+        if(!input || !grid) return;
+
+        const tiles = Array.from(grid.querySelectorAll('.game-tile'));
+
+        function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+        function highlight(text, q){
+          if(!q) return text;
+          const re = new RegExp('(' + escapeRegExp(q) + ')', 'ig');
+          return text.replace(re, '<mark class="game-match">$1</mark>');
+        }
+
+        let emptyEl = document.querySelector('.games-empty');
+        if(!emptyEl){
+          emptyEl = document.createElement('div');
+          emptyEl.className = 'games-empty';
+          emptyEl.textContent = 'Ничего не найдено';
+          emptyEl.style.display = 'none';
+          const section = document.getElementById('games');
+          if(section) section.appendChild(emptyEl);
+        }
+
+        input.addEventListener('input', ()=>{
+          const q = input.value.trim().toLowerCase();
+          let any = false;
+          tiles.forEach(tile => {
+            const nameEl = tile.querySelector('.game-name');
+            const name = nameEl && nameEl.textContent ? nameEl.textContent.trim() : '';
+            if(!q){
+              tile.style.display = '';
+              // remove highlights
+              if(nameEl) nameEl.innerHTML = name;
+              any = true;
+              return;
+            }
+            if(name.toLowerCase().includes(q)){
+              tile.style.display = '';
+              if(nameEl) nameEl.innerHTML = highlight(name, q);
+              any = true;
+            } else {
+              tile.style.display = 'none';
+              // remove highlights
+              if(nameEl) nameEl.innerHTML = name;
+            }
+          });
+          emptyEl.style.display = any ? 'none' : '';
+        });
+      })();
     function scrollToHash(){
       const path = location.pathname.split('/').pop() || 'home.html';
       const hash = (location.hash || '').replace('#','');

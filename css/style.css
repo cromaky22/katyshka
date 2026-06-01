@@ -126,6 +126,10 @@ html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;back
 .games-grid .game-caption{transition:background .18s ease,color .18s ease}
 .games-grid .game-thumb-link:hover + .game-caption{background:rgba(0,0,0,0.12)}
 
+/* search match highlight */
+.game-name mark.game-match{background:rgba(46,227,107,0.14);color:var(--text);padding:0 4px;border-radius:4px}
+.games-empty{color:var(--muted);text-align:center;padding:12px;margin-top:12px}
+
 @media(max-width:420px){.games-grid .game-thumb-link:hover .game-thumb{transform:scale(1.03)}}
 
 /* Footer (matches provided design) */
