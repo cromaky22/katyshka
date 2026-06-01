@@ -163,6 +163,18 @@
       if(!user) return false;
       if(nameEl) nameEl.textContent = ((user.first_name||'') + (user.last_name ? (' ' + user.last_name) : '') ).trim() || (user.username || '');
       if(subEl) subEl.textContent = 'Telegram ID ' + (user.id || '');
+      // set header profile image if available
+      try{
+        const profileImg = document.querySelector('.app-header .profile img');
+        if(profileImg){
+          const candidate = user.photo_url || user.avatar || (user.id ? ('https://t.me/i/userpic/320/' + user.id + '.jpg') : null);
+          if(candidate){
+            profileImg.src = candidate;
+            profileImg.style.display = '';
+            profileImg.onerror = function(){ this.style.display = 'none'; };
+          }
+        }
+      }catch(e){}
       // save locally for offline fallback
       try{ localStorage.setItem('tg_user', JSON.stringify(user)); }catch(e){}
       // try send to local API (if server running)
