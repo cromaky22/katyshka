@@ -209,8 +209,27 @@
     // create loader element
     const loader = document.createElement('div');
     loader.className = 'page-loader';
-    loader.innerHTML = '<div class="loader-box"><div class="loader-spinner" aria-hidden="true"></div><div class="loader-text" id="loaderText">ЗАГРУЗКА...</div></div>';
+    loader.innerHTML = '<div class="loader-box"><div class="loader-ring" id="loaderRing" aria-hidden="true"></div><div class="loader-text" id="loaderText">ЗАГРУЗКА...</div></div>';
     document.body.appendChild(loader);
+
+    // populate ring with hearts
+    (function createHearts(){
+      const ring = document.getElementById('loaderRing');
+      if(!ring) return;
+      const count = 14;
+      const radius = 42; // px
+      for(let i=0;i<count;i++){
+        const angle = (360 / count) * i;
+        const span = document.createElement('span');
+        span.className = 'heart';
+        span.innerText = '❤';
+        // set transform to place heart on circle; translate(-50%,-50%) will be applied in animation
+        span.style.transform = `translate(-50%,-50%) rotate(${angle}deg) translateY(-${radius}px)`;
+        // stagger animation delay for nicer effect
+        span.style.animationDelay = (i * 0.08) + 's';
+        ring.appendChild(span);
+      }
+    })();
 
     function showLoader(text){
       const t = document.getElementById('loaderText');

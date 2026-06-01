@@ -159,7 +159,17 @@ html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;back
 .page-loader.active{opacity:1;pointer-events:auto}
 .page-loader .loader-box{display:flex;flex-direction:column;align-items:center;gap:18px;padding:16px}
 .page-loader .loader-text{color:var(--muted);font-weight:700;letter-spacing:1px}
-.page-loader .loader-spinner{width:86px;height:86px;border-radius:50%;border:6px solid rgba(255,255,255,0.04);border-top-color:var(--accent);animation:spin 1s linear infinite}
+
+/* ring of hearts loader */
+.page-loader .loader-ring{position:relative;width:120px;height:120px;display:block}
+.page-loader .loader-ring .heart{position:absolute;left:50%;top:50%;transform-origin:0 0;display:block;color:#ff6b9a;opacity:0.95;transition:transform .28s ease,color .28s ease}
+.page-loader .loader-ring .heart:nth-child(odd){color:#ff9ab0}
+.page-loader .loader-ring .heart{font-size:16px}
+.page-loader .loader-ring{animation:ringSpin 3s linear infinite}
+.page-loader .loader-ring .heart{animation:heartPulse 1.6s ease-in-out infinite}
+
+@keyframes ringSpin{ to{ transform: rotate(360deg) } }
+@keyframes heartPulse{ 0%{ transform: translate(-50%,-50%) scale(0.92) } 50%{ transform: translate(-50%,-50%) scale(1.12) } 100%{ transform: translate(-50%,-50%) scale(0.92) } }
 
 /* Wallet modal styles */
 .wallet-section{display:flex;justify-content:center;padding:18px 0}
