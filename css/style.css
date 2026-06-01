@@ -96,6 +96,15 @@ html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;back
 .menu-actions{display:flex;flex-direction:column;gap:10px;margin-top:10px;align-items:center}
 .menu-actions .chip{display:block;width:90%;max-width:420px;padding:12px 14px;border-radius:12px;text-decoration:none;background:rgba(255,255,255,0.02);border:2px solid rgba(255,255,255,0.06);color:var(--muted);}
 .menu-actions .chip:hover{background:rgba(255,255,255,0.03);border-color:rgba(255,255,255,0.09);color:var(--text)}
+.menu-actions .chip,
+.menu-actions .chip *{
+  animation: none !important;
+  -webkit-animation: none !important;
+  transition: none !important;
+  -webkit-transition: none !important;
+  will-change: auto !important;
+}
+.menu-actions .chip{position:relative;z-index:2}
 .promo-btn img{width:90%;max-width:420px;max-height:96px;object-fit:cover;margin:0 auto;display:block;border-radius:12px}
 
 .chip .chip-icon{width:14px;height:14px;display:block}
