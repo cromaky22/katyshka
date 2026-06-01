@@ -157,14 +157,36 @@
 // Populate recipient info from Telegram WebApp when available
 (function(){
   try{
-    const tg = window.Telegram && window.Telegram.WebApp;
-    if(tg && tg.initDataUnsafe && tg.initDataUnsafe.user){
-      const user = tg.initDataUnsafe.user;
-      const nameEl = document.querySelector('.recipient-name');
-      const subEl = document.querySelector('.recipient-sub');
-      if(nameEl) nameEl.textContent = (user.first_name || '') + (user.last_name ? (' ' + user.last_name) : '');
+    const nameEl = document.querySelector('.recipient-name');
+    const subEl = document.querySelector('.recipient-sub');
+    function fillFromUser(user){
+      if(!user) return false;
+      if(nameEl) nameEl.textContent = ((user.first_name||'') + (user.last_name ? (' ' + user.last_name) : '') ).trim() || (user.username || '');
       if(subEl) subEl.textContent = 'Telegram ID ' + (user.id || '');
+      return true;
     }
+
+    function tryFill(){
+      try{
+        const tg = window.Telegram && window.Telegram.WebApp;
+        if(tg){
+          // try several common locations
+          const u1 = tg.initDataUnsafe && tg.initDataUnsafe.user;
+          if(fillFromUser(u1)) return;
+          const u2 = tg.initData && tg.initData.user;
+          if(fillFromUser(u2)) return;
+          const u3 = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.user;
+          if(fillFromUser(u3)) return;
+        }
+        // fallback: try global initData parse (if available)
+        if(window.__tg_user){ fillFromUser(window.__tg_user); return }
+      }catch(e){/*ignore*/}
+    }
+
+    // attempt multiple times in case WebApp initializes slightly later
+    tryFill();
+    let attempts = 0;
+    const t = setInterval(()=>{ attempts++; tryFill(); if(attempts>6) clearInterval(t); }, 500);
   }catch(e){
     // ignore if WebApp not present
   }
