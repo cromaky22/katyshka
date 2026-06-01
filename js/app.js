@@ -206,16 +206,28 @@
 
   // Page loader overlay: inject DOM node and handle navigation transitions
   (function(){
-    // create loader element (simple spinner + text)
+    // create loader element (ring of hearts + text)
     const loader = document.createElement('div');
     loader.className = 'page-loader';
-    loader.innerHTML = '<div class="loader-box"><div class="spinner" aria-hidden="true"></div><div class="loader-text" id="loaderText">ЗАГРУЗКА...</div></div>';
+    loader.innerHTML = '<div class="loader-box"><div class="loader-ring" id="loaderRing" aria-hidden="true"></div><div class="loader-text" id="loaderText">ЗАГРУЗКА...</div></div>';
     document.body.appendChild(loader);
 
-    // remove any previously injected heart ring (safe no-op if none)
-    (function cleanupHearts(){
-      const old = document.getElementById('loaderRing');
-      if(old && old.parentNode) old.parentNode.removeChild(old);
+    // populate ring with hearts
+    (function createHearts(){
+      const ring = document.getElementById('loaderRing');
+      if(!ring) return;
+      const count = 24;
+      const radius = 56; // px
+      for(let i=0;i<count;i++){
+        const angle = (360 / count) * i;
+        const span = document.createElement('span');
+        span.className = 'heart';
+        span.innerText = '❤';
+        // store angle and radius in CSS variables so animations can preserve placement
+        span.style.setProperty('--angle', angle + 'deg');
+        span.style.setProperty('--r', '-' + radius + 'px');
+        ring.appendChild(span);
+      }
     })();
 
     function showLoader(text, mode){
