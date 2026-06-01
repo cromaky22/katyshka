@@ -209,4 +209,27 @@ input[type=number]{
   .wallet-modal{padding:10px}
 }
 
+/* Mobile improvements for wallet modal (Telegram WebView friendly) */
+@media(max-width:520px){
+  .wallet-modal{
+    position:fixed;
+    left:50%;
+    transform:translateX(-50%);
+    top:72px;
+    width:calc(100% - 24px);
+    max-width:720px;
+    z-index:220;
+    padding:10px;
+    border-radius:14px;
+    box-shadow:0 20px 60px rgba(2,6,23,0.6);
+    background:linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.4));
+  }
+  .wallet-body{max-height:calc(100vh - 180px);overflow:auto;padding-right:8px}
+  .wallet-tabs{gap:6px}
+  .wallet-tabs .tab{background:rgba(255,255,255,0.03);color:var(--text);padding:8px 10px}
+  .wallet-tabs .tab.active{background:linear-gradient(90deg, rgba(21,97,255,0.12), rgba(46,227,107,0.06));color:var(--text)}
+  /* close button removed from tabs */
+  .wallet-section{padding:10px 0}
+}
+
 
