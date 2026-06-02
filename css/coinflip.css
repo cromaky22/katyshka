@@ -100,6 +100,11 @@
   .buttons .btn{min-width:110px;padding:8px 10px;font-size:13px;border-radius:10px}
   .buttons .coin-badge{width:36px;height:36px;left:8px}
   .buttons .btn:last-child .coin-badge{right:8px}
+  /* ensure labels don't get overlapped by coin badges */
+  .buttons .btn{padding-left:64px;padding-right:18px}
+  .buttons .btn:last-child{padding-left:18px;padding-right:64px}
+  .buttons .btn .btn-label{position:relative;z-index:2}
+  .buttons .coin-badge{width:44px;height:44px}
   .stake-row{flex-direction:column;align-items:stretch;gap:8px}
   .controls .stake-row input{width:100%;max-width:none}
   .controls .stake-row #play{width:100%;margin-left:0;padding:12px;border-radius:10px}
