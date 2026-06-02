@@ -243,6 +243,20 @@ html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;back
 .multipliers::-webkit-scrollbar{height:8px}
 .multipliers::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.03);border-radius:8px}
 
+/* On coinflip page, pin multipliers row to bottom above navigation */
+.coinflip .multipliers-row{
+  position:fixed;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:110px; /* adjust to sit above .bottom-nav */
+  width:920px;
+  max-width:96%;
+  z-index:250;
+  padding:10px 12px;
+  justify-content:center;
+  background:transparent;
+}
+
 
 /* Wallet modal styles */
 .wallet-section{display:flex;justify-content:center;padding:18px 0}
