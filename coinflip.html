@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Coinflip — Nvuti</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/coinflip.css">
 </head>
 <body class="page-coinflip">
   <header class="app-header">
@@ -20,7 +21,16 @@
   <main class="content">
     <section class="coinflip">
       <div class="coinflip-board">
-        <div class="score">0 из 20 — x0</div>
+        <div class="score-bar">
+          <div class="score-left">
+            <div class="score-main">0 из 20</div>
+            <div class="score-sub">раунд</div>
+          </div>
+          <div class="score-right">
+            <div class="score-main">x0</div>
+            <div class="score-sub">множитель</div>
+          </div>
+        </div>
         <div class="coin-wrap">
           <div class="coin" id="coin">
             <div class="side side-head">ОРЕЛ</div>
