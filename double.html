@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Double — Nvuti</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/double.css">
+</head>
+<body class="page-double">
+  <header class="app-header">
+    <div class="left-controls"></div>
+    <div class="header-title">Double</div>
+    <div class="right-controls">
+      <div class="balance-pill">
+        <span class="wallet-icon">💠</span>
+        <span class="balance-value">0.00</span>
+        <span class="currency">$</span>
+        <span class="caret">▾</span>
+      </div>
+      <a href="menu.html" class="profile" title="Профиль" aria-label="Профиль"><img class="profile-icon" src="" alt="Аватар" onerror="this.style.display='none'"></a>
+    </div>
+  </header>
+
+  <main class="content">
+    <section class="double">
+      <div class="double-board">
+        <!-- Рулетка/колесо -->
+        <div class="wheel-container">
+          <div class="wheel-wrapper">
+            <img class="wheel" id="wheel" src="assets/wheel.svg" alt="Wheel">
+            <img class="pointer" id="pointer" src="assets/pointer.svg" alt="Pointer">
+            <div class="result-display" id="resultDisplay"></div>
+          </div>
+        </div>
+
+        <!-- Панель выбора ставок -->
+        <div class="bets-panel">
+          <div class="bets-grid">
+            <button class="bet-btn" data-multiplier="2" data-index="0">
+              <span class="bet-multiplier">x2</span>
+              <span class="bet-color">Blue</span>
+            </button>
+            <button class="bet-btn" data-multiplier="3" data-index="1">
+              <span class="bet-multiplier">x3</span>
+              <span class="bet-color">Yellow</span>
+            </button>
+            <button class="bet-btn" data-multiplier="5" data-index="2">
+              <span class="bet-multiplier">x5</span>
+              <span class="bet-color">Orange</span>
+            </button>
+            <button class="bet-btn" data-multiplier="50" data-index="3">
+              <span class="bet-multiplier">x50</span>
+              <span class="bet-color">Green</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Панель ставки -->
+        <div class="stake-panel">
+          <div class="stake-header">
+            <label>Ставка</label>
+            <span class="stake-range">От <span class="currency-sign-green">$</span>0.50 до <span class="currency-sign-green">$</span>200</span>
+          </div>
+          <div class="stake-row">
+            <input id="stakeInput" type="number" min="0.5" max="200" step="0.5" value="1">
+            <div class="stake-buttons">
+              <button id="halfBtn" class="btn-stake">1/2</button>
+              <button id="doubleBtn" class="btn-stake">x2</button>
+            </div>
+          </div>
+          <button id="playBtn" class="btn play-btn">ИГРАТЬ</button>
+          <button id="collectBtn" class="btn collect-btn" style="display:none">ЗАБРАТЬ</button>
+        </div>
+
+        <!-- История игр -->
+        <div class="history-panel">
+          <div class="history-header">ИСТОРИЯ ИГР</div>
+          <div class="history-scroll" id="historyScroll">
+            <!-- История добавляется динамически -->
+          </div>
+        </div>
+
+        <!-- Статус игры -->
+        <div id="gameStatus" class="game-status" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <a href="home.html#games" class="nav-item" data-name="games"><span class="icon">🎮</span><span class="label">Games</span></a>
+    <a href="wallet.html" class="nav-item" data-name="wallet"><span class="icon">💼</span><span class="label">Wallet</span></a>
+    <a href="home.html" class="nav-item center" data-name=""><span class="icon">💎</span></a>
+    <a href="bonus.html" class="nav-item" data-name="bonus"><span class="icon">🎁</span><span class="label">Bonus</span></a>
+    <a href="menu.html" class="nav-item" data-name="menu"><span class="icon">☰</span><span class="label">Menu</span></a>
+  </nav>
+
+  <script src="js/app.js"></script>
+  <script src="js/double.js"></script>
+</body>
+</html>

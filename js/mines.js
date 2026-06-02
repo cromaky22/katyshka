@@ -53,7 +53,6 @@
     // multipliers array starts from first reveal (1st step = index 0)
     const mines = gameActive ? currentMines : (parseInt(minesSelect.value,10) || currentMines || 0);
     const presets = {
-      3: [1.1,1.25,1.44,1.67,1.95,2.3,2.73,3.28,3.98,4.9,6.12,7.8,10.14,13.52,18.59,26.55,39.83,63.73,111.55,223.1,557.75,2230],
       5: [1.21,1.53,1.95,2.53,3.32,4.43,6.01,8.32,11.79,17.16,25.74,40.04,65.07,111.55,204.5,409.01,920.28,2450,8580,515300],
       6: [1.27,1.7,2.3,3.16,4.43,6.33,9.25,13.88,21.45,34.32,57.2,100.1,185.91,371.83,818.03,2004,6130,24540,171780],
       7: [1.34,1.9,2.73,4,6.01,9.25,14.65,23.97,40.75,72.45,135.86,271.72,58873,1410,3880,12950,58280,466270],
@@ -197,7 +196,7 @@
   function buildMinesPicker(){
     if(!minesPickerGrid) return;
     minesPickerGrid.innerHTML = '';
-    for(let v=2; v<=24; v++){
+    for(let v=5; v<=24; v++){
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'pick-cell';
