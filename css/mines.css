@@ -62,7 +62,7 @@
   .mines-bottom {display:flex !important;position:static !important;width:100% !important;max-width:360px;margin:0 auto;padding:10px;box-shadow:none !important;z-index:4}
   .field-wrapper {margin-bottom:10px}
   .field-wrapper::before {left:-14px;right:-14px;top:-14px;bottom:-14px;border-radius:20px}
-  .grid {max-width:360px;margin:0 auto;gap:8px !important}
+  .grid {width:360px;height:360px;max-width:360px;margin:0 auto;gap:8px !important}
   .grid .cell {min-height:48px;border-radius:8px;font-size:14px}
   main {padding-bottom:110px}
 }
@@ -141,6 +141,7 @@
   .top-multipliers .m-item .mult-step{font-size:8px}
   .mines-board{margin:0 auto;max-width:360px;overflow:hidden;padding:12px}
   .center-area{margin:0 auto;max-width:320px;transform:none}
+  .grid{width:280px;height:280px;max-width:280px}
   /* make the dark background fully cover the field */
   .field-wrapper::before{left:-12px;right:-12px;top:-12px;bottom:-12px;border-radius:16px}
 }
@@ -156,7 +157,7 @@
   .mines-board{max-width:360px;padding:12px;border-radius:14px}
   .field-wrapper{padding:10px;border-radius:14px;margin:0}
   .center-area{max-width:290px}
-  .grid{grid-template-columns:repeat(5,1fr);gap:8px;max-width:280px}
+  .grid{width:280px;height:280px;grid-template-columns:repeat(5,1fr);gap:8px;max-width:280px}
   .grid .cell{min-height:46px;font-size:14px;border-radius:8px;padding:6px}
   .compact-panels{gap:6px;margin-bottom:6px}
   .controls,.controls-panel{display:none}
@@ -197,6 +198,7 @@
   .top-multipliers .m-item{min-width:58px;padding:3px 4px;gap:1px}
   .top-multipliers .m-item .mult-value{font-size:10px}
   .top-multipliers .m-item .mult-step{font-size:8px}
+  .grid{width:280px;height:280px;max-width:280px}
   html,body{overflow-x:hidden}
   .mines-container{max-width:360px;padding:6px}
   .mines-board{max-width:360px;padding:10px}
