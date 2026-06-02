@@ -266,7 +266,21 @@
         // mark as revealed bomb and keep selected highlight
         cell.classList.add('revealed','bomb','selected');
         cell.textContent = '💣';
-      revealAll(mineSet);
+      
+      // При подставке казино не показываем реальные мины, только текущую
+      if(!isHouseTrick){
+        revealAll(mineSet);
+      } else {
+        // Для подставки: показываем остальные ячейки безопасными
+        const cells = gridEl.querySelectorAll('.cell');
+        cells.forEach((c, i) => {
+          if(i !== idx){
+            c.classList.add('revealed');
+            c.textContent = '✓';
+          }
+        });
+      }
+      
       gameActive = false;
         updateStatus('Проигрыш — мина найдена');
         // reset controls and clear field after showing result
