@@ -15,9 +15,10 @@ document.addEventListener('DOMContentLoaded', function(){
   btnTail.addEventListener('click', ()=>{ choice = 'tail'; btnTail.classList.add('active'); btnHead.classList.remove('active'); });
 
   function updateStakeDisplays(){
-    const val = stakeInput && stakeInput.value ? (Number(stakeInput.value) || 0) : 0;
-    if(stakeHeadEl) stakeHeadEl.textContent = `₽ ${val}`;
-    if(stakeTailEl) stakeTailEl.textContent = `₽ ${val}`;
+    const raw = stakeInput ? ('' + stakeInput.value).trim() : '';
+    const val = raw !== '' ? (Number(stakeInput.value) || 0) : null;
+    if(stakeHeadEl) stakeHeadEl.textContent = val !== null ? `₽ ${val}` : '';
+    if(stakeTailEl) stakeTailEl.textContent = val !== null ? `₽ ${val}` : '';
     // highlight selected button
     if(choice === 'head'){
       btnHead.classList.add('bet-on'); btnTail.classList.remove('bet-on');
@@ -114,7 +115,9 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function updateScoreDisplay(){
     if(scoreRoundsEl) scoreRoundsEl.textContent = `${currentRound} из ${roundsTotal}`;
-    if(scoreMultiplierEl) scoreMultiplierEl.textContent = accumulated>0 ? `x${accumulated.toFixed(2)}` : `x${(multipliersValues[currentMultiplierIdx]||0)}`;
+    // show current multiplier factor (not accumulated money)
+    const curMult = multipliersValues[currentMultiplierIdx] || 1;
+    if(scoreMultiplierEl) scoreMultiplierEl.textContent = `x${Number(curMult).toFixed(2)}`;
   }
 
   function markPassed(idx){
