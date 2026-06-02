@@ -1,5 +1,5 @@
 /* Basic Mines game styles — inspired by coinflip layout */
-.page-mines .app-header .header-title{text-align:center;margin-right:120px}
+.page-mines .app-header .header-title{text-align:right;margin-right:100px}
 .mines{display:flex;justify-content:center;padding:24px 0}
 .currency{color:#4cd97a;font-weight:700}
 .balance-small{color:#4cd97a;font-weight:700}
