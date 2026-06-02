@@ -1,30 +1,82 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
     <defs>
         <style>
-            .cls-1{fill:#2196f3;stroke:#1a1a1a;stroke-width:1;}
-            .cls-2{fill:#ffc107;stroke:#1a1a1a;stroke-width:1;}
-            .cls-3{fill:#ff5722;stroke:#1a1a1a;stroke-width:1;}
-            .cls-4{fill:#8bc34a;stroke:#1a1a1a;stroke-width:1;}
+            .blue{fill:#2196f3;}
+            .yellow{fill:#ffc107;}
+            .orange{fill:#ff5722;}
+            .green{fill:#8bc34a;}
         </style>
     </defs>
-    <!-- x2 Blue (0° - 90°) Top Right -->
-    <path class="cls-1" d="M 100 100 L 100 5 A 95 95 0 0 1 195 100 Z"/>
     
-    <!-- x3 Yellow (90° - 180°) Bottom Right -->
-    <path class="cls-2" d="M 100 100 L 195 100 A 95 95 0 0 1 100 195 Z"/>
-    
-    <!-- x5 Orange (180° - 270°) Bottom Left -->
-    <path class="cls-3" d="M 100 100 L 100 195 A 95 95 0 0 1 5 100 Z"/>
-    
-    <!-- x50 Green (270° - 360°) Top Left -->
-    <path class="cls-4" d="M 100 100 L 5 100 A 95 95 0 0 1 100 5 Z"/>
-    
-    <!-- Разделители между сегментами -->
-    <line x1="100" y1="100" x2="100" y2="5" stroke="#1a1a1a" stroke-width="2"/>
-    <line x1="100" y1="100" x2="195" y2="100" stroke="#1a1a1a" stroke-width="2"/>
-    <line x1="100" y1="100" x2="100" y2="195" stroke="#1a1a1a" stroke-width="2"/>
-    <line x1="100" y1="100" x2="5" y2="100" stroke="#1a1a1a" stroke-width="2"/>
-    
-    <!-- Центральная точка -->
-    <circle cx="100" cy="100" r="10" fill="#1a1a1a"/>
+    <!-- 14 blue bars (x2) - top right quadrant (0-90°) -->
+    <g transform="translate(100,100)">
+        <rect class="blue" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(0)"/>
+        <rect class="blue" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(6.43)"/>
+        <rect class="blue" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(12.86)"/>
+        <rect class="blue" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(19.29)"/>
+        <rect class="blue" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(25.71)"/>
+        <rect class="blue" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(32.14)"/>
+        <rect class="blue" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(38.57)"/>
+        <rect class="blue" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(45)"/>
+        <rect class="blue" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(51.43)"/>
+        <rect class="blue" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(57.86)"/>
+        <rect class="blue" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(64.29)"/>
+        <rect class="blue" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(70.71)"/>
+        <rect class="blue" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(77.14)"/>
+        <rect class="blue" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(83.57)"/>
+        
+        <!-- 14 yellow bars (x3) - bottom right quadrant (90-180°) -->
+        <rect class="yellow" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(90)"/>
+        <rect class="yellow" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(96.43)"/>
+        <rect class="yellow" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(102.86)"/>
+        <rect class="yellow" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(109.29)"/>
+        <rect class="yellow" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(115.71)"/>
+        <rect class="yellow" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(122.14)"/>
+        <rect class="yellow" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(128.57)"/>
+        <rect class="yellow" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(135)"/>
+        <rect class="yellow" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(141.43)"/>
+        <rect class="yellow" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(147.86)"/>
+        <rect class="yellow" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(154.29)"/>
+        <rect class="yellow" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(160.71)"/>
+        <rect class="yellow" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(167.14)"/>
+        <rect class="yellow" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(173.57)"/>
+        
+        <!-- 14 orange bars (x5) - bottom left quadrant (180-270°) -->
+        <rect class="orange" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(180)"/>
+        <rect class="orange" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(186.43)"/>
+        <rect class="orange" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(192.86)"/>
+        <rect class="orange" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(199.29)"/>
+        <rect class="orange" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(205.71)"/>
+        <rect class="orange" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(212.14)"/>
+        <rect class="orange" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(218.57)"/>
+        <rect class="orange" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(225)"/>
+        <rect class="orange" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(231.43)"/>
+        <rect class="orange" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(237.86)"/>
+        <rect class="orange" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(244.29)"/>
+        <rect class="orange" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(250.71)"/>
+        <rect class="orange" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(257.14)"/>
+        <rect class="orange" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(263.57)"/>
+        
+        <!-- 14 green bars (x50) - top left quadrant (270-360°) -->
+        <rect class="green" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(270)"/>
+        <rect class="green" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(276.43)"/>
+        <rect class="green" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(282.86)"/>
+        <rect class="green" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(289.29)"/>
+        <rect class="green" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(295.71)"/>
+        <rect class="green" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(302.14)"/>
+        <rect class="green" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(308.57)"/>
+        <rect class="green" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(315)"/>
+        <rect class="green" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(321.43)"/>
+        <rect class="green" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(327.86)"/>
+        <rect class="green" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(334.29)"/>
+        <rect class="green" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(340.71)"/>
+        <rect class="green" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(347.14)"/>
+        <rect class="green" x="45" y="-4" width="8" height="50" rx="2" transform="rotate(353.57)"/>
+        
+        <!-- Outer circle border -->
+        <circle cx="0" cy="0" r="95" fill="none" stroke="#1a1a1a" stroke-width="2"/>
+        
+        <!-- Center hub -->
+        <circle cx="0" cy="0" r="12" fill="#1a1a1a"/>
+    </g>
 </svg>
