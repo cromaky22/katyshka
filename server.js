@@ -6,8 +6,19 @@ const app = express();
 const dbFile = path.join(__dirname, 'data.sqlite');
 const db = new sqlite3.Database(dbFile);
 
+const ADMIN_KEY = process.env.ADMIN_KEY || 'admin123'; // change in production
+
 app.use(express.json());
 app.use(express.static(__dirname));
+
+// middleware для проверки админ-ключа
+function requireAdmin(req, res, next) {
+  const key = req.headers['x-admin-key'] || req.query.adminKey || '';
+  if (key !== ADMIN_KEY) {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+  next();
+}
 
 db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS users (
@@ -157,16 +168,16 @@ app.get('/api/users/:id', (req, res) => {
   });
 });
 
-// list users
-app.get('/api/users', (req, res) => {
+// list users (admin only)
+app.get('/api/users', requireAdmin, (req, res) => {
   db.all('SELECT id, first_name, last_name, username, avatar, balance, updated_at FROM users ORDER BY updated_at DESC', [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows || []);
   });
 });
 
-// update user balance
-app.put('/api/users/:id/balance', (req, res) => {
+// update user balance (admin only)
+app.put('/api/users/:id/balance', requireAdmin, (req, res) => {
   const id = req.params.id;
   const b = Number((req.body && req.body.balance) || 0);
   if (!id) return res.status(400).json({ error: 'missing id' });
