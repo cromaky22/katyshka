@@ -281,25 +281,26 @@
     // Добавляем стили анимации
     const style = document.createElement('style');
     style.textContent = `
-      @keyframes wheel-spin {
+      @keyframes wheel-spin-${Date.now()} {
         from { transform: rotateZ(0deg); }
         to { transform: rotateZ(${wheelFinalRotation}deg); }
       }
-      @keyframes ball-spin {
-        0% { opacity: 1; transform: rotateZ(0deg); }
-        90% { opacity: 1; transform: rotateZ(${ballFinalRotation}deg); }
-        100% { opacity: 0; transform: rotateZ(${ballFinalRotation}deg); }
+      @keyframes ball-spin-${Date.now()} {
+        0% { opacity: 1; transform: translate(-50%, -50%) rotateZ(0deg); }
+        90% { opacity: 1; transform: translate(-50%, -50%) rotateZ(${ballFinalRotation}deg); }
+        100% { opacity: 0; transform: translate(-50%, -50%) rotateZ(${ballFinalRotation}deg); }
       }
     `;
+    const animName = `wheel-spin-${Date.now()}`;
+    const ballAnimName = `ball-spin-${Date.now()}`;
     document.head.appendChild(style);
     
     // Запускаем анимацию
-    wheelWrapper.style.animation = `wheel-spin 10s ease-out forwards`;
-    ballWrapper.style.animation = `ball-spin 11s ease-out forwards`;
+    wheelWrapper.style.animation = `${animName} 10s ease-out forwards`;
+    ballWrapper.style.animation = `${ballAnimName} 11s ease-out forwards`;
     ballContainer.style.opacity = '1';
 
     setTimeout(() => {
-      ballContainer.style.opacity = '0';
       onComplete();
     }, 11000);
   }
@@ -351,7 +352,8 @@
     wheelWrapper.style.animation = 'none';
     wheelWrapper.style.transform = 'rotateZ(0deg)';
     ballWrapper.style.animation = 'none';
-    ballWrapper.style.transform = 'rotateZ(0deg)';
+    ballWrapper.style.transform = 'translate(-50%, -50%)';
+    ballContainer.style.opacity = '0';
   }
 
   // Инициализировать при загрузке страницы
