@@ -50,8 +50,8 @@
   .mines-picker{left:50%;transform:translateX(-50%);bottom:84px;min-width:86%;max-width:320px}
   .mines-picker-grid{grid-template-columns:repeat(5,1fr);gap:6px}
 }
-.grid{width:100%;max-width:840px;display:grid;grid-template-columns:repeat(5,1fr);gap:12px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));border-radius:12px}
-.field-wrapper{background:linear-gradient(180deg, rgba(6,4,12,0.6), rgba(10,8,18,0.6));padding:12px;border-radius:14px;margin:0;box-shadow:0 12px 30px rgba(0,0,0,0.6);width:100%;max-width:100%;position:relative;z-index:2;isolation:isolate}
+.grid{width:100%;max-width:460px;display:grid;grid-template-columns:repeat(5,1fr);gap:12px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));border-radius:12px}
+.field-wrapper{background:linear-gradient(180deg, rgba(6,4,12,0.6), rgba(10,8,18,0.6));padding:12px;border-radius:14px;margin:0;box-shadow:0 12px 30px rgba(0,0,0,0.6);width:100%;max-width:484px;position:relative;z-index:2;isolation:isolate}
 
 /* dark square slightly larger than the field */
 
