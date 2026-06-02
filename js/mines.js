@@ -293,14 +293,10 @@
     if(revealedCount >= safeCount){
       // user cleared all safe cells — win
       const payout = Math.round(currentStake *  (1 + safeCount/GRID_SIZE) * 100)/100;
-      setTimeout(()=>{
-        if(confirm(`Вы открыли все безопасные клетки! Вы выиграли $${payout} — зачислить?`)){
-          setBalance(getBalance() + payout);
-        }
-      },200);
+      setBalance(getBalance() + payout);
       gameActive = false;
       revealAll(mineSet);
-      updateStatus('Раунд завершён — все безопасные ячейки открыты');
+      updateStatus(`Выигрыш! +$${payout.toFixed(2)}`);
       updateCompactStep();
       setTimeout(resetField, 800);
     }
