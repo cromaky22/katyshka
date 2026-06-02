@@ -27,6 +27,14 @@ document.addEventListener('DOMContentLoaded', function(){
     } else {
       btnHead.classList.remove('bet-on'); btnTail.classList.remove('bet-on');
     }
+    // hide play button once a stake is set (>0), show it when cleared
+    if(play){
+      if(val !== null && val > 0){
+        play.style.display = 'none';
+      } else {
+        play.style.display = '';
+      }
+    }
   }
   if(stakeInput) stakeInput.addEventListener('input', updateStakeDisplays);
   // update displays when choosing side
@@ -68,6 +76,8 @@ document.addEventListener('DOMContentLoaded', function(){
         resultEl.textContent += ' — Вы выиграли!';
         // enter chain mode: allow continuing by clicking side buttons
         inChain = true;
+        // ensure play button is hidden while in chain mode
+        if(play) play.style.display = 'none';
       } else {
         resultEl.textContent += ' — Проигрыш';
         resetProgress();
