@@ -54,10 +54,11 @@
 .mult-nav:hover{background:rgba(255,255,255,0.04);color:var(--text)}
 .mult-nav:disabled{opacity:0.35;cursor:default}
 .mult-item{width:64px;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;background:transparent;padding:6px;opacity:0.6}
-.mult-item .mult-icon{width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));margin-bottom:6px;font-size:14px;box-shadow:inset 0 2px 6px rgba(255,255,255,0.02),0 6px 14px rgba(2,6,23,0.35)}
+.mult-item .mult-icon{width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:transparent;margin-bottom:6px;font-size:14px}
+.mult-item .mult-icon img{width:36px;height:36px;object-fit:contain;border-radius:50%;filter:grayscale(100%) brightness(0.95) contrast(1);display:block}
 .mult-item .mult-value{font-size:11px;color:var(--muted);margin-top:4px}
 .mult-item.active{opacity:1}
-.mult-item.active .mult-icon{box-shadow:0 8px 28px rgba(20,50,74,0.45);background:linear-gradient(180deg,#14324a,#092428)}
+.mult-item.active .mult-icon{box-shadow:0 8px 28px rgba(20,50,74,0.45)}
 .multipliers::-webkit-scrollbar{height:8px}
 .multipliers::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.03);border-radius:8px}
 
