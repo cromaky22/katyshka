@@ -243,16 +243,17 @@ html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;back
 .multipliers::-webkit-scrollbar{height:8px}
 .multipliers::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.03);border-radius:8px}
 
-/* On coinflip page, pin multipliers row to bottom above navigation */
+/* Multipliers row positioned under controls for coinflip */
 .coinflip .multipliers-row{
-  position:fixed;
-  left:50%;
-  transform:translateX(-50%);
-  bottom:110px; /* adjust to sit above .bottom-nav */
-  width:920px;
-  max-width:96%;
-  z-index:250;
-  padding:10px 12px;
+  position:relative;
+  left:auto;
+  transform:none;
+  bottom:auto;
+  width:100%;
+  max-width:720px;
+  margin:8px auto 0;
+  z-index:6;
+  padding:8px 4px;
   justify-content:center;
   background:transparent;
 }
