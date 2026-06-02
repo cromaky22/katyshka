@@ -1,8 +1,8 @@
 // Basic Mines game logic — minimal prototype following coinflip patterns
 (function(){
   const GRID_SIZE = 25;
-  // 🎰 HOUSE EDGE: 0 = honest game, no casino tricks
-  const HOUSE_EDGE = 0; // Honest game - no casino tricks
+  // 🎰 HOUSE EDGE: Micro advantage - small chance of fake bomb on safe cells
+  const HOUSE_EDGE = 0.15; // 15% micro advantage (small edge, no extra bombs)
   
   const gridEl = document.getElementById('minesGrid');
   const playBtn = document.getElementById('minesPlay');
