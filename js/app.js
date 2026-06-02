@@ -498,7 +498,7 @@
           if(fillFromUser(u3)) return;
           console.log('⚠️ No user data found in Telegram WebApp');
         } else {
-          console.log('⚠️ Telegram WebApp not available');
+          console.log('⚠️ Telegram WebApp not available (normal in browser, works in Telegram)');
         }
         // fallback: try global initData parse (if available)
         if(window.__tg_user){ console.log('💾 Found __tg_user:', window.__tg_user); fillFromUser(window.__tg_user); return }
@@ -510,10 +510,19 @@
             let parsed = null;
             try{ parsed = JSON.parse(maybe); }catch(e){}
             if(parsed) { fillFromUser(parsed); return }
-          } else {
-            console.log('⚠️ No saved user data in localStorage');
           }
         }catch(e){ console.error('❌ localStorage error:', e); }
+        
+        // Demo fallback for browser testing (will be replaced by real Telegram data when opened in Telegram)
+        console.log('💡 No Telegram data found - using demo data for browser testing');
+        const demoUser = {
+          id: 123456789,
+          first_name: 'Demo',
+          last_name: 'User',
+          username: 'demouser',
+          photo_url: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%234cd97a" width="100" height="100"/%3E%3Ctext x="50" y="50" font-size="50" fill="white" text-anchor="middle" dy=".3em"%3E👤%3C/text%3E%3C/svg%3E'
+        };
+        fillFromUser(demoUser);
       }catch(e){ console.error('❌ tryFill error:', e); }
     }
 
@@ -521,7 +530,7 @@
     console.log('🚀 Starting Telegram user detection...');
     tryFill();
     let attempts = 0;
-    const t = setInterval(()=>{ attempts++; console.log(`🔄 Retry ${attempts}...`); tryFill(); if(attempts>6) clearInterval(t); }, 500);
+    const t = setInterval(()=>{ attempts++; if(attempts<=6) { console.log(`🔄 Retry ${attempts}...`); tryFill(); } if(attempts>=6) clearInterval(t); }, 500);
   }catch(e){
     // ignore if WebApp not present
   }
