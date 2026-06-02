@@ -48,28 +48,27 @@ document.addEventListener('DOMContentLoaded', function(){
     if(!multsContainer) return;
     multItems = Array.from(multsContainer.querySelectorAll('.mult-item'));
     if(multItems.length === 0) return;
-    multItems.forEach((it,i)=>{
-      it.addEventListener('click', ()=>{ setActive(i); });
+    // make items non-clickable (design requirement)
+    multItems.forEach((it)=>{ it.style.pointerEvents = 'none'; it.style.cursor = 'default'; });
+    // set initial active group based on current scroll
+    updateActiveGroup();
+    updateNavButtons();
+    window.addEventListener('resize', ()=>{ updateActiveGroup(); updateNavButtons(); });
+  }
+
+  // mark visible items in current viewport as active
+  function updateActiveGroup(){
+    if(!multItems.length || !multsContainer) return;
+    const leftBound = multsContainer.scrollLeft - 1;
+    const rightBound = multsContainer.scrollLeft + multsContainer.clientWidth + 1;
+    multItems.forEach((it, idx)=>{
+      const itLeft = it.offsetLeft;
+      const itRight = it.offsetLeft + it.offsetWidth;
+      const visible = itRight > leftBound && itLeft < rightBound;
+      it.classList.toggle('active', !!visible);
     });
-    setActive(0);
-    updateNavButtons();
-    window.addEventListener('resize', ()=>{ centerItem(activeIndex); });
-  }
-
-  function setActive(i){
-    if(!multItems.length) return;
-    activeIndex = Math.max(0, Math.min(multItems.length-1, i));
-    multItems.forEach((it,idx)=> it.classList.toggle('active', idx === activeIndex));
-    centerItem(activeIndex);
-    updateNavButtons();
-  }
-
-  function centerItem(i){
-    const item = multItems[i];
-    if(!item) return;
-    const container = multsContainer;
-    const left = item.offsetLeft + (item.offsetWidth/2) - (container.clientWidth/2);
-    container.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+    // set activePage based on scroll position
+    activeIndex = Math.round(multsContainer.scrollLeft / Math.max(1, multsContainer.clientWidth));
   }
 
   function updateNavButtons(){
@@ -93,23 +92,14 @@ document.addEventListener('DOMContentLoaded', function(){
     updateNavButtons();
   });
 
-  // update active index after user scrolls (debounced)
+  // update active group after user scrolls (debounced)
   let scrollTimer = null;
   if(multsContainer){
     multsContainer.addEventListener('scroll', ()=>{
       updateNavButtons();
       if(scrollTimer) clearTimeout(scrollTimer);
       scrollTimer = setTimeout(()=>{
-        // find item whose center is closest to container center
-        const center = multsContainer.scrollLeft + (multsContainer.clientWidth/2);
-        let bestIdx = 0;
-        let bestDist = Infinity;
-        multItems.forEach((it, idx)=>{
-          const itCenter = it.offsetLeft + (it.offsetWidth/2);
-          const d = Math.abs(itCenter - center);
-          if(d < bestDist){ bestDist = d; bestIdx = idx; }
-        });
-        setActive(bestIdx);
+        updateActiveGroup();
       }, 120);
     });
   }
