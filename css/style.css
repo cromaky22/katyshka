@@ -202,8 +202,8 @@ html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;back
 /* Coinflip mode styles */
 .coinflip{display:flex;justify-content:center;padding:24px 0}
 .coinflip-board{width:920px;max-width:96%;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:28px;border-radius:14px;box-shadow:0 18px 40px rgba(0,0,0,0.6)}
-.coin-wrap{display:flex;justify-content:center;margin:6px 0 0 0}
-.coin{width:140px;height:140px;position:relative;perspective:1200px;margin-top:-48px}
+.coin-wrap{display:flex;justify-content:center;margin:0 0 0 0;position:relative;z-index:5}
+.coin{width:140px;height:140px;position:relative;perspective:1200px;margin-top:-80px;z-index:6}
 .coin .side{position:absolute;inset:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#041017}
 .coin .side-head{background:linear-gradient(180deg,#ffd97b,#ffcf59)}
 .coin .side-tail{background:linear-gradient(180deg,#e6f0ff,#cfe0ff);transform:rotateY(180deg)}
@@ -217,7 +217,7 @@ html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;back
   100%{transform:rotateY(1080deg)}
 }
 
-.controls{display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:12px}
+.controls{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:6px}
 .buttons{display:flex;gap:12px}
 .buttons .btn{min-width:140px;display:inline-flex;align-items:center;gap:12px;padding:16px 22px;border-radius:12px;background:linear-gradient(180deg,#2f78ff,#1a5fff);color:#fff;border:3px solid rgba(32,120,255,0.18);box-shadow:0 10px 30px rgba(20,90,200,0.18);font-weight:800}
 .buttons .btn .btn-label{font-weight:800;letter-spacing:1px}
