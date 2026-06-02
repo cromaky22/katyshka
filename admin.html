@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin — Promo Manager</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="left-controls">
+      <a href="home.html" class="btn-icon">←</a>
+    </div>
+    <div class="header-title">Admin</div>
+    <div class="right-controls"></div>
+  </header>
+  <main class="content">
+    <section>
+      <h3>Управление промокодами</h3>
+      <div class="wallet-modal" style="position:static;box-shadow:none;padding:12px;max-width:720px">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+          <input id="adminCode" placeholder="Код (например: katyshka)" class="promo-input">
+          <input id="adminAmount" placeholder="Сумма (например: 5.00)" class="promo-input" style="width:120px">
+          <input id="adminMax" placeholder="Лимит активаций (0 = неогр.)" class="promo-input" style="width:160px">
+          <button id="adminAdd" class="btn">Добавить</button>
+        </div>
+        <div class="admin-header">
+          <div class="admin-col admin-name">Код</div>
+          <div class="admin-col admin-uses">Активаций</div>
+          <div class="admin-col admin-amount">Сумма</div>
+          <div class="admin-col admin-actions"></div>
+        </div>
+        <div id="promoList"></div>
+      </div>
+    </section>
+  </main>
+  <script src="js/app.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

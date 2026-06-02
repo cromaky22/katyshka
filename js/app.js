@@ -113,6 +113,105 @@
   const balance = stored !== null ? parseFloat(stored).toFixed(2) : '0.00';
   balanceElems.forEach(el=>el.textContent = balance);
 
+  // Promo modal & activation logic
+  (function(){
+    function normalizeCode(s){ return (s||'').replace(/[^A-Z0-9]/ig,'').toUpperCase(); }
+
+    function loadPromos(){
+      try{
+        const raw = localStorage.getItem('mc_promos');
+        let arr = raw ? JSON.parse(raw) : null;
+        if(!Array.isArray(arr)){
+          // seed defaults
+          arr = [ { code: 'KATYSHKA', amount: 5.00, uses: 0 }, { code: 'WELCOME10', amount: 10.00, uses: 0 } ];
+          localStorage.setItem('mc_promos', JSON.stringify(arr));
+        }
+        // build map
+        const map = {};
+        arr.forEach(it=>{ if(it && it.code){ map[normalizeCode(it.code)] = Number(it.amount) || 0; } });
+        return map;
+      }catch(e){ return {}; }
+    }
+
+    function getPromosArray(){
+      try{ const raw = localStorage.getItem('mc_promos'); const arr = raw ? JSON.parse(raw) : []; return Array.isArray(arr) ? arr : []; }catch(e){ return []; }
+    }
+    function setPromosArray(arr){ try{ localStorage.setItem('mc_promos', JSON.stringify(arr || [])); }catch(e){} }
+
+    const promoButtons = document.querySelectorAll('[data-action="promo"]');
+    const promoModal = document.getElementById('promoModal');
+    const promoInput = document.getElementById('promoCodeInput');
+    const promoActivate = document.getElementById('promoActivate');
+    const promoClose = document.getElementById('promoClose');
+    const promoMessage = document.getElementById('promoMessage');
+
+    function updateBalanceDisplay(newVal){
+      const vals = document.querySelectorAll('.balance-value');
+      vals.forEach(el=> el.textContent = Number(newVal).toFixed(2));
+    }
+
+    function getActivated(){
+      try{ return JSON.parse(localStorage.getItem('mc_activated_promos')||'[]') || []; }catch(e){ return []; }
+    }
+    function setActivated(arr){ try{ localStorage.setItem('mc_activated_promos', JSON.stringify(arr)); }catch(e){} }
+
+    function openModal(){ if(!promoModal) return; promoModal.style.display = ''; promoModal.setAttribute('aria-hidden','false'); promoMessage.textContent=''; if(promoInput) { promoInput.value=''; promoInput.focus(); } }
+    function closeModal(){ if(!promoModal) return; promoModal.style.display = 'none'; promoModal.setAttribute('aria-hidden','true'); }
+
+    promoButtons.forEach(b=> b.addEventListener('click', (e)=>{ e.preventDefault(); openModal(); }));
+    if(promoClose) promoClose.addEventListener('click', closeModal);
+    if(promoModal) promoModal.addEventListener('click', (e)=>{ if(e.target === promoModal) closeModal(); });
+
+    function showMessage(msg, success){ if(!promoMessage) return; promoMessage.textContent = msg; promoMessage.style.color = success ? 'var(--accent-green)' : '' }
+
+    if(promoActivate){
+      promoActivate.addEventListener('click', ()=>{
+        const raw = promoInput ? promoInput.value : '';
+        const code = normalizeCode(raw);
+        if(!code){ showMessage('Введите код', false); return; }
+        const PROMOS = loadPromos();
+        const amount = PROMOS[code];
+        // find promo object to check maxUses
+        const promosArr = getPromosArray();
+        const promoObj = promosArr.find(p=> normalizeCode(p.code) === code);
+        if(promoObj){
+          const max = Number(promoObj.maxUses || 0);
+          const used = Number(promoObj.uses || 0);
+          if(max > 0 && used >= max){ showMessage('Лимит активаций исчерпан', false); return; }
+        }
+        if(!amount){ showMessage('Неверный промокод', false); return; }
+        const activated = getActivated();
+        if(activated.indexOf(code) !== -1){ showMessage('Промокод уже активирован', false); return; }
+        // credit balance
+        const cur = parseFloat(localStorage.getItem('mc_balance') || '0') || 0;
+        const next = Math.round((cur + amount) * 100) / 100;
+        localStorage.setItem('mc_balance', next.toFixed(2));
+        updateBalanceDisplay(next);
+        // mark activated (per-user)
+        activated.push(code); setActivated(activated);
+        // increment global promo uses
+        try{
+          const arr = getPromosArray();
+          const idx = arr.findIndex(p=> normalizeCode(p.code) === code);
+          if(idx !== -1){
+            arr[idx].uses = (Number(arr[idx].uses)||0) + 1;
+            // if maxUses set and exceeded, clamp
+            const max = Number(arr[idx].maxUses || 0);
+            if(max > 0 && arr[idx].uses > max) arr[idx].uses = max;
+            setPromosArray(arr);
+          }
+        }catch(e){}
+        showMessage('Промокод активирован! +$' + Number(amount).toFixed(2), true);
+        // disable activate button to prevent double click
+        promoActivate.disabled = true; promoInput.disabled = true;
+        // auto-close after short delay
+        setTimeout(()=>{ closeModal(); }, 1400);
+      });
+      // allow Enter key in input
+      if(promoInput) promoInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ promoActivate.click(); } });
+    }
+  })();
+
   // simple auto-scrolling carousel for empty promo cards
   (function(){
     const carousel = document.getElementById('mainCarousel');

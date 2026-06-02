@@ -36,6 +36,20 @@
       </div>
     </section>
   </main>
+  <!-- Promo modal -->
+  <div class="promo-modal" id="promoModal" aria-hidden="true" style="display:none">
+    <div class="promo-card">
+      <button class="promo-close" id="promoClose" aria-label="Close">✕</button>
+      <div class="promo-illustration"><img src="assets/promo_card.png" alt="promo" onerror="this.style.display='none'"></div>
+      <h3>Активируй промокод и получи бонус</h3>
+      <p class="promo-sub">Введите код</p>
+      <input id="promoCodeInput" class="promo-input" placeholder="katyshka" maxlength="40">
+      <div class="promo-actions">
+        <button id="promoActivate" class="btn">Активировать</button>
+      </div>
+      <div id="promoMessage" class="promo-message" aria-live="polite"></div>
+    </div>
+  </div>
   <nav class="bottom-nav">
     <a href="home.html#games" class="nav-item" data-name="games"><span class="icon">🎮</span><span class="label">Games</span></a>
     <a href="wallet.html" class="nav-item" data-name="wallet"><span class="icon">💼</span><span class="label">Wallet</span></a>

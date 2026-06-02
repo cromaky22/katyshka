@@ -14,7 +14,12 @@
     </div>
     <div class="header-title">Coinflip</div>
     <div class="right-controls">
-      <a class="profile" href="#"></a>
+      <div class="balance-pill">
+        <span class="wallet-icon">💠</span>
+        <span class="balance-value">0.00</span>
+        <span class="currency">$</span>
+        <span class="caret">▾</span>
+      </div>
     </div>
   </header>
 
@@ -32,7 +37,7 @@
           </div>
         </div>
         <div class="coin-wrap">
-          <div class="coin" id="coin">
+          <div class="coin show-head" id="coin">
             <div class="side side-head">
               <img src="assets/orel.jpg.png" alt="ОРЕЛ">
             </div>
@@ -73,22 +78,11 @@
             </button>
           </div>
           <div class="stake-row">
-              <div class="stake-card compact">
-                <div class="stake-top">
-                  <div class="stake-label">Ставка</div>
-                  <div class="stake-range">От <span class="currency-sign-green">$</span>0.50 до <span class="currency-sign-green">$</span>25 000</div>
-                </div>
-                <div class="stake-main compact-row">
-                  <div class="stake-amount">
-                    <span class="stake-currency">$</span>
-                    <input id="stake" class="stake-input-big" type="number" min="0.5" step="0.5" value="0.50">
-                  </div>
-                  <div class="stake-actions-vertical compact-actions">
-                    <button class="stake-ctrl" data-op="half" aria-label="половина">½</button>
-                    <button class="stake-ctrl" data-op="double" aria-label="удвоить">×2</button>
-                  </div>
-                </div>
-              </div>
+            <div class="stake-head">
+              <label>Ставка</label>
+              <span class="stake-range">От <span class="currency-sign-green">$</span>0.50 до <span class="currency-sign-green">$</span>200</span>
+            </div>
+            <input id="stake" type="number" min="0.5" max="200" step="0.5" value="0.50">
             <button id="play" class="btn">ИГРАТЬ</button>
             <div class="chain-controls" id="chainControls" aria-hidden="true" style="display:none">
               <span id="accumulatedDisplay" class="acc-value">$ 0.00</span>
@@ -109,6 +103,7 @@
     <a href="bonus.html" class="nav-item" data-name="bonus"><span class="icon">🎁</span><span class="label">Bonus</span></a>
     <a href="menu.html" class="nav-item" data-name="menu"><span class="icon">☰</span><span class="label">Menu</span></a>
   </nav>
+  <script src="js/app.js"></script>
   <script src="js/coinflip.js"></script>
 </body>
 </html>

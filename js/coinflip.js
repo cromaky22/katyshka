@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', function(){
   const play = document.getElementById('play');
   const resultEl = document.getElementById('result');
   const stakeInput = document.getElementById('stake');
-  const stakeActions = document.querySelectorAll('.stake-ctrl');
   const chainControls = document.getElementById('chainControls');
   const accumulatedDisplay = document.getElementById('accumulatedDisplay');
   const stopChainBtn = document.getElementById('stopChain');
@@ -14,18 +13,25 @@ document.addEventListener('DOMContentLoaded', function(){
   let choice = null;
   const stakeHeadEl = document.getElementById('stakeHead');
   const stakeTailEl = document.getElementById('stakeTail');
+  let inChain = false;
+  let chainBaseStake = 0; // original stake for chain rounds (fixed)
+  let chainPayout = 0; // last payout = chainBaseStake * multiplier
 
-  btnHead.addEventListener('click', ()=>{ choice = 'head'; btnHead.classList.add('active'); btnTail.classList.remove('active'); if(inChain){ startFlip(accumulated); } });
-  btnTail.addEventListener('click', ()=>{ choice = 'tail'; btnTail.classList.add('active'); btnHead.classList.remove('active'); if(inChain){ startFlip(accumulated); } });
+  // Balance helpers
+  function getBalance(){ return parseFloat(localStorage.getItem('mc_balance') || '0') || 0; }
+  function setBalance(v){ const n = Math.round(Number(v) * 100) / 100; localStorage.setItem('mc_balance', n.toFixed(2)); document.querySelectorAll('.balance-value').forEach(el=>el.textContent = n.toFixed(2)); }
+
+  btnHead.addEventListener('click', ()=>{ choice = 'head'; btnHead.classList.add('active'); btnTail.classList.remove('active'); if(inChain){ startFlip(chainBaseStake); } });
+  btnTail.addEventListener('click', ()=>{ choice = 'tail'; btnTail.classList.add('active'); btnHead.classList.remove('active'); if(inChain){ startFlip(chainBaseStake); } });
 
   function updateStakeDisplays(){
     const raw = stakeInput ? ('' + stakeInput.value).trim() : '';
     const val = raw !== '' ? (Number(stakeInput.value) || 0) : null;
+    const MIN_STAKE = 0.5, MAX_STAKE = 200;
     if(val !== null){
-      const v = Number(Math.max(0.5, val));
-      const txt = `$ ${v.toFixed(2)}`;
-      if(stakeHeadEl) stakeHeadEl.textContent = txt;
-      if(stakeTailEl) stakeTailEl.textContent = txt;
+      const v = Number(Math.min(MAX_STAKE, Math.max(MIN_STAKE, val)));
+      if(stakeHeadEl) stakeHeadEl.textContent = `$ ${v.toFixed(2)}`;
+      if(stakeTailEl) stakeTailEl.textContent = `$ ${v.toFixed(2)}`;
     } else {
       if(stakeHeadEl) stakeHeadEl.textContent = '';
       if(stakeTailEl) stakeTailEl.textContent = '';
@@ -42,19 +48,6 @@ document.addEventListener('DOMContentLoaded', function(){
     // by game flow (initial play vs chain mode) to ensure first-bet uses `play`.
   }
   if(stakeInput) stakeInput.addEventListener('input', updateStakeDisplays);
-  // stake action buttons (half / double)
-  if(stakeActions && stakeActions.length){
-    stakeActions.forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const op = btn.getAttribute('data-op');
-        let v = Number(stakeInput && stakeInput.value) || 0.5;
-        if(op === 'half') v = Math.max(0.5, Math.round((v/2) * 100) / 100);
-        if(op === 'double') v = Math.round((v*2) * 100) / 100;
-        stakeInput.value = v.toFixed(2);
-        updateStakeDisplays();
-      });
-    });
-  }
   // update displays when choosing side
   btnHead.addEventListener('click', updateStakeDisplays);
   btnTail.addEventListener('click', updateStakeDisplays);
@@ -64,18 +57,20 @@ document.addEventListener('DOMContentLoaded', function(){
   function showResult(res){
     resultEl.textContent = res === 'head' ? 'Выпал ОРЕЛ' : 'Выпала РЕШКА';
   }
-
-  // chain mode: when true, user continues by clicking side buttons
-  let inChain = false;
+          // chain mode: when true, user continues by clicking side buttons
 
   function startFlip(baseStake){
     if(!choice){ resultEl.textContent = 'Выберите Орел или Решка'; return }
     resultEl.textContent = '';
     if(baseStake <= 0){ resultEl.textContent = 'Укажите ставку больше 0'; return }
     if(coin.classList.contains('flip')) return;
+    // check balance and deduct stake
+    const balBefore = getBalance();
+    if(balBefore < baseStake){ resultEl.textContent = 'Недостаточно средств'; return }
+    setBalance(Math.round((balBefore - baseStake) * 100) / 100);
     const pendingResult = randomResult();
-    coin.classList.remove('show-head','show-tail');
-    play.disabled = true;
+        coin.classList.remove('show-head','show-tail');
+          if(accumulatedDisplay) accumulatedDisplay.textContent = `$ ${Number(chainPayout).toFixed(2)}`;
     btnHead.disabled = true; btnTail.disabled = true;
     coin.classList.remove('flip'); void coin.offsetWidth; coin.classList.add('flip');
     const onEnd = ()=>{
@@ -86,7 +81,11 @@ document.addEventListener('DOMContentLoaded', function(){
       if(win){
         markPassed(currentMultiplierIdx);
         const mult = multipliersValues[currentMultiplierIdx] || 1;
-        accumulated = accumulated > 0 ? accumulated * mult : baseStake * mult;
+        // payout should be stake * current multiplier (do not compound or sum previous accumulated)
+        chainPayout = Number((baseStake * mult).toFixed(2));
+        accumulated = chainPayout;
+        // keep original stake for subsequent chain rounds
+        chainBaseStake = baseStake;
         currentRound = Math.min(roundsTotal, currentRound + 1);
         if(currentMultiplierIdx < multipliersValues.length - 1) currentMultiplierIdx++;
         highlightCurrent(currentMultiplierIdx);
@@ -99,14 +98,10 @@ document.addEventListener('DOMContentLoaded', function(){
         // lock stake input and show accumulated value + stop button
         if(stakeInput) stakeInput.disabled = true;
         if(chainControls) chainControls.style.display = 'flex';
-        if(accumulatedDisplay) {
-          accumulatedDisplay.textContent = `$ ${Number(accumulated).toFixed(2)}`;
-          // pulse animation for visibility
-          accumulatedDisplay.classList.remove('pulse');
-          void accumulatedDisplay.offsetWidth;
-          accumulatedDisplay.classList.add('pulse');
-          setTimeout(()=>{ accumulatedDisplay.classList.remove('pulse'); }, 900);
-        }
+        if(accumulatedDisplay) accumulatedDisplay.textContent = `$ ${Number(accumulated).toFixed(2)}`;
+        // credit payout to balance
+        const balNow = getBalance();
+        setBalance(Math.round((balNow + chainPayout) * 100) / 100);
         if(stopChainBtn) stopChainBtn.style.display = '';
         // if chain completed by rounds or reaching last multiplier, end it
         if(currentRound >= roundsTotal || currentMultiplierIdx >= multipliersValues.length - 1){
@@ -119,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function(){
         resetProgress();
         inChain = false;
         // clear stake input so user must enter new amount
-        if(stakeInput) stakeInput.value = '0.50';
+        if(stakeInput) stakeInput.value = '';
         updateStakeDisplays();
         // show play button again after loss so user can place a new initial bet
         if(play) play.classList.remove('play-hidden');
@@ -135,9 +130,10 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   play.addEventListener('click', ()=>{
+    const MIN_STAKE = 0.5, MAX_STAKE = 200;
     let raw = Number(stakeInput && stakeInput.value) || 0;
-    if(isNaN(raw) || raw < 0.5) raw = 0.5;
-    // normalize to 2 decimals
+    if(isNaN(raw) || raw < MIN_STAKE) raw = MIN_STAKE;
+    if(raw > MAX_STAKE) raw = MAX_STAKE;
     raw = Math.round(raw * 100) / 100;
     if(stakeInput) stakeInput.value = raw.toFixed(2);
     updateStakeDisplays();
@@ -161,10 +157,17 @@ document.addEventListener('DOMContentLoaded', function(){
   let multipliersValues = [];
 
   function parseMultipliers(){
-    multipliersValues = multItems.map(it=>{
+    // parse values from DOM, but slightly reduce multipliers after the first one
+    const REDUCTION = 0.80; // 20% smaller for idx >= 1 (previously 10%)
+    multipliersValues = multItems.map((it, idx)=>{
       const v = it.querySelector('.mult-value')?.textContent || it.textContent || '';
       const n = parseFloat((v+'').replace(/[^0-9.,]/g,'').replace(',','.'));
-      return isNaN(n) ? 1 : n;
+      const raw = isNaN(n) ? 1 : n;
+      const adjusted = idx === 0 ? raw : Number((raw * REDUCTION).toFixed(2));
+      // update visible text to reflect adjusted multiplier
+      const label = it.querySelector('.mult-value');
+      if(label) label.textContent = `x${adjusted}`;
+      return adjusted;
     });
   }
 
@@ -192,11 +195,6 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function highlightCurrent(idx){
     multItems.forEach((it,i)=>{ it.classList.toggle('current', i === idx); });
-    // scroll the current multiplier into view for clearer UX
-    const el = multItems[idx];
-    if(el && el.scrollIntoView){
-      el.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
-    }
   }
 
 
@@ -226,8 +224,6 @@ document.addEventListener('DOMContentLoaded', function(){
     inChain = false;
     // reset chain UI and make play visible
     if(stakeInput) stakeInput.disabled = false;
-    // ensure minimum stake visible
-    if(stakeInput && (!stakeInput.value || Number(stakeInput.value) < 0.5)) stakeInput.value = '0.50';
     if(chainControls) chainControls.style.display = 'none';
     if(stopChainBtn) stopChainBtn.style.display = 'none';
     if(play) play.classList.remove('play-hidden');
