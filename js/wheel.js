@@ -6,7 +6,9 @@
   const gameBalance = document.getElementById('gameBalance');
   const historyScroll = document.getElementById('historyScroll');
   const wheelImage = document.getElementById('wheelImage');
-  const wheelWrapper = document.querySelector('.wheel-wrapper');
+  const wheelWrapper = document.getElementById('wheelWrapper');
+  const ballWrapper = document.getElementById('ballWrapper');
+  const ballContainer = document.getElementById('ballContainer');
   const wheelWaiting = document.getElementById('wheelWaiting');
   const bettingTable = document.getElementById('bettingTable');
   const numbersTable = document.getElementById('numbersTable');
@@ -178,6 +180,13 @@
     return labels[betType] || `Число ${betType}`;
   }
 
+  // Изменение ставки
+  function changeStake(amount) {
+    let newStake = parseFloat(stakeInput.value) + parseFloat(amount);
+    newStake = Math.max(MIN_STAKE, Math.min(MAX_STAKE, newStake));
+    stakeInput.value = newStake.toFixed(2);
+  }
+
   // Начать игру
   function startGame() {
     if (!gameState.currentBet) {
@@ -191,7 +200,7 @@
       return;
     }
 
-    // Отключить кнопку и показать спиннинг
+    // Отключить кнопку
     gameState.isSpinning = true;
     playBtn.disabled = true;
     collectBtn.classList.add('hidden');
@@ -245,7 +254,6 @@
     if (betType === 'range3') return resultNumber >= 1 && resultNumber <= 12;
     if (betType === 'range4') return resultNumber >= 13 && resultNumber <= 24;
     if (betType === 'range5') return resultNumber >= 25 && resultNumber <= 36;
-    // Число
     return parseInt(betType) === resultNumber;
   }
 
@@ -257,26 +265,43 @@
     return 2;
   }
 
-  // Спин колеса
+  // Спин колеса с шариком
   function spinWheel(resultNumber, onComplete) {
     // Градусы для каждого числа (360 / 37)
     const degreesPerNumber = 360 / 37;
     const targetDegrees = resultNumber * degreesPerNumber;
-    
-    // Добавляем случайный офсет
     const randomOffset = (Math.random() - 0.5) * degreesPerNumber * 0.8;
     
-    // Финальный угол (10 полных оборотов + целевой угол)
-    const finalRotation = 360 * 10 + targetDegrees + randomOffset;
+    // Финальный угол для колеса (10 полных оборотов)
+    const wheelFinalRotation = 360 * 10 + targetDegrees + randomOffset;
     
-    // Добавляем CSS анимацию
-    wheelWrapper.style.animation = 'none';
-    setTimeout(() => {
-      wheelWrapper.style.animation = `wheel-spin 10s ease-out forwards`;
-      wheelWrapper.style.transform = `rotateZ(${finalRotation}deg)`;
-    }, 10);
+    // Шарик вращается в противоположном направлении (11 оборотов)
+    const ballFinalRotation = -360 * 11 + targetDegrees + randomOffset;
+    
+    // Добавляем стили анимации
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes wheel-spin {
+        from { transform: rotateZ(0deg); }
+        to { transform: rotateZ(${wheelFinalRotation}deg); }
+      }
+      @keyframes ball-spin {
+        0% { opacity: 1; transform: rotateZ(0deg); }
+        90% { opacity: 1; transform: rotateZ(${ballFinalRotation}deg); }
+        100% { opacity: 0; transform: rotateZ(${ballFinalRotation}deg); }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Запускаем анимацию
+    wheelWrapper.style.animation = `wheel-spin 10s ease-out forwards`;
+    ballWrapper.style.animation = `ball-spin 11s ease-out forwards`;
+    ballContainer.style.opacity = '1';
 
-    setTimeout(onComplete, 10000);
+    setTimeout(() => {
+      ballContainer.style.opacity = '0';
+      onComplete();
+    }, 11000);
   }
 
   // Добавить в историю
@@ -289,7 +314,6 @@
     item.textContent = resultNumber;
     historyScroll.insertBefore(item, historyScroll.firstChild);
 
-    // Ограничить историю до HISTORY_LIMIT элементов
     while (historyScroll.children.length > HISTORY_LIMIT) {
       historyScroll.removeChild(historyScroll.lastChild);
     }
@@ -326,6 +350,8 @@
     // Сброс анимации колеса
     wheelWrapper.style.animation = 'none';
     wheelWrapper.style.transform = 'rotateZ(0deg)';
+    ballWrapper.style.animation = 'none';
+    ballWrapper.style.transform = 'rotateZ(0deg)';
   }
 
   // Инициализировать при загрузке страницы
