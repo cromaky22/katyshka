@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Coinflip — Nvuti</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page-coinflip">
+  <header class="app-header">
+    <div class="left-controls">
+      <a href="index.html" class="btn-icon">◄</a>
+      <img src="assets/nvuti.jpg" alt="Nvuti" class="logo-small">
+    </div>
+    <div class="header-title">Coinflip</div>
+    <div class="right-controls">
+      <a class="profile" href="#"></a>
+    </div>
+  </header>
+
+  <main class="content">
+    <section class="coinflip">
+      <div class="coinflip-board">
+        <div class="score">0 из 20 — x0</div>
+        <div class="coin-wrap">
+          <div class="coin" id="coin">
+            <div class="side side-head">ОРЕЛ</div>
+            <div class="side side-tail">РЕШКА</div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="buttons">
+            <button id="btnHead" class="btn btn-primary">ОРЕЛ</button>
+            <button id="btnTail" class="btn btn-primary">РЕШКА</button>
+          </div>
+          <div class="stake-row">
+            <label>Ставка</label>
+            <input id="stake" type="number" min="1" value="10">
+            <button id="play" class="btn">ИГРАТЬ</button>
+          </div>
+        </div>
+
+        <div id="result" class="coinflip-result" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/coinflip.js"></script>
+</body>
+</html>
