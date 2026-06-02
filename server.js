@@ -18,6 +18,82 @@ db.serialize(() => {
     avatar TEXT,
     updated_at TEXT
   )`);
+  db.run(`CREATE TABLE IF NOT EXISTS promos (
+    code TEXT PRIMARY KEY,
+    amount REAL DEFAULT 0,
+    uses INTEGER DEFAULT 0,
+    max_uses INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now'))
+  )`);
+  db.run(`CREATE TABLE IF NOT EXISTS promo_activations (
+    id INTEGER PRIMARY KEY,
+    code TEXT,
+    user_id TEXT,
+    activated_at TEXT DEFAULT (datetime('now')),
+    UNIQUE(code, user_id)
+  )`);
+});
+
+// Promo endpoints
+app.get('/api/promos', (req, res) => {
+  db.all('SELECT code, amount, uses, max_uses AS maxUses, created_at FROM promos ORDER BY created_at DESC', [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows || []);
+  });
+});
+
+app.post('/api/promos', (req, res) => {
+  const body = req.body || {};
+  const code = (body.code || '').toString().trim().toUpperCase();
+  const amount = Number(body.amount) || 0;
+  const maxUses = Number(body.maxUses) || 0;
+  if (!code) return res.status(400).json({ error: 'missing code' });
+  const stmt = db.prepare(`INSERT OR REPLACE INTO promos (code, amount, uses, max_uses, created_at) VALUES (?, ?, COALESCE((SELECT uses FROM promos WHERE code = ?), 0), ?, datetime('now'))`);
+  stmt.run(code, amount, code, maxUses, function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ ok: true });
+  });
+  stmt.finalize();
+});
+
+app.delete('/api/promos/:code', (req, res) => {
+  const code = (req.params.code || '').toString().trim().toUpperCase();
+  if(!code) return res.status(400).json({ error: 'missing code' });
+  db.run('DELETE FROM promos WHERE code = ?', [code], function(err){
+    if(err) return res.status(500).json({ error: err.message });
+    // also remove activations
+    db.run('DELETE FROM promo_activations WHERE code = ?', [code], ()=>{});
+    res.json({ ok: true });
+  });
+});
+
+app.post('/api/promos/:code/activate', (req, res) => {
+  const code = (req.params.code || '').toString().trim().toUpperCase();
+  const userId = (req.body && req.body.userId) ? req.body.userId.toString() : null;
+  if(!code) return res.status(400).json({ error: 'missing code' });
+  if(!userId) return res.status(400).json({ error: 'missing userId' });
+  db.get('SELECT code, amount, uses, max_uses AS maxUses FROM promos WHERE code = ?', [code], (err, promo) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!promo) return res.status(404).json({ error: 'promo not found' });
+    const max = Number(promo.maxUses || 0);
+    const used = Number(promo.uses || 0);
+    if (max > 0 && used >= max) return res.status(400).json({ error: 'max uses reached' });
+    // check user activation
+    db.get('SELECT 1 FROM promo_activations WHERE code = ? AND user_id = ?', [code, userId], (err2, row) => {
+      if (err2) return res.status(500).json({ error: err2.message });
+      if (row) return res.status(400).json({ error: 'already activated' });
+      // insert activation and increment uses
+      const ins = db.prepare('INSERT INTO promo_activations (code, user_id) VALUES (?, ?)');
+      ins.run(code, userId, function(err3){
+        if(err3) return res.status(500).json({ error: err3.message });
+        db.run('UPDATE promos SET uses = COALESCE(uses,0) + 1 WHERE code = ?', [code], function(err4){
+          if(err4) return res.status(500).json({ error: err4.message });
+          res.json({ ok: true, amount: promo.amount });
+        });
+      });
+      ins.finalize();
+    });
+  });
 });
 
 app.post('/api/users', (req, res) => {

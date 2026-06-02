@@ -117,16 +117,24 @@
   (function(){
     function normalizeCode(s){ return (s||'').replace(/[^A-Z0-9]/ig,'').toUpperCase(); }
 
-    function loadPromos(){
+    async function loadPromos(){
+      try{
+        // try server API first
+        const res = await fetch('/api/promos');
+        if(res.ok){
+          const arr = await res.json();
+          const map = {};
+          (arr || []).forEach(it=>{ if(it && it.code){ map[normalizeCode(it.code)] = Number(it.amount) || 0; } });
+          return map;
+        }
+      }catch(e){ /* fallthrough to local */ }
       try{
         const raw = localStorage.getItem('mc_promos');
         let arr = raw ? JSON.parse(raw) : null;
         if(!Array.isArray(arr)){
-          // seed defaults
           arr = [ { code: 'KATYSHKA', amount: 5.00, uses: 0 }, { code: 'WELCOME10', amount: 10.00, uses: 0 } ];
           localStorage.setItem('mc_promos', JSON.stringify(arr));
         }
-        // build map
         const map = {};
         arr.forEach(it=>{ if(it && it.code){ map[normalizeCode(it.code)] = Number(it.amount) || 0; } });
         return map;
@@ -165,49 +173,43 @@
     function showMessage(msg, success){ if(!promoMessage) return; promoMessage.textContent = msg; promoMessage.style.color = success ? 'var(--accent-green)' : '' }
 
     if(promoActivate){
-      promoActivate.addEventListener('click', ()=>{
+      promoActivate.addEventListener('click', async ()=>{
         const raw = promoInput ? promoInput.value : '';
         const code = normalizeCode(raw);
         if(!code){ showMessage('Введите код', false); return; }
-        const PROMOS = loadPromos();
-        const amount = PROMOS[code];
-        // find promo object to check maxUses
-        const promosArr = getPromosArray();
-        const promoObj = promosArr.find(p=> normalizeCode(p.code) === code);
-        if(promoObj){
-          const max = Number(promoObj.maxUses || 0);
-          const used = Number(promoObj.uses || 0);
-          if(max > 0 && used >= max){ showMessage('Лимит активаций исчерпан', false); return; }
+        // determine client/user id (try Telegram user saved or fallback to generated id)
+        function getClientId(){
+          try{
+            const tg = localStorage.getItem('tg_user');
+            if(tg){ const parsed = JSON.parse(tg); if(parsed && parsed.id) return String(parsed.id); }
+          }catch(e){}
+          try{ const cid = localStorage.getItem('mc_client_id'); if(cid) return cid; }catch(e){}
+          const gen = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,9);
+          try{ localStorage.setItem('mc_client_id', gen); }catch(e){}
+          return gen;
         }
-        if(!amount){ showMessage('Неверный промокод', false); return; }
-        const activated = getActivated();
-        if(activated.indexOf(code) !== -1){ showMessage('Промокод уже активирован', false); return; }
-        // credit balance
-        const cur = parseFloat(localStorage.getItem('mc_balance') || '0') || 0;
-        const next = Math.round((cur + amount) * 100) / 100;
-        localStorage.setItem('mc_balance', next.toFixed(2));
-        updateBalanceDisplay(next);
-        // mark activated (per-user)
-        activated.push(code); setActivated(activated);
-        // increment global promo uses
+        const clientId = getClientId();
+        // call server activation
         try{
-          const arr = getPromosArray();
-          const idx = arr.findIndex(p=> normalizeCode(p.code) === code);
-          if(idx !== -1){
-            arr[idx].uses = (Number(arr[idx].uses)||0) + 1;
-            // if maxUses set and exceeded, clamp
-            const max = Number(arr[idx].maxUses || 0);
-            if(max > 0 && arr[idx].uses > max) arr[idx].uses = max;
-            setPromosArray(arr);
-          }
-        }catch(e){}
-        showMessage('Промокод активирован! +$' + Number(amount).toFixed(2), true);
-        // disable activate button to prevent double click
-        promoActivate.disabled = true; promoInput.disabled = true;
-        // auto-close after short delay
-        setTimeout(()=>{ closeModal(); }, 1400);
+          const res = await fetch('/api/promos/' + encodeURIComponent(code) + '/activate', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: clientId })
+          });
+          const j = await res.json();
+          if(!res.ok){ showMessage(j && j.error ? j.error : 'Ошибка активации', false); return; }
+          const amount = Number(j.amount || 0);
+          // credit balance locally
+          const cur = parseFloat(localStorage.getItem('mc_balance') || '0') || 0;
+          const next = Math.round((cur + amount) * 100) / 100;
+          localStorage.setItem('mc_balance', next.toFixed(2));
+          updateBalanceDisplay(next);
+          // mark activated locally to provide fast UI feedback
+          const activated = getActivated();
+          activated.push(code); setActivated(activated);
+          showMessage('Промокод активирован! +$' + Number(amount).toFixed(2), true);
+          promoActivate.disabled = true; promoInput.disabled = true;
+          setTimeout(()=>{ closeModal(); }, 1400);
+        }catch(e){ showMessage('Ошибка сети', false); }
       });
-      // allow Enter key in input
       if(promoInput) promoInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ promoActivate.click(); } });
     }
   })();
