@@ -45,41 +45,47 @@ document.addEventListener('DOMContentLoaded', function(){
     // read stake
     const baseStake = Math.max(0, Number(stakeInput && stakeInput.value) || 0);
     if(baseStake <= 0){ resultEl.textContent = 'Укажите ставку больше 0'; return }
+    // prevent double-play while animating
+    if(coin.classList.contains('flip')) return;
+    // determine result ahead of animation (will apply on animationend)
+    const pendingResult = randomResult();
+    // reset shown faces during animation
+    coin.classList.remove('show-head','show-tail');
+    // disable play until animation finishes
+    play.disabled = true;
     coin.classList.remove('flip');
     // trigger reflow to restart animation
     void coin.offsetWidth;
     coin.classList.add('flip');
-    // after animation determine result
-    setTimeout(()=>{
-      const r = randomResult();
-      // set final face via data attribute
-      if(r === 'head'){
-        coin.classList.remove('show-tail');
-        coin.classList.add('show-head');
-      }else{
-        coin.classList.remove('show-head');
-        coin.classList.add('show-tail');
+    // when animation ends, apply result and game logic
+    const onEnd = ()=>{
+      // show correct face
+      if(pendingResult === 'head'){
+        coin.classList.remove('show-tail'); coin.classList.add('show-head');
+      } else {
+        coin.classList.remove('show-head'); coin.classList.add('show-tail');
       }
-      showResult(r);
+      showResult(pendingResult);
       // chain logic: win => multiply and progress, lose => reset
-      const win = (choice === r);
+      const win = (choice === pendingResult);
       if(win){
-        // mark this multiplier as passed and accumulate winnings
         markPassed(currentMultiplierIdx);
         const mult = multipliersValues[currentMultiplierIdx] || 1;
         accumulated = accumulated > 0 ? accumulated * mult : baseStake * mult;
         currentRound = Math.min(roundsTotal, currentRound + 1);
-        // advance to next multiplier (if any)
         if(currentMultiplierIdx < multipliersValues.length - 1) currentMultiplierIdx++;
         highlightCurrent(currentMultiplierIdx);
         updateScoreDisplay();
         resultEl.textContent += ' — Вы выиграли!';
-      }else{
-        // lost — reset progress
+      } else {
         resultEl.textContent += ' — Проигрыш';
         resetProgress();
       }
-    }, 1400);
+      // re-enable play and clean up
+      play.disabled = false;
+      coin.classList.remove('flip');
+    };
+    coin.addEventListener('animationend', onEnd, { once: true });
   });
 
   // helper to page-wise activate via keyboard
