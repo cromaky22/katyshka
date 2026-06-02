@@ -125,6 +125,17 @@
   if(multLeftBtn){ multLeftBtn.addEventListener('click', ()=>{ multipliersOffset = Math.max(0, multipliersOffset - multipliersVisible); renderMultipliers(); }); }
   if(multRightBtn){ multRightBtn.addEventListener('click', ()=>{ multipliersOffset = Math.min(Math.max(0,multipliers.length - multipliersVisible), multipliersOffset + multipliersVisible); renderMultipliers(); }); }
 
+  // Keyboard navigation for multipliers
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'ArrowLeft'){
+      multipliersOffset = Math.max(0, multipliersOffset - multipliersVisible);
+      renderMultipliers();
+    } else if(e.key === 'ArrowRight'){
+      multipliersOffset = Math.min(Math.max(0,multipliers.length - multipliersVisible), multipliersOffset + multipliersVisible);
+      renderMultipliers();
+    }
+  });
+
   function updateWinDisplay(){
     const idx = revealedCount - 1; // multiplier index corresponding to number of revealed cells
     const mult = multipliers[idx] || 1;
@@ -272,6 +283,7 @@
       if(cashoutBtn) cashoutBtn.style.display = '';
       if(cashoutBtnBottom) { cashoutBtnBottom.style.display = ''; }
       if(playBtn) playBtn.style.display = 'none';
+      if(playBtnBottom) playBtnBottom.style.display = 'none';
     }
     // update multipliers panel highlight and win
     renderMultipliers();
@@ -321,10 +333,13 @@
     mineSet = null;
     revealedCount = 0;
     currentStake = 0;
+    multipliersOffset = 0; // reset to step 1
     createGrid();
     disableCells();
     if(cashoutBtn) { cashoutBtn.style.display = 'none'; cashoutBtn.textContent = 'Забрать'; }
     if(playBtn) playBtn.style.display = '';
+    if(cashoutBtnBottom) { cashoutBtnBottom.style.display = 'none'; }
+    if(playBtnBottom) { playBtnBottom.style.display = ''; }
     enableControls();
     updateCompactStep();
     updateWinDisplay();
@@ -381,6 +396,8 @@
     // hide play, hide cashout until first reveal
     if(playBtn) playBtn.style.display = 'none';
     if(cashoutBtn) cashoutBtn.style.display = 'none';
+    if(playBtnBottom) playBtnBottom.style.display = 'none';
+    if(cashoutBtnBottom) cashoutBtnBottom.style.display = 'none';
     parseMultipliers();
     renderMultipliers();
     updateWinDisplay();
@@ -410,6 +427,7 @@
       cashoutBtn.style.display = 'none';
       if(cashoutBtnBottom) cashoutBtnBottom.style.display = 'none';
       if(playBtn) playBtn.style.display = '';
+      if(playBtnBottom) playBtnBottom.style.display = '';
       // re-enable controls after round
       enableControls();
         updateWinDisplay();

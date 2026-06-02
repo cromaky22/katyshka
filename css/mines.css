@@ -18,13 +18,14 @@
 .top-multipliers{display:flex;gap:12px;margin-bottom:6px}
 .top-multipliers .m-item{background:rgba(255,255,255,0.02);padding:8px 14px;border-radius:12px;font-weight:800;text-align:center;color:var(--muted)}
 .top-multipliers .m-item span{display:block;margin-top:6px;font-size:13px;color:var(--text)}
-.top-multipliers-wrap{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.mult-btn{background:transparent;border:none;color:var(--muted);font-size:16px;padding:8px;border-radius:8px;cursor:pointer}
-.mult-btn:hover{background:rgba(255,255,255,0.02);color:var(--text)}
-.top-multipliers{display:flex;gap:8px;overflow:hidden;padding:4px}
-.top-multipliers .m-item{min-width:96px;padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:10px;display:flex;flex-direction:column;align-items:center}
-.top-multipliers .m-item .mult-value{font-weight:900;font-size:14px;color:inherit}
-.top-multipliers .m-item .mult-step{font-size:12px;color:inherit;opacity:0.85}
+.top-multipliers-wrap{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px}
+.mult-btn{background:linear-gradient(180deg, rgba(47,120,255,0.2), rgba(26,95,255,0.12));border:2px solid rgba(47,120,255,0.4);color:#6bb4ff;font-size:22px;padding:10px 12px;border-radius:10px;cursor:pointer;transition:all .15s ease;display:flex;align-items:center;justify-content:center;min-width:44px;height:44px;font-weight:900;box-shadow:0 4px 12px rgba(47,120,255,0.12);flex-shrink:0}
+.mult-btn:hover{background:linear-gradient(180deg, rgba(47,120,255,0.25), rgba(26,95,255,0.15));border:2px solid rgba(47,120,255,0.5);color:#9fd4ff;box-shadow:0 6px 18px rgba(47,120,255,0.2);transform:translateY(-2px)}
+.mult-btn:active{transform:scale(0.95)}
+.top-multipliers{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:2px;justify-items:center}
+.top-multipliers .m-item{min-width:72px;padding:5px 6px;background:rgba(255,255,255,0.02);border-radius:8px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.top-multipliers .m-item .mult-value{font-weight:900;font-size:12px;color:inherit}
+.top-multipliers .m-item .mult-step{font-size:10px;color:inherit;opacity:0.75}
 .top-multipliers .m-item.achieved{background:linear-gradient(180deg,#fff7cc,#ffec99);color:#2b1f00;box-shadow:0 8px 22px rgba(255,200,0,0.12) inset}
 .top-multipliers .m-item.current{outline:2px solid rgba(255,200,0,0.14);transform:scale(1.05)}
 
@@ -51,6 +52,18 @@
 .field-wrapper{background:linear-gradient(180deg, rgba(6,4,12,0.6), rgba(10,8,18,0.6));padding:12px;border-radius:14px;margin:10px 0;box-shadow:0 12px 30px rgba(0,0,0,0.6);width:100%;max-width:420px;position:relative;z-index:2;isolation:isolate}
 
 /* dark square slightly larger than the field */
+
+/* Emergency fallback: hide top controls and force bottom controls for phones up to 480px */
+@media (max-width:480px){
+  .controls-panel, .controls {display:none !important}
+  .play-area, .play-area .btn {display:none !important}
+  .mines-bottom {display:flex !important;position:static !important;width:100% !important;max-width:360px;margin:10px auto;padding:10px;box-shadow:none !important;z-index:4}
+  .field-wrapper {margin-bottom:10px}
+  .field-wrapper::before {left:-14px;right:-14px;top:-14px;bottom:-14px;border-radius:20px}
+  .grid {max-width:300px;margin:0 auto;gap:8px !important}
+  .grid .cell {min-height:48px;border-radius:8px;font-size:14px}
+  main {padding-bottom:110px}
+}
 .field-wrapper::before{
   content:'';
   position:absolute;
@@ -76,6 +89,15 @@
 .compact-count{font-weight:900;color:var(--accent);font-size:18px}
 .controls{width:100%;display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:12px}
 .controls-row{display:flex;align-items:center;gap:12px}
+.controls-panel{width:100%;display:flex;flex-direction:column;align-items:stretch;gap:10px;margin-top:12px;padding:12px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));box-shadow:0 8px 20px rgba(0,0,0,0.45)}
+.controls-panel .controls-row{display:flex;align-items:center;gap:12px;justify-content:space-between}
+.controls-panel{max-width:420px;padding:10px 12px}
+.controls-panel .controls-row label{width:56px;color:var(--muted);font-weight:800;font-size:13px}
+.controls-panel .controls-row input#minesStake{width:84px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text)}
+.controls-panel .controls-row .mines-select-wrap{min-width:120px}
+.controls-panel .play-area{margin-left:12px;display:flex;align-items:center}
+.controls-panel .play-area .btn{min-width:140px;height:48px;padding:10px 16px;border-radius:10px}
+.controls-panel .hint{margin-top:6px;font-size:13px}
 .controls-row input,.controls-row select{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text)}
 .play-btn{padding:12px 24px;border-radius:10px;background:linear-gradient(180deg,#1f73ff,#0d5cff);color:#fff;border:none;font-weight:900}
 
@@ -95,41 +117,47 @@
 .hint{font-size:13px;color:var(--muted);margin-top:6px}
 
 @media (max-width:720px){
-  /* Mobile: show side panels but reduce widths, prevent board from pushing bottom panel out of viewport */
-  .mines{display:flex;align-items:center;justify-content:center;padding:12px 0 120px}
-  /* Mobile: hide top controls, show a single static stake panel under the field; remove scrolling */
-  .mines{min-height:auto;display:block;padding:8px 0}
-  .mines-board{flex-direction:row;padding:10px;border-radius:14px;max-width:420px;margin:12px auto;align-items:flex-start;box-shadow:0 18px 40px rgba(0,0,0,0.55);max-height:none;overflow:visible}
-  .mines-board .side{display:flex;width:64px;flex-direction:column;align-items:center;padding:8px}
-  .center-area{flex:1;max-width:300px;margin:0 8px}
-  .field-wrapper{padding:8px;border-radius:12px;margin:6px 0}
-  .grid{grid-template-columns:repeat(5,1fr);gap:6px;width:100%;max-width:300px}
+  /* Mobile-first layout: stack content, center board, ensure bottom panel visible */
+  .mines{display:block;padding:8px 0 40px}
+  .mines-board{flex-direction:column;padding:12px;border-radius:14px;max-width:360px;margin:12px auto;align-items:center;box-shadow:0 18px 40px rgba(0,0,0,0.55);overflow:visible}
+  .mines-board .side{display:none}
+  .center-area{flex:1;max-width:320px;margin:0 auto}
+  .field-wrapper{padding:10px;border-radius:12px;margin:8px 0;width:100%;max-width:320px}
+  .grid{grid-template-columns:repeat(5,1fr);gap:8px;width:100%;max-width:300px}
   .grid .cell{min-height:48px;font-size:14px;border-radius:9px;padding:6px}
-  .top-multipliers{display:flex;gap:6px;padding:4px;margin-bottom:8px;font-size:12px}
-  /* hide duplicate/top controls so only bottom static panel shows */
-  .controls{display:none}
-  /* ensure bottom static panel is visible under the field */
-  .mines-bottom{display:flex;position:static;left:auto;right:auto;bottom:auto;width:100%;max-width:360px;margin:6px auto 0;box-shadow:0 6px 18px rgba(0,0,0,0.45);padding:10px}
+  .top-multipliers{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:4px;margin-bottom:8px;font-size:12px;justify-items:center}
+  .controls,.controls-panel{display:none}
+  .mines-bottom{display:flex;position:static;left:auto;right:auto;bottom:auto;width:100%;max-width:340px;margin:6px auto 0;box-shadow:0 6px 18px rgba(0,0,0,0.45);padding:10px;align-items:center;justify-content:space-between}
 }
 
 /* mobile fixes to prevent visual shift in device emulation (F12) */
 @media (max-width:430px){
+  .mult-btn{display:flex !important;font-size:16px;padding:6px 8px;min-width:36px;height:36px;background:linear-gradient(180deg, rgba(47,120,255,0.25), rgba(26,95,255,0.15));border:2px solid rgba(47,120,255,0.45)}
+  .top-multipliers{gap:4px;padding:1px}
+  .top-multipliers .m-item{min-width:60px;padding:3px 4px;gap:1px}
+  .top-multipliers .m-item .mult-value{font-size:10px}
+  .top-multipliers .m-item .mult-step{font-size:8px}
   .mines-board{margin:0 auto;max-width:360px;overflow:hidden;padding:12px}
   .center-area{margin:0 auto;max-width:320px;transform:none}
-  /* make the dark background not extend beyond the field to avoid horizontal shift */
-  .field-wrapper::before{left:0;right:0;top:0;bottom:0;border-radius:12px}
+  /* make the dark background fully cover the field */
+  .field-wrapper::before{left:-12px;right:-12px;top:-12px;bottom:-12px;border-radius:16px}
 }
 
 /* Specific adaptation for iPhone-like 430x932 viewport */
 @media (max-width:430px) and (max-height:932px){
+  .mult-btn{display:flex !important;font-size:16px;padding:6px 8px;min-width:36px;height:36px;background:linear-gradient(180deg, rgba(47,120,255,0.25), rgba(26,95,255,0.15));border:2px solid rgba(47,120,255,0.45);color:#6bb4ff}
+  .mult-btn:hover{background:linear-gradient(180deg, rgba(47,120,255,0.35), rgba(26,95,255,0.25));border:2px solid rgba(47,120,255,0.6);color:#9fd4ff}
+  .top-multipliers{gap:4px;padding:1px}
+  .top-multipliers .m-item{min-width:60px;padding:3px 4px;gap:1px}
+  .top-multipliers .m-item .mult-value{font-size:10px}
+  .top-multipliers .m-item .mult-step{font-size:8px}
   .mines-board{max-width:360px;padding:12px;border-radius:14px}
   .field-wrapper{padding:10px;border-radius:14px;margin:8px 0}
   .center-area{max-width:290px}
-  .grid{grid-template-columns:repeat(5,1fr);gap:6px;max-width:280px}
-  .grid .cell{min-height:52px;font-size:15px;border-radius:10px;padding:8px}
+  .grid{grid-template-columns:repeat(5,1fr);gap:8px;max-width:280px}
+  .grid .cell{min-height:46px;font-size:14px;border-radius:8px;padding:6px}
   .compact-panels{gap:6px;margin-bottom:6px}
-  .top-multipliers{display:flex;gap:6px;overflow:auto;padding:4px;margin-bottom:8px}
-  .controls{display:none}
+  .controls,.controls-panel{display:none}
   .mines-bottom{max-width:320px;padding:8px;margin:6px auto}
   .mines-bottom .bottom-center .panel-controls select{padding:6px}
   .mines-bottom .bottom-left .panel-controls input{width:64px}
@@ -148,10 +176,148 @@
 .mines-bottom .large{padding:12px 20px;border-radius:10px}
 
 @media (max-width:720px){
-  /* make bottom panel non-fixed and place under the game area */
-  .mines-bottom{display:flex;position:static;left:auto;right:auto;bottom:auto;width:100%;max-width:320px;margin:12px auto 0;box-shadow:none}
+  .top-multipliers-wrap{gap:8px;margin-bottom:10px}
+  .mult-btn{display:flex !important;font-size:18px;padding:8px 10px;min-width:40px;height:40px;background:linear-gradient(180deg, rgba(47,120,255,0.2), rgba(26,95,255,0.12));border:2px solid rgba(47,120,255,0.4);color:#6bb4ff}
+  .mult-btn:hover{background:linear-gradient(180deg, rgba(47,120,255,0.3), rgba(26,95,255,0.2));border:2px solid rgba(47,120,255,0.6);color:#9fd4ff}
+  .top-multipliers{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:2px;margin-bottom:8px;justify-items:center}
+  .top-multipliers .m-item{min-width:65px;padding:4px 5px;gap:1px}
+  .top-multipliers .m-item .mult-value{font-size:11px}
+  .top-multipliers .m-item .mult-step{font-size:9px}
   /* keep top controls hidden on mobile */
-  .controls{display:none}
-  .top-multipliers{display:flex;gap:6px;overflow:auto;padding:4px;margin-bottom:8px}
+  .controls,.controls-panel{display:none}
   .mines-board{padding-bottom:0}
+}
+
+/* Strong mobile enforcement to prevent overflow and fix positioning */
+@media (max-width:420px){
+  .mult-btn{display:flex !important;font-size:15px;padding:5px 7px;min-width:34px;height:34px;background:linear-gradient(180deg, rgba(47,120,255,0.25), rgba(26,95,255,0.15));border:2px solid rgba(47,120,255,0.45);color:#6bb4ff;flex-shrink:0}
+  .top-multipliers{gap:4px;padding:1px;margin-bottom:6px}
+  .top-multipliers .m-item{min-width:58px;padding:3px 4px;gap:1px}
+  .top-multipliers .m-item .mult-value{font-size:10px}
+  .top-multipliers .m-item .mult-step{font-size:8px}
+  html,body{overflow-x:hidden}
+  .mines-container{max-width:360px;padding:6px}
+  .mines-board{max-width:360px;padding:10px}
+  .field-wrapper{max-width:340px;padding:10px;margin:8px auto}
+  .field-wrapper::before{left:6px;right:6px;top:6px;bottom:6px}
+  .grid{max-width:300px;gap:8px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:center}
+  .grid .cell{min-height:46px;border-radius:8px;font-size:14px}
+  .controls-panel{display:none}
+  .mines-bottom{display:flex;position:static;width:100%;max-width:340px;margin:10px auto 16px;padding:8px;box-shadow:none}
+  .mines-bottom .bottom-right{display:flex;gap:8px}
+  .mines-bottom .bottom-right .btn{min-width:130px;height:48px;padding:10px 14px}
+  .play-area .btn{min-width:120px;height:44px;padding:8px 12px}
+  .play-area{width:100%;display:flex;justify-content:flex-end}
+  .play-area .btn{flex:0 0 auto}
+  /* ensure bottom nav doesn't overlap content */
+  main{padding-bottom:84px}
+}
+
+/* Full mobile redesign for screens ≤480px */
+@media (max-width:480px){
+  /* Hide all top controls and buttons */
+  .controls{display:none !important}
+  .controls-panel{display:none !important}
+  .play-area{display:none !important}
+  .hint{display:none !important}
+
+  /* Shift field left to ensure dark background covers edges */
+  .field-wrapper{
+    margin-left:-12px;
+    margin-right:-6px;
+  }
+
+  /* Full width bottom panel with proper layout */
+  .mines-bottom{
+    display:flex !important;
+    position:static !important;
+    left:auto !important;right:auto !important;bottom:auto !important;
+    width:calc(100% - 16px);
+    max-width:100%;
+    margin:12px 8px 20px 8px !important;
+    padding:14px !important;
+    background:linear-gradient(180deg,#0a0f18,#050810);
+    border-radius:12px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.6);
+    flex-wrap:wrap;
+    align-items:stretch;
+    justify-content:space-between;
+    gap:10px;
+    z-index:2;
+  }
+
+  /* First row: stake controls - full width */
+  .mines-bottom .bottom-left{
+    width:100%;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:6px;
+    background:rgba(255,255,255,0.01);
+    border-radius:8px;
+    color:var(--muted);
+    font-weight:700;
+  }
+  .mines-bottom .bottom-left .panel-row{display:flex;align-items:center;gap:6px;font-size:13px}
+  .mines-bottom .bottom-left .label{color:var(--muted);font-weight:800;font-size:12px;min-width:42px}
+  .mines-bottom .bottom-left .value{font-weight:900;color:var(--text);font-size:13px}
+  .mines-bottom .bottom-left .panel-controls{display:flex;gap:4px;align-items:center}
+  .mines-bottom .quick-btn{padding:6px 10px;border-radius:6px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);color:var(--muted);font-weight:800;font-size:11px;cursor:pointer;min-width:30px}
+  .mines-bottom #minesStakeBottom{width:62px;padding:7px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.01);color:var(--text);font-size:12px}
+
+  /* Second row left: mines select */
+  .mines-bottom .bottom-center{
+    flex:1;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:6px;
+    background:rgba(255,255,255,0.01);
+    border-radius:8px;
+    justify-content:flex-start;
+  }
+  .mines-bottom .bottom-center .panel-row{display:flex;align-items:center;gap:4px;font-size:12px}
+  .mines-bottom .bottom-center .label{color:var(--muted);font-weight:800;font-size:11px;min-width:34px}
+  .mines-bottom .bottom-center .value{font-weight:900;color:var(--text);font-size:12px}
+  .mines-bottom .bottom-center #minesCountBottom{padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.01);color:var(--text);font-size:11px;min-width:44px}
+  .mines-bottom .bottom-center .open-picker-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);color:var(--muted);cursor:pointer;font-size:12px;padding:0}
+
+  /* Second row right: play button */
+  .mines-bottom .bottom-right{
+    display:flex;
+    gap:6px;
+    align-items:center;
+    padding:0;
+  }
+  .mines-bottom .bottom-right .btn{
+    min-width:120px;
+    height:48px;
+    padding:10px 14px;
+    border-radius:8px;
+    font-weight:900;
+    font-size:13px;
+    border:none;
+    cursor:pointer;
+  }
+  .mines-bottom .bottom-right .btn.play-btn{
+    background:linear-gradient(180deg,#2f78ff,#1a5fff);
+    color:#fff;
+  }
+  .mines-bottom .bottom-right .btn.cashout-btn{
+    background:linear-gradient(180deg,#ffd54d,#ffb400);
+    color:#2b1f00;
+  }
+
+  /* Field positioning */
+  .field-wrapper{margin-bottom:8px;position:relative;z-index:1}
+
+  /* Bottom nav clearance */
+  main{padding-bottom:110px}
+
+  /* Top multipliers stay as grid */
+  .top-multipliers{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:1px;margin-bottom:6px;justify-items:center}
+  .top-multipliers .m-item{min-width:58px;padding:3px 4px;gap:1px}
+  .top-multipliers .m-item .mult-value{font-size:10px}
+  .top-multipliers .m-item .mult-step{font-size:8px}
+  .mult-btn{display:flex !important;font-size:15px;padding:5px 7px;min-width:34px;height:34px;background:linear-gradient(180deg, rgba(47,120,255,0.25), rgba(26,95,255,0.15));border:2px solid rgba(47,120,255,0.45);color:#6bb4ff;flex-shrink:0}
 }
