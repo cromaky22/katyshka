@@ -177,18 +177,28 @@ document.addEventListener('DOMContentLoaded', function(){
   let multipliersValues = [];
 
   function parseMultipliers(){
-    // parse values from DOM, reduce multipliers by 15% for values greater than 6.21
+    // parse values from DOM
+    // - apply 15% reduction for raw > 6.21
+    // - additionally apply 10% reduction for raw > 11.87
+    // - finally apply a global 10% reduction to all multipliers
     const REDUCTION_THRESHOLD = 6.21;
-    const REDUCTION_FACTOR = 0.85; // reduce by 15%
+    const REDUCTION_FACTOR = 0.85; // 15% reduction
+    const EXTRA_THRESHOLD = 11.87;
+    const EXTRA_FACTOR = 0.90; // extra 10% reduction for very large multipliers
+    const GLOBAL_REDUCE = 0.90; // final global 10% reduction
     multipliersValues = multItems.map((it, idx)=>{
       const v = it.querySelector('.mult-value')?.textContent || it.textContent || '';
       const n = parseFloat((v+'').replace(/[^0-9.,]/g,'').replace(',','.'));
       const raw = isNaN(n) ? 1 : n;
-      const adjusted = raw > REDUCTION_THRESHOLD ? Number((raw * REDUCTION_FACTOR).toFixed(2)) : raw;
+      // initial adjustment based on thresholds
+      let adjusted = raw;
+      if(raw > REDUCTION_THRESHOLD) adjusted = Number((adjusted * REDUCTION_FACTOR).toFixed(6));
+      if(raw > EXTRA_THRESHOLD) adjusted = Number((adjusted * EXTRA_FACTOR).toFixed(6));
+      const finalVal = Number((adjusted * GLOBAL_REDUCE).toFixed(2));
       // update visible text to reflect adjusted multiplier
       const label = it.querySelector('.mult-value');
-      if(label) label.textContent = `x${adjusted}`;
-      return adjusted;
+      if(label) label.textContent = `x${finalVal}`;
+      return finalVal;
     });
   }
 
