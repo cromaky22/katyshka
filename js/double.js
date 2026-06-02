@@ -125,12 +125,12 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function spinWheel(resultIndex, onComplete){
-    // getDeg angles from CharmGames: x2=0, x3=6.2, x5=13.4, x50=20
-    const getDeg = [0, 6.2, 13.4, 20];
+    // Angles to center of each segment: x2=45°, x3=135°, x5=225°, x50=315°
+    const getDeg = [45, 135, 225, 315];
     const targetDeg = getDeg[resultIndex];
     
-    // Calculate final rotation: 150 + 10 full rotations (360*10) + target angle
-    const targetRotation = 150 + 360 * 10 + targetDeg;
+    // Calculate final rotation: 10 full rotations (360*10) + target angle
+    const targetRotation = 360 * 10 + targetDeg;
     
     // Reset to initial state and force reflow
     const pointer = document.querySelector('.pointer');
