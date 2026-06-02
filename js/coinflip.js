@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', function(){
   const stakeInput = document.getElementById('stake');
   const chainControls = document.getElementById('chainControls');
   const accumulatedDisplay = document.getElementById('accumulatedDisplay');
-  const stopChainBtn = document.getElementById('stopChain');
   const collectBtn = document.getElementById('collectBtn');
   const scoreRoundsEl = document.getElementById('scoreRounds');
   const scoreMultiplierEl = document.getElementById('scoreMultiplier');
@@ -22,8 +21,8 @@ document.addEventListener('DOMContentLoaded', function(){
   function getBalance(){ return parseFloat(localStorage.getItem('mc_balance') || '0') || 0; }
   function setBalance(v){ const n = Math.round(Number(v) * 100) / 100; localStorage.setItem('mc_balance', n.toFixed(2)); document.querySelectorAll('.balance-value').forEach(el=>el.textContent = n.toFixed(2)); }
 
-  btnHead.addEventListener('click', ()=>{ choice = 'head'; btnHead.classList.add('active'); btnTail.classList.remove('active'); if(inChain){ startFlip(chainBaseStake); } });
-  btnTail.addEventListener('click', ()=>{ choice = 'tail'; btnTail.classList.add('active'); btnHead.classList.remove('active'); if(inChain){ startFlip(chainBaseStake); } });
+  btnHead.addEventListener('click', ()=>{ choice = 'head'; btnHead.classList.add('active'); btnTail.classList.remove('active'); if(inChain){ startFlip(chainBaseStake, { skipDeduct: true }); } });
+  btnTail.addEventListener('click', ()=>{ choice = 'tail'; btnTail.classList.add('active'); btnHead.classList.remove('active'); if(inChain){ startFlip(chainBaseStake, { skipDeduct: true }); } });
 
   function updateStakeDisplays(){
     const raw = stakeInput ? ('' + stakeInput.value).trim() : '';
@@ -60,15 +59,19 @@ document.addEventListener('DOMContentLoaded', function(){
   }
           // chain mode: when true, user continues by clicking side buttons
 
-  function startFlip(baseStake){
+  function startFlip(baseStake, options){
+    options = options || {};
+    const skipDeduct = !!options.skipDeduct;
     if(!choice){ resultEl.textContent = 'Выберите Орел или Решка'; return }
     resultEl.textContent = '';
     if(baseStake <= 0){ resultEl.textContent = 'Укажите ставку больше 0'; return }
     if(coin.classList.contains('flip')) return;
-    // check balance and deduct stake
+    // check balance and deduct stake (unless skipDeduct true for chain continuation)
     const balBefore = getBalance();
-    if(balBefore < baseStake){ resultEl.textContent = 'Недостаточно средств'; return }
-    setBalance(Math.round((balBefore - baseStake) * 100) / 100);
+    if(!skipDeduct){
+      if(balBefore < baseStake){ resultEl.textContent = 'Недостаточно средств'; return }
+      setBalance(Math.round((balBefore - baseStake) * 100) / 100);
+    }
     const pendingResult = randomResult();
         coin.classList.remove('show-head','show-tail');
           if(accumulatedDisplay) accumulatedDisplay.textContent = `$ ${Number(chainPayout).toFixed(2)}`;
@@ -103,7 +106,6 @@ document.addEventListener('DOMContentLoaded', function(){
         // do not credit payout immediately — wait for user to collect
         // show collect button
         if(collectBtn) { collectBtn.style.display = ''; collectBtn.disabled = false; }
-        if(stopChainBtn) stopChainBtn.style.display = '';
         // if chain completed by rounds or reaching last multiplier, end it
         if(currentRound >= roundsTotal || currentMultiplierIdx >= multipliersValues.length - 1){
           resultEl.textContent += ' — Цепочка завершена';
@@ -121,7 +123,6 @@ document.addEventListener('DOMContentLoaded', function(){
         if(play) play.classList.remove('play-hidden');
         if(stakeInput) stakeInput.disabled = false;
         if(chainControls) chainControls.style.display = 'none';
-        if(stopChainBtn) stopChainBtn.style.display = 'none';
       }
       play.disabled = false;
       btnHead.disabled = false; btnTail.disabled = false;
@@ -176,13 +177,14 @@ document.addEventListener('DOMContentLoaded', function(){
   let multipliersValues = [];
 
   function parseMultipliers(){
-    // parse values from DOM, but slightly reduce multipliers after the first one
-    const REDUCTION = 0.80; // 20% smaller for idx >= 1 (previously 10%)
+    // parse values from DOM, reduce multipliers by 15% for values greater than 6.21
+    const REDUCTION_THRESHOLD = 6.21;
+    const REDUCTION_FACTOR = 0.85; // reduce by 15%
     multipliersValues = multItems.map((it, idx)=>{
       const v = it.querySelector('.mult-value')?.textContent || it.textContent || '';
       const n = parseFloat((v+'').replace(/[^0-9.,]/g,'').replace(',','.'));
       const raw = isNaN(n) ? 1 : n;
-      const adjusted = idx === 0 ? raw : Number((raw * REDUCTION).toFixed(2));
+      const adjusted = raw > REDUCTION_THRESHOLD ? Number((raw * REDUCTION_FACTOR).toFixed(2)) : raw;
       // update visible text to reflect adjusted multiplier
       const label = it.querySelector('.mult-value');
       if(label) label.textContent = `x${adjusted}`;
@@ -197,7 +199,6 @@ document.addEventListener('DOMContentLoaded', function(){
     updateScoreDisplay();
     // hide chain UI and re-enable stake input
     if(chainControls) chainControls.style.display = 'none';
-    if(stopChainBtn) stopChainBtn.style.display = 'none';
     if(stakeInput) stakeInput.disabled = false;
     if(collectBtn){ collectBtn.style.display = 'none'; collectBtn.disabled = true; }
   }
@@ -245,13 +246,11 @@ document.addEventListener('DOMContentLoaded', function(){
     // reset chain UI and make play visible
     if(stakeInput) stakeInput.disabled = false;
     if(chainControls) chainControls.style.display = 'none';
-    if(stopChainBtn) stopChainBtn.style.display = 'none';
     if(play) play.classList.remove('play-hidden');
     // reset progress so next chain starts fresh
     resetProgress();
   }
 
-  if(stopChainBtn){ stopChainBtn.addEventListener('click', ()=>{ resultEl.textContent = 'Цепочка остановлена пользователем'; endChain(); }); }
 
   // mark visible items in current viewport as active
   function updateActiveGroup(){
