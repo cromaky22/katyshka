@@ -251,6 +251,20 @@
           const next = Math.round((cur + amount) * 100) / 100;
           localStorage.setItem('mc_balance', next.toFixed(2));
           updateBalanceDisplay(next);
+          // save to server if we have user id
+          try{
+            const tg = localStorage.getItem('tg_user');
+            if(tg){ 
+              const parsed = JSON.parse(tg); 
+              if(parsed && parsed.id){
+                fetch('/api/users/' + parsed.id + '/balance', {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ balance: next })
+                }).catch(()=>{});
+              }
+            }
+          }catch(e){}
           // mark activated locally to provide fast UI feedback
           const activated = getActivated();
           activated.push(code); setActivated(activated);
@@ -487,6 +501,22 @@
             username: user.username || null,
             avatar: user.photo_url || user.avatar || null
           })
+        }).then(res => res.json()).then(data => {
+          // After registering user, load their balance from DB
+          if(user.id){
+            fetch('/api/users/' + user.id)
+              .then(res => res.json())
+              .then(userData => {
+                if(userData && userData.balance != null){
+                  const balance = Number(userData.balance).toFixed(2);
+                  localStorage.setItem('mc_balance', balance);
+                  const balanceElems = document.querySelectorAll('.balance-value');
+                  balanceElems.forEach(el => el.textContent = balance);
+                  console.log('✅ Loaded balance from DB:', balance);
+                }
+              })
+              .catch(() => {});
+          }
         }).catch(()=>{});
       }catch(e){}
       return true;

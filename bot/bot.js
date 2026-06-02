@@ -19,6 +19,23 @@ bot.start((ctx) => {
   });
 });
 
+// Handle web app data
+bot.on('web_app_data', async (ctx) => {
+  try {
+    const data = ctx.webAppData.data;
+    console.log('Received web app data:', data);
+    // The data contains user info from the web app
+    await ctx.answerWebAppQuery(ctx.webAppData.button_text, {
+      type: 'article',
+      id: '1',
+      title: 'Успешно',
+      input_message_content: { message_text: 'Спасибо!' }
+    });
+  } catch (e) {
+    console.error('Error handling web app data:', e);
+  }
+});
+
 bot.launch().then(() => console.log('Bot started'));
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
