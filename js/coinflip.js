@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function(){
   const chainControls = document.getElementById('chainControls');
   const accumulatedDisplay = document.getElementById('accumulatedDisplay');
   const stopChainBtn = document.getElementById('stopChain');
+  const collectBtn = document.getElementById('collectBtn');
   const scoreRoundsEl = document.getElementById('scoreRounds');
   const scoreMultiplierEl = document.getElementById('scoreMultiplier');
   let choice = null;
@@ -99,9 +100,9 @@ document.addEventListener('DOMContentLoaded', function(){
         if(stakeInput) stakeInput.disabled = true;
         if(chainControls) chainControls.style.display = 'flex';
         if(accumulatedDisplay) accumulatedDisplay.textContent = `$ ${Number(accumulated).toFixed(2)}`;
-        // credit payout to balance
-        const balNow = getBalance();
-        setBalance(Math.round((balNow + chainPayout) * 100) / 100);
+        // do not credit payout immediately — wait for user to collect
+        // show collect button
+        if(collectBtn) { collectBtn.style.display = ''; collectBtn.disabled = false; }
         if(stopChainBtn) stopChainBtn.style.display = '';
         // if chain completed by rounds or reaching last multiplier, end it
         if(currentRound >= roundsTotal || currentMultiplierIdx >= multipliersValues.length - 1){
@@ -127,6 +128,24 @@ document.addEventListener('DOMContentLoaded', function(){
       coin.classList.remove('flip');
     };
     coin.addEventListener('animationend', onEnd, { once: true });
+  }
+
+  // collect winnings when user presses collect button
+  if(collectBtn){
+    collectBtn.addEventListener('click', ()=>{
+      const toAdd = Number(accumulated) || 0;
+      if(toAdd <= 0) return;
+      const balNow = getBalance();
+      setBalance(Math.round((balNow + toAdd) * 100) / 100);
+      // after collecting, clear accumulated and hide collect button
+      accumulated = 0; chainPayout = 0;
+      if(accumulatedDisplay) accumulatedDisplay.textContent = `$ ${Number(accumulated).toFixed(2)}`;
+      collectBtn.disabled = true; collectBtn.style.display = 'none';
+      // end chain UI
+      endChain();
+    });
+    // hide collect button initially
+    collectBtn.style.display = 'none';
   }
 
   play.addEventListener('click', ()=>{
@@ -180,6 +199,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if(chainControls) chainControls.style.display = 'none';
     if(stopChainBtn) stopChainBtn.style.display = 'none';
     if(stakeInput) stakeInput.disabled = false;
+    if(collectBtn){ collectBtn.style.display = 'none'; collectBtn.disabled = true; }
   }
 
   function updateScoreDisplay(){
