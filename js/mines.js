@@ -268,8 +268,14 @@
         cell.classList.add('revealed','bomb','selected');
         cell.textContent = '💣';
       
-      // ВСЕГДА показываем ВСЕ реальные мины при проигрыше
-      revealAll(mineSet);
+      // Показываем только безопасные ячейки, мины скрыты
+      const cells = gridEl.querySelectorAll('.cell');
+      cells.forEach((c, i) => {
+        if(i !== idx && !mineSet.has(i)){
+          c.classList.add('revealed');
+          c.textContent = '✓';
+        }
+      });
       
       gameActive = false;
         updateStatus('Проигрыш — мина найдена');
