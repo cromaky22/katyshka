@@ -107,10 +107,11 @@
       });
     });
   })();
-  // populate balance fields
+  // populate balance fields (default $100)
   const balanceElems = document.querySelectorAll('.balance-value');
   const stored = localStorage.getItem('mc_balance');
-  const balance = stored !== null ? parseFloat(stored).toFixed(2) : '0.00';
+  if(stored === null){ try{ localStorage.setItem('mc_balance', (100).toFixed(2)); }catch(e){} }
+  const balance = (localStorage.getItem('mc_balance') !== null) ? parseFloat(localStorage.getItem('mc_balance')).toFixed(2) : '100.00';
   balanceElems.forEach(el=>el.textContent = balance);
 
   // Promo modal & activation logic
@@ -173,6 +174,37 @@
     function showMessage(msg, success){ if(!promoMessage) return; promoMessage.textContent = msg; promoMessage.style.color = success ? 'var(--accent-green)' : '' }
 
     if(promoActivate){
+      async function attemptLocalActivate(code){
+        const PROMOS_MAP = await loadPromos();
+        const amount = PROMOS_MAP[code];
+        const promosArr = getPromosArray();
+        const promoObj = promosArr.find(p=> normalizeCode(p.code) === code);
+        if(promoObj){
+          const max = Number(promoObj.maxUses || 0);
+          const used = Number(promoObj.uses || 0);
+          if(max > 0 && used >= max){ showMessage('Лимит активаций исчерпан', false); return false; }
+        }
+        if(!amount){ showMessage('Неверный промокод', false); return false; }
+        const activated = getActivated();
+        if(activated.indexOf(code) !== -1){ showMessage('Промокод уже активирован', false); return false; }
+        // credit balance
+        const cur = parseFloat(localStorage.getItem('mc_balance') || '0') || 0;
+        const next = Math.round((cur + amount) * 100) / 100;
+        localStorage.setItem('mc_balance', next.toFixed(2));
+        updateBalanceDisplay(next);
+        // mark activated (per-user)
+        activated.push(code); setActivated(activated);
+        // increment global promo uses locally
+        try{
+          const arr = getPromosArray();
+          const idx = arr.findIndex(p=> normalizeCode(p.code) === code);
+          if(idx !== -1){ arr[idx].uses = (Number(arr[idx].uses)||0) + 1; const max = Number(arr[idx].maxUses || 0); if(max>0 && arr[idx].uses>max) arr[idx].uses = max; setPromosArray(arr); }
+        }catch(e){}
+        showMessage('Промокод активирован! +$' + Number(amount).toFixed(2), true);
+        promoActivate.disabled = true; promoInput.disabled = true;
+        setTimeout(()=>{ closeModal(); }, 1400);
+        return true;
+      }
       promoActivate.addEventListener('click', async ()=>{
         const raw = promoInput ? promoInput.value : '';
         const code = normalizeCode(raw);
@@ -195,7 +227,12 @@
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: clientId })
           });
           const j = await res.json();
-          if(!res.ok){ showMessage(j && j.error ? j.error : 'Ошибка активации', false); return; }
+          if(!res.ok){
+            // try local fallback
+            const ok = await attemptLocalActivate(code);
+            if(!ok) showMessage(j && j.error ? j.error : 'Ошибка активации', false);
+            return;
+          }
           const amount = Number(j.amount || 0);
           // credit balance locally
           const cur = parseFloat(localStorage.getItem('mc_balance') || '0') || 0;
@@ -208,7 +245,11 @@
           showMessage('Промокод активирован! +$' + Number(amount).toFixed(2), true);
           promoActivate.disabled = true; promoInput.disabled = true;
           setTimeout(()=>{ closeModal(); }, 1400);
-        }catch(e){ showMessage('Ошибка сети', false); }
+        }catch(e){
+          // network error -> fallback to local activation
+          const ok = await attemptLocalActivate(code);
+          if(!ok) showMessage('Ошибка сети, промокод не активирован', false);
+        }
       });
       if(promoInput) promoInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ promoActivate.click(); } });
     }
