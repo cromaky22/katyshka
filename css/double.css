@@ -58,7 +58,7 @@
 
 .result-display {
   position: absolute;
-  top: calc(50% - 30px);
+  top: -70px;
   left: calc(50% - 30px);
   width: 60px;
   height: 60px;
@@ -71,6 +71,7 @@
   font-size: 20px;
   color: white;
   animation: show-result-text 1s linear both;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
 }
 
 @keyframes show-result-text {

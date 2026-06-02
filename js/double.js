@@ -161,6 +161,8 @@ document.addEventListener('DOMContentLoaded', function(){
     const pointer = document.querySelector('.pointer');
     pointer.style.transition = 'none';
     pointer.style.transform = 'rotateZ(0deg)';
+    // Hide result when resetting
+    resultDisplay.style.display = 'none';
   }
 
   function showResult(win, winAmount, stake, resultIndex){
