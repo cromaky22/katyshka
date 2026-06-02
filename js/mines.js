@@ -267,8 +267,19 @@
         cell.classList.add('revealed','bomb','selected');
         cell.textContent = '💣';
       
-      // Показываем ВСЕ реальные мины
-      revealAll(mineSet);
+      // Показываем мины только если это РЕАЛЬНАЯ мина, а не подставка казино
+      if(mineSet && mineSet.has(idx)){
+        revealAll(mineSet);
+      } else {
+        // Для подставки казино: показываем только текущую ячейку как бомбу, остальные как безопасные
+        const cells = gridEl.querySelectorAll('.cell');
+        cells.forEach((c, i) => {
+          if(i !== idx){
+            c.classList.add('revealed');
+            c.textContent = '✓';
+          }
+        });
+      }
       
       gameActive = false;
         updateStatus('Проигрыш — мина найдена');
