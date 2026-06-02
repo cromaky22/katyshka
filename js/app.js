@@ -221,61 +221,10 @@
         const raw = promoInput ? promoInput.value : '';
         const code = normalizeCode(raw);
         if(!code){ showMessage('Введите код', false); return; }
-        // determine client/user id (try Telegram user saved or fallback to generated id)
-        function getClientId(){
-          try{
-            const tg = localStorage.getItem('tg_user');
-            if(tg){ const parsed = JSON.parse(tg); if(parsed && parsed.id) return String(parsed.id); }
-          }catch(e){}
-          try{ const cid = localStorage.getItem('mc_client_id'); if(cid) return cid; }catch(e){}
-          const gen = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,9);
-          try{ localStorage.setItem('mc_client_id', gen); }catch(e){}
-          return gen;
-        }
-        const clientId = getClientId();
-        // call server activation
-        try{
-          const res = await fetch('/api/promos/' + encodeURIComponent(code) + '/activate', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: clientId })
-          });
-          const j = await res.json();
-          if(!res.ok){
-            // try local fallback
-            const ok = await attemptLocalActivate(code);
-            if(!ok) showMessage(j && j.error ? j.error : 'Ошибка активации', false);
-            return;
-          }
-          const amount = Number(j.amount || 0);
-          // credit balance locally
-          const cur = parseFloat(localStorage.getItem('mc_balance') || '0') || 0;
-          const next = Math.round((cur + amount) * 100) / 100;
-          localStorage.setItem('mc_balance', next.toFixed(2));
-          updateBalanceDisplay(next);
-          // save to server if we have user id
-          try{
-            const tg = localStorage.getItem('tg_user');
-            if(tg){ 
-              const parsed = JSON.parse(tg); 
-              if(parsed && parsed.id){
-                fetch('/api/users/' + parsed.id + '/balance', {
-                  method: 'PUT',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ balance: next })
-                }).catch(()=>{});
-              }
-            }
-          }catch(e){}
-          // mark activated locally to provide fast UI feedback
-          const activated = getActivated();
-          activated.push(code); setActivated(activated);
-          showMessage('Промокод активирован! +$' + Number(amount).toFixed(2), true);
-          promoActivate.disabled = true; promoInput.disabled = true;
-          setTimeout(()=>{ closeModal(); }, 1400);
-        }catch(e){
-          // network error -> fallback to local activation
-          const ok = await attemptLocalActivate(code);
-          if(!ok) showMessage('Ошибка сети, промокод не активирован', false);
-        }
+        // ⚠️ ТЕСТОВЫЙ РЕЖИМ: локальная активация без сервера
+        console.log('🔑 Testing promo locally:', code);
+        const ok = await attemptLocalActivate(code);
+        if(!ok) showMessage('Ошибка активации', false);
       });
       if(promoInput) promoInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ promoActivate.click(); } });
     }
