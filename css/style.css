@@ -228,6 +228,8 @@ html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;back
 .multipliers-row{margin-top:18px;padding:6px 8px}
 .multipliers-row{display:flex;align-items:center;gap:8px;position:relative}
 .multipliers{display:flex;gap:10px;align-items:center;overflow-x:auto;padding:6px 4px;flex:1}
+.multipliers{scrollbar-width:none;-ms-overflow-style:none}
+.multipliers::-webkit-scrollbar{display:none}
 .mult-nav{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);color:var(--muted);width:36px;height:36px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .mult-nav:hover{background:rgba(255,255,255,0.04);color:var(--text)}
 .mult-nav:disabled{opacity:0.35;cursor:default}

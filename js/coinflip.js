@@ -73,13 +73,46 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function updateNavButtons(){
-    if(!prevBtn || !nextBtn || !multItems.length) return;
-    prevBtn.disabled = activeIndex <= 0;
-    nextBtn.disabled = activeIndex >= multItems.length-1;
+    if(!prevBtn || !nextBtn || !multItems.length || !multsContainer) return;
+    prevBtn.disabled = multsContainer.scrollLeft <= 1;
+    nextBtn.disabled = (multsContainer.scrollLeft + multsContainer.clientWidth) >= (multsContainer.scrollWidth - 1);
   }
 
-  if(prevBtn) prevBtn.addEventListener('click', ()=>{ setActive(activeIndex-1); });
-  if(nextBtn) nextBtn.addEventListener('click', ()=>{ setActive(activeIndex+1); });
+  // page-wise scroll: move by container width
+  if(prevBtn) prevBtn.addEventListener('click', ()=>{
+    if(!multsContainer) return;
+    const newLeft = Math.max(0, multsContainer.scrollLeft - multsContainer.clientWidth);
+    multsContainer.scrollTo({ left: newLeft, behavior: 'smooth' });
+    updateNavButtons();
+  });
+  if(nextBtn) nextBtn.addEventListener('click', ()=>{
+    if(!multsContainer) return;
+    const maxLeft = Math.max(0, multsContainer.scrollWidth - multsContainer.clientWidth);
+    const newLeft = Math.min(maxLeft, multsContainer.scrollLeft + multsContainer.clientWidth);
+    multsContainer.scrollTo({ left: newLeft, behavior: 'smooth' });
+    updateNavButtons();
+  });
+
+  // update active index after user scrolls (debounced)
+  let scrollTimer = null;
+  if(multsContainer){
+    multsContainer.addEventListener('scroll', ()=>{
+      updateNavButtons();
+      if(scrollTimer) clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(()=>{
+        // find item whose center is closest to container center
+        const center = multsContainer.scrollLeft + (multsContainer.clientWidth/2);
+        let bestIdx = 0;
+        let bestDist = Infinity;
+        multItems.forEach((it, idx)=>{
+          const itCenter = it.offsetLeft + (it.offsetWidth/2);
+          const d = Math.abs(itCenter - center);
+          if(d < bestDist){ bestDist = d; bestIdx = idx; }
+        });
+        setActive(bestIdx);
+      }, 120);
+    });
+  }
 
   // allow keyboard arrows to navigate when multipliers present
   document.addEventListener('keydown', (e)=>{
