@@ -73,9 +73,27 @@
             </button>
           </div>
           <div class="stake-row">
-            <label>Ставка</label>
-            <input id="stake" type="number" min="1" value="">
+              <div class="stake-card compact">
+                <div class="stake-top">
+                  <div class="stake-label">Ставка</div>
+                  <div class="stake-range">От <span class="currency-sign-green">$</span>0.50 до <span class="currency-sign-green">$</span>25 000</div>
+                </div>
+                <div class="stake-main compact-row">
+                  <div class="stake-amount">
+                    <span class="stake-currency">$</span>
+                    <input id="stake" class="stake-input-big" type="number" min="0.5" step="0.5" value="0.50">
+                  </div>
+                  <div class="stake-actions-vertical compact-actions">
+                    <button class="stake-ctrl" data-op="half" aria-label="половина">½</button>
+                    <button class="stake-ctrl" data-op="double" aria-label="удвоить">×2</button>
+                  </div>
+                </div>
+              </div>
             <button id="play" class="btn">ИГРАТЬ</button>
+            <div class="chain-controls" id="chainControls" aria-hidden="true" style="display:none">
+              <span id="accumulatedDisplay" class="acc-value">$ 0.00</span>
+              <button id="stopChain" class="btn stop-chain">ОСТАНОВИТЬ</button>
+            </div>
           </div>
         </div>
 
