@@ -70,8 +70,8 @@ document.addEventListener('DOMContentLoaded', function(){
         resultEl.textContent += ' — Вы выиграли!';
         // enter chain mode: allow continuing by clicking side buttons
         inChain = true;
-        // ensure play button is hidden while in chain mode
-        if(play) play.style.display = 'none';
+        // ensure play button is hidden while in chain mode (fade-out)
+        if(play) play.classList.add('play-hidden');
       } else {
         resultEl.textContent += ' — Проигрыш';
         resetProgress();
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function(){
         if(stakeInput) stakeInput.value = '';
         updateStakeDisplays();
         // show play button again after loss so user can place a new initial bet
-        if(play) play.style.display = '';
+        if(play) play.classList.remove('play-hidden');
       }
       play.disabled = false;
       btnHead.disabled = false; btnTail.disabled = false;

@@ -87,6 +87,10 @@
 .controls .stake-row input{width:88px;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text)}
 .controls .stake-row #play{margin-left:auto;padding:14px 32px;border-radius:10px;background:linear-gradient(180deg,#1f73ff,#0d5cff);font-weight:900}
 
+/* fade transition for play button */
+.controls .stake-row #play{transition:opacity .22s ease,transform .18s ease,visibility .18s;will-change:opacity,transform}
+.controls .stake-row #play.play-hidden{opacity:0;transform:translateY(6px) scale(0.98);pointer-events:none}
+
 /* Mobile adjustments */
 @media (max-width: 480px){
   .coinflip-board{width:100%;padding:16px;border-radius:12px;margin:0 8px}
