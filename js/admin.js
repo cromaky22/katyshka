@@ -52,8 +52,9 @@ document.addEventListener('DOMContentLoaded', function(){
   function setPromosLocal(arr){ try{ localStorage.setItem('mc_promos', JSON.stringify(arr)); }catch(e){} }
   
   function fetchWithAuth(url, options = {}) {
-    const headers = { ...options.headers };
+    const headers = { ...(options.headers || {}) };
     headers['x-admin-key'] = adminKey;
+    console.log('🔐 Sending auth header:', headers);
     return fetch(url, { ...options, headers });
   }
 
@@ -115,17 +116,21 @@ document.addEventListener('DOMContentLoaded', function(){
     const newPromo = { code: code, amount: Math.round(amt*100)/100, maxUses: maxUses, uses: 0 };
     
     try{
+      console.log('📤 Adding promo:', newPromo, 'with key:', adminKey);
       const res = await fetchWithAuth('/api/promos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newPromo) });
-      if(!res.ok) throw new Error('server');
-      console.log('✅ Promo saved to server:', code);
+      const respText = await res.text();
+      console.log('📥 Server response:', res.status, respText);
+      if(!res.ok) {
+        alert('Ошибка сервера: ' + respText);
+        return;
+      }
+      alert('✅ Промокод добавлен!');
+      codeInput.value=''; amountInput.value=''; maxInput.value='';
+      render();
     }catch(e){
-      console.log('⚠️ Server save failed, saving to localStorage:', e.message);
-      const arrLocal = getPromosLocal();
-      arrLocal.push(newPromo);
-      setPromosLocal(arrLocal);
+      console.error('❌ Error adding promo:', e);
+      alert('Ошибка: ' + e.message);
     }
-    codeInput.value=''; amountInput.value=''; maxInput.value='';
-    render();
   });
 
   render();
