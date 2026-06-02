@@ -27,14 +27,8 @@ document.addEventListener('DOMContentLoaded', function(){
     } else {
       btnHead.classList.remove('bet-on'); btnTail.classList.remove('bet-on');
     }
-    // hide play button once a stake is set (>0), show it when cleared
-    if(play){
-      if(val !== null && val > 0){
-        play.style.display = 'none';
-      } else {
-        play.style.display = '';
-      }
-    }
+    // update stake badges and selection only; play visibility is controlled
+    // by game flow (initial play vs chain mode) to ensure first-bet uses `play`.
   }
   if(stakeInput) stakeInput.addEventListener('input', updateStakeDisplays);
   // update displays when choosing side
@@ -85,6 +79,8 @@ document.addEventListener('DOMContentLoaded', function(){
         // clear stake input so user must enter new amount
         if(stakeInput) stakeInput.value = '';
         updateStakeDisplays();
+        // show play button again after loss so user can place a new initial bet
+        if(play) play.style.display = '';
       }
       play.disabled = false;
       btnHead.disabled = false; btnTail.disabled = false;
