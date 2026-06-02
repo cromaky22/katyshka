@@ -27,6 +27,8 @@ document.addEventListener('DOMContentLoaded', function(){
   // Show admin panel
   adminAuth.style.display = 'none';
   adminPanel.forEach(el => el.style.display = 'block');
+  const adminUsersPanel = document.getElementById('adminUsersPanel');
+  if(adminUsersPanel) adminUsersPanel.style.display = 'block';
   
   // Add logout button to header
   const rightControls = document.querySelector('.app-header .right-controls');
@@ -50,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function(){
   function setPromosLocal(arr){ try{ localStorage.setItem('mc_promos', JSON.stringify(arr)); }catch(e){} }
   
   function fetchWithAuth(url, options = {}) {
-    const headers = options.headers || {};
+    const headers = { ...options.headers };
     headers['x-admin-key'] = adminKey;
     return fetch(url, { ...options, headers });
   }
@@ -89,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function(){
         const code = b.dataset.code;
         if(!confirm('Удалить промокод ' + code + '?')) return;
         try{
-          const res = await fetch('/api/promos/' + encodeURIComponent(code), { method: 'DELETE' });
+          const res = await fetchWithAuth('/api/promos/' + encodeURIComponent(code), { method: 'DELETE' });
           if(!res.ok) throw new Error('server');
           render();
         }catch(err){
@@ -113,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function(){
     const newPromo = { code: code, amount: Math.round(amt*100)/100, maxUses: maxUses, uses: 0 };
     
     try{
-      const res = await fetch('/api/promos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newPromo) });
+      const res = await fetchWithAuth('/api/promos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newPromo) });
       if(!res.ok) throw new Error('server');
       console.log('✅ Promo saved to server:', code);
     }catch(e){

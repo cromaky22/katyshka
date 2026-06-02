@@ -87,7 +87,7 @@ app.get('/api/promos', (req, res) => {
   });
 });
 
-app.post('/api/promos', (req, res) => {
+app.post('/api/promos', requireAdmin, (req, res) => {
   const body = req.body || {};
   const code = (body.code || '').toString().trim().toUpperCase();
   const amount = Number(body.amount) || 0;
@@ -101,7 +101,7 @@ app.post('/api/promos', (req, res) => {
   stmt.finalize();
 });
 
-app.delete('/api/promos/:code', (req, res) => {
+app.delete('/api/promos/:code', requireAdmin, (req, res) => {
   const code = (req.params.code || '').toString().trim().toUpperCase();
   if(!code) return res.status(400).json({ error: 'missing code' });
   db.run('DELETE FROM promos WHERE code = ?', [code], function(err){
