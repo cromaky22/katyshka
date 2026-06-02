@@ -136,22 +136,26 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function spinWheel(resultIndex, onComplete){
-    // Angles to center of each segment (from CharmGames)
-    // x2=0°, x3=6.2°, x5=13.4°, x50=20°
-    const getDeg = [0, 6.2, 13.4, 20];
+    // Angles to center of each segment - 4 equal segments
+    // Each segment is 90° apart for even distribution
+    const getDeg = [0, 90, 180, 270];
     const targetDeg = getDeg[resultIndex];
     
     // Calculate final rotation: 150 + 10 full rotations (360*10) + target angle
     const targetRotation = 150 + 360 * 10 + targetDeg;
     
-    // Reset to initial state and force reflow
+    // Get pointer and set up animation
     const pointer = document.querySelector('.pointer');
+    
+    // Reset to initial state
     pointer.style.transition = 'none';
     pointer.style.transform = 'rotateZ(0deg)';
-    void pointer.offsetWidth; // Force reflow
     
-    // Apply animation (12 seconds like CharmGames)
-    pointer.style.transition = 'all 12s ease 0s';
+    // Force reflow to apply reset
+    void pointer.offsetWidth;
+    
+    // Apply spinning animation
+    pointer.style.transition = 'transform 12s cubic-bezier(0.17, 0.67, 0.12, 0.98)';
     pointer.style.transform = `rotateZ(${targetRotation}deg)`;
     
     setTimeout(onComplete, 12000);
