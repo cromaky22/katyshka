@@ -268,19 +268,8 @@
         cell.classList.add('revealed','bomb','selected');
         cell.textContent = '💣';
       
-      // При подставке казино не показываем реальные мины, только текущую
-      if(!isHouseTrick){
-        revealAll(mineSet);
-      } else {
-        // Для подставки: показываем остальные ячейки безопасными
-        const cells = gridEl.querySelectorAll('.cell');
-        cells.forEach((c, i) => {
-          if(i !== idx){
-            c.classList.add('revealed');
-            c.textContent = '✓';
-          }
-        });
-      }
+      // ВСЕГДА показываем ВСЕ реальные мины при проигрыше
+      revealAll(mineSet);
       
       gameActive = false;
         updateStatus('Проигрыш — мина найдена');
