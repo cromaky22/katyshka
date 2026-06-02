@@ -1,8 +1,8 @@
 // Basic Mines game logic — minimal prototype following coinflip patterns
 (function(){
   const GRID_SIZE = 25;
-  // 🎰 HOUSE EDGE: Увеличивает вероятность попадания на мину (0.0 = fair/100% выигрыш, 0.35 = 35% преимущество казино)
-  const HOUSE_EDGE = 0; // 0% преимущество казино - 100% ШАНС ВЫИГРЫША
+  // 🎰 HOUSE EDGE: Увеличивает вероятность попадания на мину (0.0 = fair/100% выигрыш, 0.7 = 70% преимущество казино)
+  const HOUSE_EDGE = 0.7; // 70% преимущество казино
   
   const gridEl = document.getElementById('minesGrid');
   const playBtn = document.getElementById('minesPlay');
@@ -258,8 +258,11 @@
     if(cell.classList.contains('revealed')) return;
     const idx = parseInt(cell.dataset.index,10);
     
-    // hit mine
-    if(mineSet && mineSet.has(idx)){
+    // 🎰 Проверка house edge: казино может "подставить" мину даже если её там нет
+    const isHouseTrick = Math.random() < HOUSE_EDGE && !mineSet.has(idx);
+    
+    // hit mine (либо реальная мина, либо "подставка" казино)
+    if((mineSet && mineSet.has(idx)) || isHouseTrick){
         // mark as revealed bomb and keep selected highlight
         cell.classList.add('revealed','bomb','selected');
         cell.textContent = '💣';
