@@ -6,18 +6,13 @@
 .coin{width:170px;height:170px;position:relative;perspective:1200px;margin-top:-110px;z-index:6;box-shadow:0 14px 38px rgba(2,6,23,0.45)}
 .coin{width:170px;height:170px;position:relative;perspective:1200px;margin-top:-110px;z-index:6;box-shadow:0 14px 38px rgba(2,6,23,0.45);transform-style:preserve-3d;border-radius:50%;overflow:hidden;background:transparent}
 .coin .side{position:absolute;inset:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#041017;background:transparent;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden}
-.coin .side img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%;transition:opacity .12s ease}
+.coin .side img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
 .coin .side-head{transform:rotateY(0)}
 .coin .side-tail{transform:rotateY(180deg)}
 .coin.flip{animation:coinFlip 1.2s cubic-bezier(.2,.9,.2,1) forwards}
 .coin.show-head .side-head{transform:rotateY(0)}
 .coin.show-tail .side-tail{transform:rotateY(0)}
-/* ensure only the resulting face image is visible after flip */
-.coin .side img{opacity:1}
-.coin.show-head .side-head img{opacity:1}
-.coin.show-head .side-tail img{opacity:0}
-.coin.show-tail .side-tail img{opacity:1}
-.coin.show-tail .side-head img{opacity:0}
+/* do not toggle face opacity — rely on 3D backface-visibility during flip */
 
 @keyframes coinFlip{
   0%{transform:rotateY(0)}
