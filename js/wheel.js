@@ -266,6 +266,7 @@
   }
 
   // Спин колеса с шариком
+  // Спин колеса с шариком
   function spinWheel(resultNumber, onComplete) {
     // Градусы для каждого числа (360 / 37)
     const degreesPerNumber = 360 / 37;
@@ -275,30 +276,31 @@
     // Финальный угол для колеса (10 полных оборотов)
     const wheelFinalRotation = 360 * 10 + targetDegrees + randomOffset;
     
-    // Шарик вращается в противоположном направлении (11 оборотов)
-    const ballFinalRotation = -360 * 11 + targetDegrees + randomOffset;
-    
     // Добавляем стили анимации
     const style = document.createElement('style');
+    const timestamp = Date.now();
+    const wheelAnimName = `wheel-spin-${timestamp}`;
+    const ballAnimName = `ball-fade-${timestamp}`;
+    
     style.textContent = `
-      @keyframes wheel-spin-${Date.now()} {
-        from { transform: rotateZ(0deg); }
-        to { transform: rotateZ(${wheelFinalRotation}deg); }
+      @keyframes ${wheelAnimName} {
+        from { transform: translate(-50%, -50%) rotateZ(0deg); }
+        to { transform: translate(-50%, -50%) rotateZ(${wheelFinalRotation}deg); }
       }
-      @keyframes ball-spin-${Date.now()} {
-        0% { opacity: 1; transform: translate(-50%, -50%) rotateZ(0deg); }
-        90% { opacity: 1; transform: translate(-50%, -50%) rotateZ(${ballFinalRotation}deg); }
-        100% { opacity: 0; transform: translate(-50%, -50%) rotateZ(${ballFinalRotation}deg); }
+      @keyframes ${ballAnimName} {
+        0% { opacity: 1; }
+        85% { opacity: 1; }
+        100% { opacity: 0; }
       }
     `;
-    const animName = `wheel-spin-${Date.now()}`;
-    const ballAnimName = `ball-spin-${Date.now()}`;
     document.head.appendChild(style);
     
-    // Запускаем анимацию
-    wheelWrapper.style.animation = `${animName} 10s ease-out forwards`;
-    ballWrapper.style.animation = `${ballAnimName} 11s ease-out forwards`;
-    ballContainer.style.opacity = '1';
+    // Запускаем анимацию колеса - оно вращается на месте
+    wheelWrapper.style.animation = `${wheelAnimName} 10s ease-out forwards`;
+    
+    // Шарик находится внутри колеса, поэтому вращается вместе
+    // Плюс добавляем эффект исчезновения в конце
+    ballContainer.style.animation = `${ballAnimName} 11s ease-out forwards`;
 
     setTimeout(() => {
       onComplete();
@@ -348,12 +350,13 @@
     document.querySelectorAll('[data-bet]').forEach(btn => btn.style.opacity = '1');
     wheelWaiting.style.display = 'flex';
     
-    // Сброс анимации колеса
+    // Сброс анимации колеса - вращение колеса и шарика вместе
     wheelWrapper.style.animation = 'none';
-    wheelWrapper.style.transform = 'rotateZ(0deg)';
+    wheelWrapper.style.transform = 'translate(-50%, -50%) rotateZ(0deg)';
     ballWrapper.style.animation = 'none';
-    ballWrapper.style.transform = 'translate(-50%, -50%)';
-    ballContainer.style.opacity = '0';
+    ballWrapper.style.transform = 'none';
+    ballContainer.style.animation = 'none';
+    ballContainer.style.opacity = '1';
   }
 
   // Инициализировать при загрузке страницы
