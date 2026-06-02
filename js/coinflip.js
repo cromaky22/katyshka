@@ -11,8 +11,8 @@ document.addEventListener('DOMContentLoaded', function(){
   const stakeHeadEl = document.getElementById('stakeHead');
   const stakeTailEl = document.getElementById('stakeTail');
 
-  btnHead.addEventListener('click', ()=>{ choice = 'head'; btnHead.classList.add('active'); btnTail.classList.remove('active'); });
-  btnTail.addEventListener('click', ()=>{ choice = 'tail'; btnTail.classList.add('active'); btnHead.classList.remove('active'); });
+  btnHead.addEventListener('click', ()=>{ choice = 'head'; btnHead.classList.add('active'); btnTail.classList.remove('active'); if(inChain){ startFlip(accumulated); } });
+  btnTail.addEventListener('click', ()=>{ choice = 'tail'; btnTail.classList.add('active'); btnHead.classList.remove('active'); if(inChain){ startFlip(accumulated); } });
 
   function updateStakeDisplays(){
     const raw = stakeInput ? ('' + stakeInput.value).trim() : '';
@@ -39,34 +39,23 @@ document.addEventListener('DOMContentLoaded', function(){
     resultEl.textContent = res === 'head' ? 'Выпал ОРЕЛ' : 'Выпала РЕШКА';
   }
 
-  play.addEventListener('click', ()=>{
+  // chain mode: when true, user continues by clicking side buttons
+  let inChain = false;
+
+  function startFlip(baseStake){
     if(!choice){ resultEl.textContent = 'Выберите Орел или Решка'; return }
     resultEl.textContent = '';
-    // read stake
-    const baseStake = Math.max(0, Number(stakeInput && stakeInput.value) || 0);
     if(baseStake <= 0){ resultEl.textContent = 'Укажите ставку больше 0'; return }
-    // prevent double-play while animating
     if(coin.classList.contains('flip')) return;
-    // determine result ahead of animation (will apply on animationend)
     const pendingResult = randomResult();
-    // reset shown faces during animation
     coin.classList.remove('show-head','show-tail');
-    // disable play until animation finishes
     play.disabled = true;
-    coin.classList.remove('flip');
-    // trigger reflow to restart animation
-    void coin.offsetWidth;
-    coin.classList.add('flip');
-    // when animation ends, apply result and game logic
+    btnHead.disabled = true; btnTail.disabled = true;
+    coin.classList.remove('flip'); void coin.offsetWidth; coin.classList.add('flip');
     const onEnd = ()=>{
-      // show correct face
-      if(pendingResult === 'head'){
-        coin.classList.remove('show-tail'); coin.classList.add('show-head');
-      } else {
-        coin.classList.remove('show-head'); coin.classList.add('show-tail');
-      }
+      if(pendingResult === 'head'){ coin.classList.remove('show-tail'); coin.classList.add('show-head'); }
+      else { coin.classList.remove('show-head'); coin.classList.add('show-tail'); }
       showResult(pendingResult);
-      // chain logic: win => multiply and progress, lose => reset
       const win = (choice === pendingResult);
       if(win){
         markPassed(currentMultiplierIdx);
@@ -77,15 +66,26 @@ document.addEventListener('DOMContentLoaded', function(){
         highlightCurrent(currentMultiplierIdx);
         updateScoreDisplay();
         resultEl.textContent += ' — Вы выиграли!';
+        // enter chain mode: allow continuing by clicking side buttons
+        inChain = true;
       } else {
         resultEl.textContent += ' — Проигрыш';
         resetProgress();
+        inChain = false;
+        // clear stake input so user must enter new amount
+        if(stakeInput) stakeInput.value = '';
+        updateStakeDisplays();
       }
-      // re-enable play and clean up
       play.disabled = false;
+      btnHead.disabled = false; btnTail.disabled = false;
       coin.classList.remove('flip');
     };
     coin.addEventListener('animationend', onEnd, { once: true });
+  }
+
+  play.addEventListener('click', ()=>{
+    const baseStake = Math.max(0, Number(stakeInput && stakeInput.value) || 0);
+    startFlip(baseStake);
   });
 
   // helper to page-wise activate via keyboard
