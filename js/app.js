@@ -177,7 +177,14 @@
     function setActivated(arr){ try{ localStorage.setItem('mc_activated_promos', JSON.stringify(arr)); }catch(e){} }
 
     function openModal(){ if(!promoModal) return; promoModal.style.display = ''; promoModal.setAttribute('aria-hidden','false'); promoMessage.textContent=''; if(promoInput) { promoInput.value=''; promoInput.focus(); } }
-    function closeModal(){ if(!promoModal) return; promoModal.style.display = 'none'; promoModal.setAttribute('aria-hidden','true'); }
+    function closeModal(){ 
+      if(!promoModal) return; 
+      promoModal.style.display = 'none'; 
+      promoModal.setAttribute('aria-hidden','true');
+      // Включаем кнопку и инпут для следующей активации
+      if(promoActivate) promoActivate.disabled = false;
+      if(promoInput) promoInput.disabled = false;
+    }
 
     promoButtons.forEach(b=> b.addEventListener('click', (e)=>{ e.preventDefault(); openModal(); }));
     if(promoClose) promoClose.addEventListener('click', closeModal);
