@@ -10,5 +10,11 @@
     "amount": 10.00,
     "maxUses": 0,
     "uses": 0
+  },
+   {
+    "code": "111",
+    "amount": 100.00,
+    "maxUses": 0,
+    "uses": 0
   }
 ]
