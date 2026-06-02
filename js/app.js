@@ -120,7 +120,18 @@
 
     async function loadPromos(){
       try{
-        // try server API first
+        // try load from server promos.json file first
+        const res = await fetch('/promos.json');
+        if(res.ok){
+          const arr = await res.json();
+          const map = {};
+          (arr || []).forEach(it=>{ if(it && it.code){ map[normalizeCode(it.code)] = Number(it.amount) || 0; } });
+          console.log('📋 Promos loaded from file:', map);
+          return map;
+        }
+      }catch(e){ console.log('⚠️ Could not load promos.json:', e.message); /* fallthrough to local */ }
+      try{
+        // fallback: try server API
         const res = await fetch('/api/promos');
         if(res.ok){
           const arr = await res.json();
@@ -130,11 +141,12 @@
         }
       }catch(e){ /* fallthrough to local */ }
       try{
+        // last fallback: localStorage with default values
         const raw = localStorage.getItem('mc_promos');
         let arr = raw ? JSON.parse(raw) : null;
         if(!Array.isArray(arr)){
+          // Use default promos if nothing saved
           arr = [ { code: 'KATYSHKA', amount: 5.00, uses: 0 }, { code: 'WELCOME10', amount: 10.00, uses: 0 } ];
-          localStorage.setItem('mc_promos', JSON.stringify(arr));
         }
         const map = {};
         arr.forEach(it=>{ if(it && it.code){ map[normalizeCode(it.code)] = Number(it.amount) || 0; } });

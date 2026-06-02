@@ -1,0 +1,14 @@
+[
+  {
+    "code": "KATYSHKA",
+    "amount": 5.00,
+    "maxUses": 0,
+    "uses": 0
+  },
+  {
+    "code": "WELCOME10",
+    "amount": 10.00,
+    "maxUses": 0,
+    "uses": 0
+  }
+]

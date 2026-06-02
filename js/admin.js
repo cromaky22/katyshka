@@ -13,9 +13,17 @@ document.addEventListener('DOMContentLoaded', function(){
   async function render(){
     let arr = null;
     try{
-      const res = await fetch('/api/promos');
+      // try load from promos.json file first
+      const res = await fetch('/promos.json');
       if(res.ok){ arr = await res.json(); }
     }catch(e){ arr = null; }
+    // fallback to API
+    if(!Array.isArray(arr) || arr.length === 0){
+      try{
+        const res = await fetch('/api/promos');
+        if(res.ok){ arr = await res.json(); }
+      }catch(e){ arr = null; }
+    }
     // fallback to local storage
     if(!Array.isArray(arr) || arr.length === 0){ arr = getPromosLocal(); }
     if(!Array.isArray(arr) || arr.length === 0){ listEl.innerHTML = '<div class="hint">Пока нет промокодов</div>'; return; }
@@ -60,19 +68,23 @@ document.addEventListener('DOMContentLoaded', function(){
     if(isNaN(amt) || amt <= 0){ alert('Введите корректную сумму'); return; }
     let maxUses = parseInt(maxInput && maxInput.value);
     if(isNaN(maxUses) || maxUses < 0) maxUses = 0;
+    
+    const newPromo = { code: code, amount: Math.round(amt*100)/100, maxUses: maxUses, uses: 0 };
+    
     try{
-      const res = await fetch('/api/promos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: code, amount: Math.round(amt*100)/100, maxUses: maxUses }) });
+      // try to save to server API first
+      const res = await fetch('/api/promos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newPromo) });
       if(!res.ok) throw new Error('server');
-      codeInput.value=''; amountInput.value=''; maxInput.value='';
-      render();
+      console.log('✅ Promo saved to server:', code);
     }catch(e){
-      // server not available — persist locally and refresh
+      console.log('⚠️ Server save failed, saving to localStorage:', e.message);
+      // fallback: save to localStorage
       const arrLocal = getPromosLocal();
-      arrLocal.push({ code: code, amount: Math.round(amt*100)/100, uses: 0, maxUses: maxUses });
+      arrLocal.push(newPromo);
       setPromosLocal(arrLocal);
-      codeInput.value=''; amountInput.value=''; maxInput.value='';
-      render();
     }
+    codeInput.value=''; amountInput.value=''; maxInput.value='';
+    render();
   });
 
   render();
