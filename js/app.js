@@ -442,6 +442,7 @@
     const subEl = document.querySelector('.recipient-sub');
     function fillFromUser(user){
       if(!user) return false;
+      console.log('📷 Telegram user data:', user);
       if(nameEl) nameEl.textContent = ((user.first_name||'') + (user.last_name ? (' ' + user.last_name) : '') ).trim() || (user.username || '');
       if(subEl) subEl.textContent = 'Telegram ID ' + (user.id || '');
       // set header profile image if available
@@ -449,13 +450,17 @@
         const profileImg = document.querySelector('.app-header .profile img');
         if(profileImg){
           const candidate = user.photo_url || user.avatar || (user.id ? ('/api/tg-photo/' + user.id) : null);
+          console.log('🖼️ Avatar URL:', candidate);
           if(candidate){
             profileImg.src = candidate;
             profileImg.style.display = '';
-            profileImg.onerror = function(){ this.style.display = 'none'; };
+            console.log('✅ Avatar set to:', candidate);
+            profileImg.onerror = function(){ console.warn('❌ Avatar failed to load'); this.style.display = 'none'; };
+          } else {
+            console.warn('⚠️ No avatar URL found in user data');
           }
         }
-      }catch(e){}
+      }catch(e){ console.error('❌ Error setting avatar:', e); }
       // save locally for offline fallback
       try{ localStorage.setItem('tg_user', JSON.stringify(user)); }catch(e){}
       // try send to local API (if server running)
@@ -478,33 +483,45 @@
     function tryFill(){
       try{
         const tg = window.Telegram && window.Telegram.WebApp;
+        console.log('🔍 Checking Telegram WebApp:', !!tg);
         if(tg){
+          console.log('✅ Telegram WebApp found');
           // try several common locations
           const u1 = tg.initDataUnsafe && tg.initDataUnsafe.user;
+          console.log('📱 Try 1 - initDataUnsafe.user:', u1);
           if(fillFromUser(u1)) return;
           const u2 = tg.initData && tg.initData.user;
+          console.log('📱 Try 2 - initData.user:', u2);
           if(fillFromUser(u2)) return;
           const u3 = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.user;
+          console.log('📱 Try 3 - WebApp.user:', u3);
           if(fillFromUser(u3)) return;
+          console.log('⚠️ No user data found in Telegram WebApp');
+        } else {
+          console.log('⚠️ Telegram WebApp not available');
         }
         // fallback: try global initData parse (if available)
-        if(window.__tg_user){ fillFromUser(window.__tg_user); return }
+        if(window.__tg_user){ console.log('💾 Found __tg_user:', window.__tg_user); fillFromUser(window.__tg_user); return }
         // additional fallback: try reading saved user from localStorage
         try{
           const maybe = localStorage.getItem('tg_user') || localStorage.getItem('mc_user') || localStorage.getItem('user');
           if(maybe){
+            console.log('💾 Found saved user in localStorage');
             let parsed = null;
             try{ parsed = JSON.parse(maybe); }catch(e){}
             if(parsed) { fillFromUser(parsed); return }
+          } else {
+            console.log('⚠️ No saved user data in localStorage');
           }
-        }catch(e){}
-      }catch(e){/*ignore*/}
+        }catch(e){ console.error('❌ localStorage error:', e); }
+      }catch(e){ console.error('❌ tryFill error:', e); }
     }
 
     // attempt multiple times in case WebApp initializes slightly later
+    console.log('🚀 Starting Telegram user detection...');
     tryFill();
     let attempts = 0;
-    const t = setInterval(()=>{ attempts++; tryFill(); if(attempts>6) clearInterval(t); }, 500);
+    const t = setInterval(()=>{ attempts++; console.log(`🔄 Retry ${attempts}...`); tryFill(); if(attempts>6) clearInterval(t); }, 500);
   }catch(e){
     // ignore if WebApp not present
   }
