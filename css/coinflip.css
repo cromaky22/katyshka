@@ -19,14 +19,18 @@
 
 .controls{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:6px}
 .buttons{display:flex;gap:12px}
-.buttons .btn{min-width:280px;display:inline-flex;align-items:center;gap:12px;padding:18px 28px;border-radius:12px;background:linear-gradient(180deg,#2f78ff,#1a5fff);color:#fff;border:3px solid rgba(32,120,255,0.18);box-shadow:0 12px 34px rgba(20,90,200,0.22);font-weight:800;position:relative}
+.buttons .btn{min-width:220px;display:inline-flex;align-items:center;gap:12px;padding:14px 20px;border-radius:12px;background:linear-gradient(180deg,#2f78ff,#1a5fff);color:#fff;border:3px solid rgba(32,120,255,0.18);box-shadow:0 10px 28px rgba(20,90,200,0.20);font-weight:800;position:relative}
 .buttons .btn:first-child{border-top-left-radius:12px;border-bottom-left-radius:12px}
 .buttons .btn:last-child{border-top-right-radius:12px;border-bottom-right-radius:12px}
 
 /* coin badge overlap */
-.buttons .coin-badge{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:52px;height:52px;border-width:4px}
+.buttons .coin-badge{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:46px;height:46px;border-width:4px}
 .buttons .btn:last-child .coin-badge{right:12px;left:auto}
 .buttons .btn .btn-label{flex:1;text-align:center}
+
+/* stake label on buttons */
+.btn-stake{position:absolute;left:50%;transform:translateX(-50%);bottom:-18px;background:rgba(0,0,0,0.12);padding:4px 8px;border-radius:8px;font-size:13px;color:var(--text);min-width:48px;text-align:center}
+.btn.bet-on{box-shadow:0 14px 36px rgba(20,90,200,0.28), 0 0 0 6px rgba(46,120,255,0.06)}
 .buttons .btn .btn-label{font-weight:800;letter-spacing:1px}
 .coin-badge{width:44px;height:44px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 6px 18px rgba(2,6,23,0.4);border:4px solid rgba(20,110,255,0.12);background:linear-gradient(180deg,#ffd97b,#ffcf59)}
 .coin-badge.coin-tail{background:linear-gradient(180deg,#e6f0ff,#cfe0ff)}

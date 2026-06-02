@@ -8,9 +8,29 @@ document.addEventListener('DOMContentLoaded', function(){
   const scoreRoundsEl = document.getElementById('scoreRounds');
   const scoreMultiplierEl = document.getElementById('scoreMultiplier');
   let choice = null;
+  const stakeHeadEl = document.getElementById('stakeHead');
+  const stakeTailEl = document.getElementById('stakeTail');
 
   btnHead.addEventListener('click', ()=>{ choice = 'head'; btnHead.classList.add('active'); btnTail.classList.remove('active'); });
   btnTail.addEventListener('click', ()=>{ choice = 'tail'; btnTail.classList.add('active'); btnHead.classList.remove('active'); });
+
+  function updateStakeDisplays(){
+    const val = stakeInput && stakeInput.value ? (Number(stakeInput.value) || 0) : 0;
+    if(stakeHeadEl) stakeHeadEl.textContent = `₽ ${val}`;
+    if(stakeTailEl) stakeTailEl.textContent = `₽ ${val}`;
+    // highlight selected button
+    if(choice === 'head'){
+      btnHead.classList.add('bet-on'); btnTail.classList.remove('bet-on');
+    } else if(choice === 'tail'){
+      btnTail.classList.add('bet-on'); btnHead.classList.remove('bet-on');
+    } else {
+      btnHead.classList.remove('bet-on'); btnTail.classList.remove('bet-on');
+    }
+  }
+  if(stakeInput) stakeInput.addEventListener('input', updateStakeDisplays);
+  // update displays when choosing side
+  btnHead.addEventListener('click', updateStakeDisplays);
+  btnTail.addEventListener('click', updateStakeDisplays);
 
   function randomResult(){ return Math.random() < 0.5 ? 'head' : 'tail'; }
 
@@ -185,4 +205,5 @@ document.addEventListener('DOMContentLoaded', function(){
 
   initMults();
   updateScoreDisplay();
+  updateStakeDisplays();
 });
