@@ -644,11 +644,15 @@
   })();
 })();
 
-// Background floating hearts
+// Background floating hearts/bombs
 (function(){
   const MAX = 28;
   const spawnInterval = 700; // ms
   const containerClass = 'bg-hearts';
+  
+  // Check if we're on mines page
+  const isMinesPage = document.body.classList.contains('page-mines');
+  const emoji = isMinesPage ? '💣' : '❤';
 
   let container = document.querySelector('.' + containerClass);
   if(!container){
@@ -663,7 +667,7 @@
     if(container.children.length > MAX) return;
     const s = document.createElement('span');
     s.className = 'bg-heart';
-    s.textContent = '❤';
+    s.textContent = emoji;
     const size = Math.round(rand(12,28));
     const left = Math.round(rand(2,98));
     const tx = Math.round(rand(-80,80)) + 'px';
