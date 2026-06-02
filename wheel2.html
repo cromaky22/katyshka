@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wheel 2 — Nvuti</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/wheel.css">
+</head>
+<body class="page-wheel">
+  <header class="header">
+    <div class="header-left">
+      <span class="game-title">Wheel 2</span>
+    </div>
+    <div class="header-right">
+      <div class="balance-header">
+        <span class="balance-emoji">💠</span>
+        <span class="balance-value" id="headerBalance">0.00</span>
+        <span class="currency">$</span>
+      </div>
+      <a href="menu.html" class="profile-link">Профиль ▾</a>
+    </div>
+  </header>
+
+  <main class="wheel-game">
+    <div class="wheel-board">
+      <!-- Баланс карточка -->
+      <div class="balance-card">
+        <span class="balance-icon">💰</span>
+        <span class="balance-amount" id="gameBalance">0.00</span>
+      </div>
+
+      <!-- История игр -->
+      <div class="history-section">
+        <div class="history-label">История игр</div>
+        <div class="history-scroll" id="historyScroll"></div>
+      </div>
+
+      <!-- Колесо -->
+      <div class="wheel-container">
+        <div class="wheel-display" id="wheelDisplay">
+          <div class="wheel-waiting">
+            <div class="waiting-icon">⏱️</div>
+            <div class="waiting-text">Ждём ставок...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Таблица ставок -->
+      <div class="betting-table" id="bettingTable">
+        <div class="betting-buttons">
+          <button class="bet-btn btn-red" data-bet="red">Красное<div class="coef">x2</div></button>
+          <button class="bet-btn btn-black" data-bet="black">Черное<div class="coef">x2</div></button>
+        </div>
+        <div class="betting-buttons">
+          <button class="bet-btn btn-even" data-bet="odd">Четное<div class="coef">x2</div></button>
+          <button class="bet-btn btn-odd" data-bet="notodd">Нечетное<div class="coef">x2</div></button>
+        </div>
+        <div class="betting-buttons">
+          <button class="bet-btn btn-range1" data-bet="range1">1-18<div class="coef">x2</div></button>
+          <button class="bet-btn btn-zero" data-bet="0">0<div class="coef">x36</div></button>
+          <button class="bet-btn btn-range2" data-bet="range2">19-36<div class="coef">x2</div></button>
+        </div>
+        <div class="betting-buttons">
+          <button class="bet-btn btn-range3" data-bet="range3">1-12<div class="coef">x3</div></button>
+          <button class="bet-btn btn-range4" data-bet="range4">13-24<div class="coef">x3</div></button>
+          <button class="bet-btn btn-range5" data-bet="range5">25-36<div class="coef">x3</div></button>
+        </div>
+        <button class="toggle-numbers-btn" id="toggleNumbersBtn">Поставить на число</button>
+      </div>
+
+      <!-- Таблица чисел (скрытая по умолчанию) -->
+      <div class="numbers-table hidden" id="numbersTable">
+        <div class="numbers-grid" id="numbersGrid"></div>
+        <button class="toggle-numbers-btn" id="toggleDefaultBtn">Назад</button>
+      </div>
+
+      <!-- Панель ставки -->
+      <div class="stake-panel">
+        <div class="stake-header">
+          <label>Ставка</label>
+          <span class="stake-range">От $0.50 до $200</span>
+        </div>
+
+        <div class="quick-bet-buttons">
+          <button class="quick-bet-btn" data-amount="0.5">+0.5</button>
+          <button class="quick-bet-btn" data-amount="1">+1</button>
+          <button class="quick-bet-btn" data-amount="5">+5</button>
+          <button class="quick-bet-btn" data-amount="10">+10</button>
+        </div>
+
+        <div class="stake-input-group">
+          <input type="number" id="stakeInput" value="1" min="0.5" max="200" step="0.5">
+          <div class="stake-controls">
+            <button class="stake-btn" id="halfBtn">1/2</button>
+            <button class="stake-btn" id="doubleBtn">x2</button>
+          </div>
+        </div>
+
+        <button class="btn-play" id="playBtn">СТАВИТЬ</button>
+        <button class="btn-collect hidden" id="collectBtn">ЗАБРАТЬ</button>
+        <div class="game-status" id="gameStatus"></div>
+      </div>
+    </div>
+  </main>
+
+  <nav class="bottom-nav">
+    <a href="home.html#games" class="nav-item">
+      <span class="nav-emoji">🎮</span>
+      <span class="nav-label">Games</span>
+    </a>
+    <a href="wallet.html" class="nav-item">
+      <span class="nav-emoji">💼</span>
+      <span class="nav-label">Wallet</span>
+    </a>
+    <a href="home.html" class="nav-item">
+      <span class="nav-emoji">💎</span>
+    </a>
+    <a href="bonus.html" class="nav-item">
+      <span class="nav-emoji">🎁</span>
+      <span class="nav-label">Bonus</span>
+    </a>
+    <a href="menu.html" class="nav-item">
+      <span class="nav-emoji">☰</span>
+      <span class="nav-label">Menu</span>
+    </a>
+  </nav>
+
+  <script src="js/wheel2.js"></script>
+</body>
+</html>
