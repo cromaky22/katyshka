@@ -1,8 +1,8 @@
 // Basic Mines game logic — minimal prototype following coinflip patterns
 (function(){
   const GRID_SIZE = 25;
-  // 🎰 HOUSE EDGE: Увеличивает вероятность попадания на мину (0.0 = fair/100% выигрыш, 0.4375 = 43.75% подставки на безопасных = 55% проигрыш, 45% выигрыш)
-  const HOUSE_EDGE = 0.4375; // ~44% подставка на безопасных клетках → 45% шанс выигрыша игрокам
+  // 🎰 HOUSE EDGE: 0 = fair (100% win), 0.40 = 40% casino trick chance on safe cells (60% player win rate)
+  const HOUSE_EDGE = 0.40; // 40% casino advantage
   
   const gridEl = document.getElementById('minesGrid');
   const playBtn = document.getElementById('minesPlay');
