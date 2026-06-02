@@ -258,11 +258,8 @@
     if(cell.classList.contains('revealed')) return;
     const idx = parseInt(cell.dataset.index,10);
     
-    // 🎰 Проверка house edge: казино может "подставить" мину даже если её там нет
-    const isHouseTrick = Math.random() < HOUSE_EDGE && !mineSet.has(idx);
-    
-    // hit mine (либо реальная мина, либо "подставка" казино)
-    if((mineSet && mineSet.has(idx)) || isHouseTrick){
+    // hit mine
+    if(mineSet && mineSet.has(idx)){
         // mark as revealed bomb and keep selected highlight
         cell.classList.add('revealed','bomb','selected');
         cell.textContent = '💣';
