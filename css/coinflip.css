@@ -59,6 +59,11 @@
 .mult-item .mult-value{font-size:11px;color:var(--muted);margin-top:4px}
 .mult-item.active{opacity:1}
 .mult-item.active .mult-icon{box-shadow:0 8px 28px rgba(20,50,74,0.45)}
+
+/* passed state: colorize to yellow */
+.mult-item.passed .mult-icon{background:linear-gradient(180deg,#ffd97b,#ffcf59);box-shadow:0 10px 30px rgba(255,185,70,0.18);}
+.mult-item.passed .mult-icon img{filter:none}
+.mult-item .mult-icon{transition:background .18s ease,box-shadow .18s ease}
 .multipliers::-webkit-scrollbar{height:8px}
 .multipliers::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.03);border-radius:8px}
 
