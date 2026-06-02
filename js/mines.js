@@ -1,8 +1,8 @@
 // Basic Mines game logic — minimal prototype following coinflip patterns
 (function(){
   const GRID_SIZE = 25;
-  // 🎰 HOUSE EDGE: Micro advantage - small chance of fake bomb on safe cells
-  const HOUSE_EDGE = 0.15; // 15% micro advantage (small edge, no extra bombs)
+  // 🎰 HOUSE EDGE: 0 = completely fair game, no casino tricks
+  const HOUSE_EDGE = 0; // No house edge - completely honest game
   
   const gridEl = document.getElementById('minesGrid');
   const playBtn = document.getElementById('minesPlay');
@@ -258,28 +258,14 @@
     if(cell.classList.contains('revealed')) return;
     const idx = parseInt(cell.dataset.index,10);
     
-    // 🎰 Проверка house edge: казино может "подставить" мину даже если её там нет
-    const isHouseTrick = Math.random() < HOUSE_EDGE && !mineSet.has(idx);
-    
-    // hit mine (либо реальная мина, либо "подставка" казино)
-    if((mineSet && mineSet.has(idx)) || isHouseTrick){
+    // hit mine
+    if(mineSet && mineSet.has(idx)){
         // mark as revealed bomb and keep selected highlight
         cell.classList.add('revealed','bomb','selected');
         cell.textContent = '💣';
       
-      // Показываем мины только если это РЕАЛЬНАЯ мина, а не подставка казино
-      if(mineSet && mineSet.has(idx)){
-        revealAll(mineSet);
-      } else {
-        // Для подставки казино: показываем только текущую ячейку как бомбу, остальные как безопасные
-        const cells = gridEl.querySelectorAll('.cell');
-        cells.forEach((c, i) => {
-          if(i !== idx){
-            c.classList.add('revealed');
-            c.textContent = '✓';
-          }
-        });
-      }
+      // Показываем ВСЕ реальные мины
+      revealAll(mineSet);
       
       gameActive = false;
         updateStatus('Проигрыш — мина найдена');
