@@ -45,6 +45,27 @@ db.serialize(() => {
     activated_at TEXT DEFAULT (datetime('now')),
     UNIQUE(code, user_id)
   )`);
+  
+  // Load promos from promos.json into database
+  try {
+    const promosFile = path.join(__dirname, 'promos.json');
+    const promosData = require(promosFile);
+    if (Array.isArray(promosData)) {
+      promosData.forEach(promo => {
+        const code = (promo.code || '').toUpperCase();
+        if (code) {
+          db.run(`INSERT OR IGNORE INTO promos (code, amount, uses, max_uses, created_at) 
+                  VALUES (?, ?, ?, ?, datetime('now'))`,
+            [code, Number(promo.amount) || 0, Number(promo.uses) || 0, Number(promo.maxUses) || 0],
+            (err) => {
+              if (err) console.error('Error loading promo:', code, err);
+            });
+        }
+      });
+    }
+  } catch (e) {
+    console.error('Error loading promos.json:', e);
+  }
 });
 
 // Promo endpoints
