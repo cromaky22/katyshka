@@ -292,7 +292,8 @@
     const safeCount = GRID_SIZE - currentMines;
     if(revealedCount >= safeCount){
       // user cleared all safe cells — win
-      const payout = Math.round(currentStake *  (1 + safeCount/GRID_SIZE) * 100)/100;
+      const mult = multipliers[revealedCount - 1] || 1;
+      const payout = Math.round(currentStake * mult * 100) / 100;
       setBalance(getBalance() + payout);
       gameActive = false;
       revealAll(mineSet);
