@@ -16,6 +16,7 @@
   const stakeInputBottom = document.getElementById('minesStakeBottom');
   const minesSelectBottom = document.getElementById('minesCountBottom');
   const playBtnBottom = document.getElementById('minesPlayBottom');
+  const cashoutBtnBottom = document.getElementById('minesCashoutBottom');
   const openMinesPickerBtn = document.getElementById('openMinesPicker');
   const openMinesPickerBtnBottom = document.getElementById('openMinesPickerBottom');
   const minesPicker = document.getElementById('minesPicker');
@@ -147,6 +148,15 @@
         cashoutBtn.textContent = 'Забрать';
       }
     }
+    // sync bottom cashout button if present
+    if(cashoutBtnBottom){
+      if(gameActive && revealedCount > 0){
+        cashoutBtnBottom.style.display = '';
+        cashoutBtnBottom.textContent = `Забрать $${win.toFixed(2)}`;
+      } else {
+        cashoutBtnBottom.style.display = 'none';
+      }
+    }
     return (gameActive && revealedCount > 0) ? win : 0;
   }
 
@@ -260,6 +270,7 @@
     // after first safe cell, allow cashout
     if(revealedCount >= 1){
       if(cashoutBtn) cashoutBtn.style.display = '';
+      if(cashoutBtnBottom) { cashoutBtnBottom.style.display = ''; }
       if(playBtn) playBtn.style.display = 'none';
     }
     // update multipliers panel highlight and win
@@ -397,6 +408,7 @@
       revealAll(mineSet);
       // reset buttons
       cashoutBtn.style.display = 'none';
+      if(cashoutBtnBottom) cashoutBtnBottom.style.display = 'none';
       if(playBtn) playBtn.style.display = '';
       // re-enable controls after round
       enableControls();
@@ -405,6 +417,8 @@
         // clear field after showing result
         setTimeout(resetField, 800);
     });
+    // mirror bottom cashout to call top cashout
+    if(cashoutBtnBottom){ cashoutBtnBottom.addEventListener('click', ()=>{ if(cashoutBtn) cashoutBtn.click(); }); }
   }
 
   function enableCells(){

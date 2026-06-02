@@ -9,6 +9,12 @@
 .mines-board .side .panel-title{font-weight:800;margin-bottom:6px}
 .mines-board .side .panel-count{font-size:28px;font-weight:900;color:var(--accent)}
 .center-area{flex:1;display:flex;flex-direction:column;align-items:center;gap:12px}
+
+/* container to hold multipliers, field and controls cleanly centered */
+.mines-container{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:12px;margin:0 auto}
+.top-multipliers-wrap{width:100%;display:flex;align-items:center;justify-content:center}
+.top-multipliers{justify-content:center}
+.top-multipliers .m-item{min-width:86px}
 .top-multipliers{display:flex;gap:12px;margin-bottom:6px}
 .top-multipliers .m-item{background:rgba(255,255,255,0.02);padding:8px 14px;border-radius:12px;font-weight:800;text-align:center;color:var(--muted)}
 .top-multipliers .m-item span{display:block;margin-top:6px;font-size:13px;color:var(--text)}
@@ -42,7 +48,17 @@
   .mines-picker-grid{grid-template-columns:repeat(5,1fr);gap:6px}
 }
 .grid{width:100%;max-width:720px;display:grid;grid-template-columns:repeat(5,1fr);gap:12px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));border-radius:12px}
-.field-wrapper{background:linear-gradient(180deg, rgba(6,4,12,0.6), rgba(10,8,18,0.6));padding:12px;border-radius:14px;margin:10px 0;box-shadow:0 12px 30px rgba(0,0,0,0.6);width:100%;max-width:420px;margin-left:auto;margin-right:auto;position:relative;z-index:2;isolation:isolate}
+.field-wrapper{background:linear-gradient(180deg, rgba(6,4,12,0.6), rgba(10,8,18,0.6));padding:12px;border-radius:14px;margin:10px 0;box-shadow:0 12px 30px rgba(0,0,0,0.6);width:100%;max-width:420px;position:relative;z-index:2;isolation:isolate}
+
+/* dark square slightly larger than the field */
+.field-wrapper::before{
+  content:'';
+  position:absolute;
+  left:-10px;right:-10px;top:-10px;bottom:-10px;
+  background:linear-gradient(180deg, rgba(3,6,12,0.85), rgba(6,8,14,0.85));
+  border-radius:18px;
+  z-index:-1;
+}
 .grid .cell{aspect-ratio:1/1;min-height:56px;border-radius:12px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:800;cursor:pointer;border:1px solid rgba(255,255,255,0.02);transition:transform .12s ease,box-shadow .12s ease;font-size:15px}
 .grid .cell:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,0.45)}
 .grid .cell.revealed{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));color:var(--text);cursor:default;transform:none;box-shadow:0 6px 18px rgba(0,0,0,0.5);transition:box-shadow .18s ease, transform .12s ease, background .12s ease}
@@ -62,6 +78,20 @@
 .controls-row{display:flex;align-items:center;gap:12px}
 .controls-row input,.controls-row select{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text)}
 .play-btn{padding:12px 24px;border-radius:10px;background:linear-gradient(180deg,#1f73ff,#0d5cff);color:#fff;border:none;font-weight:900}
+
+/* coinflip-like big pill buttons for play/cashout */
+.play-area .btn{min-width:220px;height:56px;display:inline-flex;align-items:center;justify-content:center;gap:12px;padding:12px 20px;border-radius:999px;background:linear-gradient(180deg,#2f78ff,#1a5fff);color:#fff;border:3px solid rgba(32,120,255,0.18);box-shadow:0 12px 34px rgba(20,90,200,0.22);font-weight:900;transition:box-shadow .18s ease,transform .14s ease,filter .12s ease}
+.play-area .btn.cashout-btn{background:linear-gradient(180deg,#ffd54d,#ffb400);color:#2b1f00;border:3px solid rgba(255,185,70,0.12);box-shadow:0 12px 34px rgba(255,185,70,0.12)}
+
+/* bottom panel big buttons */
+.mines-bottom .bottom-right .btn{min-width:140px;height:48px;padding:10px 16px;border-radius:10px;font-weight:900}
+.mines-bottom .bottom-right .btn.large{min-width:160px;height:52px;border-radius:999px}
+
+/* ensure cashout is visible and aligned on small screens */
+@media (max-width:720px){
+  .mines-bottom .bottom-right{display:flex;align-items:center;gap:8px;justify-content:center}
+  .mines-bottom .bottom-right .btn{flex:0 0 auto}
+}
 .hint{font-size:13px;color:var(--muted);margin-top:6px}
 
 @media (max-width:720px){
@@ -82,6 +112,14 @@
   .mines-bottom{display:flex;position:static;left:auto;right:auto;bottom:auto;width:100%;max-width:360px;margin:6px auto 0;box-shadow:0 6px 18px rgba(0,0,0,0.45);padding:10px}
 }
 
+/* mobile fixes to prevent visual shift in device emulation (F12) */
+@media (max-width:430px){
+  .mines-board{margin:0 auto;max-width:360px;overflow:hidden;padding:12px}
+  .center-area{margin:0 auto;max-width:320px;transform:none}
+  /* make the dark background not extend beyond the field to avoid horizontal shift */
+  .field-wrapper::before{left:0;right:0;top:0;bottom:0;border-radius:12px}
+}
+
 /* Specific adaptation for iPhone-like 430x932 viewport */
 @media (max-width:430px) and (max-height:932px){
   .mines-board{max-width:360px;padding:12px;border-radius:14px}
@@ -90,7 +128,7 @@
   .grid{grid-template-columns:repeat(5,1fr);gap:6px;max-width:280px}
   .grid .cell{min-height:52px;font-size:15px;border-radius:10px;padding:8px}
   .compact-panels{gap:6px;margin-bottom:6px}
-  .top-multipliers{display:none}
+  .top-multipliers{display:flex;gap:6px;overflow:auto;padding:4px;margin-bottom:8px}
   .controls{display:none}
   .mines-bottom{max-width:320px;padding:8px;margin:6px auto}
   .mines-bottom .bottom-center .panel-controls select{padding:6px}
@@ -114,6 +152,6 @@
   .mines-bottom{display:flex;position:static;left:auto;right:auto;bottom:auto;width:100%;max-width:320px;margin:12px auto 0;box-shadow:none}
   /* keep top controls hidden on mobile */
   .controls{display:none}
-  .top-multipliers{display:none}
+  .top-multipliers{display:flex;gap:6px;overflow:auto;padding:4px;margin-bottom:8px}
   .mines-board{padding-bottom:0}
 }

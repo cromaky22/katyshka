@@ -27,7 +27,7 @@
         <!-- compact panels moved to top; original side panels removed for compact layout -->
 
         <div class="center-area">
-              
+          <div class="mines-container">
           <div class="compact-panels">
             <div class="compact-item">
               <div class="compact-icon">
@@ -103,7 +103,7 @@
               <div class="mines-picker-actions"><button id="closeMinesPicker" class="btn small">Закрыть</button></div>
             </div>
           </div>
-          </div>
+          </div> <!-- .mines-container -->
           <!-- Mobile/compact stake panel moved here to appear under the game field on small screens -->
           <div class="mines-bottom" id="minesBottom">
             <div class="bottom-left">
@@ -159,6 +159,7 @@
             </div>
             <div class="bottom-right">
               <button id="minesPlayBottom" class="btn play-btn large">ИГРАТЬ</button>
+              <button id="minesCashoutBottom" class="btn cashout-btn large" style="display:none;background:linear-gradient(180deg,#ffd54d,#ffb400);color:#2b1f00;font-weight:900;margin-left:8px">ЗАБРАТЬ</button>
             </div>
           </div>
         </div>
