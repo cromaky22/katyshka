@@ -1,8 +1,9 @@
 // Basic Mines game logic — minimal prototype following coinflip patterns
 (function(){
   const GRID_SIZE = 25;
-  // 🎰 HOUSE EDGE: 0 = fair (100% win), 0.40 = 40% casino trick chance on safe cells
-  const HOUSE_EDGE = 0; // 0 = fair game for testing
+  // 🎰 HOUSE EDGE: Probability casino tricks a safe click into a bomb
+  // 45% player win rate: HOUSE_EDGE needs to be adjusted based on mine count
+  const HOUSE_EDGE = 0.45; // 45% chance of fake bomb on safe cells
   
   const gridEl = document.getElementById('minesGrid');
   const playBtn = document.getElementById('minesPlay');
