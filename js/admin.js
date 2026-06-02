@@ -61,12 +61,14 @@ document.addEventListener('DOMContentLoaded', function(){
   async function render(){
     let arr = null;
     try{
-      const res = await fetch('/promos.json');
+      // Always load from API first (it has the latest data from DB)
+      const res = await fetch('/api/promos');
       if(res.ok){ arr = await res.json(); }
     }catch(e){ arr = null; }
+    // Fallback to promos.json if API fails
     if(!Array.isArray(arr) || arr.length === 0){
       try{
-        const res = await fetch('/api/promos');
+        const res = await fetch('/promos.json');
         if(res.ok){ arr = await res.json(); }
       }catch(e){ arr = null; }
     }
@@ -118,10 +120,10 @@ document.addEventListener('DOMContentLoaded', function(){
     try{
       console.log('📤 Adding promo:', newPromo, 'with key:', adminKey);
       const res = await fetchWithAuth('/api/promos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newPromo) });
-      const respText = await res.text();
-      console.log('📥 Server response:', res.status, respText);
+      console.log('📥 Server response status:', res.status);
       if(!res.ok) {
-        alert('Ошибка сервера: ' + respText);
+        const errText = await res.text();
+        alert('Ошибка сервера: ' + errText);
         return;
       }
       alert('✅ Промокод добавлен!');
