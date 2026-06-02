@@ -13,7 +13,7 @@ html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;back
 .app-header .left-controls{display:flex;align-items:center;gap:8px}
 .app-header .btn-icon{background:transparent;border:none;color:var(--muted);font-size:20px;padding:6px;border-radius:8px}
 .app-header .logo-small{width:34px;height:34px;object-fit:cover;border-radius:8px}
-.app-header .header-title{text-align:center;font-weight:700;font-size:17px;color:var(--text)}
+.app-header .header-title{text-align:right;font-weight:700;font-size:17px;color:var(--text);margin-right:60px}
 .app-header .right-controls{display:flex;align-items:center;gap:10px}
 .balance-pill{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:6px 10px;border-radius:22px;color:var(--muted);display:flex;align-items:center;gap:8px}
 .balance-pill .wallet-icon{font-size:14px}
