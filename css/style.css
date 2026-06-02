@@ -219,7 +219,11 @@ html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;back
 
 .controls{display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:12px}
 .buttons{display:flex;gap:12px}
-.buttons .btn{min-width:120px}
+.buttons .btn{min-width:120px;display:inline-flex;align-items:center;gap:12px;padding:12px 18px;border-radius:12px}
+.buttons .btn .btn-label{font-weight:800}
+.coin-badge{width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 6px 18px rgba(2,6,23,0.4)}
+.coin-badge.coin-head{background:linear-gradient(180deg,#ffd97b,#ffcf59);color:#041017}
+.coin-badge.coin-tail{background:linear-gradient(180deg,#e6f0ff,#cfe0ff);color:#041017}
 .stake-row{display:flex;align-items:center;gap:8px;margin-top:8px}
 .stake-row input{width:80px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text)}
 .coinflip-result{margin-top:12px;color:var(--accent);font-weight:800;text-align:center}
