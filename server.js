@@ -16,8 +16,21 @@ db.serialize(() => {
     last_name TEXT,
     username TEXT,
     avatar TEXT,
+    balance REAL DEFAULT 100,
     updated_at TEXT
   )`);
+  // ensure balance column exists for older DBs
+  db.get("PRAGMA table_info(users)", [], (err, info) => {
+    // we will perform a safe check for balance column
+    db.all("PRAGMA table_info(users)", [], (err2, cols) => {
+      if(!err2 && Array.isArray(cols)){
+        const has = cols.some(c=> c.name === 'balance');
+        if(!has){
+          db.run('ALTER TABLE users ADD COLUMN balance REAL DEFAULT 100');
+        }
+      }
+    });
+  });
   db.run(`CREATE TABLE IF NOT EXISTS promos (
     code TEXT PRIMARY KEY,
     amount REAL DEFAULT 0,
@@ -99,13 +112,19 @@ app.post('/api/promos/:code/activate', (req, res) => {
 app.post('/api/users', (req, res) => {
   const u = req.body || {};
   if (!u.id) return res.status(400).json({ error: 'missing id' });
-  const stmt = db.prepare(`REPLACE INTO users (id, first_name, last_name, username, avatar, updated_at)
-    VALUES (?, ?, ?, ?, ?, datetime('now'))`);
-  stmt.run(u.id, u.first_name || null, u.last_name || null, u.username || null, u.avatar || null, function (err) {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json({ ok: true });
+  // preserve existing balance unless explicitly provided
+  db.get('SELECT balance FROM users WHERE id = ?', [u.id], (err, row) => {
+    if(err) return res.status(500).json({ error: err.message });
+    const existingBalance = (row && row.balance != null) ? row.balance : 100;
+    const balance = (u.balance != null) ? Number(u.balance) : existingBalance;
+    const stmt = db.prepare(`INSERT OR REPLACE INTO users (id, first_name, last_name, username, avatar, balance, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`);
+    stmt.run(u.id, u.first_name || null, u.last_name || null, u.username || null, u.avatar || null, balance, function (err2) {
+      if (err2) return res.status(500).json({ error: err2.message });
+      res.json({ ok: true });
+    });
+    stmt.finalize();
   });
-  stmt.finalize();
 });
 
 app.get('/api/users/:id', (req, res) => {
@@ -114,6 +133,33 @@ app.get('/api/users/:id', (req, res) => {
     if (err) return res.status(500).json({ error: err.message });
     if (!row) return res.status(404).json({});
     res.json(row);
+  });
+});
+
+// list users
+app.get('/api/users', (req, res) => {
+  db.all('SELECT id, first_name, last_name, username, avatar, balance, updated_at FROM users ORDER BY updated_at DESC', [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows || []);
+  });
+});
+
+// update user balance
+app.put('/api/users/:id/balance', (req, res) => {
+  const id = req.params.id;
+  const b = Number((req.body && req.body.balance) || 0);
+  if (!id) return res.status(400).json({ error: 'missing id' });
+  if (isNaN(b)) return res.status(400).json({ error: 'invalid balance' });
+  db.run('UPDATE users SET balance = ?, updated_at = datetime(\'now\') WHERE id = ?', [b, id], function(err){
+    if(err) return res.status(500).json({ error: err.message });
+    // if no rows updated, create new user row with balance
+    if(this.changes === 0){
+      const stmt = db.prepare('INSERT INTO users (id, balance, updated_at) VALUES (?, ?, datetime(\'now\'))');
+      stmt.run(id, b, function(err2){ if(err2) return res.status(500).json({ error: err2.message }); res.json({ ok: true }); });
+      stmt.finalize();
+      return;
+    }
+    res.json({ ok: true });
   });
 });
 

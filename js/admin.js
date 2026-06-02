@@ -76,4 +76,45 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   render();
+  // users management
+  async function renderUsers(){
+    const userEl = document.getElementById('userList');
+    if(!userEl) return;
+    try{
+      const res = await fetch('/api/users');
+      if(!res.ok) throw new Error('no');
+      const arr = await res.json();
+      if(!Array.isArray(arr) || arr.length === 0){ userEl.innerHTML = '<div class="hint">Пока нет пользователей</div>'; return; }
+      const rows = arr.map(u=>{
+        const id = u.id || '';
+        const name = ((u.first_name||'') + (u.last_name?(' '+u.last_name):'')).trim() || (u.username||'');
+        const login = u.username || '';
+        const bal = (u.balance != null) ? Number(u.balance).toFixed(2) : '100.00';
+        return `
+          <div class="admin-row" data-id="${id}">
+            <div class="admin-col admin-name"><strong>${id}</strong><div class="muted">${name}</div></div>
+            <div class="admin-col admin-uses">${login}</div>
+            <div class="admin-col admin-amount"><input class="user-balance" value="${bal}" style="width:100px"></div>
+            <div class="admin-col admin-actions"><button class="btn small user-save">Save</button></div>
+          </div>`;
+      }).join('');
+      userEl.innerHTML = rows;
+      Array.from(userEl.querySelectorAll('.user-save')).forEach(b=>{
+        b.addEventListener('click', async ()=>{
+          const row = b.closest('.admin-row');
+          const id = row && row.dataset && row.dataset.id;
+          const input = row.querySelector('.user-balance');
+          const val = parseFloat(input.value) || 0;
+          try{
+            const res2 = await fetch('/api/users/' + encodeURIComponent(id) + '/balance', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ balance: val }) });
+            if(!res2.ok) throw new Error('err');
+            alert('Баланс обновлён');
+            renderUsers();
+          }catch(e){ alert('Ошибка обновления'); }
+        });
+      });
+    }catch(e){ userEl.innerHTML = '<div class="hint">Ошибка загрузки пользователей</div>'; }
+  }
+  // initial load of users
+  renderUsers();
 });
