@@ -165,8 +165,15 @@ document.addEventListener('DOMContentLoaded', function() {
     dreamStake.value = Math.min(200, (val * 2).toFixed(2));
   });
 
-  function spinWheel(duration, onComplete) {
-    const startRotation = rotation % 360;
+  function pickRandomSegmentIndex() {
+    return Math.floor(Math.random() * TOTAL_SEGMENTS);
+  }
+
+  function spinToIndex(targetIndex, duration, onComplete) {
+    const startRotation = rotation;
+    const targetSegmentCenter = targetIndex * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
+    const targetAngle = (360 - targetSegmentCenter) % 360;
+    const totalRotation = 360 * 7 + targetAngle;
     const startTime = Date.now();
     let lastSegmentPassed = -1;
 
@@ -174,10 +181,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      rotation = (startRotation + 360 * 7 * eased) % 360;
+      rotation = startRotation + totalRotation * eased;
+
       drawWheel();
 
-      const currentSegment = Math.floor(((rotation % 360) + 360) % 360 / SEGMENT_ANGLE);
+      const normalizedRot = ((rotation % 360) + 360) % 360;
+      const currentSegment = Math.floor(normalizedRot / SEGMENT_ANGLE);
       if (currentSegment !== lastSegmentPassed && progress < 0.9) {
         lastSegmentPassed = currentSegment;
         sfxTick();
@@ -186,17 +195,12 @@ document.addEventListener('DOMContentLoaded', function() {
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
+        rotation = rotation % 360;
         onComplete();
       }
     }
 
     requestAnimationFrame(animate);
-  }
-
-  function getResultAtPointer() {
-    const normalizedRotation = ((rotation % 360) + 360) % 360;
-    const segmentIndex = Math.floor(normalizedRotation / SEGMENT_ANGLE);
-    return wheelData[segmentIndex];
   }
 
   function getColorForResult(num) {
@@ -214,16 +218,18 @@ document.addEventListener('DOMContentLoaded', function() {
     return map[num] || '#666';
   }
 
-  function addHistoryItem(num, isMultiplier) {
+  function addHistoryItem(num) {
     const item = document.createElement('div');
     item.className = 'history-item';
-    const text = isMultiplier ? num.toUpperCase() : 'x' + num;
+    const numStr = String(num);
+    const isMult = /^[0-9]+x$/i.test(numStr);
+    const text = isMult ? num.toUpperCase() : 'x' + num;
     item.textContent = text;
     item.style.background = getColorForResult(num);
     item.style.color = (num === 1) ? '#000' : '#fff';
     item.style.border = 'none';
     historyScroll.insertBefore(item, historyScroll.firstChild);
-    historyCount.textContent = gameHistory.length + 1;
+    historyCount.textContent = parseInt(historyCount.textContent || '0') + 1;
   }
 
   playBtn.addEventListener('click', () => {
@@ -249,17 +255,16 @@ document.addEventListener('DOMContentLoaded', function() {
     betsPanel.style.pointerEvents = 'none';
     resultPanel.style.display = 'none';
 
-    // FIRST SPIN
-    spinWheel(4000, () => {
-      const firstResult = getResultAtPointer();
-      addToHistory(firstResult);
+    const firstIndex = pickRandomSegmentIndex();
+    const firstResult = wheelData[firstIndex];
 
-      // Check if it's a multiplier (2x or 5x)
+    spinToIndex(firstIndex, 4000, () => {
       const isMult = typeof firstResult.num === 'string' && firstResult.num.includes('x');
-      
+
       if (isMult) {
-        // It's a multiplier spin! Spin again
         sfxMultiplier();
+        addHistoryItem(firstResult.num);
+
         resultEmoji.textContent = '🎰';
         resultNum.textContent = firstResult.num.toUpperCase();
         resultBadge.className = 'result-badge mult';
@@ -268,19 +273,21 @@ document.addEventListener('DOMContentLoaded', function() {
         resultWin.className = 'result-detail-value';
         resultPanel.style.display = 'flex';
 
-        // Second spin after short delay
+        const multValue = parseInt(firstResult.num);
+
         setTimeout(() => {
-          spinWheel(4000, () => {
-            const secondResult = getResultAtPointer();
-            const multiplierValue = parseInt(firstResult.num);
-            const finalNum = secondResult.num * multiplierValue;
-            
+          const secondIndex = pickRandomSegmentIndex();
+          const secondResult = wheelData[secondIndex];
+          const finalNum = secondResult.num * multValue;
+
+          spinToIndex(secondIndex, 4000, () => {
+            addHistoryItem(finalNum);
             showFinalResult(finalNum, firstResult.num);
           });
         }, 1200);
 
       } else {
-        // Regular number - just show result
+        addHistoryItem(firstResult.num);
         showFinalResult(firstResult.num, null);
       }
     });
@@ -304,12 +311,11 @@ document.addEventListener('DOMContentLoaded', function() {
     resultEmoji.style.animation = 'bounceIn 0.5s cubic-bezier(.2,.9,.2,1)';
 
     resultNum.textContent = 'x' + finalNum;
-    resultBadge.className = 'result-badge ' + getResultClass(finalNum);
+    resultBadge.className = 'result-badge ' + getResultClassForNum(finalNum);
     resultStake.textContent = '$' + currentStake.toFixed(2);
     resultWin.textContent = '$' + winAmount.toFixed(2);
     resultWin.className = 'result-detail-value ' + (won ? '' : 'loss');
 
-    // If there was a bonus multiplier, show it
     if (bonusMultiplier) {
       resultNum.textContent = 'x' + finalNum + ' (' + bonusMultiplier.toUpperCase() + ')';
     }
@@ -318,38 +324,11 @@ document.addEventListener('DOMContentLoaded', function() {
     betsPanel.style.display = 'none';
 
     won ? sfxWin() : sfxLose();
-
-    // Add final result to history
-    addToHistory({ num: finalNum, color: getColorForResult(finalNum), won: won });
   }
 
-  function getResultClass(num) {
-    if (typeof num === 'string' && num.includes('x')) return 'mult';
+  function getResultClassForNum(num) {
     const map = { 1: 'num-1', 2: 'num-2', 5: 'num-5', 10: 'num-10', 20: 'num-20', 40: 'num-40' };
     return map[num] || '';
-  }
-
-  function addToHistory(record) {
-    gameHistory.unshift(record);
-    if (gameHistory.length > 25) gameHistory.pop();
-    updateHistoryDisplay();
-  }
-
-  function updateHistoryDisplay() {
-    historyScroll.innerHTML = '';
-    gameHistory.forEach(r => {
-      const item = document.createElement('div');
-      item.className = 'history-item';
-      const numStr = String(r.num);
-      const isMult = /^[0-9]+x$/i.test(numStr);
-      const text = isMult ? r.num.toUpperCase() : 'x' + r.num;
-      item.textContent = text;
-      item.style.background = r.color || getColorForResult(r.num);
-      item.style.color = (r.num === 1) ? '#000' : '#fff';
-      item.style.border = 'none';
-      historyScroll.appendChild(item);
-    });
-    historyCount.textContent = gameHistory.length;
   }
 
   continueBtn.addEventListener('click', () => {
