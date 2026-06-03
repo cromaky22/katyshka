@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dream Catcher — Nvuti</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dreamcatcher.css">
+</head>
+<body class="page-dream">
+  <header class="app-header">
+    <div class="left-controls"></div>
+    <div class="header-title">DREAM CATCHER</div>
+    <div class="right-controls">
+      <div class="balance-pill">
+        <span class="wallet-icon">💠</span>
+        <span class="balance-value">0.00</span>
+        <span class="currency">$</span>
+        <span class="caret">▾</span>
+      </div>
+      <a href="menu.html" class="profile" title="Профиль" aria-label="Профиль"><img class="profile-icon" src="" alt="Аватар" onerror="this.style.display='none'"></a>
+    </div>
+  </header>
+
+  <main class="content">
+    <section class="dream">
+      <div class="dream-board">
+        
+        <!-- Баланс -->
+        <div class="dream-balance-card">
+          <div class="dream-balance-info">
+            <span class="dream-balance-label">БАЛАНС</span>
+            <span class="dream-balance-value">
+              <span class="dream-coin-icon">💠</span>
+              <span id="balanceDisplay">100.00</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Колесо -->
+        <div class="wheel-container">
+          <div class="wheel-wrapper">
+            <canvas id="dreamWheel" width="340" height="340"></canvas>
+            <div class="wheel-pointer" id="wheelPointer">▼</div>
+            <div class="wheel-center">
+              <span class="wheel-center-icon">✨</span>
+            </div>
+          </div>
+          
+          <!-- Таймер -->
+          <div class="dream-timer" id="dreamTimer" style="display:none">
+            <span class="timer-icon">⏱</span>
+            <span class="timer-value" id="timerValue">20</span>
+          </div>
+        </div>
+
+        <!-- Ставки -->
+        <div class="bets-panel" id="betsPanel">
+          <div class="bets-grid">
+            <button class="bet-btn bet-1" data-bet="1">
+              <span class="bet-value">x1</span>
+              <span class="bet-label">1</span>
+            </button>
+            <button class="bet-btn bet-2" data-bet="2">
+              <span class="bet-value">x2</span>
+              <span class="bet-label">2</span>
+            </button>
+            <button class="bet-btn bet-5" data-bet="5">
+              <span class="bet-value">x5</span>
+              <span class="bet-label">5</span>
+            </button>
+            <button class="bet-btn bet-10" data-bet="10">
+              <span class="bet-value">x10</span>
+              <span class="bet-label">10</span>
+            </button>
+            <button class="bet-btn bet-20" data-bet="20">
+              <span class="bet-value">x20</span>
+              <span class="bet-label">20</span>
+            </button>
+            <button class="bet-btn bet-40" data-bet="40">
+              <span class="bet-value">x40</span>
+              <span class="bet-label">40</span>
+            </button>
+          </div>
+
+          <div class="stake-row">
+            <div class="stake-input-wrap">
+              <input id="dreamStake" type="number" min="0.5" step="0.5" value="1" placeholder="Ставка">
+              <span class="stake-currency">$</span>
+            </div>
+            <div class="stake-helpers">
+              <button class="stake-helper" id="halfBtn">½</button>
+              <button class="stake-helper" id="doubleBtn">×2</button>
+            </div>
+          </div>
+
+          <button id="playBtn" class="btn play-btn">🎰 СТАВИТЬ</button>
+        </div>
+
+        <!-- Результат -->
+        <div class="result-panel" id="resultPanel" style="display:none">
+          <div class="result-emoji" id="resultEmoji">💫</div>
+          <div class="result-title">РЕЗУЛЬТАТ</div>
+          <div class="result-badge" id="resultBadge">
+            <span class="result-num" id="resultNum">x2</span>
+          </div>
+          <div class="result-details">
+            <div class="result-detail">
+              <span class="result-detail-label">СТАВКА</span>
+              <span class="result-detail-value" id="resultStake">$1.00</span>
+            </div>
+            <div class="result-detail">
+              <span class="result-detail-label">ВЫИГРЫШ</span>
+              <span class="result-detail-value" id="resultWin">$0.00</span>
+            </div>
+          </div>
+          <button id="continueBtn" class="btn play-btn">НОВАЯ ИГРА</button>
+        </div>
+
+        <!-- История -->
+        <div class="history-panel">
+          <div class="history-header">
+            <span>📜 ИСТОРИЯ</span>
+            <span class="history-count" id="historyCount">0</span>
+          </div>
+          <div class="history-scroll" id="historyScroll"></div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <a href="home.html#games" class="nav-item" data-name="games"><span class="icon">🎮</span><span class="label">Games</span></a>
+    <a href="wallet.html" class="nav-item" data-name="wallet"><span class="icon">💼</span><span class="label">Wallet</span></a>
+    <a href="home.html" class="nav-item center" data-name=""><span class="icon">💎</span></a>
+    <a href="bonus.html" class="nav-item" data-name="bonus"><span class="icon">🎁</span><span class="label">Bonus</span></a>
+    <a href="menu.html" class="nav-item" data-name="menu"><span class="icon">☰</span><span class="label">Menu</span></a>
+  </nav>
+
+  <script src="js/app.js"></script>
+  <script src="js/dreamcatcher.js"></script>
+</body>
+</html>
