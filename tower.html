@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tower — Tower</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/tower.css">
+</head>
+<body class="page-tower">
+  <header class="app-header">
+    <div class="left-controls"></div>
+    <div class="header-title">Tower</div>
+    <div class="right-controls">
+      <div class="balance-pill">
+        <span class="wallet-icon">💠</span>
+        <span class="balance-value">0.00</span>
+        <span class="currency">$</span>
+        <span class="caret">▾</span>
+      </div>
+      <a href="menu.html" class="profile" title="Профиль" aria-label="Профиль"><img class="profile-icon" src="" alt="Аватар" onerror="this.style.display='none'"></a>
+    </div>
+  </header>
+
+  <main class="content">
+    <section class="tower">
+      <div class="tower-board">
+        
+        <!-- Панель ставки -->
+        <div class="stake-panel" id="stakePanel">
+          <div class="stake-header">
+            <label>Ставка</label>
+            <span class="stake-range">От <span class="currency-sign-green">$</span>0.2 до <span class="currency-sign-green">$</span>200</span>
+          </div>
+          
+          <!-- Быстрые кнопки ставок -->
+          <div class="quick-bet-buttons">
+            <button class="quick-bet-btn" data-amount="1">+1</button>
+            <button class="quick-bet-btn" data-amount="3">+3</button>
+            <button class="quick-bet-btn" data-amount="5">+5</button>
+            <button class="quick-bet-btn" data-amount="10">+10</button>
+          </div>
+          
+          <div class="stake-row">
+            <input id="stakeInput" type="number" min="0.2" step="0.1" value="1">
+            <div class="stake-buttons">
+              <button id="halfBtn" class="btn-stake">1/2</button>
+              <button id="doubleBtn" class="btn-stake">x2</button>
+            </div>
+          </div>
+          <button id="playBtn" class="btn play-btn">ИГРАТЬ</button>
+        </div>
+
+        <!-- Сетка башни -->
+        <div class="tower-grid" id="towerGrid" style="display:none">
+          <!-- Уровни генерируются динамически -->
+        </div>
+
+        <!-- Панель результата -->
+        <div class="result-panel" id="resultPanel" style="display:none">
+          <div class="result-info">
+            <div class="result-level">Уровень: <span id="resultLevel">1</span></div>
+            <div class="result-winnings">Выигрыш: <span id="resultWinnings">0.00</span>$</div>
+          </div>
+          <div id="gameStatus" class="game-status" aria-live="polite"></div>
+          <button id="collectBtn" class="btn play-btn">ЗАБРАТЬ ВЫИГРЫШ</button>
+          <button id="continueBtn" class="btn play-btn" style="display:none">ПРОДОЛЖИТЬ</button>
+        </div>
+
+        <!-- История игр -->
+        <div class="history-panel">
+          <div class="history-header">ИСТОРИЯ ИГР</div>
+          <div class="history-scroll" id="historyScroll">
+            <!-- История добавляется динамически -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <a href="home.html#games" class="nav-item" data-name="games"><span class="icon">🎮</span><span class="label">Games</span></a>
+    <a href="wallet.html" class="nav-item" data-name="wallet"><span class="icon">💼</span><span class="label">Wallet</span></a>
+    <a href="home.html" class="nav-item center" data-name=""><span class="icon">💎</span></a>
+    <a href="bonus.html" class="nav-item" data-name="bonus"><span class="icon">🎁</span><span class="label">Bonus</span></a>
+    <a href="menu.html" class="nav-item" data-name="menu"><span class="icon">☰</span><span class="label">Menu</span></a>
+  </nav>
+
+  <script src="js/app.js"></script>
+  <script src="js/tower.js"></script>
+</body>
+</html>
