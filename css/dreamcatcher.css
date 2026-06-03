@@ -326,8 +326,8 @@
 .history-panel {
   background: linear-gradient(180deg, rgba(16, 22, 36, 0.95), rgba(8, 12, 22, 0.9));
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
-  padding: 4px 6px;
+  border-radius: 6px;
+  padding: 2px 4px;
   backdrop-filter: blur(10px);
 }
 .history-header {
@@ -339,12 +339,12 @@
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 1px;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 .history-scroll {
   display: flex;
   flex-wrap: nowrap;
-  gap: 4px;
+  gap: 3px;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: thin;
@@ -359,10 +359,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 34px;
-  min-height: 34px;
+  min-width: 30px;
+  min-height: 30px;
   border-radius: 50%;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 800;
   white-space: nowrap;
   animation: popIn 0.3s cubic-bezier(.2,.9,.2,1);
