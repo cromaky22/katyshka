@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const resultWin = document.getElementById('resultWin');
   const continueBtn = document.getElementById('continueBtn');
   const historyScroll = document.getElementById('historyScroll');
-  const historyCount = document.getElementById('historyCount');
   const dreamStake = document.getElementById('dreamStake');
   const halfBtn = document.getElementById('halfBtn');
   const doubleBtn = document.getElementById('doubleBtn');
@@ -229,7 +228,6 @@ document.addEventListener('DOMContentLoaded', function() {
     item.style.color = (num === 1) ? '#000' : '#fff';
     item.style.border = 'none';
     historyScroll.insertBefore(item, historyScroll.firstChild);
-    historyCount.textContent = parseInt(historyCount.textContent || '0') + 1;
   }
 
   playBtn.addEventListener('click', () => {
@@ -300,7 +298,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let winAmount = 0;
     if (won) {
       const HOUSE_EDGE = 0.06;
-      const payouts = { 1: 1.0, 2: 2.0, 5: 5.0, 10: 10.0, 20: 20.0, 40: 40.0 };
+      const payouts = { 1: 2.0, 2: 3.0, 5: 5.0, 10: 10.0, 20: 20.0, 40: 40.0 };
       winAmount = Math.round(currentStake * (payouts[betValue] || 0) * (1 - HOUSE_EDGE) * 100) / 100;
       setBalance(getBalance() + winAmount);
     }

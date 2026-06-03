@@ -341,14 +341,6 @@
   letter-spacing: 1px;
   margin-bottom: 12px;
 }
-.history-count {
-  background: rgba(46, 227, 107, 0.1);
-  color: var(--accent-green);
-  padding: 2px 8px;
-  border-radius: 16px;
-  font-size: 10px;
-  border: 1px solid rgba(46, 227, 107, 0.2);
-}
 .history-scroll {
   display: flex;
   flex-wrap: nowrap;
