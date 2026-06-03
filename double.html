@@ -10,13 +10,12 @@
 <body class="page-double">
   <header class="app-header">
     <div class="left-controls"></div>
-    <div class="header-title">Double</div>
+    <div class="header-title">DOUBLE</div>
     <div class="right-controls">
       <div class="balance-pill">
         <span class="wallet-icon">💠</span>
         <span class="balance-value">0.00</span>
         <span class="currency">$</span>
-        <span class="caret">▾</span>
       </div>
       <a href="menu.html" class="profile" title="Профиль" aria-label="Профиль"><img class="profile-icon" src="" alt="Аватар" onerror="this.style.display='none'"></a>
     </div>
@@ -25,73 +24,71 @@
   <main class="content">
     <section class="double">
       <div class="double-board">
-        <!-- Рулетка/колесо -->
+
+        <!-- Результаты -->
+        <div class="history-scroll" id="historyScroll"></div>
+
+        <!-- Колесо -->
         <div class="wheel-container">
           <div class="wheel-wrapper">
-            <img class="wheel" id="wheel" src="assets/wheel.svg" alt="Wheel">
-            <img class="pointer" id="pointer" src="assets/pointer.svg" alt="Pointer">
+            <canvas id="doubleWheel" width="340" height="340"></canvas>
+            <div class="wheel-pointer">▼</div>
+            <div class="wheel-center">
+              <span class="wheel-center-icon">🎯</span>
+            </div>
             <div class="result-display" id="resultDisplay"></div>
           </div>
         </div>
 
-        <!-- Панель выбора ставок -->
+        <!-- Выбор цвета -->
         <div class="bets-panel">
           <div class="bets-grid">
-            <button class="bet-btn" data-multiplier="2" data-index="0">
+            <button class="bet-btn bet-blue" data-color="blue" data-multiplier="2">
               <span class="bet-multiplier">x2</span>
               <span class="bet-color">Blue</span>
             </button>
-            <button class="bet-btn" data-multiplier="3" data-index="1">
+            <button class="bet-btn bet-yellow" data-color="yellow" data-multiplier="3">
               <span class="bet-multiplier">x3</span>
               <span class="bet-color">Yellow</span>
             </button>
-            <button class="bet-btn" data-multiplier="5" data-index="2">
+            <button class="bet-btn bet-orange" data-color="orange" data-multiplier="5">
               <span class="bet-multiplier">x5</span>
               <span class="bet-color">Orange</span>
             </button>
-            <button class="bet-btn" data-multiplier="50" data-index="3">
+            <button class="bet-btn bet-green" data-color="green" data-multiplier="50">
               <span class="bet-multiplier">x50</span>
               <span class="bet-color">Green</span>
             </button>
           </div>
         </div>
 
-        <!-- Панель ставки -->
+        <!-- Ставка -->
         <div class="stake-panel">
           <div class="stake-header">
             <label>Ставка</label>
             <span class="stake-range">От <span class="currency-sign-green">$</span>0.50 до <span class="currency-sign-green">$</span>200</span>
           </div>
-          
-          <!-- Быстрые кнопки ставок -->
+
           <div class="quick-bet-buttons">
             <button class="quick-bet-btn" data-amount="0.5">+0.5</button>
             <button class="quick-bet-btn" data-amount="1">+1</button>
             <button class="quick-bet-btn" data-amount="5">+5</button>
             <button class="quick-bet-btn" data-amount="10">+10</button>
           </div>
-          
+
           <div class="stake-row">
             <input id="stakeInput" type="number" min="0.5" max="200" step="0.5" value="1">
             <div class="stake-buttons">
-              <button id="halfBtn" class="btn-stake">1/2</button>
-              <button id="doubleBtn" class="btn-stake">x2</button>
+              <button id="halfBtn" class="btn-stake">½</button>
+              <button id="doubleBtn" class="btn-stake">×2</button>
             </div>
           </div>
-          <button id="playBtn" class="btn play-btn">ИГРАТЬ</button>
-          <button id="collectBtn" class="btn collect-btn" style="display:none">ЗАБРАТЬ</button>
+          <button id="playBtn" class="btn play-btn">🎰 ИГРАТЬ</button>
         </div>
 
-        <!-- Статус игры -->
+        <!-- Статус -->
         <div id="gameStatus" class="game-status" aria-live="polite"></div>
 
-        <!-- История игр -->
-        <div class="history-panel">
-          <div class="history-header">ИСТОРИЯ ИГР</div>
-          <div class="history-scroll" id="historyScroll">
-            <!-- История добавляется динамически -->
-          </div>
-        </div>
       </div>
     </section>
   </main>
