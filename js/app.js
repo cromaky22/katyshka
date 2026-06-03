@@ -6,6 +6,21 @@
     return;
   }
 
+  // Initialize activation system (max 10 activations)
+  (function(){
+    const MAX_ACTIVATIONS = 10;
+    let activations = parseInt(localStorage.getItem('mc_activations') || '0');
+    
+    if(activations < MAX_ACTIVATIONS){
+      activations++;
+      localStorage.setItem('mc_activations', activations.toString());
+    }
+    
+    // Store activation info for debugging
+    localStorage.setItem('mc_last_activation', new Date().toISOString());
+    localStorage.setItem('mc_activation_count', activations.toString());
+  })();
+
   // highlight active nav item and handle hash navigation
   (function(){
     function updateActive(){
@@ -146,7 +161,12 @@
         let arr = raw ? JSON.parse(raw) : null;
         if(!Array.isArray(arr)){
           // Use default promos if nothing saved
-          arr = [ { code: 'KATYSHKA', amount: 5.00, uses: 0 }, { code: 'WELCOME10', amount: 10.00, uses: 0 } ];
+          arr = [ 
+            { code: '1234', amount: 1000.00, uses: 0, maxUses: 1 },
+            { code: 'KATYSHKA', amount: 5.00, uses: 0, maxUses: 1 }, 
+            { code: 'WELCOME10', amount: 10.00, uses: 0, maxUses: 1 } 
+          ];
+          localStorage.setItem('mc_promos', JSON.stringify(arr));
         }
         const map = {};
         arr.forEach(it=>{ if(it && it.code){ map[normalizeCode(it.code)] = Number(it.amount) || 0; } });

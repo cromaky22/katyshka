@@ -460,6 +460,29 @@
 
 /* ======= RESPONSIVE ======= */
 
+@media (max-width: 700px) {
+  .stake-panel {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .quick-bet-buttons {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .quick-bet-btn {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .bomb-control-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+}
+
 @media (max-width: 600px) {
   .stake-panel {
     padding: 15px;
@@ -560,6 +583,71 @@
 
   #winningsAmount {
     font-size: 24px;
+  }
+}
+
+@media (max-width: 420px) {
+  .stake-panel {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .game-panel {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .tower-grid {
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .tower-cell {
+    font-size: 18px;
+    min-height: 50px;
+    border-width: 1.5px;
+  }
+
+  .play-btn,
+  #collectBtn,
+  #continueBtn {
+    font-size: 13px;
+    padding: 12px;
+    min-height: 44px;
+  }
+
+  .level-bar {
+    padding: 6px 4px;
+    font-size: 9px;
+  }
+
+  .level-number {
+    font-size: 10px;
+  }
+
+  .coefs-scroll {
+    max-height: 100px;
+  }
+
+  #coefsContainer {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .coef-item {
+    padding: 8px 6px;
+    font-size: 11px;
+  }
+
+  .bomb-control-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  .quick-bet-btn {
+    font-size: 12px;
+    padding: 8px;
   }
 }
 

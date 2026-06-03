@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Crash — Crash</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/crash.css">
+</head>
+<body class="page-crash">
+  <header class="app-header">
+    <div class="left-controls"></div>
+    <div class="header-title">Crash</div>
+    <div class="right-controls">
+      <div class="balance-pill">
+        <span class="wallet-icon">💠</span>
+        <span class="balance-value">0.00</span>
+        <span class="currency">$</span>
+        <span class="caret">▾</span>
+      </div>
+      <a href="menu.html" class="profile" title="Профиль" aria-label="Профиль"><img class="profile-icon" src="" alt="Аватар" onerror="this.style.display='none'"></a>
+    </div>
+  </header>
+
+  <main class="content">
+    <section class="crash">
+      <div class="crash-board">
+        
+        <!-- Панель ставки -->
+        <div class="stake-panel" id="stakePanel">
+          <div class="quick-bet-buttons">
+            <button class="quick-bet-btn" data-amount="1">+1<span style="color:var(--accent-green)">$</span></button>
+            <button class="quick-bet-btn" data-amount="5">+5<span style="color:var(--accent-green)">$</span></button>
+            <button class="quick-bet-btn" data-amount="10">+10<span style="color:var(--accent-green)">$</span></button>
+            <button class="quick-bet-btn" data-amount="50">+50<span style="color:var(--accent-green)">$</span></button>
+          </div>
+
+          <div class="stake-input-wrapper">
+            <input id="stakeInput" type="number" min="0.2" step="0.1" value="1" placeholder="Ставка">
+            <div class="stake-helpers">
+              <button class="stake-helper" id="halfBtn">/2</button>
+              <button class="stake-helper" id="doubleBtn">x2</button>
+            </div>
+          </div>
+
+          <button id="playBtn" class="btn play-btn">ПОСТАВИТЬ</button>
+        </div>
+
+        <!-- Панель игры (график и кнопка вывода) -->
+        <div class="game-panel" id="gamePanel" style="display:none">
+          <div class="chart-container">
+            <canvas id="crashChart"></canvas>
+            <div class="crash-multiplier" id="crashMultiplier">1.00x</div>
+          </div>
+
+          <div class="game-info">
+            <div class="info-item">
+              <span class="info-label">Ставка:</span>
+              <span class="info-value" id="gameStake">$0.00</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Выигрыш:</span>
+              <span class="info-value" id="gameWinning">$0.00</span>
+            </div>
+          </div>
+
+          <button id="cashoutBtn" class="btn play-btn cash-out-btn">ЗАБРАТЬ</button>
+        </div>
+
+        <!-- Панель результата -->
+        <div class="result-panel" id="resultPanel" style="display:none">
+          <div class="result-title">ИГРА ЗАВЕРШЕНА</div>
+          <div class="result-multiplier" id="resultMultiplier">1.00x</div>
+          <div id="gameStatus" class="game-status" aria-live="polite"></div>
+          <button id="continueBtn" class="btn play-btn">НОВАЯ ИГРА</button>
+        </div>
+
+        <!-- История игр -->
+        <div class="history-panel">
+          <div class="history-header">ИСТОРИЯ ИГР</div>
+          <div class="history-scroll" id="historyScroll">
+            <!-- История добавляется динамически -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <a href="home.html#games" class="nav-item" data-name="games"><span class="icon">🎮</span><span class="label">Games</span></a>
+    <a href="wallet.html" class="nav-item" data-name="wallet"><span class="icon">💼</span><span class="label">Wallet</span></a>
+    <a href="home.html" class="nav-item center" data-name=""><span class="icon">💎</span></a>
+    <a href="bonus.html" class="nav-item" data-name="bonus"><span class="icon">🎁</span><span class="label">Bonus</span></a>
+    <a href="menu.html" class="nav-item" data-name="menu"><span class="icon">☰</span><span class="label">Menu</span></a>
+  </nav>
+
+  <script src="js/app.js"></script>
+  <script src="js/crash.js"></script>
+</body>
+</html>

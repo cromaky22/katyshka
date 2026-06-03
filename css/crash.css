@@ -1,0 +1,575 @@
+/* ======= CRASH GAME STYLES ======= */
+
+.page-crash {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Hide multiplier on stake panel by default */
+.stake-panel ~ .game-panel {
+  position: relative;
+}
+
+.crash-multiplier {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+.crash {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.crash-board {
+  width: 100%;
+  max-width: 700px;
+  background: transparent;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* ======= STAKE PANEL ======= */
+
+.stake-panel {
+  background: linear-gradient(180deg, rgba(11, 19, 32, 0.95), rgba(5, 10, 20, 0.9));
+  padding: 28px;
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.quick-bet-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.quick-bet-btn {
+  padding: 10px 0;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: rgba(47, 120, 255, 0.25);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(47, 120, 255, 0.3);
+}
+
+.quick-bet-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(47, 120, 255, 0.4);
+  background: rgba(47, 120, 255, 0.35);
+}
+
+/* Stake input */
+.stake-input-wrapper {
+  position: relative;
+  margin-bottom: 15px;
+}
+
+.stake-input-wrapper input {
+  width: 100%;
+  padding: 12px 90px 12px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.stake-input-wrapper input:focus {
+  outline: none;
+  border-color: rgba(47, 120, 255, 0.3);
+  background: rgba(47, 120, 255, 0.04);
+}
+
+.stake-helpers {
+  position: absolute;
+  display: flex;
+  gap: 8px;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.stake-helper {
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.stake-helper:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.09);
+}
+
+/* Play button */
+.play-btn {
+  width: 100%;
+  background: linear-gradient(180deg, #2f78ff, #1a5fff);
+  border: 3px solid rgba(32, 120, 255, 0.18);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 12px 34px rgba(20, 90, 200, 0.22);
+}
+
+.play-btn:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 18px 44px rgba(255, 255, 255, 0.12), 0 12px 30px rgba(20, 90, 200, 0.18);
+  filter: brightness(1.06);
+}
+
+.play-btn:active {
+  transform: translateY(-2px);
+}
+
+/* ======= GAME PANEL ======= */
+
+.game-panel {
+  background: linear-gradient(180deg, rgba(11, 19, 32, 0.95), rgba(5, 10, 20, 0.9));
+  padding: 28px;
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Chart */
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.chart-container canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.chart-container .crash-multiplier {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--accent-green);
+  text-shadow: 0 0 10px rgba(46, 227, 107, 0.3);
+  z-index: 10;
+  display: none !important;
+  visibility: hidden !important;
+}
+
+.game-panel[style*="flex"] .crash-multiplier,
+.game-panel[style*="block"] .crash-multiplier {
+  display: block !important;
+  visibility: visible !important;
+}
+
+/* Game info */
+.game-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 15px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.01);
+  border-radius: 8px;
+}
+
+.info-label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.info-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent-green);
+}
+
+/* Cash out button */
+.cash-out-btn {
+  background: linear-gradient(180deg, #ff6b6b, #ff5252);
+  border-color: rgba(255, 107, 107, 0.18);
+  box-shadow: 0 12px 34px rgba(255, 107, 107, 0.22);
+}
+
+.cash-out-btn:hover {
+  box-shadow: 0 18px 44px rgba(255, 255, 255, 0.12), 0 12px 30px rgba(255, 107, 107, 0.3);
+}
+
+/* ======= RESULT PANEL ======= */
+
+.result-panel {
+  background: linear-gradient(180deg, rgba(11, 19, 32, 0.95), rgba(5, 10, 20, 0.9));
+  padding: 40px 28px;
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.result-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.result-multiplier {
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--accent-green);
+  text-shadow: 0 0 20px rgba(46, 227, 107, 0.3);
+}
+
+.game-status {
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  padding: 15px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.game-status.success {
+  color: var(--accent-green);
+  border: 1px solid rgba(46, 227, 107, 0.3);
+}
+
+.game-status.error {
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+/* ======= HISTORY PANEL ======= */
+
+.history-panel {
+  background: linear-gradient(180deg, rgba(11, 19, 32, 0.95), rgba(5, 10, 20, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.45);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.history-header {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.history-scroll {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.history-item {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+}
+
+.history-item.win {
+  border-color: rgba(46, 227, 107, 0.3);
+  background: rgba(46, 227, 107, 0.08);
+  color: var(--accent-green);
+}
+
+.history-item.lose {
+  border-color: rgba(255, 107, 107, 0.3);
+  background: rgba(255, 107, 107, 0.08);
+  color: #ff6b6b;
+}
+
+/* ======= CRASH ANIMATION ======= */
+
+@keyframes crashFlash {
+  0% { background: rgba(255, 107, 107, 0); }
+  50% { background: rgba(255, 107, 107, 0.4); }
+  100% { background: rgba(255, 107, 107, 0); }
+}
+
+@keyframes crashShake {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  10% { transform: translateX(-8px) translateY(-8px); }
+  20% { transform: translateX(8px) translateY(8px); }
+  30% { transform: translateX(-8px) translateY(8px); }
+  40% { transform: translateX(8px) translateY(-8px); }
+  50% { transform: translateX(-6px) translateY(-6px); }
+  60% { transform: translateX(6px) translateY(6px); }
+  70% { transform: translateX(-4px) translateY(4px); }
+  80% { transform: translateX(4px) translateY(-4px); }
+  90% { transform: translateX(-2px) translateY(-2px); }
+}
+
+.crash-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 107, 107, 0);
+  z-index: 1000;
+  animation: crashFlash 0.8s ease-in-out;
+}
+
+.game-panel.shake {
+  animation: crashShake 0.6s ease-in-out;
+}
+
+/* ======= RESPONSIVE ======= */
+
+@media (max-width: 700px) {
+  .crash-board {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .quick-bet-buttons {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .quick-bet-btn {
+    padding: 10px 0;
+    font-size: 13px;
+  }
+
+  .chart-container {
+    height: 220px;
+    padding: 16px;
+  }
+
+  .crash-multiplier {
+    font-size: 28px;
+    top: 16px;
+    right: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .crash-board {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .stake-panel,
+  .game-panel,
+  .result-panel,
+  .history-panel {
+    padding: 15px;
+  }
+
+  .quick-bet-buttons {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .quick-bet-btn {
+    padding: 8px 0;
+    font-size: 12px;
+  }
+
+  .stake-input-wrapper input {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .stake-helper {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+
+  .play-btn {
+    font-size: 14px;
+    padding: 14px;
+  }
+
+  .chart-container {
+    height: 200px;
+    padding: 15px;
+  }
+
+  .crash-multiplier {
+    font-size: 24px;
+    top: 15px;
+    right: 15px;
+  }
+
+  .result-multiplier {
+    font-size: 36px;
+  }
+
+  .game-info {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .info-item {
+    padding: 10px;
+  }
+
+  .history-scroll {
+    max-height: 120px;
+  }
+}
+
+@media (max-width: 420px) {
+  .crash-board {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .stake-panel,
+  .game-panel,
+  .result-panel {
+    padding: 12px;
+  }
+
+  .quick-bet-buttons {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .quick-bet-btn {
+    padding: 6px 0;
+    font-size: 11px;
+  }
+
+  .stake-input-wrapper input {
+    font-size: 13px;
+    padding: 8px;
+  }
+
+  .stake-helper {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+
+  .play-btn,
+  #continueBtn,
+  #cashoutBtn {
+    font-size: 12px;
+    padding: 12px;
+  }
+
+  .chart-container {
+    height: 150px;
+    padding: 10px;
+  }
+
+  .crash-multiplier {
+    font-size: 20px;
+    top: 10px;
+    right: 10px;
+  }
+
+  .result-multiplier {
+    font-size: 28px;
+  }
+
+  .result-title {
+    font-size: 16px;
+  }
+
+  .game-info {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .info-label {
+    font-size: 12px;
+  }
+
+  .info-value {
+    font-size: 13px;
+  }
+
+  .history-scroll {
+    max-height: 100px;
+  }
+}
+
+/* Hide demo labels and initial multiplier on stake panel */
+.stake-panel ~ .crash-multiplier {
+  display: none !important;
+}
+
+.stake-panel > * {
+  pointer-events: auto;
+}
+
+/* Ensure multiplier only shows during game */
+#stakePanel + #gamePanel #crashMultiplier,
+#stakePanel ~ #gamePanel #crashMultiplier {
+  display: none !important;
+}
+
+#gamePanel[style*="display: flex"] #crashMultiplier,
+#gamePanel[style*="display: block"] #crashMultiplier {
+  display: block !important;
+}
