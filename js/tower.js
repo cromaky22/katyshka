@@ -16,8 +16,9 @@ document.addEventListener('DOMContentLoaded', function(){
   const bombBtns = document.querySelectorAll('.bomb-btn');
   const coefsList = document.getElementById('coefsList');
 
-  const ROWS = 2; // 2 ряда по 5 ячеек = 10 уровней
+  const ROWS = 2;
   const COLS = 5;
+  const TOTAL_LEVELS = ROWS * COLS; // 10 уровней
   
   // Коэффициенты в зависимости от количества бомб
   const COEFS = {
@@ -27,13 +28,12 @@ document.addEventListener('DOMContentLoaded', function(){
     4: [4.5, 22.5, 112.5, 562.5, 2812.5, 14062.5, 70312.5, 351562.5, 1757812.5, 8789062.5]
   };
 
-  let gameActive = false;
+  let gameState = 'selecting'; // selecting -> playing -> result
+  let bombCount = 1;
   let currentBet = 0;
-  let currentLevel = 0;
+  let currentLevel = 0; // 0-9
   let towerData = [];
-  let gameEnded = false;
   let currentWinnings = 0;
-  let bombCount = 1; // По умолчанию 1 бомба
 
   // Balance helpers
   function getBalance(){ 
@@ -46,118 +46,103 @@ document.addEventListener('DOMContentLoaded', function(){
     document.querySelectorAll('.balance-value').forEach(el=>el.textContent = n.toFixed(2)); 
   }
 
-  // Generate tower levels
+  // Generate tower - создаёт 10 уровней с случайными бомбами
   function generateTower() {
     towerData = [];
-    for(let row = 0; row < ROWS; row++) {
-      const level = [];
-      
-      // Create array of cells
+    for(let level = 0; level < TOTAL_LEVELS; level++) {
+      const cells = [];
       for(let col = 0; col < COLS; col++) {
-        level.push({
-          isBomb: false,
-          opened: false
-        });
+        cells.push({ isBomb: false });
       }
       
-      // Randomly place bombs (количество зависит от bombCount)
+      // Случайно размещаем бомбы
       for(let i = 0; i < bombCount; i++) {
-        let bombPos = Math.floor(Math.random() * COLS);
-        while(level[bombPos].isBomb) {
-          bombPos = Math.floor(Math.random() * COLS);
+        let pos = Math.floor(Math.random() * COLS);
+        while(cells[pos].isBomb) {
+          pos = Math.floor(Math.random() * COLS);
         }
-        level[bombPos].isBomb = true;
+        cells[pos].isBomb = true;
       }
       
-      towerData.push(level);
+      towerData.push(cells);
     }
   }
 
-  // Render tower grid
-  function renderTower() {
+  function formatCoef(v) {
+    if(v >= 1000000) {
+      return (v / 1000000).toFixed(2) + 'M';
+    } else if(v >= 1000) {
+      return (v / 1000).toFixed(2) + 'K';
+    }
+    return v.toFixed(2);
+  }
+
+  function updateCoefsDisplay() {
+    coefsList.innerHTML = '';
+    const coefs = COEFS[bombCount];
+    coefs.forEach((coef, idx) => {
+      const item = document.createElement('div');
+      item.className = 'coef-item';
+      item.innerHTML = `<div class="level">Lvl ${idx + 1}</div><div class="multiplier">x${formatCoef(coef)}</div>`;
+      coefsList.appendChild(item);
+    });
+  }
+
+  function renderGrid() {
     towerGrid.innerHTML = '';
-    let levelIndex = 0;
+    let cellIndex = 0;
     
     for(let row = 0; row < ROWS; row++) {
-      const levelDiv = document.createElement('div');
-      levelDiv.className = 'tower-level';
+      const rowDiv = document.createElement('div');
+      rowDiv.className = 'tower-level';
+      
+      // Показываем уровень и коэффициент слева
+      const levelInfo = document.createElement('div');
+      levelInfo.className = 'level-info';
+      const coef = COEFS[bombCount][row * COLS];
+      levelInfo.innerHTML = `
+        <div class="level-number">Lvl ${row + 1}</div>
+        <div class="level-coef">x${formatCoef(coef)}</div>
+      `;
+      rowDiv.appendChild(levelInfo);
+      
+      // Ячейки
+      const cellsDiv = document.createElement('div');
+      cellsDiv.className = 'cells-row';
       
       for(let col = 0; col < COLS; col++) {
+        const levelIndex = row * COLS + col;
         const btn = document.createElement('button');
         btn.className = 'tower-cell';
         
-        const cell = towerData[row][col];
+        const cell = towerData[levelIndex];
         const isCurrentLevel = (levelIndex === currentLevel);
+        const isPlayable = isCurrentLevel && gameState === 'playing';
+        const isPastLevel = levelIndex < currentLevel;
         
-        if(cell.opened) {
+        if(isPlayable) {
+          // Текущий уровень - кликабельны все ячейки
+          btn.addEventListener('click', () => openCell(levelIndex, col));
+          btn.textContent = '?';
+        } else if(isPastLevel) {
+          // Прошлые уровни - показываем результат
           btn.disabled = true;
-          if(cell.isBomb) {
-            btn.classList.add('bomb');
-            btn.textContent = '💣';
-          } else {
-            btn.classList.add('safe');
-            btn.textContent = '✓';
+          if(cell.opened) {
+            btn.textContent = cell.isBomb ? '💣' : '✓';
+            btn.classList.add(cell.isBomb ? 'bomb' : 'safe');
           }
-        } else if(isCurrentLevel) {
-          btn.disabled = gameEnded;
-          btn.addEventListener('click', () => openCell(row, col));
         } else {
+          // Будущие уровни
           btn.disabled = true;
+          btn.textContent = '?';
         }
         
-        levelDiv.appendChild(btn);
-        levelIndex++;
+        cellsDiv.appendChild(btn);
       }
       
-      towerGrid.appendChild(levelDiv);
+      rowDiv.appendChild(cellsDiv);
+      towerGrid.appendChild(rowDiv);
     }
-  }
-
-  // Open cell
-  function openCell(row, col) {
-    if(gameEnded) return;
-    
-    const cell = towerData[row][col];
-    cell.opened = true;
-    
-    if(cell.isBomb) {
-      // Game over - hit bomb
-      gameEnded = true;
-      gameStatus.textContent = '✗ Вы попали на бомбу!';
-      gameStatus.className = 'game-status error';
-      playBtn.style.display = 'none';
-      collectBtn.style.display = 'none';
-      continueBtn.style.display = '';
-      addToHistory({ level: currentLevel, win: false });
-      renderTower();
-    } else {
-      // Safe cell - advance to next level
-      currentWinnings = calculateWinnings();
-      resultWinnings.textContent = currentWinnings.toFixed(2);
-      resultLevel.textContent = (currentLevel + 1);
-      
-      if(currentLevel < ROWS * COLS - 1) {
-        currentLevel++;
-        renderTower();
-        gameStatus.textContent = `✓ Уровень ${currentLevel + 1} открыт!`;
-        gameStatus.className = 'game-status success';
-      } else {
-        // Won the tower
-        gameEnded = true;
-        gameStatus.textContent = `✓ Вы прошли башню! Выигрыш: $${currentWinnings.toFixed(2)}`;
-        gameStatus.className = 'game-status success';
-        playBtn.style.display = 'none';
-        collectBtn.style.display = '';
-        addToHistory({ level: ROWS * COLS, win: true });
-        renderTower();
-      }
-    }
-  }
-
-  // Calculate winnings based on level and bet
-  function calculateWinnings() {
-    const multiplier = COEFS[bombCount][currentLevel] || 1;
-    return Math.round(currentBet * multiplier * 100) / 100;
   }
 
   // Event listeners
@@ -186,13 +171,12 @@ document.addEventListener('DOMContentLoaded', function(){
 
   doubleBtn.addEventListener('click', () => {
     const val = parseFloat(stakeInput.value) || 0;
-    stakeInput.value = Math.min(1000000, (val * 2).toFixed(2));
+    stakeInput.value = Math.min(10000000, (val * 2).toFixed(2));
   });
 
   playBtn.addEventListener('click', () => {
-    if(gameActive) return;
-
     const stake = parseFloat(stakeInput.value);
+    
     if(isNaN(stake) || stake <= 0){
       gameStatus.textContent = 'Введите корректную ставку';
       gameStatus.className = 'game-status error';
@@ -205,8 +189,7 @@ document.addEventListener('DOMContentLoaded', function(){
       return;
     }
 
-    const balance = getBalance();
-    if(balance < stake){
+    if(getBalance() < stake){
       gameStatus.textContent = 'Недостаточно средств';
       gameStatus.className = 'game-status error';
       return;
@@ -216,9 +199,8 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   collectBtn.addEventListener('click', () => {
-    const winAmount = parseFloat(resultWinnings.textContent);
-    setBalance(getBalance() + winAmount);
-    gameStatus.textContent = `Вы забрали $${winAmount.toFixed(2)}`;
+    setBalance(getBalance() + currentWinnings);
+    gameStatus.textContent = `Вы забрали $${currentWinnings.toFixed(2)}`;
     gameStatus.className = 'game-status success';
     resetGame();
   });
@@ -228,24 +210,19 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   function startGame(stake) {
-    gameActive = true;
     currentBet = stake;
     currentLevel = 0;
-    gameEnded = false;
     currentWinnings = 0;
+    gameState = 'playing';
 
-    // Deduct stake
     setBalance(getBalance() - stake);
-
-    // Generate tower
     generateTower();
 
-    // Hide stake panel, show tower grid
     stakePanel.style.display = 'none';
     towerGrid.style.display = 'block';
     resultPanel.style.display = 'block';
 
-    resultLevel.textContent = '1';
+    resultLevel.textContent = '0';
     resultWinnings.textContent = '0.00';
     gameStatus.textContent = 'Выберите ячейку на первом уровне';
     gameStatus.className = 'game-status';
@@ -253,14 +230,14 @@ document.addEventListener('DOMContentLoaded', function(){
     collectBtn.style.display = 'none';
     continueBtn.style.display = 'none';
 
-    renderTower();
+    renderGrid();
   }
 
   function resetGame() {
-    gameActive = false;
+    gameState = 'selecting';
     currentLevel = 0;
-    gameEnded = false;
     currentWinnings = 0;
+    towerData = [];
 
     stakePanel.style.display = 'block';
     towerGrid.style.display = 'none';
@@ -271,35 +248,46 @@ document.addEventListener('DOMContentLoaded', function(){
     continueBtn.style.display = 'none';
   }
 
-  function addToHistory(result) {
-    const item = document.createElement('div');
-    item.className = `history-item ${result.win ? 'win' : 'lose'}`;
-    item.textContent = `${result.level}`;
-    item.title = result.win ? `Выигрыш на уровне ${result.level}` : `Проигрыш на уровне ${result.level}`;
-    historyScroll.insertBefore(item, historyScroll.firstChild);
-
-    // Keep last 20 items
-    while(historyScroll.children.length > 20){
-      historyScroll.removeChild(historyScroll.lastChild);
+  function openCell(levelIndex, cellCol) {
+    if(gameState !== 'playing') return;
+    
+    const cell = towerData[levelIndex][cellCol];
+    cell.opened = true;
+    
+    if(cell.isBomb) {
+      gameStatus.textContent = '✗ Вы попали на бомбу!';
+      gameStatus.className = 'game-status error';
+      gameState = 'result';
+      continueBtn.style.display = '';
+      collectBtn.style.display = 'none';
+      addToHistory({ level: levelIndex + 1, win: false, bombs: bombCount });
+      renderGrid();
+    } else {
+      if(levelIndex < TOTAL_LEVELS - 1) {
+        currentLevel++;
+        currentWinnings = currentBet * COEFS[bombCount][currentLevel - 1];
+        resultWinnings.textContent = currentWinnings.toFixed(2);
+        resultLevel.textContent = currentLevel;
+        gameStatus.textContent = `✓ Открыт уровень ${currentLevel + 1}`;
+        gameStatus.className = 'game-status success';
+        renderGrid();
+      } else {
+        currentWinnings = currentBet * COEFS[bombCount][TOTAL_LEVELS - 1];
+        resultWinnings.textContent = currentWinnings.toFixed(2);
+        resultLevel.textContent = TOTAL_LEVELS;
+        gameStatus.textContent = '✓ Вы прошли башню!';
+        gameStatus.className = 'game-status success';
+        gameState = 'result';
+        collectBtn.style.display = '';
+        continueBtn.style.display = 'none';
+        addToHistory({ level: TOTAL_LEVELS, win: true, bombs: bombCount });
+        renderGrid();
+      }
     }
   }
 
-  // Display coefficients
-  function updateCoefsDisplay() {
-    coefsList.innerHTML = '';
-    const coefs = COEFS[bombCount];
-    coefs.forEach((coef, idx) => {
-      const item = document.createElement('div');
-      item.className = 'coef-item';
-      item.innerHTML = `<div class="level">Lvl ${idx + 1}</div><div class="multiplier">x${coef.toFixed(2)}</div>`;
-      coefsList.appendChild(item);
-    });
-  }
-
-  // Set initial display
+  // Initialize
   updateCoefsDisplay();
-
-  // Set initial balance display
   document.querySelectorAll('.balance-value').forEach(el => {
     el.textContent = getBalance().toFixed(2);
   });
