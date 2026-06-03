@@ -47,6 +47,80 @@
   font-weight: 200;
 }
 
+/* Bomb selector */
+.bomb-selector {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.bomb-btn {
+  padding: 10px;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.7);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bomb-btn:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.bomb-btn.active {
+  background: linear-gradient(135deg, #4986cc 0%, #3a6ba8 100%);
+  color: white;
+  border-color: #4986cc;
+}
+
+/* Coefs display */
+.coefs-display {
+  background: rgba(0,0,0,0.3);
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border-left: 3px solid #4986cc;
+}
+
+.coefs-header {
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.coefs-list {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  font-size: 11px;
+}
+
+.coef-item {
+  text-align: center;
+  padding: 6px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 6px;
+  color: rgba(255,255,255,0.8);
+}
+
+.coef-item .level {
+  font-size: 9px;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 2px;
+}
+
+.coef-item .multiplier {
+  font-weight: 600;
+  color: #2196f3;
+}
+
 .quick-bet-buttons {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

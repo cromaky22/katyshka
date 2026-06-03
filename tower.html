@@ -29,16 +29,34 @@
         <!-- Панель ставки -->
         <div class="stake-panel" id="stakePanel">
           <div class="stake-header">
+            <label>Выберите количество бомб</label>
+          </div>
+
+          <!-- Селектор бомб -->
+          <div class="bomb-selector" id="bombSelector">
+            <button class="bomb-btn active" data-bombs="1">1 💣</button>
+            <button class="bomb-btn" data-bombs="2">2 💣</button>
+            <button class="bomb-btn" data-bombs="3">3 💣</button>
+            <button class="bomb-btn" data-bombs="4">4 💣</button>
+          </div>
+
+          <!-- Таблица коэффициентов -->
+          <div class="coefs-display">
+            <div class="coefs-header">Коэффициенты за уровень:</div>
+            <div class="coefs-list" id="coefsList"></div>
+          </div>
+
+          <div class="stake-header" style="margin-top: 20px;">
             <label>Ставка</label>
             <span class="stake-range">От <span class="currency-sign-green">$</span>0.2 до <span class="currency-sign-green">$</span>200</span>
           </div>
           
           <!-- Быстрые кнопки ставок -->
           <div class="quick-bet-buttons">
-            <button class="quick-bet-btn" data-amount="1">+1</button>
-            <button class="quick-bet-btn" data-amount="3">+3</button>
-            <button class="quick-bet-btn" data-amount="5">+5</button>
-            <button class="quick-bet-btn" data-amount="10">+10</button>
+            <button class="quick-bet-btn" data-amount="100">+100</button>
+            <button class="quick-bet-btn" data-amount="1000">+1K</button>
+            <button class="quick-bet-btn" data-amount="5000">+5K</button>
+            <button class="quick-bet-btn" data-amount="25000">+25K</button>
           </div>
           
           <div class="stake-row">
