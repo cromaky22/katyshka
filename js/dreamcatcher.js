@@ -287,16 +287,45 @@ document.addEventListener('DOMContentLoaded', function() {
     gameHistory.forEach(r => {
       const item = document.createElement('div');
       item.className = 'history-item';
-      item.textContent = (/^[0-9]+x$/i.test(String(r.num))) ? r.num.toUpperCase() : 'x' + r.num;
-      if (r.won) {
-        item.style.background = 'rgba(46,227,107,0.1)';
-        item.style.border = '1px solid rgba(46,227,107,0.2)';
-        item.style.color = 'var(--accent-green)';
+      
+      let text, bgColor, textColor;
+      const numStr = String(r.num);
+      const isMult = /^[0-9]+x$/i.test(numStr);
+      
+      if (isMult) {
+        text = r.num.toUpperCase();
+        bgColor = 'linear-gradient(30deg, #f3c025, #e5004c)';
+        textColor = '#fff';
       } else {
-        item.style.background = 'rgba(255,107,107,0.1)';
-        item.style.border = '1px solid rgba(255,107,107,0.2)';
-        item.style.color = '#ff6b6b';
+        text = 'x' + r.num;
+        const colorMap = {
+          1: { bg: '#f3c025', text: '#000' },
+          2: { bg: '#0072e5', text: '#fff' },
+          5: { bg: '#a65ecc', text: '#fff' },
+          10: { bg: '#096', text: '#fff' },
+          20: { bg: '#ff5722', text: '#fff' },
+          40: { bg: '#e5004c', text: '#fff' }
+        };
+        const cm = colorMap[r.num] || { bg: '#666', text: '#fff' };
+        bgColor = cm.bg;
+        textColor = cm.text;
       }
+      
+      item.textContent = text;
+      item.style.background = bgColor;
+      item.style.color = textColor;
+      item.style.border = 'none';
+      item.style.fontWeight = '800';
+      item.style.minWidth = '42px';
+      item.style.minHeight = '42px';
+      item.style.borderRadius = '50%';
+      item.style.display = 'inline-flex';
+      item.style.alignItems = 'center';
+      item.style.justifyContent = 'center';
+      item.style.lineHeight = '1';
+      item.style.padding = '8px 10px';
+      item.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+      
       historyScroll.appendChild(item);
     });
     historyCount.textContent = gameHistory.length;
