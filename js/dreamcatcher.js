@@ -81,6 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function sfxTick() { playTone(600 + Math.random() * 300, 'sine', 0.04, 0.03); }
   function sfxWin() { playTone(800, 'square', 0.1, 0.05); playTone(1200, 'sine', 0.15, 0.04); }
   function sfxLose() { playTone(100, 'sawtooth', 0.3, 0.04); }
+  function sfxMultiplier() { playTone(500, 'triangle', 0.15, 0.06); playTone(700, 'sine', 0.2, 0.05); }
 
   function getBalance() { return parseFloat(localStorage.getItem('mc_balance') || '100') || 100; }
 
@@ -164,6 +165,67 @@ document.addEventListener('DOMContentLoaded', function() {
     dreamStake.value = Math.min(200, (val * 2).toFixed(2));
   });
 
+  function spinWheel(duration, onComplete) {
+    const startRotation = rotation % 360;
+    const startTime = Date.now();
+    let lastSegmentPassed = -1;
+
+    function animate() {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      rotation = (startRotation + 360 * 7 * eased) % 360;
+      drawWheel();
+
+      const currentSegment = Math.floor(((rotation % 360) + 360) % 360 / SEGMENT_ANGLE);
+      if (currentSegment !== lastSegmentPassed && progress < 0.9) {
+        lastSegmentPassed = currentSegment;
+        sfxTick();
+      }
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        onComplete();
+      }
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  function getResultAtPointer() {
+    const normalizedRotation = ((rotation % 360) + 360) % 360;
+    const segmentIndex = Math.floor(normalizedRotation / SEGMENT_ANGLE);
+    return wheelData[segmentIndex];
+  }
+
+  function getColorForResult(num) {
+    if (typeof num === 'string' && num.includes('x')) {
+      return 'linear-gradient(30deg, #f3c025, #e5004c)';
+    }
+    const map = {
+      1: '#f3c025',
+      2: '#0072e5',
+      5: '#a65ecc',
+      10: '#096',
+      20: '#ff5722',
+      40: '#e5004c'
+    };
+    return map[num] || '#666';
+  }
+
+  function addHistoryItem(num, isMultiplier) {
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    const text = isMultiplier ? num.toUpperCase() : 'x' + num;
+    item.textContent = text;
+    item.style.background = getColorForResult(num);
+    item.style.color = (num === 1) ? '#000' : '#fff';
+    item.style.border = 'none';
+    historyScroll.insertBefore(item, historyScroll.firstChild);
+    historyCount.textContent = gameHistory.length + 1;
+  }
+
   playBtn.addEventListener('click', () => {
     initAudio();
     if (gameState !== 'idle' && gameState !== 'betting') return;
@@ -185,62 +247,53 @@ document.addEventListener('DOMContentLoaded', function() {
     playBtn.disabled = true;
     betsPanel.style.opacity = '0.5';
     betsPanel.style.pointerEvents = 'none';
+    resultPanel.style.display = 'none';
 
-    const rand = Math.random();
-    let resultIndex;
-    if (rand < 0.30) resultIndex = Math.floor(Math.random() * 23);
-    else if (rand < 0.58) resultIndex = 23 + Math.floor(Math.random() * 15);
-    else if (rand < 0.78) resultIndex = 38 + Math.floor(Math.random() * 7);
-    else if (rand < 0.88) resultIndex = 45 + Math.floor(Math.random() * 4);
-    else if (rand < 0.94) resultIndex = 49 + Math.floor(Math.random() * 2);
-    else if (rand < 0.97) resultIndex = 51;
-    else if (rand < 0.985) resultIndex = 52;
-    else resultIndex = 53;
+    // FIRST SPIN
+    spinWheel(4000, () => {
+      const firstResult = getResultAtPointer();
+      addToHistory(firstResult);
 
-    const resultData = wheelData[resultIndex];
-    const segmentCenter = resultIndex * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
-    const targetAngle = (360 - segmentCenter) % 360;
-    const totalRotation = 360 * 7 + targetAngle;
-    const duration = 5000;
-    const startRotation = rotation % 360;
-    const startTime = Date.now();
-    let lastSegmentPassed = -1;
+      // Check if it's a multiplier (2x or 5x)
+      const isMult = typeof firstResult.num === 'string' && firstResult.num.includes('x');
+      
+      if (isMult) {
+        // It's a multiplier spin! Spin again
+        sfxMultiplier();
+        resultEmoji.textContent = '🎰';
+        resultNum.textContent = firstResult.num.toUpperCase();
+        resultBadge.className = 'result-badge mult';
+        resultStake.textContent = '$' + currentStake.toFixed(2);
+        resultWin.textContent = 'БОНУСНЫЙ ВРАЩЕНИЕ!';
+        resultWin.className = 'result-detail-value';
+        resultPanel.style.display = 'flex';
 
-    function animateSpin() {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      rotation = (startRotation + totalRotation * eased) % 360;
+        // Second spin after short delay
+        setTimeout(() => {
+          spinWheel(4000, () => {
+            const secondResult = getResultAtPointer();
+            const multiplierValue = parseInt(firstResult.num);
+            const finalNum = secondResult.num * multiplierValue;
+            
+            showFinalResult(finalNum, firstResult.num);
+          });
+        }, 1200);
 
-      drawWheel();
-
-      const currentSegment = Math.floor(((rotation % 360) + 360) % 360 / SEGMENT_ANGLE);
-      if (currentSegment !== lastSegmentPassed && progress < 0.9) {
-        lastSegmentPassed = currentSegment;
-        sfxTick();
-      }
-
-      if (progress < 1) {
-        requestAnimationFrame(animateSpin);
       } else {
-        gameState = 'result';
-        showResult(resultData);
+        // Regular number - just show result
+        showFinalResult(firstResult.num, null);
       }
-    }
-
-    requestAnimationFrame(animateSpin);
+    });
   });
 
-  function showResult(resultData) {
+  function showFinalResult(finalNum, bonusMultiplier) {
     const betValue = selectedBet;
-    const isMultiplier = /^[0-9]+x$/i.test(String(resultData.num));
-    const resultNumValue = isMultiplier ? parseInt(resultData.num) : resultData.num;
-    const won = betValue === resultNumValue;
+    const won = betValue === finalNum;
 
     let winAmount = 0;
     if (won) {
       const HOUSE_EDGE = 0.06;
-      const payouts = { 1: 1.0, 2: 2.0, 5: 5.0, 10: 10.0, 20: 20.0, 40: 40.0, '2x': 40.0, '5x': 150.0 };
+      const payouts = { 1: 1.0, 2: 2.0, 5: 5.0, 10: 10.0, 20: 20.0, 40: 40.0 };
       winAmount = Math.round(currentStake * (payouts[betValue] || 0) * (1 - HOUSE_EDGE) * 100) / 100;
       setBalance(getBalance() + winAmount);
     }
@@ -250,28 +303,28 @@ document.addEventListener('DOMContentLoaded', function() {
     void resultEmoji.offsetHeight;
     resultEmoji.style.animation = 'bounceIn 0.5s cubic-bezier(.2,.9,.2,1)';
 
-    resultNum.textContent = isMultiplier ? resultData.num : 'x' + resultData.num;
-    resultBadge.className = 'result-badge ' + getResultClass(resultData.num);
+    resultNum.textContent = 'x' + finalNum;
+    resultBadge.className = 'result-badge ' + getResultClass(finalNum);
     resultStake.textContent = '$' + currentStake.toFixed(2);
     resultWin.textContent = '$' + winAmount.toFixed(2);
     resultWin.className = 'result-detail-value ' + (won ? '' : 'loss');
+
+    // If there was a bonus multiplier, show it
+    if (bonusMultiplier) {
+      resultNum.textContent = 'x' + finalNum + ' (' + bonusMultiplier.toUpperCase() + ')';
+    }
 
     resultPanel.style.display = 'flex';
     betsPanel.style.display = 'none';
 
     won ? sfxWin() : sfxLose();
 
-    addToHistory({
-      num: resultData.num,
-      color: resultData.color,
-      won: won,
-      winAmount: winAmount,
-      stake: currentStake
-    });
+    // Add final result to history
+    addToHistory({ num: finalNum, color: getColorForResult(finalNum), won: won });
   }
 
   function getResultClass(num) {
-    if (/^[0-9]+x$/i.test(String(num))) return 'mult';
+    if (typeof num === 'string' && num.includes('x')) return 'mult';
     const map = { 1: 'num-1', 2: 'num-2', 5: 'num-5', 10: 'num-10', 20: 'num-20', 40: 'num-40' };
     return map[num] || '';
   }
@@ -287,45 +340,13 @@ document.addEventListener('DOMContentLoaded', function() {
     gameHistory.forEach(r => {
       const item = document.createElement('div');
       item.className = 'history-item';
-      
-      let text, bgColor, textColor;
       const numStr = String(r.num);
       const isMult = /^[0-9]+x$/i.test(numStr);
-      
-      if (isMult) {
-        text = r.num.toUpperCase();
-        bgColor = 'linear-gradient(30deg, #f3c025, #e5004c)';
-        textColor = '#fff';
-      } else {
-        text = 'x' + r.num;
-        const colorMap = {
-          1: { bg: '#f3c025', text: '#000' },
-          2: { bg: '#0072e5', text: '#fff' },
-          5: { bg: '#a65ecc', text: '#fff' },
-          10: { bg: '#096', text: '#fff' },
-          20: { bg: '#ff5722', text: '#fff' },
-          40: { bg: '#e5004c', text: '#fff' }
-        };
-        const cm = colorMap[r.num] || { bg: '#666', text: '#fff' };
-        bgColor = cm.bg;
-        textColor = cm.text;
-      }
-      
+      const text = isMult ? r.num.toUpperCase() : 'x' + r.num;
       item.textContent = text;
-      item.style.background = bgColor;
-      item.style.color = textColor;
+      item.style.background = r.color || getColorForResult(r.num);
+      item.style.color = (r.num === 1) ? '#000' : '#fff';
       item.style.border = 'none';
-      item.style.fontWeight = '800';
-      item.style.minWidth = '42px';
-      item.style.minHeight = '42px';
-      item.style.borderRadius = '50%';
-      item.style.display = 'inline-flex';
-      item.style.alignItems = 'center';
-      item.style.justifyContent = 'center';
-      item.style.lineHeight = '1';
-      item.style.padding = '8px 10px';
-      item.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
-      
       historyScroll.appendChild(item);
     });
     historyCount.textContent = gameHistory.length;
