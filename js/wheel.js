@@ -343,12 +343,11 @@
     return parseInt(betType) === resultNumber;
   }
 
-  // Получить множитель выигрыша
+  // Получить множитель выигрыша (с house edge 6%)
+  const WHEEL_HOUSE_EDGE = 0.06;
   function getWinMultiplier(betType) {
-    if (betType === '0') return 36;
-    if (betType.match(/^\d+$/) && betType !== '0') return 36;
-    if (betType === 'range3' || betType === 'range4' || betType === 'range5') return 3;
-    return 2;
+    const base = (betType === '0') ? 36 : (betType.match(/^\d+$/) && betType !== '0') ? 36 : (betType === 'range3' || betType === 'range4' || betType === 'range5') ? 3 : 2;
+    return +((base * (1 - WHEEL_HOUSE_EDGE)).toFixed(2));
   }
 
   // Спин колеса с шариком

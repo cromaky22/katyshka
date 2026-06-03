@@ -17,7 +17,8 @@ document.addEventListener('DOMContentLoaded', function(){
 
   const ROWS = 2;
   const COLS = 5;
-  const TOTAL_LEVELS = ROWS * COLS; // 10 уровней
+  const TOTAL_LEVELS = ROWS * COLS;
+  const HOUSE_EDGE = 0.06; // 10 уровней
   
   // Коэффициенты в зависимости от количества бомб
   const COEFS = {
@@ -342,7 +343,7 @@ document.addEventListener('DOMContentLoaded', function(){
     } else {
       if(levelIndex < TOTAL_LEVELS - 1) {
         currentLevel++;
-        currentWinnings = currentBet * COEFS[bombCount][currentLevel - 1];
+        currentWinnings = currentBet * COEFS[bombCount][currentLevel - 1] * (1 - HOUSE_EDGE);
         winningsAmount.textContent = currentWinnings.toFixed(2) + '$';
         gameStatus.textContent = `✓ Открыт уровень ${currentLevel + 1}`;
         gameStatus.className = 'game-status success';
@@ -355,7 +356,7 @@ document.addEventListener('DOMContentLoaded', function(){
         
         renderGrid();
       } else {
-        currentWinnings = currentBet * COEFS[bombCount][TOTAL_LEVELS - 1];
+        currentWinnings = currentBet * COEFS[bombCount][TOTAL_LEVELS - 1] * (1 - HOUSE_EDGE);
         winningsAmount.textContent = currentWinnings.toFixed(2) + '$';
         gameStatus.textContent = '✓ Вы прошли башню!';
         gameStatus.className = 'game-status success';

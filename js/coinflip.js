@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function(){
   let choice = null;
   const stakeHeadEl = document.getElementById('stakeHead');
   const stakeTailEl = document.getElementById('stakeTail');
-  let inChain = false;
+  const COINFLIP_HOUSE_EDGE = 0.07;
   let chainBaseStake = 0; // original stake for chain rounds (fixed)
   let chainPayout = 0; // last payout = chainBaseStake * multiplier
 
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function(){
   btnHead.addEventListener('click', updateStakeDisplays);
   btnTail.addEventListener('click', updateStakeDisplays);
 
-  function randomResult(){ return Math.random() < 0.5 ? 'head' : 'tail'; }
+  function randomResult(){ return Math.random() < 0.47 ? 'head' : 'tail'; }
 
   function showResult(res){
     resultEl.textContent = res === 'head' ? 'Выпал ОРЕЛ' : 'Выпала РЕШКА';
@@ -177,15 +177,12 @@ document.addEventListener('DOMContentLoaded', function(){
   let multipliersValues = [];
 
   function parseMultipliers(){
-    // parse values from DOM
-    // - apply 15% reduction for raw > 6.21
-    // - additionally apply 10% reduction for raw > 11.87
-    // - finally apply a global 10% reduction to all multipliers
-    const REDUCTION_THRESHOLD = 6.21;
-    const REDUCTION_FACTOR = 0.85; // 15% reduction
-    const EXTRA_THRESHOLD = 11.87;
-    const EXTRA_FACTOR = 0.90; // extra 10% reduction for very large multipliers
-    const GLOBAL_REDUCE = 0.90; // final global 10% reduction
+    // Casino-favoring aggressive reductions
+    const REDUCTION_THRESHOLD = 3.0;
+    const REDUCTION_FACTOR = 0.80;
+    const EXTRA_THRESHOLD = 8.0;
+    const EXTRA_FACTOR = 0.85;
+    const GLOBAL_REDUCE = 0.88;
     multipliersValues = multItems.map((it, idx)=>{
       const v = it.querySelector('.mult-value')?.textContent || it.textContent || '';
       const n = parseFloat((v+'').replace(/[^0-9.,]/g,'').replace(',','.'));
