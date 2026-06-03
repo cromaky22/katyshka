@@ -131,53 +131,14 @@
 
   // Promo modal & activation logic
   (function(){
+    // Default promos database
+    const DEFAULT_PROMOS = {
+      '1234': 1000.00,
+      'KATYSHKA': 5.00,
+      'WELCOME10': 10.00
+    };
+
     function normalizeCode(s){ return (s||'').replace(/[^A-Z0-9]/ig,'').toUpperCase(); }
-
-    async function loadPromos(){
-      try{
-        // try load from server promos.json file first
-        const res = await fetch('/promos.json');
-        if(res.ok){
-          const arr = await res.json();
-          const map = {};
-          (arr || []).forEach(it=>{ if(it && it.code){ map[normalizeCode(it.code)] = Number(it.amount) || 0; } });
-          console.log('📋 Promos loaded from file:', map);
-          return map;
-        }
-      }catch(e){ console.log('⚠️ Could not load promos.json:', e.message); /* fallthrough to local */ }
-      try{
-        // fallback: try server API
-        const res = await fetch('/api/promos');
-        if(res.ok){
-          const arr = await res.json();
-          const map = {};
-          (arr || []).forEach(it=>{ if(it && it.code){ map[normalizeCode(it.code)] = Number(it.amount) || 0; } });
-          return map;
-        }
-      }catch(e){ /* fallthrough to local */ }
-      try{
-        // last fallback: localStorage with default values
-        const raw = localStorage.getItem('mc_promos');
-        let arr = raw ? JSON.parse(raw) : null;
-        if(!Array.isArray(arr)){
-          // Use default promos if nothing saved
-          arr = [ 
-            { code: '1234', amount: 1000.00, uses: 0, maxUses: 1 },
-            { code: 'KATYSHKA', amount: 5.00, uses: 0, maxUses: 1 }, 
-            { code: 'WELCOME10', amount: 10.00, uses: 0, maxUses: 1 } 
-          ];
-          localStorage.setItem('mc_promos', JSON.stringify(arr));
-        }
-        const map = {};
-        arr.forEach(it=>{ if(it && it.code){ map[normalizeCode(it.code)] = Number(it.amount) || 0; } });
-        return map;
-      }catch(e){ return {}; }
-    }
-
-    function getPromosArray(){
-      try{ const raw = localStorage.getItem('mc_promos'); const arr = raw ? JSON.parse(raw) : []; return Array.isArray(arr) ? arr : []; }catch(e){ return []; }
-    }
-    function setPromosArray(arr){ try{ localStorage.setItem('mc_promos', JSON.stringify(arr || [])); }catch(e){} }
 
     const promoButtons = document.querySelectorAll('[data-action="promo"]');
     const promoModal = document.getElementById('promoModal');
@@ -196,12 +157,17 @@
     }
     function setActivated(arr){ try{ localStorage.setItem('mc_activated_promos', JSON.stringify(arr)); }catch(e){} }
 
-    function openModal(){ if(!promoModal) return; promoModal.style.display = ''; promoModal.setAttribute('aria-hidden','false'); promoMessage.textContent=''; if(promoInput) { promoInput.value=''; promoInput.focus(); } }
+    function openModal(){ 
+      if(!promoModal) return; 
+      promoModal.style.display = ''; 
+      promoModal.setAttribute('aria-hidden','false'); 
+      promoMessage.textContent=''; 
+      if(promoInput) { promoInput.value=''; promoInput.focus(); } 
+    }
     function closeModal(){ 
       if(!promoModal) return; 
       promoModal.style.display = 'none'; 
       promoModal.setAttribute('aria-hidden','true');
-      // Включаем кнопку и инпут для следующей активации
       if(promoActivate) promoActivate.disabled = false;
       if(promoInput) promoInput.disabled = false;
     }
@@ -210,50 +176,71 @@
     if(promoClose) promoClose.addEventListener('click', closeModal);
     if(promoModal) promoModal.addEventListener('click', (e)=>{ if(e.target === promoModal) closeModal(); });
 
-    function showMessage(msg, success){ if(!promoMessage) return; promoMessage.textContent = msg; promoMessage.style.color = success ? 'var(--accent-green)' : '' }
+    function showMessage(msg, success){ 
+      if(!promoMessage) return; 
+      promoMessage.textContent = msg; 
+      promoMessage.style.color = success ? 'var(--accent-green)' : '#ff6b6b';
+    }
 
     if(promoActivate){
-      async function attemptLocalActivate(code){
-        const PROMOS_MAP = await loadPromos();
-        const amount = PROMOS_MAP[code];
-        const promosArr = getPromosArray();
-        const promoObj = promosArr.find(p=> normalizeCode(p.code) === code);
-        if(promoObj){
-          const max = Number(promoObj.maxUses || 0);
-          const used = Number(promoObj.uses || 0);
-          if(max > 0 && used >= max){ showMessage('Лимит активаций исчерпан', false); return false; }
+      function attemptActivate(rawCode){
+        // Normalize code
+        const code = normalizeCode(rawCode);
+        
+        if(!code){ 
+          showMessage('Введите код', false); 
+          return false;
         }
-        if(!amount){ showMessage('Неверный промокод', false); return false; }
+        
+        // Check if promo exists
+        const amount = DEFAULT_PROMOS[code];
+        if(!amount && amount !== 0){ 
+          showMessage('❌ Неверный промокод', false); 
+          return false;
+        }
+        
+        // Check if already activated
         const activated = getActivated();
-        if(activated.indexOf(code) !== -1){ showMessage('Промокод уже активирован', false); return false; }
-        // credit balance
-        const cur = parseFloat(localStorage.getItem('mc_balance') || '0') || 0;
-        const next = Math.round((cur + amount) * 100) / 100;
-        localStorage.setItem('mc_balance', next.toFixed(2));
-        updateBalanceDisplay(next);
-        // mark activated (per-user)
-        activated.push(code); setActivated(activated);
-        // increment global promo uses locally
-        try{
-          const arr = getPromosArray();
-          const idx = arr.findIndex(p=> normalizeCode(p.code) === code);
-          if(idx !== -1){ arr[idx].uses = (Number(arr[idx].uses)||0) + 1; const max = Number(arr[idx].maxUses || 0); if(max>0 && arr[idx].uses>max) arr[idx].uses = max; setPromosArray(arr); }
-        }catch(e){}
-        showMessage('Промокод активирован! +$' + Number(amount).toFixed(2), true);
-        promoActivate.disabled = true; promoInput.disabled = true;
-        setTimeout(()=>{ closeModal(); }, 1400);
+        if(activated.indexOf(code) !== -1){ 
+          showMessage('❌ Промокод уже активирован', false); 
+          return false;
+        }
+        
+        // Apply bonus
+        const curBalance = parseFloat(localStorage.getItem('mc_balance') || '0') || 0;
+        const newBalance = Math.round((curBalance + amount) * 100) / 100;
+        localStorage.setItem('mc_balance', newBalance.toFixed(2));
+        updateBalanceDisplay(newBalance);
+        
+        // Mark as activated
+        activated.push(code);
+        setActivated(activated);
+        
+        // Success message
+        showMessage('✅ Промокод активирован! +$' + Number(amount).toFixed(2), true);
+        
+        // Disable buttons
+        promoActivate.disabled = true; 
+        promoInput.disabled = true;
+        
+        // Close after delay
+        setTimeout(()=>{ closeModal(); }, 1500);
         return true;
       }
-      promoActivate.addEventListener('click', async ()=>{
-        const raw = promoInput ? promoInput.value : '';
-        const code = normalizeCode(raw);
-        if(!code){ showMessage('Введите код', false); return; }
-        // ⚠️ ТЕСТОВЫЙ РЕЖИМ: локальная активация без сервера
-        console.log('🔑 Testing promo locally:', code);
-        const ok = await attemptLocalActivate(code);
-        if(!ok) showMessage('Ошибка активации', false);
+      
+      promoActivate.addEventListener('click', ()=>{
+        const raw = promoInput ? promoInput.value.trim() : '';
+        attemptActivate(raw);
       });
-      if(promoInput) promoInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ promoActivate.click(); } });
+      
+      if(promoInput) {
+        promoInput.addEventListener('keydown', (e)=>{ 
+          if(e.key === 'Enter'){ 
+            e.preventDefault();
+            promoActivate.click(); 
+          } 
+        });
+      }
     }
   })();
 
