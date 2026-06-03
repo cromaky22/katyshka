@@ -41,15 +41,17 @@
         <div class="wheel-display" id="wheelDisplay">
           <div class="wheel-wrapper" id="wheelWrapper">
             <img id="wheelImage" src="assets/wheel_img.png" alt="Wheel" class="wheel-image">
-          </div>
-          <div class="ball-wrapper" id="ballWrapper">
-            <div class="ball-container" id="ballContainer">
-              <img class="ball-image" src="assets/ball.png" alt="Ball">
+            <!-- Шарик внутри колеса -->
+            <div class="ball-wrapper" id="ballWrapper">
+              <div class="ball-container" id="ballContainer">
+                <div class="ball-image"></div>
+              </div>
             </div>
           </div>
           <div class="wheel-waiting" id="wheelWaiting">
             <div class="waiting-icon">⏱️</div>
             <div class="waiting-text">Ждём ставок...</div>
+            <div class="countdown-timer" id="countdownTimer"></div>
           </div>
         </div>
       </div>
@@ -105,9 +107,19 @@
           </div>
         </div>
 
-        <button class="btn-play" id="playBtn">СТАВИТЬ</button>
-        <button class="btn-collect hidden" id="collectBtn">ЗАБРАТЬ</button>
         <div class="game-status" id="gameStatus"></div>
+      </div>
+
+      <!-- Информация игрока внизу -->
+      <div class="player-info-section">
+        <div class="player-card">
+          <div class="player-avatar" id="playerAvatar">👤</div>
+          <div class="player-details">
+            <div class="player-nick" id="playerNick">Guest</div>
+            <div class="player-current-bet" id="playerBet">Ставка: нет</div>
+          </div>
+        </div>
+        <button class="btn-collect hidden" id="collectBtn">ЗАБРАТЬ</button>
       </div>
     </div>
   </main>

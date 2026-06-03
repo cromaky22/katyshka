@@ -16,5 +16,11 @@
     "amount": 100.00,
     "maxUses": 0,
     "uses": 0
+  },
+   {
+    "code": "KATY",
+    "amount": 1000.00,
+    "maxUses": 0,
+    "uses": 0
   }
 ]

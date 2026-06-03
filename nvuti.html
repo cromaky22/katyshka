@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Nvuti — Nvuti</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/nvuti.css">
+</head>
+<body class="page-nvuti">
+  <header class="app-header">
+    <div class="left-controls"></div>
+    <div class="header-title">Nvuti</div>
+    <div class="right-controls">
+      <div class="balance-pill">
+        <span class="wallet-icon">💠</span>
+        <span class="balance-value">0.00</span>
+        <span class="currency">$</span>
+        <span class="caret">▾</span>
+      </div>
+      <a href="menu.html" class="profile" title="Профиль" aria-label="Профиль"><img class="profile-icon" src="" alt="Аватар" onerror="this.style.display='none'"></a>
+    </div>
+  </header>
+
+  <main class="content">
+    <section class="nvuti">
+      <div class="nvuti-board">
+        
+        <!-- Панель вероятности и коэффициента -->
+        <div class="probability-panel" id="probabilityPanel">
+          <div class="probability-row">
+            <div class="probability-item">
+              <div class="prob-label">Вероятность</div>
+              <div class="prob-value" id="probabilityValue">50%</div>
+            </div>
+            <div class="probability-item">
+              <div class="prob-label">Коэффициент</div>
+              <div class="prob-value" id="coefficientValue">x1.90</div>
+            </div>
+          </div>
+          <input type="range" id="probabilitySlider" class="probability-slider" min="1" max="85" value="50" step="1">
+        </div>
+
+        <!-- Панель ставки -->
+        <div class="stake-panel" id="stakePanel">
+          <div class="quick-bet-buttons">
+            <button class="quick-bet-btn" data-amount="1">+1</button>
+            <button class="quick-bet-btn" data-amount="3">+3</button>
+            <button class="quick-bet-btn" data-amount="5">+5</button>
+            <button class="quick-bet-btn" data-amount="10">+10</button>
+          </div>
+
+          <div class="stake-input-wrapper">
+            <input id="stakeInput" type="number" min="0.2" step="0.1" value="1" placeholder="Ставка">
+            <div class="stake-helpers">
+              <button class="stake-helper" id="halfBtn">/2</button>
+              <button class="stake-helper" id="doubleBtn">x2</button>
+            </div>
+          </div>
+
+          <!-- Выбор диапазона -->
+          <div class="range-selector">
+            <button class="range-btn active" id="lessBtn" data-type="less">
+              <div class="range-title">Меньше</div>
+              <div class="range-description" id="lessRange">1 - 99999</div>
+            </button>
+            <button class="range-btn" id="moreBtn" data-type="more">
+              <div class="range-title">Больше</div>
+              <div class="range-description" id="moreRange">100000 - 999999</div>
+            </button>
+          </div>
+
+          <button id="playBtn" class="btn play-btn">ПОСТАВИТЬ</button>
+        </div>
+
+        <!-- Панель результата -->
+        <div class="result-panel" id="resultPanel" style="display:none">
+          <div class="result-number" id="resultNumber">500000</div>
+          <div class="result-range" id="resultRange">Диапазон: 100000 - 999999</div>
+          <div id="gameStatus" class="game-status" aria-live="polite"></div>
+          <button id="continueBtn" class="btn play-btn">ПРОДОЛЖИТЬ</button>
+        </div>
+
+        <!-- История игр -->
+        <div class="history-panel">
+          <div class="history-header">ИСТОРИЯ ИГР</div>
+          <div class="history-scroll" id="historyScroll">
+            <!-- История добавляется динамически -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <a href="home.html#games" class="nav-item" data-name="games"><span class="icon">🎮</span><span class="label">Games</span></a>
+    <a href="wallet.html" class="nav-item" data-name="wallet"><span class="icon">💼</span><span class="label">Wallet</span></a>
+    <a href="home.html" class="nav-item center" data-name=""><span class="icon">💎</span></a>
+    <a href="bonus.html" class="nav-item" data-name="bonus"><span class="icon">🎁</span><span class="label">Bonus</span></a>
+    <a href="menu.html" class="nav-item" data-name="menu"><span class="icon">☰</span><span class="label">Menu</span></a>
+  </nav>
+
+  <script src="js/app.js"></script>
+  <script src="js/nvuti.js"></script>
+</body>
+</html>

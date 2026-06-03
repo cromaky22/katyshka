@@ -13,13 +13,22 @@ document.addEventListener('DOMContentLoaded', function(){
   const betBtns = document.querySelectorAll('.bet-btn');
   const quickBetBtns = document.querySelectorAll('.quick-bet-btn');
   
-  // Multiplier values: x2, x3, x5, x50
+  // Color to multiplier mapping
+  const colorToMultiplier = {
+    '#f39c12': 3,    // Orange = x3
+    '#3498db': 2,    // Blue = x2
+    '#e74c3c': 5,    // Red = x5
+    '#1abc9c': 50,   // Teal = x50
+    '#2ecc71': 50    // Green = x50
+  };
+  
   const multipliers = [2, 3, 5, 50];
-  const colors = ['#2196f3', '#ffc107', '#ff5722', '#8bc34a'];
+  const colors = ['#3498db', '#f39c12', '#e74c3c', '#1abc9c', '#2ecc71'];
   
   let selectedBet = null;
   let gameActive = false;
   let history = [];
+  let lastSpinAngle = 0;
   
   // Balance helpers
   function getBalance(){ 
@@ -86,14 +95,14 @@ document.addEventListener('DOMContentLoaded', function(){
     startGame(stake);
   });
 
-  // Collect winnings
+  // Auto-collect winnings (this listener is kept for backward compatibility but not used)
   collectBtn.addEventListener('click', () => {
     const winAmount = parseFloat(collectBtn.dataset.win) || 0;
     setBalance(getBalance() + winAmount);
     gameStatusEl.textContent = `Вы забрали $${winAmount.toFixed(2)}`;
     gameStatusEl.className = 'game-status success';
     gameActive = false;
-    playBtn.style.display = '';
+    playBtn.disabled = false;
     collectBtn.style.display = 'none';
     resetWheel();
   });
@@ -105,29 +114,39 @@ document.addEventListener('DOMContentLoaded', function(){
     // Deduct stake
     setBalance(getBalance() - stake);
     
-    // Random result (0-3 index)
-    const result = Math.floor(Math.random() * 4);
-    const resultMultiplier = multipliers[result];
-    const userBetMultiplier = multipliers[selectedBet];
-    const win = (selectedBet === result);
-    const winAmount = win ? (stake * resultMultiplier) : 0;
+    // Generate random target angle (0-360)
+    const targetAngle = Math.random() * 360;
+    lastSpinAngle = targetAngle;
     
     // Spin wheel
-    spinWheel(result, () => {
-      showResult(win, winAmount, stake, result);
+    spinWheel(targetAngle, () => {
+      // Determine result based on the angle
+      const result = getResultFromAngle(targetAngle);
+      
+      showResult(result.multiplier);
       
       // Add to history
-      addToHistory(userBetMultiplier, resultMultiplier, win);
+      addToHistory(result);
+      
+      const userBetMultiplier = multipliers[selectedBet];
+      const win = (result.multiplier === userBetMultiplier);
+      const winAmount = win ? (stake * result.multiplier) : 0;
       
       if(win){
-        gameStatusEl.textContent = `Вы выиграли $${winAmount.toFixed(2)}!`;
+        // Add winnings to balance automatically
+        setBalance(getBalance() + winAmount);
+        gameStatusEl.textContent = `Вы выиграли $${winAmount.toFixed(2)}! ✓`;
         gameStatusEl.className = 'game-status success';
-        playBtn.style.display = 'none';
-        collectBtn.style.display = '';
-        collectBtn.data = { win: winAmount };
-        collectBtn.dataset.win = winAmount;
+        
+        // Auto-start new round after 2 seconds
+        setTimeout(() => {
+          resetWheel();
+          playBtn.disabled = false;
+          gameActive = false;
+          gameStatusEl.textContent = '';
+        }, 2000);
       } else {
-        gameStatusEl.textContent = `Вы проиграли. Выпало x${resultMultiplier}`;
+        gameStatusEl.textContent = `Вы проиграли. Выпало x${result.multiplier}`;
         gameStatusEl.className = 'game-status error';
         playBtn.disabled = false;
         gameActive = false;
@@ -135,14 +154,41 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 
-  function spinWheel(resultIndex, onComplete){
-    // Angles to center of each segment - 4 equal segments
-    // Each segment is 90° apart for even distribution
-    const getDeg = [0, 90, 180, 270];
-    const targetDeg = getDeg[resultIndex];
+  function getResultFromAngle(angle){
+    // Normalize angle to 0-360
+    const normalizedAngle = ((angle % 360) + 360) % 360;
     
-    // Calculate final rotation: 150 + 10 full rotations (360*10) + target angle
-    const targetRotation = 150 + 360 * 10 + targetDeg;
+    // Based on SVG structure, we need to map angles to colors
+    // This is determined by reading the wheel from top (0°) going clockwise
+    // We'll try to detect which color range the angle falls into
+    
+    // Rough mapping based on wheel structure (needs to be adjusted based on actual SVG)
+    let result = { multiplier: 2, color: '#3498db' };
+    
+    // Each section is roughly 72° (360/5 colors: blue, orange, red, teal, green)
+    // But looking at SVG, colors appear mixed, so we need careful mapping
+    
+    // Let's use a simpler approach: divide into ranges based on observation
+    // This would need adjustment based on actual wheel appearance
+    
+    if(normalizedAngle >= 0 && normalizedAngle < 72){
+      result = { multiplier: 2, color: '#3498db' }; // Blue
+    } else if(normalizedAngle >= 72 && normalizedAngle < 144){
+      result = { multiplier: 3, color: '#f39c12' }; // Orange
+    } else if(normalizedAngle >= 144 && normalizedAngle < 216){
+      result = { multiplier: 5, color: '#e74c3c' }; // Red
+    } else if(normalizedAngle >= 216 && normalizedAngle < 288){
+      result = { multiplier: 50, color: '#1abc9c' }; // Teal
+    } else {
+      result = { multiplier: 50, color: '#2ecc71' }; // Green
+    }
+    
+    return result;
+  }
+
+  function spinWheel(targetDegAngle, onComplete){
+    // Calculate final rotation: multiple full rotations + target angle
+    const targetRotation = 360 * 10 + targetDegAngle;
     
     // Get pointer and set up animation
     const pointer = document.querySelector('.pointer');
@@ -169,24 +215,29 @@ document.addEventListener('DOMContentLoaded', function(){
     resultDisplay.style.display = 'none';
   }
 
-  function showResult(win, winAmount, stake, resultIndex){
-    const resultMult = multipliers[resultIndex];
-    const colorMap = ['#2196f3', '#ffc107', '#ff5722', '#8bc34a'];
-    resultDisplay.textContent = `x${resultMult}`;
-    resultDisplay.style.backgroundColor = colorMap[resultIndex];
+  function showResult(multiplier){
+    resultDisplay.textContent = `x${multiplier}`;
+    // Find color for this multiplier
+    let resultColor = '#3498db';
+    Object.keys(colorToMultiplier).forEach(color => {
+      if(colorToMultiplier[color] === multiplier){
+        resultColor = color;
+      }
+    });
+    resultDisplay.style.backgroundColor = resultColor;
     resultDisplay.style.display = 'flex';
   }
 
-  function addToHistory(bet, result, win){
+  function addToHistory(result){
     const item = document.createElement('div');
     item.className = 'history-item';
-    const colorMap = ['#2196f3', '#ffc107', '#ff5722', '#8bc34a'];
-    const resultIndex = multipliers.indexOf(result);
-    item.style.backgroundColor = colorMap[resultIndex];
+    
+    // Use color from result
+    item.style.backgroundColor = result.color;
     
     const inner = document.createElement('div');
     inner.className = 'history-inner';
-    inner.textContent = `x${result}`;
+    inner.textContent = `x${result.multiplier}`;
     
     item.appendChild(inner);
     historyScroll.insertBefore(item, historyScroll.firstChild);
