@@ -37,10 +37,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
+  for (let i = wheelData.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [wheelData[i], wheelData[j]] = [wheelData[j], wheelData[i]];
+  }
+
   const TOTAL_SEGMENTS = wheelData.length;
   const SEGMENT_ANGLE = 360 / TOTAL_SEGMENTS;
 
-  // ============ STATE ============
   let gameState = 'idle';
   let selectedBet = 1;
   let currentStake = 1;
@@ -48,8 +52,8 @@ document.addEventListener('DOMContentLoaded', function() {
   let rotation = 0;
   let soundEnabled = true;
   let audioCtx = null;
+  const baseSize = 340;
 
-  // ============ AUDIO ============
   function initAudio() {
     if (!audioCtx) {
       try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
@@ -78,7 +82,6 @@ document.addEventListener('DOMContentLoaded', function() {
   function sfxWin() { playTone(800, 'square', 0.1, 0.05); playTone(1200, 'sine', 0.15, 0.04); }
   function sfxLose() { playTone(100, 'sawtooth', 0.3, 0.04); }
 
-  // ============ BALANCE ============
   function getBalance() { return parseFloat(localStorage.getItem('mc_balance') || '100') || 100; }
 
   function setBalance(v) {
@@ -87,19 +90,14 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.balance-value').forEach(el => el.textContent = n.toFixed(2));
   }
 
-  // ============ CANVAS SETUP ============
-  const size = 340;
-  canvas.width = size * dpr;
-  canvas.height = size * dpr;
-  canvas.style.width = '280px';
-  canvas.style.height = '280px';
+  canvas.width = baseSize * dpr;
+  canvas.height = baseSize * dpr;
   ctx.scale(dpr, dpr);
+  const size = baseSize;
 
-  // ============ WHEEL DRAWING ============
   function drawWheel() {
     ctx.clearRect(0, 0, size, size);
     ctx.save();
-
     const cx = size / 2;
     const cy = size / 2;
     const radius = size / 2 - 4;
@@ -144,7 +142,6 @@ document.addEventListener('DOMContentLoaded', function() {
     ctx.restore();
   }
 
-  // ============ BET SELECTION ============
   betBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       if (gameState !== 'idle' && gameState !== 'betting') return;
@@ -157,7 +154,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (betBtns[0]) betBtns[0].classList.add('selected');
 
-  // ============ STAKE HELPERS ============
   halfBtn.addEventListener('click', () => {
     const val = parseFloat(dreamStake.value) || 1;
     dreamStake.value = Math.max(0.5, (val / 2).toFixed(2));
@@ -168,7 +164,6 @@ document.addEventListener('DOMContentLoaded', function() {
     dreamStake.value = Math.min(200, (val * 2).toFixed(2));
   });
 
-  // ============ PLAY GAME ============
   playBtn.addEventListener('click', () => {
     initAudio();
     if (gameState !== 'idle' && gameState !== 'betting') return;
@@ -191,7 +186,6 @@ document.addEventListener('DOMContentLoaded', function() {
     betsPanel.style.opacity = '0.5';
     betsPanel.style.pointerEvents = 'none';
 
-    // Weighted result (matches original probability distribution)
     const rand = Math.random();
     let resultIndex;
     if (rand < 0.30) resultIndex = Math.floor(Math.random() * 23);
@@ -204,8 +198,6 @@ document.addEventListener('DOMContentLoaded', function() {
     else resultIndex = 53;
 
     const resultData = wheelData[resultIndex];
-
-    // Target rotation: bring result segment to top (under pointer)
     const segmentCenter = resultIndex * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
     const targetAngle = (360 - segmentCenter) % 360;
     const totalRotation = 360 * 7 + targetAngle;
@@ -217,14 +209,11 @@ document.addEventListener('DOMContentLoaded', function() {
     function animateSpin() {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
-
-      // Smooth deceleration (cubic ease out)
       const eased = 1 - Math.pow(1 - progress, 3);
       rotation = (startRotation + totalRotation * eased) % 360;
 
       drawWheel();
 
-      // Tick sounds on segment crossings
       const currentSegment = Math.floor(((rotation % 360) + 360) % 360 / SEGMENT_ANGLE);
       if (currentSegment !== lastSegmentPassed && progress < 0.9) {
         lastSegmentPassed = currentSegment;
@@ -242,7 +231,6 @@ document.addEventListener('DOMContentLoaded', function() {
     requestAnimationFrame(animateSpin);
   });
 
-  // ============ SHOW RESULT ============
   function showResult(resultData) {
     const betValue = selectedBet;
     const isMultiplier = /^[0-9]+x$/i.test(String(resultData.num));
@@ -288,7 +276,6 @@ document.addEventListener('DOMContentLoaded', function() {
     return map[num] || '';
   }
 
-  // ============ HISTORY ============
   function addToHistory(record) {
     gameHistory.unshift(record);
     if (gameHistory.length > 25) gameHistory.pop();
@@ -315,7 +302,6 @@ document.addEventListener('DOMContentLoaded', function() {
     historyCount.textContent = gameHistory.length;
   }
 
-  // ============ CONTINUE ============
   continueBtn.addEventListener('click', () => {
     resultPanel.style.display = 'none';
     betsPanel.style.display = 'flex';
@@ -327,7 +313,6 @@ document.addEventListener('DOMContentLoaded', function() {
     drawWheel();
   });
 
-  // ============ INIT ============
   setBalance(getBalance());
   gameState = 'betting';
   drawWheel();
