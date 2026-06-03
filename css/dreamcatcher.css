@@ -322,25 +322,7 @@
 }
 .result-detail-value.loss { color: #ff6b6b; }
 
-/* History */
-.history-panel {
-  background: linear-gradient(180deg, rgba(16, 22, 36, 0.95), rgba(8, 12, 22, 0.9));
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 6px;
-  padding: 1px 2px;
-  backdrop-filter: blur(10px);
-}
-.history-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 9px;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 2px;
-}
+/* Results */
 .history-scroll {
   display: flex;
   flex-wrap: nowrap;
