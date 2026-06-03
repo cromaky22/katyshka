@@ -3,14 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Crash — Crash</title>
+  <title>Crash — Nvuti</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/crash.css">
 </head>
 <body class="page-crash">
+  <div class="crash-bg-grid" aria-hidden="true"></div>
+  
   <header class="app-header">
     <div class="left-controls"></div>
-    <div class="header-title">Crash</div>
+    <div class="header-title">CRASH</div>
     <div class="right-controls">
       <div class="balance-pill">
         <span class="wallet-icon">💠</span>
@@ -26,61 +28,99 @@
     <section class="crash">
       <div class="crash-board">
         
+        <!-- Топ хедер: множитель скролл + кнопка авто -->
+        <div class="crash-top-bar">
+          <div class="recent-crashes" id="recentCrashes">
+            <span class="recent-label">ПОСЛЕДНИЕ:</span>
+          </div>
+          <button class="auto-cashout-toggle" id="autoCashoutToggle" title="Автовывод">
+            <span class="auto-icon">⚡</span>
+            <span class="auto-text">АВТО</span>
+          </button>
+        </div>
+
         <!-- Панель ставки -->
         <div class="stake-panel" id="stakePanel">
-          <div class="quick-bet-buttons">
-            <button class="quick-bet-btn" data-amount="1">+1<span style="color:var(--accent-green)">$</span></button>
-            <button class="quick-bet-btn" data-amount="5">+5<span style="color:var(--accent-green)">$</span></button>
-            <button class="quick-bet-btn" data-amount="10">+10<span style="color:var(--accent-green)">$</span></button>
-            <button class="quick-bet-btn" data-amount="50">+50<span style="color:var(--accent-green)">$</span></button>
+          <!-- Speed selector -->
+          <div class="speed-selector">
+            <button class="speed-btn active" data-speed="1">🐢 NORMAL</button>
+            <button class="speed-btn" data-speed="1.6">🚀 FAST</button>
+            <button class="speed-btn" data-speed="2.2">⚡ TURBO</button>
+          </div>
+
+          <div class="quick-bet-buttons-row">
+            <div class="quick-bet-buttons">
+              <button class="quick-bet-btn" data-amount="0.5">0.5$</button>
+              <button class="quick-bet-btn" data-amount="1">1$</button>
+              <button class="quick-bet-btn" data-amount="5">5$</button>
+              <button class="quick-bet-btn" data-amount="10">10$</button>
+              <button class="quick-bet-btn" data-amount="50">50$</button>
+            </div>
+            <div class="stake-helpers">
+              <button class="stake-helper" id="halfBtn">½</button>
+              <button class="stake-helper" id="doubleBtn">×2</button>
+            </div>
           </div>
 
           <div class="stake-input-wrapper">
-            <input id="stakeInput" type="number" min="0.2" step="0.1" value="1" placeholder="Ставка">
-            <div class="stake-helpers">
-              <button class="stake-helper" id="halfBtn">/2</button>
-              <button class="stake-helper" id="doubleBtn">x2</button>
-            </div>
+            <input id="stakeInput" type="number" min="0.2" step="0.1" value="1" placeholder="Сумма ставки">
+            <span class="stake-currency">$</span>
           </div>
 
-          <button id="playBtn" class="btn play-btn">ПОСТАВИТЬ</button>
+          <!-- Auto cashout inline -->
+          <div class="auto-cashout-row" id="autoCashoutRow" style="display:none">
+            <span class="auto-cashout-label">Вывод на:</span>
+            <input id="autoCashoutInput" type="number" min="1.1" step="0.1" value="2" placeholder="2.00x">
+            <span class="auto-cashout-x">×</span>
+          </div>
+
+          <button id="playBtn" class="btn play-btn">🚀 ПОЛЕТЕЛИ</button>
         </div>
 
-        <!-- Панель игры (график и кнопка вывода) -->
+        <!-- Панель игры -->
         <div class="game-panel" id="gamePanel" style="display:none">
           <div class="chart-container">
             <canvas id="crashChart"></canvas>
-            <div class="crash-multiplier" id="crashMultiplier">1.00x</div>
+            <div class="crash-multiplier" id="crashMultiplier">1.00×</div>
+            <div class="live-profit" id="liveProfit"></div>
           </div>
 
-          <div class="game-info">
-            <div class="info-item">
-              <span class="info-label">Ставка:</span>
-              <span class="info-value" id="gameStake">$0.00</span>
+          <div class="game-stats-row">
+            <div class="game-stat">
+              <span class="stat-label">СТАВКА</span>
+              <span class="stat-value" id="gameStake">$0.00</span>
             </div>
-            <div class="info-item">
-              <span class="info-label">Выигрыш:</span>
-              <span class="info-value" id="gameWinning">$0.00</span>
+            <div class="game-stat">
+              <span class="stat-label">ВЫИГРЫШ</span>
+              <span class="stat-value" id="gameWinning">$0.00</span>
+            </div>
+            <div class="game-stat">
+              <span class="stat-label">СКОРОСТЬ</span>
+              <span class="stat-value" id="gameSpeed">1×</span>
             </div>
           </div>
 
-          <button id="cashoutBtn" class="btn play-btn cash-out-btn">ЗАБРАТЬ</button>
+          <button id="cashoutBtn" class="btn play-btn cashout-btn">
+            <span class="cashout-icon">💰</span> ЗАБРАТЬ <span class="cashout-amount" id="cashoutAmount">$0.00</span>
+          </button>
         </div>
 
         <!-- Панель результата -->
         <div class="result-panel" id="resultPanel" style="display:none">
+          <div class="result-emoji" id="resultEmoji">💥</div>
           <div class="result-title">ИГРА ЗАВЕРШЕНА</div>
-          <div class="result-multiplier" id="resultMultiplier">1.00x</div>
-          <div id="gameStatus" class="game-status" aria-live="polite"></div>
+          <div class="result-multiplier" id="resultMultiplier">1.00×</div>
+          <div id="gameStatus" class="game-status"></div>
           <button id="continueBtn" class="btn play-btn">НОВАЯ ИГРА</button>
         </div>
 
-        <!-- История игр -->
+        <!-- История -->
         <div class="history-panel">
-          <div class="history-header">ИСТОРИЯ ИГР</div>
-          <div class="history-scroll" id="historyScroll">
-            <!-- История добавляется динамически -->
+          <div class="history-header">
+            <span>📊 ИСТОРИЯ</span>
+            <span class="history-count" id="historyCount">0</span>
           </div>
+          <div class="history-scroll" id="historyScroll"></div>
         </div>
 
       </div>
