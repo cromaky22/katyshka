@@ -351,9 +351,18 @@
 }
 .history-scroll {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.15) transparent;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
 }
+.history-scroll::-webkit-scrollbar { height: 4px; }
+.history-scroll::-webkit-scrollbar-track { background: transparent; }
+.history-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
 .history-item {
   display: inline-flex;
   align-items: center;
