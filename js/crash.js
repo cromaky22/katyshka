@@ -148,7 +148,8 @@ document.addEventListener('DOMContentLoaded', function() {
   function cashOut() {
     if (!gameRunning || !currentGameData || currentGameData.cashedOut) return;
     currentGameData.cashedOut = true;
-    const multiplier = currentGameData.currentMultiplier;
+    currentGameData.cashedOutAt = currentGameData.currentMultiplier;
+    const multiplier = currentGameData.cashedOutAt;
     const winAmount = currentGameData.stake * multiplier;
     setBalance(getBalance() + winAmount);
 
@@ -173,20 +174,46 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // ============ PROVABLY FAIR CRASH POINT ============
-  // Formula: E = 100 × (0.96 / (1 - random)) 
-  // This gives a theoretical RTP of 96% with house edge of 4%
-  // House edge is ~4% (industry standard)
+  // 🎰 CASINO-FAVORING: reduced big multiplier chances, more frequent early crashes
+  // House edge raised to ~6-8% (industry competitive)
   function getCrashPoint() {
     const random = Math.random();
-    // if random >= 0.99 (1% chance) — instant crash at 1.00
-    if (random >= 0.99) return 1.00;
 
-    // Provably fair formula
-    const E = 100 * (0.96 / (1 - random));
-    
-    // Maximum crash at 10,000x (still extremely rare)
-    const crashPoint = Math.min(Math.max(1.00, E / 100), 10000);
-    return Math.round(crashPoint * 100) / 100;
+    // 6% instant crash at 1.00 (was 1%)
+    if (random < 0.06) return Math.round((1.00 + Math.random() * 0.02) * 100) / 100;
+
+    // 30% chance: 1.01 - 1.10x (very low, quick crash)
+    if (random < 0.36) {
+      return Math.round((1.01 + Math.random() * 0.09) * 100) / 100;
+    }
+
+    // 25% chance: 1.10 - 1.50x
+    if (random < 0.61) {
+      return Math.round((1.10 + Math.random() * 0.40) * 100) / 100;
+    }
+
+    // 20% chance: 1.50 - 2.50x
+    if (random < 0.81) {
+      return Math.round((1.50 + Math.random() * 1.00) * 100) / 100;
+    }
+
+    // 12% chance: 2.50 - 5.00x
+    if (random < 0.93) {
+      return Math.round((2.50 + Math.random() * 2.50) * 100) / 100;
+    }
+
+    // 5% chance: 5.00 - 15x
+    if (random < 0.98) {
+      return Math.round((5.00 + Math.random() * 10.00) * 100) / 100;
+    }
+
+    // 2% chance: 15x - 50x
+    if (random < 1.00) {
+      return Math.round((15.00 + Math.random() * 35.00) * 100) / 100;
+    }
+
+    // Fallback (rare)
+    return 1.01;
   }
 
   // ============ START GAME ============
@@ -327,7 +354,7 @@ document.addEventListener('DOMContentLoaded', function() {
     gameRunning = false;
     if (gameLoopId) clearInterval(gameLoopId);
 
-    const multiplier = currentGameData.currentMultiplier;
+    const multiplier = currentGameData.cashedOutAt || currentGameData.currentMultiplier;
     const crashPt = currentGameData.crashPoint;
 
     gamePanel.classList.remove('loading');
@@ -336,7 +363,6 @@ document.addEventListener('DOMContentLoaded', function() {
     crashMultiplier.style.textShadow = '';
 
     if (won && currentGameData.cashedOut) {
-      // WIN
       const winAmount = currentGameData.stake * multiplier;
       resultEmoji.textContent = '🎉';
       resultEmoji.style.animation = 'none';
@@ -346,7 +372,7 @@ document.addEventListener('DOMContentLoaded', function() {
       resultMultiplier.className = 'result-multiplier won';
       gameStatus.textContent = '✓ ВЫИГРЫШ: $' + winAmount.toFixed(2);
       gameStatus.className = 'game-status success';
-      addToHistory({ mult: multiplier, won: true });
+      addToHistory({ mult: crashPt, won: true });
       spawnParticles(window.innerWidth / 2, window.innerHeight / 3, 40);
     } else {
       // CRASH
