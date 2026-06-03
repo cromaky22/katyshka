@@ -1,169 +1,150 @@
-/* Tower game styles */
-.page-tower {
-  background: var(--bg);
-}
+/* Coinflip page styles separated from main stylesheet */
+/* Coinflip mode styles */
 
-.tower {
-  display: flex;
-  justify-content: center;
-  padding: 24px 0;
-}
+/* ======= STAKE PANEL - ТЕМНЫЙ ФОН ======= */
 
-.tower-board {
-  width: 100%;
-  max-width: 600px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  padding: 20px;
-  border-radius: 14px;
-  box-shadow: 0 18px 40px rgba(0,0,0,0.6);
-}
-
-/* Stake panel */
 .stake-panel {
-  background: rgba(255,255,255,0.05);
-  padding: 15px;
-  border-radius: 10px;
-  margin-bottom: 20px;
+  background: linear-gradient(180deg, rgba(11, 19, 32, 0.95), rgba(5, 10, 20, 0.9));
+  padding: 28px;
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
 .stake-header {
-  margin-bottom: 15px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .stake-header label {
   display: block;
-  font-size: 12px;
-  color: rgba(255,255,255,0.6);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
-  margin-bottom: 4px;
 }
 
-.stake-range {
-  display: block;
-  font-size: 11px;
-  color: rgba(255,255,255,0.5);
-  font-weight: 200;
-}
-
-/* Bomb selector */
-.bomb-selector {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.bomb-btn {
-  padding: 10px;
-  border: 2px solid rgba(255,255,255,0.2);
-  border-radius: 8px;
-  background: rgba(255,255,255,0.05);
-  color: rgba(255,255,255,0.7);
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.bomb-btn:hover {
-  background: rgba(255,255,255,0.1);
-}
-
-.bomb-btn.active {
-  background: linear-gradient(135deg, #4986cc 0%, #3a6ba8 100%);
-  color: white;
-  border-color: #4986cc;
-}
-
-/* Coefs display */
-.coefs-display {
-  background: rgba(0,0,0,0.3);
+/* Контроль бомб */
+.bombs-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
   padding: 12px;
+  gap: 10px;
+}
+
+.bomb-control-btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text);
   border-radius: 8px;
-  margin-bottom: 15px;
-  border-left: 3px solid #4986cc;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.coefs-header {
+.bomb-control-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.09);
+}
+
+.bombs-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.bomb-icons {
+  display: flex;
+  gap: 4px;
+}
+
+.bomb-icon {
+  font-size: 18px;
+}
+
+.bomb-count {
   font-size: 12px;
-  color: rgba(255,255,255,0.6);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
-  margin-bottom: 8px;
+  color: var(--muted);
 }
 
-.coefs-list {
+.bomb-count span:first-child {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-right: 4px;
+}
+
+/* Таблица коэффициентов */
+.coefs-scroll {
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  padding: 10px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+#coefsContainer {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
-  font-size: 11px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
 }
 
 .coef-item {
-  text-align: center;
-  padding: 6px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 6px;
-  color: rgba(255,255,255,0.8);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
 }
 
 .coef-item .level {
-  font-size: 9px;
-  color: rgba(255,255,255,0.5);
-  margin-bottom: 2px;
+  color: var(--muted);
+  font-weight: 500;
 }
 
 .coef-item .multiplier {
-  font-weight: 600;
-  color: #2196f3;
+  color: var(--accent-green);
+  font-weight: 700;
 }
 
-.quick-bet-buttons {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.quick-bet-btn {
-  padding: 8px 0;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 13px;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background: linear-gradient(135deg, #4986cc 0%, #3a6ba8 100%);
-}
-
-.quick-bet-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(73, 134, 204, 0.4);
-}
-
+/* Ставка */
 .stake-row {
   display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
+  gap: 8px;
 }
 
-.stake-row input {
+#stakeInput {
   flex: 1;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
   padding: 10px 12px;
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 8px;
-  background: rgba(255,255,255,0.05);
-  color: white;
-  font-size: 16px;
+  color: var(--text);
+  font-size: 14px;
   font-weight: 600;
 }
 
-.stake-row input::placeholder {
-  color: rgba(255,255,255,0.4);
+#stakeInput::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+#stakeInput:focus {
+  outline: none;
+  border-color: rgba(46, 227, 107, 0.3);
+  background: rgba(46, 227, 107, 0.04);
 }
 
 .stake-buttons {
@@ -172,270 +153,466 @@
 }
 
 .btn-stake {
-  padding: 10px 12px;
-  border: none;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
-  background: rgba(255,255,255,0.1);
-  color: rgba(255,255,255,0.8);
+  color: var(--text);
   font-weight: 600;
-  font-size: 13px;
+  padding: 10px 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 50px;
+  transition: all 0.2s;
 }
 
 .btn-stake:hover {
-  background: rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.09);
 }
 
+/* Быстрые кнопки ставок */
+.quick-bet-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.quick-bet-btn {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.quick-bet-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.09);
+}
+
+/* Кнопка ПОСТАВИТЬ */
 .play-btn {
   width: 100%;
-  padding: 12px;
-  border: none;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #4986cc 0%, #3a6ba8 100%);
-  color: white;
-  font-size: 16px;
-  font-weight: 600;
+  background: linear-gradient(180deg, #2f78ff, #1a5fff);
+  border: 3px solid rgba(32, 120, 255, 0.18);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 12px 34px rgba(20, 90, 200, 0.22);
 }
 
-.play-btn:hover:not(:disabled) {
+.play-btn:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 18px 44px rgba(255, 255, 255, 0.12), 0 12px 30px rgba(20, 90, 200, 0.18);
+  filter: brightness(1.06);
+}
+
+.play-btn:active {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(73, 134, 204, 0.4);
 }
 
-.play-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+/* ======= GAME PANEL - ТЕМНЫЙ ФОН ======= */
 
-/* Tower grid */
-.tower-grid {
-  background: rgba(255,255,255,0.05);
-  padding: 15px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-}
-
-.tower-level {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 10px;
-  align-items: stretch;
-}
-
-.tower-level:last-child {
-  margin-bottom: 0;
-}
-
-.level-info {
+.game-panel {
+  background: linear-gradient(180deg, rgba(11, 19, 32, 0.95), rgba(5, 10, 20, 0.9));
+  padding: 28px;
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-width: 55px;
-  background: rgba(33, 150, 243, 0.15);
-  border-radius: 8px;
-  padding: 8px;
-  border-left: 3px solid #2196f3;
+  gap: 15px;
+}
+
+.tower-container {
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+}
+
+/* Левая панель уровней */
+.levels-sidebar {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+  min-width: 80px;
+}
+
+.level-bar {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 10px 8px;
+  text-align: center;
+  font-size: 11px;
 }
 
 .level-number {
-  font-size: 11px;
-  color: rgba(255,255,255,0.6);
-  font-weight: 600;
-  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--text);
+  font-size: 12px;
 }
 
-.level-coef {
-  font-size: 16px;
+.level-multiplier {
+  color: var(--accent-green);
   font-weight: 600;
-  color: #2196f3;
+  font-size: 11px;
   margin-top: 2px;
 }
 
-.cells-row {
-  display: flex;
-  gap: 6px;
-  flex-grow: 1;
+.level-bar.current {
+  background: rgba(46, 227, 107, 0.18);
+  border-color: var(--accent-green);
+  box-shadow: 0 0 12px rgba(46, 227, 107, 0.25), inset 0 0 8px rgba(46, 227, 107, 0.15);
+  transform: scale(1.05);
+}
+
+.level-bar.passed {
+  opacity: 0.6;
+}
+
+/* Сетка ячеек */
+.tower-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  min-height: 250px;
 }
 
 .tower-cell {
-  flex: 1;
   aspect-ratio: 1;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 18px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 2px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 24px;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
-  color: white;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #8bc34a;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-  min-height: 45px;
 }
 
-.tower-cell:hover:not(:disabled) {
+.tower-cell:not(:disabled):hover {
+  background: rgba(47, 120, 255, 0.18);
+  border-color: #2f78ff;
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(139, 195, 74, 0.5);
+  box-shadow: 0 0 16px rgba(47, 120, 255, 0.4);
 }
 
 .tower-cell:disabled {
-  cursor: not-allowed;
-  opacity: 0.8;
+  cursor: default;
+  opacity: 0.6;
+}
+
+.tower-cell.current {
+  background: rgba(47, 120, 255, 0.18);
+  border-color: #2f78ff;
+  box-shadow: 0 0 16px rgba(47, 120, 255, 0.4);
 }
 
 .tower-cell.safe {
-  background: #2196f3;
+  background: rgba(46, 227, 107, 0.08);
+  border-color: var(--accent-green);
 }
 
 .tower-cell.bomb {
-  background: #f44336;
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.6);
 }
 
-.tower-cell.revealed {
-  background: var(--color_background_buttons_dark);
+/* Статус игры */
+.result-status {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.tower-cell.lose-bomb {
-  background: #f44336;
-  box-shadow: 0 0 15px rgba(244, 67, 54, 0.8);
-}
-
-.tower-cell:disabled {
-  cursor: not-allowed;
-}
-
-/* Result panel */
-.result-panel {
-  background: rgba(255,255,255,0.05);
-  padding: 20px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.result-info {
-  margin-bottom: 15px;
-}
-
-.result-level {
-  font-size: 14px;
-  color: rgba(255,255,255,0.7);
-  margin-bottom: 8px;
-  font-weight: 200;
-}
-
-.result-winnings {
-  font-size: 28px;
-  font-weight: 500;
-  color: #4caf50;
-}
-
-/* Game status */
 .game-status {
-  padding: 12px;
-  border-radius: 10px;
-  text-align: center;
+  font-size: 14px;
   font-weight: 600;
-  min-height: 20px;
-  background: rgba(255,255,255,0.05);
-  color: rgba(255,255,255,0.8);
-  margin-bottom: 15px;
-  font-size: 15px;
+  flex: 1;
 }
 
 .game-status.success {
-  background: rgba(76,175,80,0.2);
-  color: #4caf50;
-  border-left: 3px solid #4caf50;
+  color: var(--accent-green);
 }
 
 .game-status.error {
-  background: rgba(244,67,54,0.2);
-  color: #f44336;
-  border-left: 3px solid #f44336;
+  color: #ef4444;
 }
 
-/* History panel */
+.winnings-display {
+  text-align: right;
+}
+
+#gameStatusTitle {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+#winningsAmount {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent-green);
+}
+
+/* История */
 .history-panel {
-  background: rgba(255,255,255,0.05);
+  background: linear-gradient(180deg, rgba(11, 19, 32, 0.95), rgba(5, 10, 20, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.45);
+  border-radius: 12px;
   padding: 12px;
-  border-radius: 10px;
-  margin-bottom: 20px;
 }
 
 .history-header {
-  font-size: 11px;
-  color: rgba(255,255,255,0.6);
-  margin-bottom: 8px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
   letter-spacing: 0.5px;
+  margin-bottom: 10px;
 }
 
 .history-scroll {
   display: flex;
+  flex-direction: column;
   gap: 6px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-}
-
-.history-scroll::-webkit-scrollbar {
-  height: 4px;
-}
-
-.history-scroll::-webkit-scrollbar-track {
-  background: rgba(255,255,255,0.05);
-  border-radius: 2px;
-}
-
-.history-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.2);
-  border-radius: 2px;
+  max-height: 120px;
+  overflow-y: auto;
 }
 
 .history-item {
-  min-width: 45px;
-  height: 45px;
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.01);
+  border-left: 3px solid var(--accent-green);
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 12px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  justify-content: space-between;
+}
+
+.history-item.loss {
+  border-left-color: #ef4444;
+}
+
+.history-item-text {
+  color: var(--text);
+}
+
+.history-item-value {
+  font-weight: 700;
+  color: var(--accent-green);
+}
+
+.history-item.loss .history-item-value {
+  color: #ef4444;
+}
+
+/* Кнопки действий */
+#collectBtn,
+#continueBtn {
+  background: linear-gradient(180deg, #2f78ff, #1a5fff);
+  border: 3px solid rgba(32, 120, 255, 0.18);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 900;
-  font-size: 13px;
-  color: white;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 12px 34px rgba(20, 90, 200, 0.22);
 }
 
-.history-item:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+#collectBtn:hover,
+#continueBtn:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 18px 44px rgba(255, 255, 255, 0.12), 0 12px 30px rgba(20, 90, 200, 0.18);
+  filter: brightness(1.06);
 }
 
-.history-item.win {
-  background: #4caf50;
+#collectBtn:active,
+#continueBtn:active {
+  transform: translateY(-2px);
 }
 
-.history-item.lose {
-  background: #f44336;
-}
+/* ======= RESPONSIVE ======= */
 
-/* Responsive */
 @media (max-width: 600px) {
-  .tower-board {
-    padding: 16px;
+  .stake-panel {
+    padding: 15px;
+    gap: 12px;
+  }
+
+  .game-panel {
+    padding: 15px;
+    gap: 12px;
+  }
+
+  .tower-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Уровни идут горизонтально на мобиле */
+  .levels-sidebar {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    min-width: auto;
+    flex-direction: row;
+  }
+
+  .level-bar {
+    padding: 8px 6px;
+    font-size: 10px;
+  }
+
+  .level-number {
+    font-size: 11px;
+  }
+
+  .level-multiplier {
+    font-size: 10px;
+    margin-top: 2px;
+  }
+
+  /* Сетка ячеек более компактная */
+  .tower-grid {
+    gap: 8px;
+    padding: 10px;
+    min-height: auto;
+    grid-template-columns: repeat(5, 1fr);
   }
 
   .tower-cell {
-    flex: 0 0 calc(20% - 6.4px);
+    aspect-ratio: 1;
+    font-size: 20px;
+    border-width: 2px;
+    min-height: 60px;
+  }
+
+  .tower-cell:not(:disabled):active {
+    transform: scale(0.95);
+  }
+
+  .quick-bet-buttons {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .quick-bet-btn {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .result-status {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .winnings-display {
+    text-align: left;
+  }
+
+  #stakeInput {
+    font-size: 16px;
+    padding: 12px;
+  }
+
+  .bomb-control-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+  }
+
+  .coef-item {
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+
+  .game-status {
+    font-size: 15px;
+  }
+
+  #winningsAmount {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 400px) {
+  .stake-panel {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .game-panel {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .tower-grid {
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .tower-cell {
+    font-size: 20px;
+    min-height: 55px;
+    border-width: 1.5px;
+  }
+
+  .play-btn,
+  #collectBtn,
+  #continueBtn {
+    font-size: 14px;
+    padding: 14px;
+    min-height: 48px;
+  }
+
+  .level-bar {
+    padding: 8px 6px;
+    font-size: 10px;
+  }
+
+  .level-number {
+    font-size: 11px;
+  }
+
+  .coefs-scroll {
+    max-height: 120px;
+  }
+
+  #coefsContainer {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .coef-item {
+    padding: 10px 8px;
+    font-size: 12px;
   }
 }

@@ -26,62 +26,72 @@
     <section class="tower">
       <div class="tower-board">
         
-        <!-- Панель ставки -->
+        <!-- Панель ставки (state 1) -->
         <div class="stake-panel" id="stakePanel">
           <div class="stake-header">
             <label>Выберите количество бомб</label>
           </div>
 
-          <!-- Селектор бомб -->
-          <div class="bomb-selector" id="bombSelector">
-            <button class="bomb-btn active" data-bombs="1">1 💣</button>
-            <button class="bomb-btn" data-bombs="2">2 💣</button>
-            <button class="bomb-btn" data-bombs="3">3 💣</button>
-            <button class="bomb-btn" data-bombs="4">4 💣</button>
+          <!-- Контрольные кнопки бомб -->
+          <div class="bombs-control">
+            <button id="bombMinus" class="bomb-control-btn">−</button>
+            <div class="bombs-display">
+              <div class="bomb-icons" id="bombIcons"></div>
+              <div class="bomb-count">
+                <span id="bombCountText">1</span> <span id="bombCountLabel">БОМБА</span>
+              </div>
+            </div>
+            <button id="bombPlus" class="bomb-control-btn">+</button>
           </div>
 
           <!-- Таблица коэффициентов -->
-          <div class="coefs-display">
-            <div class="coefs-header">Коэффициенты за уровень:</div>
-            <div class="coefs-list" id="coefsList"></div>
+          <div class="coefs-scroll">
+            <div id="coefsContainer"></div>
           </div>
 
-          <div class="stake-header" style="margin-top: 20px;">
+          <div class="stake-header">
             <label>Ставка</label>
-            <span class="stake-range">От <span class="currency-sign-green">$</span>0.2 до <span class="currency-sign-green">$</span>200</span>
           </div>
           
           <!-- Быстрые кнопки ставок -->
           <div class="quick-bet-buttons">
-            <button class="quick-bet-btn" data-amount="100">+100</button>
-            <button class="quick-bet-btn" data-amount="1000">+1K</button>
-            <button class="quick-bet-btn" data-amount="5000">+5K</button>
-            <button class="quick-bet-btn" data-amount="25000">+25K</button>
+            <button class="quick-bet-btn" data-amount="1">+1<span style="color:var(--accent-green)">$</span></button>
+            <button class="quick-bet-btn" data-amount="3">+3<span style="color:var(--accent-green)">$</span></button>
+            <button class="quick-bet-btn" data-amount="5">+5<span style="color:var(--accent-green)">$</span></button>
+            <button class="quick-bet-btn" data-amount="10">+10<span style="color:var(--accent-green)">$</span></button>
           </div>
           
           <div class="stake-row">
             <input id="stakeInput" type="number" min="0.2" step="0.1" value="1">
             <div class="stake-buttons">
-              <button id="halfBtn" class="btn-stake">1/2</button>
+              <button id="halfBtn" class="btn-stake">/2</button>
               <button id="doubleBtn" class="btn-stake">x2</button>
             </div>
           </div>
-          <button id="playBtn" class="btn play-btn">ИГРАТЬ</button>
+          <button id="playBtn" class="btn play-btn">ПОСТАВИТЬ</button>
         </div>
 
-        <!-- Сетка башни -->
-        <div class="tower-grid" id="towerGrid" style="display:none">
-          <!-- Уровни генерируются динамически -->
-        </div>
-
-        <!-- Панель результата -->
-        <div class="result-panel" id="resultPanel" style="display:none">
-          <div class="result-info">
-            <div class="result-level">Уровень: <span id="resultLevel">1</span></div>
-            <div class="result-winnings">Выигрыш: <span id="resultWinnings">0.00</span>$</div>
+        <!-- Панель игры (state >= 2) -->
+        <div class="game-panel" id="gamePanel" style="display:none">
+          <div class="tower-container">
+            <!-- Левая панель с уровнями -->
+            <div class="levels-sidebar" id="levelsSidebar"></div>
+            
+            <!-- Сетка ячеек -->
+            <div class="tower-grid"></div>
           </div>
-          <div id="gameStatus" class="game-status" aria-live="polite"></div>
-          <button id="collectBtn" class="btn play-btn">ЗАБРАТЬ ВЫИГРЫШ</button>
+
+          <!-- Статус выигрыша -->
+          <div class="result-status">
+            <div id="gameStatus" class="game-status" aria-live="polite"></div>
+            <div class="winnings-display">
+              <div id="gameStatusTitle">Ваш выигрыш</div>
+              <div id="winningsAmount" class="winnings-amount">0.00$</div>
+            </div>
+          </div>
+
+          <!-- Кнопки действий -->
+          <button id="collectBtn" class="btn play-btn" style="display:none">ЗАБРАТЬ ВЫИГРЫШ</button>
           <button id="continueBtn" class="btn play-btn" style="display:none">ПРОДОЛЖИТЬ</button>
         </div>
 

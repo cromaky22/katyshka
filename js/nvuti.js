@@ -185,28 +185,64 @@ document.addEventListener('DOMContentLoaded', function(){
       setBalance(getBalance() + winAmount);
     }
     
-    // Show result
-    resultNumber.textContent = numberFormat(number);
-    
-    const rangeText = t === 0 
-      ? `1 - ${numberFormat(9999 + v * 10000 - 10000)}`
-      : `${numberFormat(990000 - v * 10000 + 10000)} - 999 999`;
-    resultRange.textContent = `Диапазон: ${rangeText}`;
-    
-    // Animate result after delay
-    setTimeout(() => {
-      if(win){
-        gameStatus.textContent = `✓ Выигрыш: $${winAmount.toFixed(2)} (x${coef.toFixed(2)})`;
-        gameStatus.className = 'game-status success';
-        addToHistory({ win: true, v: v });
-      } else {
-        gameStatus.textContent = `✗ Проигрыш: -$${bet}`;
-        gameStatus.className = 'game-status error';
-        addToHistory({ win: false, v: v });
-      }
+    // Show result with rolling animation
+    animateResultNumber(number, () => {
+      const rangeText = t === 0 
+        ? `1 - ${numberFormat(9999 + v * 10000 - 10000)}`
+        : `${numberFormat(990000 - v * 10000 + 10000)} - 999 999`;
+      resultRange.textContent = `Диапазон: ${rangeText}`;
       
-      playBtn.disabled = false;
-    }, 500);
+      // Animate result after delay
+      setTimeout(() => {
+        if(win){
+          gameStatus.textContent = `✓ Выигрыш: $${winAmount.toFixed(2)} (x${coef.toFixed(2)})`;
+          gameStatus.className = 'game-status success';
+          addToHistory({ win: true, v: v });
+        } else {
+          gameStatus.textContent = `✗ Проигрыш: -$${bet}`;
+          gameStatus.className = 'game-status error';
+          addToHistory({ win: false, v: v });
+        }
+        
+        playBtn.disabled = false;
+      }, 300);
+    });
+  }
+
+  // Animate number rolling effect
+  function animateResultNumber(finalNumber, onComplete) {
+    const duration = 1200; // 1.2 секунды для анимации
+    const frames = 40; // количество обновлений
+    const startTime = Date.now();
+    
+    resultNumber.style.transition = 'none';
+    
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      if(progress < 1) {
+        // Показываем случайное число во время анимации
+        const randomNum = Math.floor(Math.random() * (finalNumber + 1));
+        resultNumber.textContent = numberFormat(randomNum);
+        
+        // Добавляем класс анимации для каждого обновления
+        resultNumber.classList.remove('rolling');
+        void resultNumber.offsetWidth; // reflow trigger
+        resultNumber.classList.add('rolling');
+        
+        // Эффект прозрачности - мерцание при быстром перелистывании
+        resultNumber.style.opacity = (0.7 + Math.random() * 0.3).toString();
+      } else {
+        // Финальный результат
+        resultNumber.textContent = numberFormat(finalNumber);
+        resultNumber.style.opacity = '1';
+        resultNumber.classList.remove('rolling');
+        resultNumber.style.transform = 'scale(1)';
+        clearInterval(interval);
+        if(onComplete) onComplete();
+      }
+    }, duration / frames);
   }
 
   function addToHistory(result) {

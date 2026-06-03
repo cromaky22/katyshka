@@ -107,12 +107,15 @@
   color: white;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: linear-gradient(135deg, #4986cc 0%, #3a6ba8 100%);
+  background: rgba(47, 120, 255, 0.25);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(47, 120, 255, 0.3);
 }
 
 .quick-bet-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(73, 134, 204, 0.4);
+  box-shadow: 0 4px 12px rgba(47, 120, 255, 0.4);
+  background: rgba(47, 120, 255, 0.35);
 }
 
 .stake-input-wrapper {
@@ -238,6 +241,19 @@
   color: white;
   margin-bottom: 8px;
   letter-spacing: 2px;
+  transition: opacity 0.08s ease;
+  display: inline-block;
+  min-width: 200px;
+}
+
+@keyframes numberRoll {
+  0% { transform: scale(0.95); opacity: 0.7; }
+  50% { transform: scale(1.05); opacity: 0.9; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.result-number.rolling {
+  animation: numberRoll 0.1s ease-out;
 }
 
 .result-range {

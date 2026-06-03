@@ -22,5 +22,11 @@
     "amount": 1000.00,
     "maxUses": 0,
     "uses": 0
+  },
+  {
+    "code": "123",
+    "amount": 1000.00,
+    "maxUses": 0,
+    "uses": 0
   }
 ]
