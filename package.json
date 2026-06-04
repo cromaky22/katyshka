@@ -9,5 +9,17 @@
   "dependencies": {
     "express": "^4.18.2",
     "sqlite3": "^5.1.6"
-  }
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cromaky22/katyshka.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cromaky22/katyshka/issues"
+  },
+  "homepage": "https://github.com/cromaky22/katyshka#readme"
 }

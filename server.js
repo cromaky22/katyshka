@@ -1,14 +1,71 @@
 const express = require('express');
 const path = require('path');
-const sqlite3 = require('sqlite3').verbose();
 const http = require('http');
 
 const app = express();
 const server = http.createServer(app);
 const io = require('socket.io')(server, { cors: { origin: '*' } });
 
-const dbFile = path.join(__dirname, 'data.sqlite');
-const db = new sqlite3.Database(dbFile);
+// Database: PostgreSQL for Railway (or SQLite for local)
+const DATABASE_URL = process.env.DATABASE_URL;
+
+if (DATABASE_URL) {
+  // Railway: use PostgreSQL
+  const { Pool } = require('pg');
+  const pool = new Pool({ connectionString: DATABASE_URL, ssl: { rejectUnauthorized: false } });
+
+  // Initialize tables
+  pool.query(`CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    first_name TEXT,
+    last_name TEXT,
+    username TEXT,
+    avatar TEXT,
+    balance REAL DEFAULT 100,
+    updated_at TEXT
+  )`).then(() => {
+    console.log('PostgreSQL connected');
+  });
+
+  // Wrapper to use pg queries
+  const db = {
+    get: (sql, params, cb) => {
+      pool.query(sql, params).then(r => cb(null, r.rows[0] || null)).catch(e => cb(e));
+    },
+    all: (sql, params, cb) => {
+      pool.query(sql, params).then(r => cb(null, r.rows || [])).catch(e => cb(e));
+    },
+    run: (sql, params, cb) => {
+      pool.query(sql, params).then(r => {
+        if (cb) cb(null, { changes: r.rowCount });
+      }).catch(e => {
+        if (cb) cb(e);
+      });
+    }
+  };
+
+  module.exports = { pool, db };
+} else {
+  // Local: use SQLite
+  const sqlite3 = require('sqlite3').verbose();
+  const dbFile = path.join(__dirname, 'data.sqlite');
+  const db = new sqlite3.Database(dbFile);
+
+  db.serialize(() => {
+    db.run(`CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      first_name TEXT,
+      last_name TEXT,
+      username TEXT,
+      avatar TEXT,
+      balance REAL DEFAULT 100,
+      updated_at TEXT
+    )`);
+    console.log('SQLite connected');
+  });
+
+  module.exports = { db };
+}
 
 const ADMIN_KEY = process.env.ADMIN_KEY || 'admin123';
 
