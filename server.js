@@ -355,9 +355,9 @@ const DICE_CONFIGS = {
 };
 
 let diceStates = {
-  '1dice': { phase: 'betting', timer: 30, roundId: 0, nums: null, allBets: {}, history: [], hash: '' },
-  '2dice': { phase: 'betting', timer: 30, roundId: 0, nums: null, allBets: {}, history: [], hash: '' },
-  '3dice': { phase: 'betting', timer: 30, roundId: 0, nums: null, allBets: {}, history: [], hash: '' }
+  '1dice': { phase: 'waiting', timer: 30, roundId: 0, nums: null, allBets: {}, history: [], hash: '' },
+  '2dice': { phase: 'waiting', timer: 30, roundId: 0, nums: null, allBets: {}, history: [], hash: '' },
+  '3dice': { phase: 'waiting', timer: 30, roundId: 0, nums: null, allBets: {}, history: [], hash: '' }
 };
 
 let diceTimerIntervals = {};
@@ -449,7 +449,11 @@ function rollDice(diceType) {
   }, 7000);
 }
 
-Object.keys(diceStates).forEach(type => startDiceTimer(type));
+Object.keys(diceStates).forEach(type => {
+  const state = diceStates[type];
+  state.phase = 'waiting';
+  state.timer = 30;
+});
 
 io.on('connection', (socket) => {
   const userId = socket.handshake.query.userId || '0';
@@ -471,7 +475,7 @@ io.on('connection', (socket) => {
     const { type, amount, diceType, playerName, playerAvatar } = data;
     if (!DICE_CONFIGS[diceType]) return;
     const state = diceStates[diceType];
-    if (state.phase !== 'betting') return;
+    if (state.phase !== 'betting' && state.phase !== 'waiting') return;
     if (!type || !amount || amount <= 0) return;
     
     const config = DICE_CONFIGS[diceType];
@@ -483,6 +487,8 @@ io.on('connection', (socket) => {
       const currentBetTotal = (state.allBets[userId] || []).reduce((s, b) => s + b.amount, 0);
       if (currentBetTotal + amount > balance) return;
       
+      const wasWaiting = state.phase === 'waiting';
+      
       if (!state.allBets[userId]) state.allBets[userId] = [];
       state.allBets[userId].push({
         type,
@@ -492,6 +498,10 @@ io.on('connection', (socket) => {
       });
       
       db.run('UPDATE users SET balance = balance - ?, updated_at = datetime(\'now\') WHERE id = ?', [amount, userId]);
+      
+      if (wasWaiting) {
+        startDiceTimer(diceType);
+      }
       
       const allBetsList = [];
       for (const uid in state.allBets) {
