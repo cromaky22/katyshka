@@ -5,6 +5,18 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Mini Casino — Bonus</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    .bonus-section{padding:20px;max-width:480px;margin:0 auto}
+    .bonus-card{background:var(--card);border-radius:16px;padding:20px;margin-bottom:16px;text-align:center}
+    .bonus-icon{font-size:48px;margin-bottom:12px}
+    .bonus-title{font-size:18px;font-weight:700;margin-bottom:8px}
+    .bonus-desc{font-size:13px;color:var(--muted);margin-bottom:16px}
+    .bonus-btn{background:linear-gradient(135deg,#4caf50,#2e7d32);border:none;padding:14px 32px;border-radius:12px;color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s;width:100%}
+    .bonus-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(76,175,80,0.3)}
+    .bonus-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;box-shadow:none}
+    .bonus-timer{font-size:12px;color:var(--muted);margin-top:12px}
+    .bonus-success{font-size:14px;color:var(--accent-green);margin-top:12px;font-weight:600}
+  </style>
 </head>
 <body>
   <header class="app-header">
@@ -12,7 +24,7 @@
       <button class="btn-icon" aria-label="back">❀</button>
       <img src="assets/logo.png" alt="Logo" class="logo-small" onerror="this.style.display='none'">
     </div>
-    <div class="header-title">KATYSHKA</div>
+    <div class="header-title">BONUS</div>
     <div class="right-controls">
       <div class="balance-pill">
         <span class="wallet-icon">💠</span>
@@ -24,10 +36,16 @@
     </div>
   </header>
   <main class="content">
-    <section>
-      <h3>Бонусы</h3>
-      <p>Здесь будут текущие акции и бонусы.</p>
-    </section>
+    <div class="bonus-section">
+      <div class="bonus-card">
+        <div class="bonus-icon">🎁</div>
+        <div class="bonus-title">Часовой бонус</div>
+        <div class="bonus-desc">Получай $100 каждый час!</div>
+        <button class="bonus-btn" id="hourlyBonusBtn">Получить $100</button>
+        <div class="bonus-timer" id="bonusTimer"></div>
+        <div class="bonus-success" id="bonusSuccess"></div>
+      </div>
+    </div>
   </main>
   <nav class="bottom-nav">
     <a href="home.html#games" class="nav-item" data-name="games"><span class="icon">🎮</span><span class="label">Games</span></a>
@@ -37,5 +55,46 @@
     <a href="menu.html" class="nav-item" data-name="menu"><span class="icon">☰</span><span class="label">Menu</span></a>
   </nav>
   <script src="js/app.js"></script>
+  <script>
+  (function(){
+    const btn = document.getElementById('hourlyBonusBtn');
+    const timer = document.getElementById('bonusTimer');
+    const success = document.getElementById('bonusSuccess');
+    const COOLDOWN = 3600000; // 1 hour in ms
+
+    function updateUI(){
+      const lastClaim = localStorage.getItem('mc_hourly_bonus');
+      if(lastClaim){
+        const elapsed = Date.now() - parseInt(lastClaim);
+        if(elapsed < COOLDOWN){
+          btn.disabled = true;
+          const remaining = COOLDOWN - elapsed;
+          const mins = Math.floor(remaining / 60000);
+          const secs = Math.floor((remaining % 60000) / 1000);
+          timer.textContent = 'Следующий бонус через ' + mins + 'м ' + secs + 'с';
+          return;
+        }
+      }
+      btn.disabled = false;
+      timer.textContent = 'Бонус доступен!';
+    }
+
+    btn.addEventListener('click', ()=>{
+      const lastClaim = localStorage.getItem('mc_hourly_bonus');
+      if(lastClaim && (Date.now() - parseInt(lastClaim)) < COOLDOWN) return;
+
+      localStorage.setItem('mc_hourly_bonus', Date.now().toString());
+      const balance = parseFloat(localStorage.getItem('mc_balance') || '0') || 0;
+      const newBalance = Math.round((balance + 100) * 100) / 100;
+      localStorage.setItem('mc_balance', newBalance.toFixed(2));
+      document.querySelectorAll('.balance-value').forEach(el => el.textContent = newBalance.toFixed(2));
+      success.textContent = '✅ Получено +$100!';
+      updateUI();
+    });
+
+    updateUI();
+    setInterval(updateUI, 1000);
+  })();
+  </script>
 </body>
 </html>
