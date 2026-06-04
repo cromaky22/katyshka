@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', function(){
     updateTimer(30, 'waiting');
     modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
     // Show/hide dice wrappers based on mode
-    wrapEls[0].classList.remove('hidden');
+    wrapEls[0].classList.toggle('hidden', mode !== '1dice' && mode !== '2dice' && mode !== '3dice');
     wrapEls[1].classList.toggle('hidden', mode === '1dice');
     wrapEls[2].classList.toggle('hidden', mode !== '3dice');
     buildBettingGrid();
@@ -301,6 +301,14 @@ document.addEventListener('DOMContentLoaded', function(){
       if (t <= 0) {
         clearInterval(localTimer);
         updateTimer(0, phase);
+        // Show rolling animation while waiting for server
+        if (!isRolling) {
+          isRolling = true;
+          showRolling();
+          gameStatusEl.textContent = 'Бросаем...';
+          gameStatusEl.className = 'game-status';
+          document.querySelectorAll('.bet-btn').forEach(b => b.disabled = true);
+        }
         return;
       }
       updateTimer(t, phase);
@@ -451,5 +459,5 @@ document.addEventListener('DOMContentLoaded', function(){
 
   buildBettingGrid();
   setupSocket();
-  updateTimer(30, 'waiting');
+  switchMode('1dice');
 });
