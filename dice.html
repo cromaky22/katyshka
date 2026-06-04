@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dice — Nvuti</title>
+  <title>Dice — Katyshka</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/dice.css">
 </head>
@@ -37,32 +37,26 @@
       </div>
 
       <div class="dice-display" id="diceDisplay">
+        <div class="dice-timer-overlay">
+          <span class="timer-value" id="timerValue">30</span>
+        </div>
         <div class="dice-container" id="diceContainer">
-          <div class="dice-wrapper n1" id="diceWrapper1">
-            <div class="dice" id="dice1">
-              <div class="face one"><span class="dot"></span></div>
-            </div>
+          <div class="dice-wrapper" id="diceWrap1">
+            <div class="dice" id="dice1"></div>
           </div>
-          <div class="dice-wrapper n2 hidden" id="diceWrapper2">
-            <div class="dice" id="dice2">
-              <div class="face one"><span class="dot"></span></div>
-            </div>
+          <div class="dice-wrapper hidden" id="diceWrap2">
+            <div class="dice" id="dice2"></div>
           </div>
-          <div class="dice-wrapper n3 hidden" id="diceWrapper3">
-            <div class="dice" id="dice3">
-              <div class="face one"><span class="dot"></span></div>
-            </div>
+          <div class="dice-wrapper hidden" id="diceWrap3">
+            <div class="dice" id="dice3"></div>
           </div>
         </div>
         <div class="dice-result" id="diceResult"></div>
-        <div class="dice-timer-overlay" id="timerOverlay">
-          <span class="timer-value" id="timerValue">30</span>
-        </div>
       </div>
 
       <div class="game-status" id="gameStatus">Подключение...</div>
 
-      <div class="betting-section" id="bettingSection">
+      <div class="betting-section">
         <div class="section-title">Стол ставок</div>
         <div class="betting-grid" id="bettingGrid"></div>
       </div>
@@ -72,7 +66,7 @@
         <div class="active-bets-list" id="activeBetsList"></div>
       </div>
 
-      <div class="win-announcement" id="winAnnouncement" style="display:none">
+      <div class="win-announcement" id="winAnnounce" style="display:none">
         <div class="win-title" id="winTitle">🎉 Результат</div>
         <div class="win-details" id="winDetails"></div>
       </div>

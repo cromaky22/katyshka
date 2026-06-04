@@ -1,32 +1,20 @@
 document.addEventListener('DOMContentLoaded', function(){
-  const diceContainer = document.getElementById('diceContainer');
-  const dice1 = document.getElementById('dice1');
-  const dice2 = document.getElementById('dice2');
-  const dice3 = document.getElementById('dice3');
-  const diceWrapper1 = document.getElementById('diceWrapper1');
-  const diceWrapper2 = document.getElementById('diceWrapper2');
-  const diceWrapper3 = document.getElementById('diceWrapper3');
-  const diceResult = document.getElementById('diceResult');
-  const timerValueEl = document.getElementById('timerValue');
-  const timerOverlay = document.getElementById('timerOverlay');
-  const gameStatusEl = document.getElementById('gameStatus');
-  const historyScroll = document.getElementById('historyScroll');
-  const stakeInput = document.getElementById('stakeInput');
-  const halfBtn = document.getElementById('halfBtn');
-  const doubleBtn = document.getElementById('doubleBtn');
-  const quickBetBtns = document.querySelectorAll('.quick-bet-btn');
-  const bettingGrid = document.getElementById('bettingGrid');
-  const activeBets = document.getElementById('activeBets');
-  const activeBetsList = document.getElementById('activeBetsList');
-  const winAnnouncement = document.getElementById('winAnnouncement');
-  const winTitle = document.getElementById('winTitle');
-  const winDetails = document.getElementById('winDetails');
-  const allPlayersBetsEl = document.getElementById('allPlayersBets');
-  const allPlayersBetsList = document.getElementById('allPlayersBetsList');
-  const hashDisplay = document.getElementById('hashDisplay');
-  const hashValue = document.getElementById('hashValue');
+  // Elements
+  const $ = id => document.getElementById(id);
+  const dice1 = $('dice1'), dice2 = $('dice2'), dice3 = $('dice3');
+  const wrap1 = $('diceWrap1'), wrap2 = $('diceWrap2'), wrap3 = $('diceWrap3');
+  const diceResult = $('diceResult'), timerValueEl = $('timerValue');
+  const gameStatusEl = $('gameStatus'), historyScroll = $('historyScroll');
+  const stakeInput = $('stakeInput'), halfBtn = $('halfBtn'), doubleBtn = $('doubleBtn');
+  const bettingGrid = $('bettingGrid');
+  const activeBets = $('activeBets'), activeBetsList = $('activeBetsList');
+  const winAnnounce = $('winAnnounce'), winTitle = $('winTitle'), winDetails = $('winDetails');
+  const allPlayersBets = $('allPlayersBets'), allPlayersBetsList = $('allPlayersBetsList');
+  const hashDisplay = $('hashDisplay'), hashValue = $('hashValue');
   const modeBtns = document.querySelectorAll('.mode-btn');
+  const quickBetBtns = document.querySelectorAll('.quick-bet-btn');
 
+  // State
   let currentMode = '1dice';
   let currentBets = [];
   let playerName = 'Player';
@@ -36,205 +24,170 @@ document.addEventListener('DOMContentLoaded', function(){
   let localTimer = null;
   let audioCtx = null;
   let socket = null;
-  let timerStarted = false;
-  let currentTimer = 30;
+  let roundActive = false;
 
-  const DICE_FACES = ['one', 'two', 'three', 'four', 'five', 'six'];
-  const PARITY_GROUP = ['odd', 'notodd'];
+  const PARITY = ['odd', 'notodd'];
 
   const BET_CONFIGS = {
     '1dice': [
-      { type: 'odd', label: 'Четное', coef: 1.9, class: 'btn-odd' },
-      { type: 'notodd', label: 'Нечетное', coef: 1.9, class: 'btn-notodd' },
-      { type: '1', label: '1', coef: 5, class: 'btn-number' },
-      { type: '2', label: '2', coef: 5, class: 'btn-number' },
-      { type: '3', label: '3', coef: 5, class: 'btn-number' },
-      { type: '4', label: '4', coef: 5, class: 'btn-number' },
-      { type: '5', label: '5', coef: 5, class: 'btn-number' },
-      { type: '6', label: '6', coef: 5, class: 'btn-number' }
+      { type: 'odd', label: 'Четное', coef: 1.9, cls: 'btn-odd' },
+      { type: 'notodd', label: 'Нечетное', coef: 1.9, cls: 'btn-notodd' },
+      { type: '1', label: '1', coef: 5, cls: 'btn-number' },
+      { type: '2', label: '2', coef: 5, cls: 'btn-number' },
+      { type: '3', label: '3', coef: 5, cls: 'btn-number' },
+      { type: '4', label: '4', coef: 5, cls: 'btn-number' },
+      { type: '5', label: '5', coef: 5, cls: 'btn-number' },
+      { type: '6', label: '6', coef: 5, cls: 'btn-number' }
     ],
     '2dice': [
-      { type: 'odd', label: 'Четное', coef: 1.75, class: 'btn-odd' },
-      { type: 'notodd', label: 'Нечетное', coef: 2.1, class: 'btn-notodd' },
-      { type: '2', label: '2', coef: 34, class: 'btn-sum' },
-      { type: '3', label: '3', coef: 17, class: 'btn-sum' },
-      { type: '4', label: '4', coef: 11, class: 'btn-sum' },
-      { type: '5', label: '5', coef: 8, class: 'btn-sum' },
-      { type: '6', label: '6', coef: 6, class: 'btn-sum' },
-      { type: '7', label: '7', coef: 6, class: 'btn-sum' },
-      { type: '8', label: '8', coef: 6, class: 'btn-sum' },
-      { type: '9', label: '9', coef: 8, class: 'btn-sum' },
-      { type: '10', label: '10', coef: 11, class: 'btn-sum' },
-      { type: '11', label: '11', coef: 17, class: 'btn-sum' },
-      { type: '12', label: '12', coef: 34, class: 'btn-sum' }
+      { type: 'odd', label: 'Четное', coef: 1.75, cls: 'btn-odd' },
+      { type: 'notodd', label: 'Нечетное', coef: 2.1, cls: 'btn-notodd' },
+      { type: '2', label: '2', coef: 34, cls: 'btn-sum' },
+      { type: '3', label: '3', coef: 17, cls: 'btn-sum' },
+      { type: '4', label: '4', coef: 11, cls: 'btn-sum' },
+      { type: '5', label: '5', coef: 8, cls: 'btn-sum' },
+      { type: '6', label: '6', coef: 6, cls: 'btn-sum' },
+      { type: '7', label: '7', coef: 6, cls: 'btn-sum' },
+      { type: '8', label: '8', coef: 6, cls: 'btn-sum' },
+      { type: '9', label: '9', coef: 8, cls: 'btn-sum' },
+      { type: '10', label: '10', coef: 11, cls: 'btn-sum' },
+      { type: '11', label: '11', coef: 17, cls: 'btn-sum' },
+      { type: '12', label: '12', coef: 34, cls: 'btn-sum' }
     ],
     '3dice': [
-      { type: 'odd', label: 'Четное', coef: 1.5, class: 'btn-odd' },
-      { type: 'notodd', label: 'Нечетное', coef: 2.5, class: 'btn-notodd' },
-      { type: '3', label: '3', coef: 216, class: 'btn-sum' },
-      { type: '4', label: '4', coef: 72, class: 'btn-sum' },
-      { type: '5', label: '5', coef: 36, class: 'btn-sum' },
-      { type: '6', label: '6', coef: 21, class: 'btn-sum' },
-      { type: '7', label: '7', coef: 14, class: 'btn-sum' },
-      { type: '8', label: '8', coef: 10, class: 'btn-sum' },
-      { type: '9', label: '9', coef: 8, class: 'btn-sum' },
-      { type: '10', label: '10', coef: 7, class: 'btn-sum' },
-      { type: '11', label: '11', coef: 7, class: 'btn-sum' },
-      { type: '12', label: '12', coef: 8, class: 'btn-sum' },
-      { type: '13', label: '13', coef: 10, class: 'btn-sum' },
-      { type: '14', label: '14', coef: 14, class: 'btn-sum' },
-      { type: '15', label: '15', coef: 21, class: 'btn-sum' },
-      { type: '16', label: '16', coef: 36, class: 'btn-sum' },
-      { type: '17', label: '17', coef: 72, class: 'btn-sum' },
-      { type: '18', label: '18', coef: 216, class: 'btn-sum' }
+      { type: 'odd', label: 'Четное', coef: 1.5, cls: 'btn-odd' },
+      { type: 'notodd', label: 'Нечетное', coef: 2.5, cls: 'btn-notodd' },
+      { type: '3', label: '3', coef: 216, cls: 'btn-sum' },
+      { type: '4', label: '4', coef: 72, cls: 'btn-sum' },
+      { type: '5', label: '5', coef: 36, cls: 'btn-sum' },
+      { type: '6', label: '6', coef: 21, cls: 'btn-sum' },
+      { type: '7', label: '7', coef: 14, cls: 'btn-sum' },
+      { type: '8', label: '8', coef: 10, cls: 'btn-sum' },
+      { type: '9', label: '9', coef: 8, cls: 'btn-sum' },
+      { type: '10', label: '10', coef: 7, cls: 'btn-sum' },
+      { type: '11', label: '11', coef: 7, cls: 'btn-sum' },
+      { type: '12', label: '12', coef: 8, cls: 'btn-sum' },
+      { type: '13', label: '13', coef: 10, cls: 'btn-sum' },
+      { type: '14', label: '14', coef: 14, cls: 'btn-sum' },
+      { type: '15', label: '15', coef: 21, cls: 'btn-sum' },
+      { type: '16', label: '16', coef: 36, cls: 'btn-sum' },
+      { type: '17', label: '17', coef: 72, cls: 'btn-sum' },
+      { type: '18', label: '18', coef: 216, cls: 'btn-sum' }
     ]
   };
 
-  function buildDiceFace(num) {
-    const face = document.createElement('div');
-    face.className = `face ${DICE_FACES[num - 1]}`;
-    for (let i = 0; i < num; i++) {
-      const dot = document.createElement('span');
-      dot.className = 'dot';
-      face.appendChild(dot);
-    }
-    return face;
-  }
-
-  function initDiceFaces() {
-    [dice1, dice2, dice3].forEach(dice => {
-      dice.innerHTML = '';
-      for (let i = 1; i <= 6; i++) {
-        dice.appendChild(buildDiceFace(i));
+  // Build dice faces with dots
+  function buildDiceEl(diceEl) {
+    diceEl.innerHTML = '';
+    const faces = ['one','two','three','four','five','six'];
+    const dotCounts = [1,2,3,4,5,6];
+    faces.forEach((face, idx) => {
+      const div = document.createElement('div');
+      div.className = `face ${face}`;
+      for (let i = 0; i < dotCounts[idx]; i++) {
+        const dot = document.createElement('span');
+        dot.className = 'dot';
+        div.appendChild(dot);
       }
+      diceEl.appendChild(div);
     });
   }
-  initDiceFaces();
+  buildDiceEl(dice1);
+  buildDiceEl(dice2);
+  buildDiceEl(dice3);
 
-  function setDiceValue(diceEl, value) {
-    diceEl.classList.remove('rolling');
-    diceEl.className = `dice show-${value}`;
+  function setDiceVal(el, val) {
+    el.classList.remove('rolling');
+    el.className = `dice show-${val}`;
   }
 
-  function showRollingAnimation() {
-    [dice1, dice2, dice3].forEach(dice => {
-      dice.classList.remove('rolling');
-      void dice.offsetWidth;
-      dice.classList.add('rolling');
+  function showRolling() {
+    [dice1, dice2, dice3].forEach(d => {
+      d.classList.remove('rolling');
+      void d.offsetWidth;
+      d.classList.add('rolling');
     });
   }
 
   function buildBettingGrid() {
     bettingGrid.innerHTML = '';
-    const config = BET_CONFIGS[currentMode];
-    
+    const cfg = BET_CONFIGS[currentMode];
     if (currentMode === '1dice') {
-      const row1 = document.createElement('div');
-      row1.className = 'betting-row';
-      config.slice(0, 2).forEach(bet => row1.appendChild(createBetBtn(bet)));
-      bettingGrid.appendChild(row1);
-      
-      const row2 = document.createElement('div');
-      row2.className = 'betting-row';
-      config.slice(2, 5).forEach(bet => row2.appendChild(createBetBtn(bet)));
-      bettingGrid.appendChild(row2);
-      
-      const row3 = document.createElement('div');
-      row3.className = 'betting-row';
-      config.slice(5).forEach(bet => row3.appendChild(createBetBtn(bet)));
-      bettingGrid.appendChild(row3);
+      addRow(cfg.slice(0, 2));
+      addRow(cfg.slice(2, 5));
+      addRow(cfg.slice(5));
     } else if (currentMode === '2dice') {
-      const row1 = document.createElement('div');
-      row1.className = 'betting-row';
-      config.slice(0, 2).forEach(bet => row1.appendChild(createBetBtn(bet)));
-      bettingGrid.appendChild(row1);
-      
-      for (let i = 2; i < config.length; i += 4) {
-        const row = document.createElement('div');
-        row.className = 'betting-row';
-        config.slice(i, Math.min(i + 4, config.length)).forEach(bet => row.appendChild(createBetBtn(bet)));
-        bettingGrid.appendChild(row);
-      }
+      addRow(cfg.slice(0, 2));
+      for (let i = 2; i < cfg.length; i += 4) addRow(cfg.slice(i, i + 4));
     } else {
-      const row1 = document.createElement('div');
-      row1.className = 'betting-row';
-      config.slice(0, 2).forEach(bet => row1.appendChild(createBetBtn(bet)));
-      bettingGrid.appendChild(row1);
-      
-      for (let i = 2; i < config.length; i += 4) {
-        const row = document.createElement('div');
-        row.className = 'betting-row';
-        config.slice(i, Math.min(i + 4, config.length)).forEach(bet => row.appendChild(createBetBtn(bet)));
-        bettingGrid.appendChild(row);
-      }
+      addRow(cfg.slice(0, 2));
+      for (let i = 2; i < cfg.length; i += 4) addRow(cfg.slice(i, i + 4));
     }
   }
 
-  function createBetBtn(bet) {
-    const btn = document.createElement('button');
-    btn.className = `bet-btn ${bet.class}`;
-    btn.dataset.bet = bet.type;
-    btn.innerHTML = `${bet.label}<div class="coef">x${bet.coef}</div>`;
-    btn.addEventListener('click', () => addBet(bet.type));
-    return btn;
+  function addRow(bets) {
+    const row = document.createElement('div');
+    row.className = 'betting-row';
+    bets.forEach(b => {
+      const btn = document.createElement('button');
+      btn.className = `bet-btn ${b.cls}`;
+      btn.innerHTML = `${b.label}<div class="coef">x${b.coef}</div>`;
+      btn.addEventListener('click', () => placeBet(b.type));
+      row.appendChild(btn);
+    });
+    bettingGrid.appendChild(row);
   }
 
   function switchMode(mode) {
     currentMode = mode;
     currentBets = [];
-    timerStarted = false;
-    currentTimer = 30;
-    updateMyBetsDisplay();
-    updateTimerDisplay(30, 'waiting');
-    
-    modeBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === mode));
-    
-    diceWrapper1.classList.toggle('hidden', mode !== '1dice');
-    diceWrapper2.classList.toggle('hidden', mode !== '2dice');
-    diceWrapper3.classList.toggle('hidden', mode !== '3dice');
-    
-    diceContainer.style.gap = mode === '3dice' ? '12px' : '16px';
-    
+    roundActive = false;
+    isRolling = false;
+    updateBetsUI();
+    updateTimer(30, 'waiting');
+    modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+    wrap1.classList.toggle('hidden', mode !== '1dice');
+    wrap2.classList.toggle('hidden', mode !== '2dice');
+    wrap3.classList.toggle('hidden', mode !== '3dice');
     buildBettingGrid();
-    resetDiceDisplay();
-    setupSocketListeners();
+    resetDisplay();
   }
 
-  function resetDiceDisplay() {
+  function resetDisplay() {
     diceResult.classList.remove('show');
     diceResult.textContent = '';
-    [dice1, dice2, dice3].forEach(dice => { dice.className = 'dice show-1'; });
+    setDiceVal(dice1, 1);
+    setDiceVal(dice2, 1);
+    setDiceVal(dice3, 1);
   }
 
-  modeBtns.forEach(btn => btn.addEventListener('click', () => switchMode(btn.dataset.mode)));
+  modeBtns.forEach(b => b.addEventListener('click', () => switchMode(b.dataset.mode)));
 
+  // Audio
   function initAudio() {
-    if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+    if (!audioCtx) try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
   }
-  function tone(freq, type, dur, vol) {
+  function tone(f, t, d, v) {
     if (!audioCtx) return;
     try {
       if (audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      g.gain.setValueAtTime(vol, audioCtx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
-      osc.connect(g).connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + dur);
-    } catch (e) {}
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime);
+      g.gain.setValueAtTime(v, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d);
+      o.connect(g).connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + d);
+    } catch(e) {}
   }
-  function winSfx() { tone(800, 'square', 0.1, 0.05); setTimeout(() => tone(1200, 'sine', 0.15, 0.04), 100); }
-  function loseSfx() { tone(100, 'sawtooth', 0.3, 0.04); }
+  function winSfx() { tone(800,'square',0.1,0.05); setTimeout(() => tone(1200,'sine',0.15,0.04), 100); }
+  function loseSfx() { tone(100,'sawtooth',0.3,0.04); }
 
+  // Balance
   function getBalance() {
-    let stored = localStorage.getItem('mc_balance');
-    if (stored === null || stored === 'NaN') { stored = '100.00'; localStorage.setItem('mc_balance', stored); }
-    const val = parseFloat(stored);
-    if (isNaN(val) || val < 0.5) { localStorage.setItem('mc_balance', '100.00'); return 100; }
-    return val;
+    let s = localStorage.getItem('mc_balance');
+    if (s === null || s === 'NaN') { s = '100.00'; localStorage.setItem('mc_balance', s); }
+    const v = parseFloat(s);
+    if (isNaN(v) || v < 0.5) { localStorage.setItem('mc_balance', '100.00'); return 100; }
+    return v;
   }
   function setBalance(v) {
     const n = Math.round(Number(v) * 100) / 100;
@@ -243,25 +196,21 @@ document.addEventListener('DOMContentLoaded', function(){
     document.querySelectorAll('.balance-value').forEach(el => el.textContent = n.toFixed(2));
   }
 
-  function getBetLabel(type) {
-    const map = { odd: 'Четное', notodd: 'Нечетное' };
-    return map[type] || type;
-  }
-
-  function getBetColor(type) {
-    if (type === 'odd') return '#2196f3';
-    if (type === 'notodd') return '#607d8b';
+  function getBetLabel(t) { return { odd: 'Четное', notodd: 'Нечетное' }[t] || t; }
+  function getBetColor(t) {
+    if (t === 'odd') return '#2196f3';
+    if (t === 'notodd') return '#607d8b';
     return '#4caf50';
   }
 
-  function updateMyBetsDisplay() {
-    if (currentBets.length === 0) { activeBets.style.display = 'none'; return; }
+  function updateBetsUI() {
+    if (!currentBets.length) { activeBets.style.display = 'none'; return; }
     activeBets.style.display = 'flex';
     activeBetsList.innerHTML = '';
     const grouped = {};
-    currentBets.forEach(bet => {
-      if (!grouped[bet.type]) grouped[bet.type] = { type: bet.type, amount: 0 };
-      grouped[bet.type].amount += bet.amount;
+    currentBets.forEach(b => {
+      if (!grouped[b.type]) grouped[b.type] = { type: b.type, amount: 0 };
+      grouped[b.type].amount += b.amount;
     });
     Object.values(grouped).forEach(group => {
       const el = document.createElement('div');
@@ -272,60 +221,56 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 
-  function addBet(type) {
+  function placeBet(type) {
     if (isRolling) return;
     const stake = parseFloat(stakeInput.value) || 0;
     if (stake < 0.5) { gameStatusEl.textContent = 'Мин. ставка $0.50'; gameStatusEl.className = 'game-status error'; return; }
     if (stake > 200) { gameStatusEl.textContent = 'Макс. ставка $200'; gameStatusEl.className = 'game-status error'; return; }
-    const totalCurrent = currentBets.reduce((s, b) => s + b.amount, 0);
-    if (totalCurrent + stake > getBalance()) { gameStatusEl.textContent = 'Недостаточно средств'; gameStatusEl.className = 'game-status error'; return; }
-    
-    if (PARITY_GROUP.includes(type)) {
-      const existingParity = currentBets.find(b => PARITY_GROUP.includes(b.type));
-      if (existingParity && existingParity.type !== type) {
-        gameStatusEl.textContent = 'Можно ставить только на чет ИЛИ нечет';
+    const total = currentBets.reduce((s, b) => s + b.amount, 0);
+    if (total + stake > getBalance()) { gameStatusEl.textContent = 'Недостаточно средств'; gameStatusEl.className = 'game-status error'; return; }
+    // Parity check
+    if (PARITY.includes(type)) {
+      const existing = currentBets.find(b => PARITY.includes(b.type));
+      if (existing && existing.type !== type) {
+        gameStatusEl.textContent = 'Только чет ИЛИ нечет!';
         gameStatusEl.className = 'game-status error';
         return;
       }
     }
-    
     currentBets.push({ type, amount: stake });
-    updateMyBetsDisplay();
+    updateBetsUI();
     gameStatusEl.textContent = '';
-    
     socket.emit('dice:bet', { type, amount: stake, diceType: currentMode, playerName, playerAvatar });
   }
 
-  function updateAllPlayersBets(allBets) {
-    if (!allBets || allBets.length === 0) { allPlayersBetsEl.style.display = 'none'; return; }
-    allPlayersBetsEl.style.display = 'flex';
+  function updateAllBets(list) {
+    if (!list || !list.length) { allPlayersBets.style.display = 'none'; return; }
+    allPlayersBets.style.display = 'flex';
     allPlayersBetsList.innerHTML = '';
-    allBets.forEach(bet => {
+    list.forEach(b => {
       const el = document.createElement('div');
       el.className = 'player-bet-item';
-      el.style.borderLeftColor = getBetColor(bet.type);
-      const avatarHtml = bet.playerAvatar
-        ? `<img class="player-bet-avatar" src="${bet.playerAvatar}" alt="" onerror="this.style.display='none'">`
-        : `<div class="player-bet-avatar player-bet-avatar-empty">${(bet.playerName||'?')[0].toUpperCase()}</div>`;
-      el.innerHTML = `<div class="player-bet-left">${avatarHtml}<div class="player-bet-info"><span class="player-bet-name">${bet.playerName||'Player'}</span><span class="player-bet-type">${getBetLabel(bet.type)}</span></div></div><span class="player-bet-amount">$${bet.amount.toFixed(2)}</span>`;
+      el.style.borderLeftColor = getBetColor(b.type);
+      const av = b.playerAvatar
+        ? `<img class="player-bet-avatar" src="${b.playerAvatar}" onerror="this.style.display='none'">`
+        : `<div class="player-bet-avatar player-bet-avatar-empty">${(b.playerName||'?')[0].toUpperCase()}</div>`;
+      el.innerHTML = `<div class="player-bet-left">${av}<div class="player-bet-info"><span class="player-bet-name">${b.playerName||'Player'}</span><span class="player-bet-type">${getBetLabel(b.type)}</span></div></div><span class="player-bet-amount">$${b.amount.toFixed(2)}</span>`;
       allPlayersBetsList.appendChild(el);
     });
   }
 
-  function addHistory(sum, isEven) {
+  function addHistory(sum) {
     const el = document.createElement('div');
     el.className = 'history-item';
-    el.style.backgroundColor = isEven ? '#2196f3' : '#607d8b';
+    el.style.backgroundColor = sum % 2 === 0 ? '#2196f3' : '#607d8b';
     el.textContent = sum;
     historyScroll.insertBefore(el, historyScroll.firstChild);
     while (historyScroll.children.length > 20) historyScroll.removeChild(historyScroll.lastChild);
   }
 
-  function updateTimerDisplay(t, phase) {
-    currentTimer = t;
+  function updateTimer(t, phase) {
     timerValueEl.textContent = t;
     timerValueEl.classList.toggle('urgent', t <= 5 && phase !== 'waiting');
-    
     if (phase === 'waiting') {
       gameStatusEl.textContent = 'Ожидание ставок...';
       gameStatusEl.className = 'game-status';
@@ -344,157 +289,148 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }
 
-  function startLocalTimer(seconds, phase) {
+  function startLocalTimer(secs, phase) {
     if (localTimer) clearInterval(localTimer);
-    timerStarted = true;
-    let t = seconds;
-    updateTimerDisplay(t, phase);
+    roundActive = true;
+    let t = secs;
+    updateTimer(t, phase);
     localTimer = setInterval(() => {
       t--;
       if (t < 0) { clearInterval(localTimer); return; }
-      updateTimerDisplay(t, phase);
+      updateTimer(t, phase);
     }, 1000);
   }
 
-  function showResult(diceValues, resultData) {
-    const sum = diceValues.reduce((a, b) => a + b, 0);
-    const isEven = sum % 2 === 0;
-    const myResult = resultData || { win: 0, bet: 0 };
-    const myWin = myResult.win || 0;
-    const totalBet = myResult.bet || 0;
-    
-    setDiceValue(dice1, diceValues[0]);
-    if (diceValues[1]) setDiceValue(dice2, diceValues[1]);
-    if (diceValues[2]) setDiceValue(dice3, diceValues[2]);
-    
+  function showResult(nums, resultData) {
+    const sum = nums.reduce((a, b) => a + b, 0);
+    const myWin = resultData ? resultData.win : 0;
+    const myBet = resultData ? resultData.bet : 0;
+
+    setDiceVal(dice1, nums[0]);
+    if (nums[1] !== undefined) setDiceVal(dice2, nums[1]);
+    if (nums[2] !== undefined) setDiceVal(dice3, nums[2]);
+
     diceResult.textContent = `Сумма: ${sum}`;
     diceResult.classList.add('show');
-    
-    addHistory(sum, isEven);
-    
-    winAnnouncement.style.display = 'flex';
+    addHistory(sum);
+
+    winAnnounce.style.display = 'flex';
     if (myWin > 0) {
       winTitle.textContent = '🎉 Вы выиграли!';
       winDetails.innerHTML = `<div class="win-row"><span>Выигрыш</span><span>+$${myWin.toFixed(2)}</span></div>`;
       winSfx();
-    } else if (totalBet > 0) {
+    } else if (myBet > 0) {
       winTitle.textContent = '😔 Вы проиграли';
-      winDetails.innerHTML = `<div class="win-row lose"><span>Проигрыш</span><span>-$${totalBet.toFixed(2)}</span></div>`;
+      winDetails.innerHTML = `<div class="win-row lose"><span>Проигрыш</span><span>-$${myBet.toFixed(2)}</span></div>`;
       loseSfx();
     } else {
       winTitle.textContent = 'Результат';
       winDetails.innerHTML = `<div class="win-row"><span>Сумма</span><span>${sum}</span></div>`;
     }
-    
-    gameStatusEl.textContent = `Выпало: ${sum} (${isEven ? 'Четное' : 'Нечетное'})`;
-    gameStatusEl.className = myWin > 0 ? 'game-status success' : totalBet > 0 ? 'game-status error' : 'game-status';
+    gameStatusEl.textContent = `Выпало: ${sum} (${sum % 2 === 0 ? 'Четное' : 'Нечетное'})`;
+    gameStatusEl.className = myWin > 0 ? 'game-status success' : myBet > 0 ? 'game-status error' : 'game-status';
   }
 
-  function setupSocketListeners() {
-    if (socket) {
-      socket.off();
-    }
-    
+  // Socket
+  function setupSocket() {
+    if (socket) socket.disconnect();
     socket = io({ query: { userId } });
-    
-    socket.on('connect', () => { 
-      gameStatusEl.textContent = 'Подключено'; 
-      timerStarted = false;
-      updateTimerDisplay(30, 'waiting');
+
+    socket.on('connect', () => {
+      gameStatusEl.textContent = 'Подключено';
+      roundActive = false;
+      updateTimer(30, 'waiting');
     });
-    
+
     ['1dice', '2dice', '3dice'].forEach(diceType => {
-      const eventPrefix = `dice:${diceType}`;
-      
-      socket.on(`${eventPrefix}:state`, (state) => {
+      const p = `dice:${diceType}`;
+
+      socket.on(`${p}:state`, (state) => {
         if (diceType !== currentMode) return;
         currentBets = state.myBets || [];
-        updateMyBetsDisplay();
+        updateBetsUI();
         if (state.history) {
           historyScroll.innerHTML = '';
-          state.history.forEach(h => addHistory(h.sum, h.sum % 2 === 0));
+          state.history.forEach(h => addHistory(h.sum));
         }
         if (state.phase === 'betting' && state.timer > 0) {
-          timerStarted = true;
+          roundActive = true;
           startLocalTimer(state.timer, 'betting');
-        } else if (state.phase === 'waiting' || !timerStarted) {
-          updateTimerDisplay(30, 'waiting');
+        } else if (state.phase === 'waiting') {
+          roundActive = false;
+          updateTimer(30, 'waiting');
         }
       });
-      
-      socket.on(`${eventPrefix}:timer`, (data) => {
+
+      socket.on(`${p}:timer`, (data) => {
         if (diceType !== currentMode) return;
         if (data.phase === 'betting') {
-          timerStarted = true;
+          roundActive = true;
           startLocalTimer(data.timer, 'betting');
         }
       });
-      
-      socket.on(`${eventPrefix}:betsUpdate`, (data) => {
+
+      socket.on(`${p}:betsUpdate`, (data) => {
         if (diceType !== currentMode) return;
-        if (data.myBets) { currentBets = data.myBets; updateMyBetsDisplay(); }
-        if (data.allBets) updateAllPlayersBets(data.allBets);
-        if (!timerStarted) {
-          timerStarted = true;
+        if (data.myBets) { currentBets = data.myBets; updateBetsUI(); }
+        if (data.allBets) updateAllBets(data.allBets);
+        // First bet starts the round
+        if (!roundActive && !isRolling) {
+          roundActive = true;
           startLocalTimer(30, 'betting');
         }
       });
-      
-      socket.on(`${eventPrefix}:roll`, (data) => {
+
+      socket.on(`${p}:roll`, (data) => {
         if (diceType !== currentMode) return;
         isRolling = true;
+        roundActive = false;
         document.querySelectorAll('.bet-btn').forEach(b => b.disabled = true);
         gameStatusEl.textContent = 'Бросаем...';
-        
-        showRollingAnimation();
-        
+        showRolling();
+
         setTimeout(() => {
-          const diceValues = data.result.nums || [data.result.num];
-          const myResult = (data.results && data.results[userId]) || { win: 0, bet: 0 };
-          
+          const nums = data.result.nums || [data.result.num];
+          const myRes = (data.results && data.results[userId]) || { win: 0, bet: 0 };
           let totalBet = 0;
-          currentBets.forEach(bet => totalBet += bet.amount);
-          
-          if (myResult.win > 0) {
-            setBalance(getBalance() + myResult.win);
-          }
-          
-          showResult(diceValues, { win: myResult.win, bet: totalBet });
-          
+          currentBets.forEach(b => totalBet += b.amount);
+          if (myRes.win > 0) setBalance(getBalance() + myRes.win);
+          showResult(nums, { win: myRes.win, bet: totalBet });
           hashDisplay.style.display = 'block';
           hashValue.textContent = data.hash || '';
-          
-          setTimeout(() => {
-            isRolling = false;
-            document.querySelectorAll('.bet-btn').forEach(b => b.disabled = false);
-            winAnnouncement.style.display = 'none';
-          }, 3000);
         }, 1500);
+
+        setTimeout(() => {
+          isRolling = false;
+          document.querySelectorAll('.bet-btn').forEach(b => b.disabled = false);
+          winAnnounce.style.display = 'none';
+        }, 5000);
       });
-      
-      socket.on(`${eventPrefix}:newRound`, (data) => {
+
+      socket.on(`${p}:newRound`, (data) => {
         if (diceType !== currentMode) return;
         currentBets = [];
-        timerStarted = false;
-        updateMyBetsDisplay();
-        allPlayersBetsEl.style.display = 'none';
-        winAnnouncement.style.display = 'none';
+        roundActive = false;
+        isRolling = false;
+        updateBetsUI();
+        allPlayersBets.style.display = 'none';
+        winAnnounce.style.display = 'none';
         hashDisplay.style.display = 'none';
         gameStatusEl.textContent = 'Ожидание ставок...';
         gameStatusEl.className = 'game-status';
-        isRolling = false;
         document.querySelectorAll('.bet-btn').forEach(b => b.disabled = false);
-        resetDiceDisplay();
-        updateTimerDisplay(30, 'waiting');
+        resetDisplay();
+        updateTimer(30, 'waiting');
       });
     });
   }
 
+  // Quick bet buttons
   quickBetBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       const a = parseFloat(btn.dataset.amount);
-      const cur = parseFloat(stakeInput.value) || 0;
-      stakeInput.value = Math.min(200, Math.max(0.5, cur + a)).toFixed(2);
+      const c = parseFloat(stakeInput.value) || 0;
+      stakeInput.value = Math.min(200, Math.max(0.5, c + a)).toFixed(2);
     });
   });
   halfBtn.addEventListener('click', () => { const v = parseFloat(stakeInput.value) || 0; stakeInput.value = Math.max(0.5, v / 2).toFixed(2); });
@@ -503,6 +439,7 @@ document.addEventListener('DOMContentLoaded', function(){
   document.addEventListener('click', () => initAudio(), { once: true });
   document.querySelectorAll('.balance-value').forEach(el => el.textContent = getBalance().toFixed(2));
 
+  // Telegram user
   try {
     const tg = window.Telegram && window.Telegram.WebApp;
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
@@ -514,6 +451,6 @@ document.addEventListener('DOMContentLoaded', function(){
   } catch(e) {}
 
   buildBettingGrid();
-  setupSocketListeners();
-  updateTimerDisplay(30, 'waiting');
+  setupSocket();
+  updateTimer(30, 'waiting');
 });

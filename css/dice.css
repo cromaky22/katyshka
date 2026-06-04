@@ -15,70 +15,102 @@
 .page-dice .history-scroll{display:flex;overflow-x:auto;gap:6px;padding-bottom:4px}
 .page-dice .history-item{flex-shrink:0;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.3)}
 
-/* Dice display */
-.page-dice .dice-display{background:var(--card);border-radius:12px;padding:20px;position:relative;min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.page-dice .dice-container{display:flex;gap:16px;justify-content:center;align-items:center;flex-wrap:wrap}
-.page-dice .dice-wrapper{perspective:600px}
+/* Dice display area */
+.page-dice .dice-display{background:var(--card);border-radius:12px;padding:24px 16px;position:relative;min-height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+.page-dice .dice-container{display:flex;gap:20px;justify-content:center;align-items:center;flex-wrap:wrap}
+.page-dice .dice-wrapper{perspective:800px}
 .page-dice .dice-wrapper.hidden{display:none}
 
-/* 3D Dice */
-.page-dice .dice{width:80px;height:80px;position:relative;transform-style:preserve-3d;transition:transform 0.1s}
-.page-dice .dice.rolling{animation:diceRoll 0.5s ease-out}
-.page-dice .dice .face{position:absolute;width:80px;height:80px;background:linear-gradient(145deg,#fff,#e6e6e6);border-radius:12px;border:2px solid #ccc;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 20px rgba(0,0,0,0.1)}
-.page-dice .dice .dot{width:14px;height:14px;background:#1a1a2e;border-radius:50%;position:absolute;box-shadow:inset 1px 1px 3px rgba(0,0,0,0.5)}
-
-/* Face positions */
-.page-dice .dice .face.one{transform:rotateY(0deg) translateZ(40px)}
-.page-dice .dice .face.two{transform:rotateY(180deg) translateZ(40px)}
-.page-dice .dice .face.three{transform:rotateY(-90deg) translateZ(40px)}
-.page-dice .dice .face.four{transform:rotateY(90deg) translateZ(40px)}
-.page-dice .dice .face.five{transform:rotateX(90deg) translateZ(40px)}
-.page-dice .dice .face.six{transform:rotateX(-90deg) translateZ(40px)}
-
-/* Dot positions for each face */
-.page-dice .dice .face.one .dot{top:50%;left:50%;transform:translate(-50%,-50%)}
-.page-dice .dice .face.two .dot:nth-child(1){top:15px;left:15px}
-.page-dice .dice .face.two .dot:nth-child(2){bottom:15px;right:15px}
-.page-dice .dice .face.three .dot:nth-child(1){top:15px;left:15px}
-.page-dice .dice .face.three .dot:nth-child(2){top:50%;left:50%;transform:translate(-50%,-50%)}
-.page-dice .dice .face.three .dot:nth-child(3){bottom:15px;right:15px}
-.page-dice .dice .face.four .dot:nth-child(1){top:15px;left:15px}
-.page-dice .dice .face.four .dot:nth-child(2){top:15px;right:15px}
-.page-dice .dice .face.four .dot:nth-child(3){bottom:15px;left:15px}
-.page-dice .dice .face.four .dot:nth-child(4){bottom:15px;right:15px}
-.page-dice .dice .face.five .dot:nth-child(1){top:15px;left:15px}
-.page-dice .dice .face.five .dot:nth-child(2){top:15px;right:15px}
-.page-dice .dice .face.five .dot:nth-child(3){top:50%;left:50%;transform:translate(-50%,-50%)}
-.page-dice .dice .face.five .dot:nth-child(4){bottom:15px;left:15px}
-.page-dice .dice .face.five .dot:nth-child(5){bottom:15px;right:15px}
-.page-dice .dice .face.six .dot:nth-child(1){top:15px;left:15px}
-.page-dice .dice .face.six .dot:nth-child(2){top:15px;right:15px}
-.page-dice .dice .face.six .dot:nth-child(3){top:50%;left:15px;transform:translateY(-50%)}
-.page-dice .dice .face.six .dot:nth-child(4){top:50%;right:15px;transform:translateY(-50%)}
-.page-dice .dice .face.six .dot:nth-child(5){bottom:15px;left:15px}
-.page-dice .dice .face.six .dot:nth-child(6){bottom:15px;right:15px}
-
-/* Dice rotations for results */
-.page-dice .dice.show-1{transform:rotateX(0deg) rotateY(0deg)}
-.page-dice .dice.show-2{transform:rotateX(0deg) rotateY(180deg)}
-.page-dice .dice.show-3{transform:rotateX(0deg) rotateY(90deg)}
-.page-dice .dice.show-4{transform:rotateX(0deg) rotateY(-90deg)}
-.page-dice .dice.show-5{transform:rotateX(-90deg) rotateY(0deg)}
-.page-dice .dice.show-6{transform:rotateX(90deg) rotateY(0deg)}
-
-@keyframes diceRoll{
-  0%{transform:rotateX(0deg) rotateY(0deg)}
-  25%{transform:rotateX(180deg) rotateY(90deg)}
-  50%{transform:rotateX(360deg) rotateY(180deg)}
-  75%{transform:rotateX(540deg) rotateY(270deg)}
-  100%{transform:rotateX(720deg) rotateY(360deg)}
+/* ===== 3D CUBE DICE ===== */
+.page-dice .dice{
+  width:70px;height:70px;position:relative;
+  transform-style:preserve-3d;
+  transition:transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94);
 }
 
-.page-dice .dice-result{font-size:28px;font-weight:900;color:#fff;margin-top:16px;opacity:0;transition:opacity 0.3s}
+.page-dice .dice .face{
+  position:absolute;width:70px;height:70px;
+  background:linear-gradient(135deg,#ffffff 0%,#e8e8e8 100%);
+  border-radius:10px;border:1px solid #bbb;
+  display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+  padding:8px;box-sizing:border-box;
+  box-shadow:inset 0 0 15px rgba(0,0,0,0.08);
+  backface-visibility:hidden;
+}
+
+.page-dice .dice .dot{
+  width:14px;height:14px;background:#1a1a2e;border-radius:50%;
+  align-self:center;justify-self:center;
+  box-shadow:inset 1px 2px 3px rgba(0,0,0,0.4);
+}
+
+/* Face transforms - cube with 70px size, translateZ = 35px */
+.page-dice .dice .face.one{transform:rotateY(0deg) translateZ(35px)}
+.page-dice .dice .face.two{transform:rotateY(180deg) translateZ(35px)}
+.page-dice .dice .face.three{transform:rotateY(90deg) translateZ(35px)}
+.page-dice .dice .face.four{transform:rotateY(-90deg) translateZ(35px)}
+.page-dice .dice .face.five{transform:rotateX(90deg) translateZ(35px)}
+.page-dice .dice .face.six{transform:rotateX(-90deg) translateZ(35px)}
+
+/* Dot positions per face using grid areas */
+/* Face 1: center */
+.page-dice .dice .face.one .dot{grid-area:2/2}
+
+/* Face 2: top-left, bottom-right */
+.page-dice .dice .face.two .dot:nth-child(1){grid-area:1/1}
+.page-dice .dice .face.two .dot:nth-child(2){grid-area:3/3}
+
+/* Face 3: diagonal */
+.page-dice .dice .face.three .dot:nth-child(1){grid-area:1/1}
+.page-dice .dice .face.three .dot:nth-child(2){grid-area:2/2}
+.page-dice .dice .face.three .dot:nth-child(3){grid-area:3/3}
+
+/* Face 4: corners */
+.page-dice .dice .face.four .dot:nth-child(1){grid-area:1/1}
+.page-dice .dice .face.four .dot:nth-child(2){grid-area:1/3}
+.page-dice .dice .face.four .dot:nth-child(3){grid-area:3/1}
+.page-dice .dice .face.four .dot:nth-child(4){grid-area:3/3}
+
+/* Face 5: corners + center */
+.page-dice .dice .face.five .dot:nth-child(1){grid-area:1/1}
+.page-dice .dice .face.five .dot:nth-child(2){grid-area:1/3}
+.page-dice .dice .face.five .dot:nth-child(3){grid-area:2/2}
+.page-dice .dice .face.five .dot:nth-child(4){grid-area:3/1}
+.page-dice .dice .face.five .dot:nth-child(5){grid-area:3/3}
+
+/* Face 6: two columns */
+.page-dice .dice .face.six .dot:nth-child(1){grid-area:1/1}
+.page-dice .dice .face.six .dot:nth-child(2){grid-area:1/3}
+.page-dice .dice .face.six .dot:nth-child(3){grid-area:2/1}
+.page-dice .dice .face.six .dot:nth-child(4){grid-area:2/3}
+.page-dice .dice .face.six .dot:nth-child(5){grid-area:3/1}
+.page-dice .dice .face.six .dot:nth-child(6){grid-area:3/3}
+
+/* Show rotations for each value */
+.page-dice .dice.show-1{transform:rotateX(0deg) rotateY(0deg)}
+.page-dice .dice.show-2{transform:rotateX(0deg) rotateY(180deg)}
+.page-dice .dice.show-3{transform:rotateX(0deg) rotateY(-90deg)}
+.page-dice .dice.show-4{transform:rotateX(0deg) rotateY(90deg)}
+.page-dice .dice.show-5{transform:rotateX(90deg) rotateY(0deg)}
+.page-dice .dice.show-6{transform:rotateX(-90deg) rotateY(0deg)}
+
+/* Rolling animation */
+.page-dice .dice.rolling{
+  animation:diceShake 0.15s linear infinite;
+}
+@keyframes diceShake{
+  0%{transform:rotateX(0deg) rotateY(0deg)}
+  25%{transform:rotateX(90deg) rotateY(45deg)}
+  50%{transform:rotateX(180deg) rotateY(90deg)}
+  75%{transform:rotateX(270deg) rotateY(135deg)}
+  100%{transform:rotateX(360deg) rotateY(180deg)}
+}
+
+.page-dice .dice-result{font-size:24px;font-weight:900;color:#fff;margin-top:16px;opacity:0;transition:opacity 0.3s}
 .page-dice .dice-result.show{opacity:1}
 
-.page-dice .dice-timer-overlay{position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.6);padding:8px 14px;border-radius:20px}
-.page-dice .timer-value{font-size:18px;font-weight:800;color:#fff}
+.page-dice .dice-timer-overlay{position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.6);padding:6px 12px;border-radius:16px}
+.page-dice .timer-value{font-size:16px;font-weight:800;color:#fff}
 .page-dice .timer-value.urgent{color:#f44336;animation:pulse 0.5s infinite}
 
 /* Betting section */
@@ -86,7 +118,7 @@
 .page-dice .section-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px}
 .page-dice .betting-grid{display:flex;flex-direction:column;gap:8px}
 .page-dice .betting-row{display:flex;gap:8px}
-.page-dice .bet-btn{flex:1;padding:14px 8px;border-radius:10px;border:2px solid rgba(255,255,255,0.1);color:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all 0.2s;font-weight:600;background:rgba(255,255,255,0.03)}
+.page-dice .bet-btn{flex:1;padding:12px 6px;border-radius:10px;border:2px solid rgba(255,255,255,0.1);color:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all 0.2s;font-weight:600;font-size:14px;background:rgba(255,255,255,0.03)}
 .page-dice .bet-btn:hover{transform:scale(1.02);filter:brightness(1.2)}
 .page-dice .bet-btn:active{transform:scale(0.98)}
 .page-dice .bet-btn:disabled{opacity:0.3;cursor:not-allowed;transform:none!important}
@@ -146,14 +178,14 @@
 
 /* Responsive */
 @media(max-width:380px){
-  .page-dice .dice{width:60px;height:60px}
-  .page-dice .dice .face{width:60px;height:60px}
-  .page-dice .dice .face.one{transform:rotateY(0deg) translateZ(30px)}
-  .page-dice .dice .face.two{transform:rotateY(180deg) translateZ(30px)}
-  .page-dice .dice .face.three{transform:rotateY(-90deg) translateZ(30px)}
-  .page-dice .dice .face.four{transform:rotateY(90deg) translateZ(30px)}
-  .page-dice .dice .face.five{transform:rotateX(90deg) translateZ(30px)}
-  .page-dice .dice .face.six{transform:rotateX(-90deg) translateZ(30px)}
-  .page-dice .dice .dot{width:10px;height:10px}
-  .page-dice .dice-container{gap:10px}
+  .page-dice .dice{width:56px;height:56px}
+  .page-dice .dice .face{width:56px;height:56px;padding:6px}
+  .page-dice .dice .face.one{transform:rotateY(0deg) translateZ(28px)}
+  .page-dice .dice .face.two{transform:rotateY(180deg) translateZ(28px)}
+  .page-dice .dice .face.three{transform:rotateY(90deg) translateZ(28px)}
+  .page-dice .dice .face.four{transform:rotateY(-90deg) translateZ(28px)}
+  .page-dice .dice .face.five{transform:rotateX(90deg) translateZ(28px)}
+  .page-dice .dice .face.six{transform:rotateX(-90deg) translateZ(28px)}
+  .page-dice .dice .dot{width:11px;height:11px}
+  .page-dice .dice-container{gap:12px}
 }

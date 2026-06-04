@@ -444,7 +444,8 @@ function rollDice(diceType) {
     state.allBets = {};
     state.nums = null;
     state.roundId++;
-    startDiceTimer(diceType);
+    state.phase = 'waiting';
+    state.timer = 30;
     io.emit(`dice:${diceType}:newRound`, { roundId: state.roundId, history: state.history });
   }, 7000);
 }
