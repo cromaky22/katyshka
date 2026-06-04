@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
+<title>Star Wars Slots</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:linear-gradient(135deg,#0a0015 0%,#15002a 50%,#0a0015 100%);min-height:100vh;color:#fff;font-family:Arial,sans-serif;overflow-x:hidden}
+.s-wrap{max-width:520px;margin:0 auto;padding:10px 12px 80px}
+.s-top{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(255,255,255,0.05);border-radius:12px;margin-bottom:10px}
+.s-back{color:#fff;text-decoration:none;font-size:20px;padding:4px 10px;border-radius:8px;background:rgba(255,255,255,0.1)}
+.s-title{font-size:16px;font-weight:800;background:linear-gradient(90deg,#ffd700,#ff6b9d);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.s-bal{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:700;background:rgba(0,0,0,0.3);padding:5px 10px;border-radius:20px}
+.s-bal-val{color:#ffd700}
+.s-machine{background:linear-gradient(180deg,#1a1a2e,#0f0f1a);border-radius:16px;padding:12px;border:2px solid rgba(255,215,0,0.2);box-shadow:0 0 40px rgba(255,215,0,0.1),inset 0 0 60px rgba(0,0,0,0.5);position:relative}
+.s-machine::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#ffd700,transparent)}
+.s-reels{display:flex;gap:4px;background:rgba(0,0,0,0.4);border-radius:10px;padding:8px;min-height:240px}
+.reel{flex:1;height:220px;overflow:hidden;position:relative;border-radius:6px;background:rgba(255,255,255,0.03)}
+.reel::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.4) 0%,transparent 25%,transparent 75%,rgba(0,0,0,0.4) 100%);pointer-events:none;z-index:3;border-radius:6px}
+.icons{position:absolute;width:100%;display:flex;flex-direction:column;align-items:center}
+.icon-cell{width:100%;height:72px;display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0}
+.icon-cell.win{animation:winPulse 0.5s ease infinite alternate}
+@keyframes winPulse{0%{transform:scale(1)}100%{transform:scale(1.15);filter:brightness(1.3)}}
+.s-controls{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:10px;align-items:stretch}
+.s-bet-area{background:rgba(255,255,255,0.05);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.bet-row{display:flex;gap:6px;align-items:center}
+.bet-inp{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:rgba(0,0,0,0.3);color:#fff;font-size:16px;font-weight:700;text-align:center;outline:none}
+.bet-inp:focus{border-color:#ffd700}
+.bet-btn{padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.08);color:#fff;cursor:pointer;font-weight:600;font-size:13px}
+.bet-btn:hover{background:rgba(255,255,255,0.15)}
+.quick-row{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.qb{padding:5px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7);cursor:pointer;font-size:10px;font-weight:600;text-align:center}
+.qb:hover{background:rgba(255,255,255,0.1);color:#fff}
+.spin-btn{padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;font-size:16px;font-weight:800;cursor:pointer;transition:all 0.2s;text-transform:uppercase;letter-spacing:1px;box-shadow:0 6px 20px rgba(255,215,0,0.3)}
+.spin-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 30px rgba(255,215,0,0.4)}
+.spin-btn:disabled{opacity:0.35;cursor:not-allowed}
+.auto-btn{padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.6);cursor:pointer;font-size:12px;font-weight:700}
+.auto-btn.active{background:rgba(255,215,0,0.2);border-color:#ffd700;color:#ffd700}
+.s-status{padding:8px;border-radius:8px;text-align:center;font-weight:600;font-size:12px;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);margin-top:8px}
+.s-status.win{background:rgba(76,175,80,0.15);color:#4caf50}
+.s-status.lose{background:rgba(244,67,54,0.15);color:#f44336}
+.win-box{background:rgba(0,0,0,0.4);border-radius:12px;padding:10px;text-align:center;margin-top:8px;display:none;border:1px solid rgba(255,215,0,0.2)}
+.win-box.show{display:block;animation:popIn 0.3s ease}
+.win-label{font-size:11px;color:rgba(255,255,255,0.5)}
+.win-val{font-size:22px;font-weight:900;color:#ffd700}
+.jackpot{color:#ffd700;font-size:14px;font-weight:700;text-align:center;padding:4px}
+@keyframes popIn{0%{opacity:0;transform:scale(0.92)}100%{opacity:1;transform:scale(1)}}
+@media(max-width:380px){
+  .reel{height:180px}
+  .icon-cell{height:60px;font-size:26px}
+  .spin-btn{padding:12px;font-size:14px}
+}
+</style>
+</head>
+<body>
+<div class="s-wrap">
+  <div class="s-top">
+    <a href="home.html" class="s-back">←</a>
+    <span class="s-title">⭐ Star Wars Slots</span>
+    <div class="s-bal">💰 <span class="s-bal-val" id="bal">100.00</span></div>
+  </div>
+  <div class="jackpot" id="jackpot">JACKPOT: <span id="jp">5,555,555</span></div>
+  <div class="s-machine">
+    <div class="s-reels" id="reels">
+      <div class="reel"><div class="icons"></div></div>
+      <div class="reel"><div class="icons"></div></div>
+      <div class="reel"><div class="icons"></div></div>
+      <div class="reel"><div class="icons"></div></div>
+      <div class="reel"><div class="icons"></div></div>
+    </div>
+  </div>
+  <div class="win-box" id="winBox">
+    <div class="win-label">ВЫИГРЫШ</div>
+    <div class="win-val" id="winVal">$0.00</div>
+  </div>
+  <div class="s-controls">
+    <div class="s-bet-area">
+      <div class="bet-row">
+        <input class="bet-inp" id="betInp" type="number" min="0.2" max="100" step="0.2" value="1">
+        <button class="bet-btn" id="halfB">½</button>
+        <button class="bet-btn" id="dblB">×2</button>
+      </div>
+      <div class="quick-row">
+        <button class="qb" data-v="0.2">$0.2</button>
+        <button class="qb" data-v="0.5">$0.5</button>
+        <button class="qb" data-v="1">$1</button>
+        <button class="qb" data-v="2">$2</button>
+        <button class="qb" data-v="5">$5</button>
+        <button class="qb" data-v="10">$10</button>
+        <button class="qb" data-v="25">$25</button>
+        <button class="qb" data-v="50">$50</button>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <button class="spin-btn" id="spinB">🎰 SPIN</button>
+      <button class="auto-btn" id="autoB">AUTO</button>
+    </div>
+  </div>
+  <div class="s-status" id="status">Выберите ставку и нажмите SPIN</div>
+</div>
+<nav class="bottom-nav">
+  <a href="home.html#games" class="nav-item" data-name="games"><span class="icon">🎮</span><span class="label">Games</span></a>
+  <a href="wallet.html" class="nav-item" data-name="wallet"><span class="icon">💼</span><span class="label">Wallet</span></a>
+  <a href="home.html" class="nav-item center" data-name=""><span class="icon">💎</span></a>
+  <a href="bonus.html" class="nav-item" data-name="bonus"><span class="icon">🎁</span><span class="label">Bonus</span></a>
+  <a href="menu.html" class="nav-item" data-name="menu"><span class="icon">☰</span><span class="label">Menu</span></a>
+</nav>
+
+<script>
+(function(){
+  const REELS=5,ROWS=3;
+  const ICONS=['⭐','🌙','💎','🔴','🟡','🟢','🔵','💜','❤️'];
+  const PAYS=[50,25,15,10,8,5,3,2,1];
+  const WTS=[5,8,10,12,15,15,15,15,15];
+  const TOTAL_W=WTS.reduce((a,b)=>a+b,0);
+
+  let bal=100,bet=1,spinning=false,autoPlay=false;
+  let actx=null;
+
+  const $=id=>document.getElementById(id);
+  const reels=$('reels'),spinB=$('spinB'),autoB=$('autoB');
+  const betInp=$('betInp'),halfB=$('halfB'),dblB=$('dblB');
+  const balEl=$('bal'),status=$('status');
+  const winBox=$('winBox'),winVal=$('winVal');
+
+  function initAudio(){if(!actx)try{actx=new(window.AudioContext||window.webkitAudioContext)}catch(e){}}
+  function tone(f,t,d,v){if(!actx)return;try{const o=actx.createOscillator(),g=actx.createGain();o.type=t;o.frequency.setValueAtTime(f,actx.currentTime);g.gain.setValueAtTime(v,actx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+d);o.connect(g).connect(actx.destination);o.start();o.stop(actx.currentTime+d)}catch(e){}}
+  function sfxS(){tone(200,'sine',0.1,0.05)}
+  function sfxW(){tone(523,'square',0.15,0.08);setTimeout(()=>tone(659,'sine',0.2,0.06),100);setTimeout(()=>tone(784,'sine',0.25,0.04),200)}
+  function sfxStop(){tone(400,'triangle',0.08,0.04)}
+
+  function rSym(){
+    let r=Math.random()*TOTAL_W;
+    for(let i=0;i<ICONS.length;i++){r-=WTS[i];if(r<=0)return i}
+    return 0;
+  }
+
+  function updBal(n){bal=n;balEl.textContent=bal.toFixed(2);localStorage.setItem('mc_balance',bal.toFixed(2))}
+  function delay(ms){return new Promise(r=>setTimeout(r,ms))}
+
+  // Init reels
+  function initReels(){
+    const reelEls=reels.querySelectorAll('.reel');
+    reelEls.forEach((reel,idx)=>{
+      const iconsDiv=reel.querySelector('.icons');
+      iconsDiv.innerHTML='';
+      for(let r=0;r<ROWS;r++){
+        const cell=document.createElement('div');
+        cell.className='icon-cell';
+        cell.textContent=ICONS[rSym()];
+        iconsDiv.appendChild(cell);
+      }
+    });
+  }
+
+  // Spin animation
+  function spinReel(reelIdx,finalSymbols,duration){
+    return new Promise(resolve=>{
+      const reel=reels.children[reelIdx];
+      const iconsDiv=reel.querySelector('.icons');
+      const cellH=72;
+
+      // Build strip: random symbols + final symbols at bottom
+      const spinCount=12+Math.floor(Math.random()*4);
+      const totalCells=spinCount+ROWS;
+
+      // Clear and rebuild strip
+      iconsDiv.innerHTML='';
+      for(let i=0;i<totalCells;i++){
+        const cell=document.createElement('div');
+        cell.className='icon-cell';
+        if(i>=spinCount){
+          cell.textContent=ICONS[finalSymbols[i-spinCount]];
+        } else {
+          cell.textContent=ICONS[rSym()];
+        }
+        iconsDiv.appendChild(cell);
+      }
+
+      // Position strip above view
+      iconsDiv.style.transform=`translateY(-${spinCount*cellH}px)`;
+      iconsDiv.style.transition='none';
+
+      // Force reflow
+      void iconsDiv.offsetHeight;
+
+      // Animate down with easing
+      const targetY=0;
+      const startY=-spinCount*cellH;
+
+      const anim=iconsDiv.animate([
+        {transform:`translateY(${startY}px)`},
+        {transform:`translateY(${targetY}px)`}
+      ],{
+        duration:duration,
+        easing:'cubic-bezier(0.17, 0.67, 0.12, 0.99)',
+        fill:'forwards'
+      });
+
+      // Tick sound
+      const tickIv=setInterval(()=>{
+        if(anim.playState==='finished'){clearInterval(tickIv);return}
+        tone(600+Math.random()*300,'sine',0.02,0.015);
+      },50);
+
+      anim.onfinish=()=>{
+        clearInterval(tickIv);
+        sfxStop();
+        // Clean up - keep only final symbols
+        iconsDiv.style.transition='none';
+        iconsDiv.style.transform='translateY(0)';
+        iconsDiv.innerHTML='';
+        for(let r=0;r<ROWS;r++){
+          const cell=document.createElement('div');
+          cell.className='icon-cell';
+          cell.textContent=ICONS[finalSymbols[r]];
+          iconsDiv.appendChild(cell);
+        }
+        resolve();
+      };
+    });
+  }
+
+  function checkWins(){
+    // Get current symbols
+    const grid=[];
+    for(let c=0;c<REELS;c++){
+      const reel=reels.children[c];
+      const cells=reel.querySelectorAll('.icon-cell');
+      const col=[];
+      for(let r=0;r<ROWS;r++){
+        const icon=cells[r].textContent;
+        col.push(ICONS.indexOf(icon));
+      }
+      grid.push(col);
+    }
+
+    let winAmount=0;
+    const winCells=new Set();
+
+    // Check each row for matching symbols across reels
+    for(let r=0;r<ROWS;r++){
+      const rowSyms=grid.map(c=>c[r]);
+      // Count consecutive matches from left
+      let firstSym=rowSyms[0];
+      let count=1;
+      for(let c=1;c<REELS;c++){
+        if(rowSyms[c]===firstSym)count++;
+        else break;
+      }
+      if(count>=3&&firstSym!==-1){
+        const mult=PAYS[firstSym]||1;
+        winAmount+=bet*mult*(count-2);
+        for(let c=0;c<count;c++)winCells.add(c+','+r);
+      }
+    }
+
+    // Check for 5 of a kind (jackpot)
+    for(let r=0;r<ROWS;r++){
+      const rowSyms=grid.map(c=>c[r]);
+      if(rowSyms.every(s=>s===rowSyms[0])&&rowSyms[0]===0){
+        winAmount+=bet*100; // Jackpot!
+      }
+    }
+
+    return {amount:Math.round(winAmount*100)/100,cells:winCells};
+  }
+
+  function markWins(cells){
+    cells.forEach(key=>{
+      const [c,r]=key.split(',').map(Number);
+      const reel=reels.children[c];
+      if(reel&&reel.querySelectorAll('.icon-cell')[r]){
+        reel.querySelectorAll('.icon-cell')[r].classList.add('win');
+      }
+    });
+  }
+
+  async function spin(){
+    if(spinning)return;
+    const b=parseFloat(betInp.value);
+    if(isNaN(b)||b<0.2){status.textContent='Мин. ставка $0.20';status.className='s-status lose';return}
+    if(b>100){status.textContent='Макс. ставка $100';status.className='s-status lose';return}
+    if(bal<b){status.textContent='Недостаточно средств';status.className='s-status lose';return}
+
+    initAudio();bet=b;spinning=true;spinB.disabled=true;
+    winBox.classList.remove('show');status.className='s-status';
+    status.textContent='Крутится...';
+    updBal(bal-bet);
+    sfxS();
+
+    // Generate final result
+    const finalSyms=[];
+    for(let c=0;c<REELS;c++){
+      const col=[];
+      for(let r=0;r<ROWS;r++)col.push(rSym());
+      finalSyms.push(col);
+    }
+
+    // Spin all reels simultaneously with staggered stop
+    const promises=[];
+    for(let c=0;c<REELS;c++){
+      promises.push(spinReel(c,finalSyms[c],1500+c*200));
+    }
+    await Promise.all(promises);
+
+    // Check wins
+    const res=checkWins();
+    if(res.amount>0){
+      updBal(bal+res.amount);sfxW();
+      winBox.classList.add('show');winVal.textContent='$'+res.amount.toFixed(2);
+      status.textContent=`Выигрыш: $${res.amount.toFixed(2)} (x${(res.amount/bet).toFixed(2)})`;
+      status.className='s-status win';
+      markWins(res.cells);
+    } else {
+      status.textContent='Нет выигрыша';status.className='s-status';
+    }
+
+    spinning=false;spinB.disabled=false;
+    if(autoPlay)setTimeout(()=>spin(),1000);
+  }
+
+  // Events
+  spinB.onclick=spin;
+  autoB.onclick=()=>{autoPlay=!autoPlay;autoB.classList.toggle('active',autoPlay)};
+  halfB.onclick=()=>{betInp.value=Math.max(0.2,(parseFloat(betInp.value)||1)/2).toFixed(2)};
+  dblB.onclick=()=>{betInp.value=Math.min(100,(parseFloat(betInp.value)||1)*2).toFixed(2)};
+  document.querySelectorAll('.qb').forEach(b=>b.onclick=()=>{betInp.value=b.dataset.v});
+
+  // Init
+  bal=parseFloat(localStorage.getItem('mc_balance'))||100;
+  balEl.textContent=bal.toFixed(2);
+  initReels();
+  document.addEventListener('click',()=>initAudio(),{once:true});
+})();
+</script>
+</body>
+</html>
