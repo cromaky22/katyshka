@@ -123,7 +123,7 @@ app.post('/api/withdraw/cryptobot', async(req,res)=>{
     const r=await cryptobotReq('transfer',{user_id:parseInt(userId)||0,asset:'USDT',amount:amt.toFixed(6),spend_id:spendId,comment:'Katyshka withdraw'});
     if(r.ok){setBalance(userId,getBalance(userId)-total);res.json({ok:true,received:amt,fee,balance:getBalance(userId)});}
     else res.status(500).json({error:r.error});
-  }catch(e){res.status(500).json({error:e.message);}
+  }catch(e){res.status(500).json({error:e.message});}
 });
 
 // === XROCKET ===
