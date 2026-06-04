@@ -200,54 +200,6 @@ app.put('/api/users/:id/balance', requireAdmin, (req, res) => {
 });
 
 // === WHEEL GAME STATE ===
-const WHEEL_NUMBERS = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
-const RED_NUMBERS = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
-function getWheelColor(n) { return n === 0 ? 'green' : (RED_NUMBERS.indexOf(n) !== -1 ? 'red' : 'black'); }
-function betWins(betType, resultNum) {
-  if (betType === '0') return resultNum === 0;
-  if (betType === 'red') return RED_NUMBERS.indexOf(resultNum) !== -1;
-  if (betType === 'black') return resultNum > 0 && RED_NUMBERS.indexOf(resultNum) === -1;
-  if (betType === 'odd') return resultNum > 0 && resultNum % 2 === 0;
-  if (betType === 'notodd') return resultNum > 0 && resultNum % 2 === 1;
-  if (betType === 'range1') return resultNum >= 1 && resultNum <= 18;
-  if (betType === 'range2') return resultNum >= 19 && resultNum <= 36;
-  if (betType === 'range3') return resultNum >= 1 && resultNum <= 12;
-  if (betType === 'range4') return resultNum >= 13 && resultNum <= 24;
-  if (betType === 'range5') return resultNum >= 25 && resultNum <= 36;
-  if (!isNaN(Number(betType))) return resultNum === Number(betType);
-  return false;
-}
-function getBetCoef(type) {
-  if (type === '0' || !isNaN(Number(type))) return 36;
-  if (type === 'range3' || type === 'range4' || type === 'range5') return 3;
-  return 2;
-}
-
-let wheelState = { phase: 'betting', timer: 20, roundId: 0, result: null, allBets: {}, history: [] };
-let wheelTimerInterval = null;
-
-function startWheelTimer() {
-  if (wheelTimerInterval) clearInterval(wheelTimerInterval);
-  wheelState.timer = 20;
-  wheelState.phase = 'betting';
-  io.emit('wheel:timer', { timer: 20, phase: 'betting' });
-  wheelTimerInterval = setInterval(() => {
-    wheelState.timer--;
-    io.emit('wheel:timer', { timer: wheelState.timer, phase: wheelState.phase });
-    if (wheelState.timer <= 0) { clearInterval(wheelTimerInterval); spinWheel(); }
-  }, 1000);
-}
-
-function spinWheel() {
-  wheelState.phase = 'spinning';
-  const targetIdx = Math.floor(Math.random() * WHEEL_NUMBERS.length);
-  const resultNum = WHEEL_NUMBERS[targetIdx];
-  const resultColor = getWheelColor(resultNum);
-  const allBetsList = [];
-  for (const uid in wheelState.allBets) {
-    wheelState.allBets[uid].forEach(bet => {
-      allBetsList.push({ userId: uid, type: bet.type, amount: bet.amount, playerName: bet.playerName || 'Player', playerAvatar: bet.playerAvatar || '' });
-    });
   }
   const results = {};
   for (const uid in wheelState.allBets) {

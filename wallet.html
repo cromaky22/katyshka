@@ -126,6 +126,71 @@
     <a href="bonus.html" class="nav-item" data-name="bonus"><span class="icon">🎁</span><span class="label">Bonus</span></a>
     <a href="menu.html" class="nav-item" data-name="menu"><span class="icon">☰</span><span class="label">Menu</span></a>
   </nav>
-  <script src="js/app.js"></script>
-</body>
+   <script src="js/app.js"></script>
+   <script>
+   (function(){
+     const modal = document.querySelector('.wallet-modal');
+     if(!modal) return;
+     const balanceAmount = modal.querySelector('.balance-amount .amount');
+     const input = modal.querySelector('.amount-input input');
+     const payBtn = modal.querySelector('.pay-btn');
+     const withdrawInput = modal.querySelector('.withdraw-input');
+     const withdrawBtn = modal.querySelector('.withdraw-btn');
+     const receiveEl = modal.querySelector('.receive-amount .amount');
+     const feeEl = modal.querySelector('.commission-value');
+     let userId = 'user_' + Math.random().toString(36).substr(2, 9);
+     try {
+       const tg = window.Telegram && window.Telegram.WebApp;
+       if(tg && tg.initDataUnsafe && tg.initDataUnsafe.user) userId = String(tg.initDataUnsafe.user.id);
+       const saved = localStorage.getItem('tg_user');
+       if(saved){ const u=JSON.parse(saved); if(u.id) userId=String(u.id); }
+     } catch(e){}
+
+     function fmt(n){ return Number(n).toFixed(2); }
+     function updBal(v){ balanceAmount.textContent = fmt(v); localStorage.setItem('mc_balance', fmt(v)); document.querySelectorAll('.balance-value').forEach(el=>el.textContent=fmt(v)); }
+
+     // Quick amount buttons
+     modal.querySelectorAll('.quick-buttons .chip').forEach(b=>{
+       b.onclick=()=>{ input.value=parseFloat(b.textContent.replace('$',''))||0; };
+     });
+
+     // Deposit
+     payBtn.onclick=()=>{
+       const amt=parseFloat(input.value)||0;
+       if(amt<1){ alert('Мин. сумма: $1'); return; }
+       payBtn.disabled=true; payBtn.textContent='Обработка...';
+       fetch('/api/deposit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId,amount:amt})})
+         .then(r=>r.json()).then(d=>{
+           if(d.ok){ updBal(d.balance); payBtn.textContent='✅ Пополнено!'; input.value=0; }
+           else{ alert('Ошибка: '+(d.error||'unknown')); payBtn.textContent='Перейти к оплате'; }
+           setTimeout(()=>{ payBtn.disabled=false; payBtn.textContent='Перейти к оплате'; },2000);
+         }).catch(()=>{ alert('Ошибка сети'); payBtn.disabled=false; payBtn.textContent='Перейти к оплате'; });
+     };
+
+     // Withdraw
+     if(withdrawInput){
+       withdrawInput.oninput=()=>{
+         const v=parseFloat(withdrawInput.value)||0;
+         const fee=Math.round(v*0.03*100)/100;
+         receiveEl.textContent=fmt(Math.max(0,v-fee));
+         feeEl.textContent=fmt(fee);
+         withdrawBtn.disabled=v<1.05;
+       };
+       withdrawInput.dispatchEvent(new Event('input'));
+     }
+
+     withdrawBtn.onclick=()=>{
+       const amt=parseFloat(withdrawInput.value)||0;
+       if(amt<1.05){ alert('Мин. вывод: $1.05'); return; }
+       withdrawBtn.disabled=true; withdrawBtn.textContent='Обработка...';
+       fetch('/api/withdraw',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId,amount:amt})})
+         .then(r=>r.json()).then(d=>{
+           if(d.ok){ updBal(d.balance); withdrawBtn.textContent='✅ Выведено!'; withdrawInput.value=0; withdrawInput.dispatchEvent(new Event('input')); }
+           else{ alert('Ошибка: '+(d.error||'unknown')); withdrawBtn.textContent='Заказать вывод'; }
+           setTimeout(()=>{ withdrawBtn.disabled=false; withdrawBtn.textContent='Заказать вывод'; },2000);
+         }).catch(()=>{ alert('Ошибка сети'); withdrawBtn.disabled=false; withdrawBtn.textContent='Заказать вывод'; });
+     };
+   })();
+   </script>
+ </body>
 </html>
