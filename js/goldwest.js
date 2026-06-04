@@ -39,8 +39,7 @@ document.addEventListener('DOMContentLoaded', function(){
     let stored = localStorage.getItem('mc_balance');
     if (stored === null || stored === 'NaN') { stored = '100.00'; localStorage.setItem('mc_balance', stored); }
     const val = parseFloat(stored);
-    if (isNaN(val) || val < 0.5) { localStorage.setItem('mc_balance', '100.00'); return 100; }
-    return val;
+    return isNaN(val) ? 100 : val;
   }
   function setBalance(v) {
     const n = Math.round(Number(v) * 100) / 100;
@@ -49,119 +48,111 @@ document.addEventListener('DOMContentLoaded', function(){
     document.querySelectorAll('.balance-value').forEach(el => el.textContent = n.toFixed(2));
   }
 
-  function initAudio() { if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } }
+  function initAudio() { if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {} } }
   function tone(freq, type, dur, vol) {
     if (!audioCtx) return;
     try {
       if (audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = type; o.frequency.setValueAtTime(freq, audioCtx.currentTime);
       g.gain.setValueAtTime(vol, audioCtx.currentTime);
       g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
-      osc.connect(g).connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + dur);
-    } catch (e) {}
+      o.connect(g).connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + dur);
+    } catch(e) {}
   }
-  function sfxClick() { tone(400, 'sine', 0.05, 0.03); }
-  function sfxWin() { tone(800, 'square', 0.1, 0.05); setTimeout(() => tone(1200, 'sine', 0.15, 0.04), 100); }
-  function sfxLose() { tone(100, 'sawtooth', 0.3, 0.04); }
-  function sfxCoin() { tone(600, 'sine', 0.08, 0.04); }
+  function sfxClick(){ tone(400,'sine',0.05,0.03); }
+  function sfxWin(){ tone(800,'square',0.1,0.05); setTimeout(()=>tone(1200,'sine',0.15,0.04),100); }
+  function sfxLose(){ tone(100,'sawtooth',0.3,0.04); }
+  function sfxCoin(){ tone(600,'sine',0.08,0.04); }
 
-  // === RENDER LEVELS ===
+  function saveGame() {
+    if (!gameActive) { localStorage.removeItem('gw_game'); return; }
+    localStorage.setItem('gw_game', JSON.stringify({ bombs, level, openedCells, gameFields, currentCoef, stake }));
+  }
+  function loadGame() {
+    const s = localStorage.getItem('gw_game');
+    if (!s) return false;
+    try {
+      const d = JSON.parse(s);
+      bombs=d.bombs; level=d.level; openedCells=d.openedCells; gameFields=d.gameFields; currentCoef=d.currentCoef; stake=d.stake;
+      return gameActive = true;
+    } catch(e) { localStorage.removeItem('gw_game'); return false; }
+  }
+
   function renderLevels() {
     levelsArea.innerHTML = '';
     const coefs = genCoefs(bombs);
-    const cellsPerRow = bombs === 1 ? 2 : 3;
+    const cpr = bombs === 1 ? 2 : 3;
 
     for (let i = 0; i < 10; i++) {
-      const isCurrent = i === level && gameActive;
-      const isOpened = openedCells.includes(i);
+      const cur = i === level && gameActive;
+      const opn = openedCells.includes(i);
       const row = document.createElement('div');
-      row.className = 'gw-level' + (isCurrent ? ' gw-level-current' : '') + (isOpened ? ' gw-level-opened' : '');
+      row.className = 'gw-level' + (cur?' gw-level-current':'') + (opn?' gw-level-opened':'');
 
       const info = document.createElement('div');
       info.className = 'gw-level-info';
-      info.innerHTML = `<span class="gw-level-num">${i + 1} LVL</span><span class="gw-level-coef">x${coefs[i].toFixed(2)}</span>`;
+      info.innerHTML = `<span class="gw-level-num">${i+1} LVL</span><span class="gw-level-coef">x${coefs[i].toFixed(2)}</span>`;
       row.appendChild(info);
 
-      const cellsWrap = document.createElement('div');
-      cellsWrap.className = 'gw-cells';
+      const wrap = document.createElement('div');
+      wrap.className = 'gw-cells';
 
-      for (let j = 0; j < cellsPerRow; j++) {
+      for (let j = 0; j < cpr; j++) {
         const cell = document.createElement('div');
         cell.className = 'gw-cell';
         cell.dataset.level = i;
         cell.dataset.cell = j;
 
-        if (isOpened && gameFields[i] && gameFields[i][j] !== undefined) {
-          if (gameFields[i][j] === true) {
-            cell.classList.add('gw-cell-bomb');
-            cell.innerHTML = '💣';
-          } else {
-            cell.classList.add('gw-cell-coin');
-            cell.innerHTML = '💰';
-          }
-        } else if (isCurrent && !isOpened) {
+        if (opn && gameFields[i] && gameFields[i][j] !== undefined) {
+          cell.classList.add(gameFields[i][j] ? 'gw-cell-bomb' : 'gw-cell-coin');
+          cell.innerHTML = gameFields[i][j] ? '💣' : '💰';
+        } else if (cur) {
           cell.classList.add('gw-cell-closed');
           cell.innerHTML = '💰';
         } else {
           cell.classList.add('gw-cell-empty');
         }
-
-        cellsWrap.appendChild(cell);
+        wrap.appendChild(cell);
       }
-      row.appendChild(cellsWrap);
+      row.appendChild(wrap);
       levelsArea.appendChild(row);
     }
 
-    // Attach click handlers to current level cells
     if (gameActive) {
-      const currentRow = levelsArea.children[level];
-      if (currentRow) {
-        const cells = currentRow.querySelectorAll('.gw-cell-closed');
-        cells.forEach((cell, idx) => {
-          cell.addEventListener('click', function handler() {
-            cell.removeEventListener('click', handler);
-            handleCellClick(level, idx);
-          });
+      const r = levelsArea.children[level];
+      if (r) {
+        r.querySelectorAll('.gw-cell-closed').forEach((c, idx) => {
+          c.onclick = () => { c.onclick = null; handleClick(level, idx); };
         });
       }
     }
   }
 
-  // === HANDLE CELL CLICK ===
-  function handleCellClick(lvl, cellIdx) {
+  function handleClick(lvl, ci) {
     if (!gameActive || lvl !== level) return;
     sfxClick();
+    const bomb = gameFields[lvl][ci] === true;
 
-    const isBomb = gameFields[lvl][cellIdx] === true;
-
-    if (isBomb) {
-      // Game over
+    if (bomb) {
       sfxLose();
       openedCells.push(lvl);
       currentCoef = 0;
       gameActive = false;
-
-      // Reveal all bombs
-      const allCells = levelsArea.querySelectorAll('.gw-cell');
-      allCells.forEach(c => {
-        const cl = parseInt(c.dataset.level);
-        const ci = parseInt(c.dataset.cell);
-        if (gameFields[cl] && gameFields[cl][ci] === true) {
-          c.classList.remove('gw-cell-closed', 'gw-cell-empty');
+      levelsArea.querySelectorAll('.gw-cell').forEach(c => {
+        const cl = +c.dataset.level, ci2 = +c.dataset.cell;
+        if (gameFields[cl] && gameFields[cl][ci2] === true) {
+          c.classList.remove('gw-cell-closed','gw-cell-empty');
           c.classList.add('gw-cell-bomb');
           c.innerHTML = '💣';
         }
       });
-
       resultArea.style.display = 'flex';
       resultText.textContent = '💥 Бомба! Вы проиграли';
       resultText.style.color = '#f44336';
       resultCoef.textContent = '';
       gameStatusEl.textContent = `Проиграно. Потеря: $${stake.toFixed(2)}`;
       gameStatusEl.className = 'gw-status error';
-
       stakePanel.style.display = '';
       playBtn.disabled = false;
       bombOptions.forEach(b => b.style.pointerEvents = '');
@@ -169,46 +160,29 @@ document.addEventListener('DOMContentLoaded', function(){
       renderLevels();
       saveGame();
     } else {
-      // Coin - level passed
       sfxCoin();
       openedCells.push(lvl);
       const coefs = genCoefs(bombs);
       currentCoef = coefs[lvl];
-
-      // Show coin in clicked cell
-      const currentRow = levelsArea.children[lvl];
-      if (currentRow) {
-        const cells = currentRow.querySelectorAll('.gw-cell');
-        cells.forEach((c, idx) => {
-          if (idx === cellIdx) {
-            c.classList.remove('gw-cell-closed');
-            c.classList.add('gw-cell-coin');
-            c.innerHTML = '💰';
-          } else {
-            c.classList.remove('gw-cell-closed', 'gw-cell-empty');
-            c.classList.add('gw-cell-empty');
-            c.innerHTML = '';
-          }
-        });
-      }
-
-      gameStatusEl.textContent = `Уровень ${lvl + 1} пройден! Выигрыш: $${(stake * currentCoef).toFixed(2)} (x${currentCoef.toFixed(2)})`;
+      const rw = levelsArea.children[lvl];
+      if (rw) rw.querySelectorAll('.gw-cell').forEach((c, idx) => {
+        c.classList.remove('gw-cell-closed');
+        c.classList.add(idx === ci ? 'gw-cell-coin' : 'gw-cell-empty');
+        c.innerHTML = idx === ci ? '💰' : '';
+      });
+      gameStatusEl.textContent = `Уровень ${lvl+1} пройден! Выигрыш: $${(stake*currentCoef).toFixed(2)} (x${currentCoef.toFixed(2)})`;
       gameStatusEl.className = 'gw-status success';
 
-      // Check if all levels passed
       if (lvl >= 9) {
         gameActive = false;
-        const winAmount = Math.round(stake * currentCoef * 100) / 100;
-        setBalance(getBalance() + winAmount);
+        const win = Math.round(stake * currentCoef * 100) / 100;
+        setBalance(getBalance() + win);
         sfxWin();
-
         resultArea.style.display = 'flex';
-        resultText.textContent = `🏆 Все уровни пройдены! Выигрыш: $${winAmount.toFixed(2)}`;
+        resultText.textContent = `🏆 Все уровни! Выигрыш: $${win.toFixed(2)}`;
         resultText.style.color = '#4caf50';
         resultCoef.textContent = `x${currentCoef.toFixed(2)}`;
-        gameStatusEl.textContent = `Поздравляем! Выиграли $${winAmount.toFixed(2)}!`;
-        gameStatusEl.className = 'gw-status success';
-
+        gameStatusEl.textContent = `Поздравляем! $${win.toFixed(2)}!`;
         stakePanel.style.display = '';
         playBtn.disabled = false;
         bombOptions.forEach(b => b.style.pointerEvents = '');
@@ -216,7 +190,6 @@ document.addEventListener('DOMContentLoaded', function(){
         renderLevels();
         saveGame();
       } else {
-      // Go to next level automatically, collect button stays visible
         level++;
         collectBtn.style.display = '';
         renderLevels();
@@ -225,65 +198,50 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }
 
-  // === GENERATE FIELD ===
   function generateField() {
-    const cellsPerRow = bombs === 1 ? 2 : 3;
+    const cpr = bombs === 1 ? 2 : 3;
     gameFields = [];
     for (let i = 0; i < 10; i++) {
-      const row = new Array(cellsPerRow).fill(false);
-      const bombPositions = [];
-      while (bombPositions.length < bombs) {
-        const pos = Math.floor(Math.random() * cellsPerRow);
-        if (bombPositions.indexOf(pos) === -1) bombPositions.push(pos);
+      const row = new Array(cpr).fill(false);
+      const pos = [];
+      while (pos.length < bombs) {
+        const p = Math.floor(Math.random() * cpr);
+        if (pos.indexOf(p) === -1) pos.push(p);
       }
-      bombPositions.forEach(pos => row[pos] = true);
+      pos.forEach(p => row[p] = true);
       gameFields.push(row);
     }
   }
 
-  // === COLLECT ===
-  collectBtn.addEventListener('click', () => {
+  collectBtn.onclick = () => {
     if (currentCoef <= 0 || !gameActive) return;
-    sfxWin();
-    gameActive = false;
-    const winAmount = Math.round(stake * currentCoef * 100) / 100;
-    setBalance(getBalance() + winAmount);
-
+    sfxWin(); gameActive = false;
+    const win = Math.round(stake * currentCoef * 100) / 100;
+    setBalance(getBalance() + win);
     resultArea.style.display = 'flex';
-    resultText.textContent = `🎉 Выигрыш: $${winAmount.toFixed(2)}`;
+    resultText.textContent = `🎉 Выигрыш: $${win.toFixed(2)}`;
     resultText.style.color = '#4caf50';
     resultCoef.textContent = `x${currentCoef.toFixed(2)}`;
-    gameStatusEl.textContent = `Забрали $${winAmount.toFixed(2)}!`;
+    gameStatusEl.textContent = `Забрали $${win.toFixed(2)}!`;
     gameStatusEl.className = 'gw-status success';
-
     stakePanel.style.display = '';
     playBtn.disabled = false;
     bombOptions.forEach(b => b.style.pointerEvents = '');
     collectBtn.style.display = 'none';
-
     setTimeout(() => { resultArea.style.display = 'none'; renderLevels(); }, 2000);
     saveGame();
-  });
+  };
 
-  // === PLAY ===
-  playBtn.addEventListener('click', () => {
+  playBtn.onclick = () => {
     initAudio();
     const s = parseFloat(stakeInput.value);
-    if (isNaN(s) || s < 0.5) { gameStatusEl.textContent = 'Мин. ставка $0.50'; gameStatusEl.className = 'gw-status error'; return; }
-    if (s > 200) { gameStatusEl.textContent = 'Макс. ставка $200'; gameStatusEl.className = 'gw-status error'; return; }
-    if (getBalance() < s) { gameStatusEl.textContent = 'Недостаточно средств'; gameStatusEl.className = 'gw-status error'; return; }
-
+    if (isNaN(s) || s < 0.5) { gameStatusEl.textContent='Мин. ставка $0.50'; gameStatusEl.className='gw-status error'; return; }
+    if (s > 200) { gameStatusEl.textContent='Макс. ставка $200'; gameStatusEl.className='gw-status error'; return; }
+    if (getBalance() < s) { gameStatusEl.textContent='Недостаточно средств'; gameStatusEl.className='gw-status error'; return; }
     stake = s;
     setBalance(getBalance() - stake);
-    gameActive = true;
-    level = 0;
-    openedCells = [];
-    currentCoef = 1;
-
-    generateField();
-    renderLevels();
-    saveGame();
-
+    gameActive = true; level = 0; openedCells = []; currentCoef = 1;
+    generateField(); renderLevels(); saveGame();
     stakePanel.style.display = 'none';
     playBtn.disabled = true;
     bombOptions.forEach(b => b.style.pointerEvents = 'none');
@@ -291,93 +249,41 @@ document.addEventListener('DOMContentLoaded', function(){
     collectBtn.style.display = 'none';
     gameStatusEl.textContent = 'Уровень 1. Выберите ячейку';
     gameStatusEl.className = 'gw-status';
-  });
+  };
 
-  // === BOMB SELECT ===
   bombOptions.forEach(opt => {
-    opt.addEventListener('click', () => {
+    opt.onclick = () => {
       if (gameActive) return;
       bombOptions.forEach(b => b.classList.remove('active'));
       opt.classList.add('active');
-      bombs = parseInt(opt.dataset.bombs);
-      // Reset game state when bomb count changes
-      level = 0;
-      openedCells = [];
-      gameFields = [];
-      currentCoef = 1;
-      stake = 0;
-      gameActive = false;
-      resultArea.style.display = 'none';
-      collectBtn.style.display = 'none';
-      stakePanel.style.display = '';
-      playBtn.disabled = false;
-      gameStatusEl.textContent = '';
-      gameStatusEl.className = 'gw-status';
-      renderLevels();
-      saveGame();
-    });
-  });
-
-  // === QUICK BETS ===
-  quickBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const a = parseFloat(btn.dataset.amount);
-      const cur = parseFloat(stakeInput.value) || 0;
-      stakeInput.value = Math.min(200, Math.max(0.5, cur + a)).toFixed(2);
-    });
-  });
-  halfBtn.addEventListener('click', () => { const v = parseFloat(stakeInput.value) || 0; stakeInput.value = Math.max(0.5, v / 2).toFixed(2); });
-  doubleBtn.addEventListener('click', () => { const v = parseFloat(stakeInput.value) || 0; stakeInput.value = Math.min(200, v * 2).toFixed(2); });
-
-  // === SAVE/LOAD GAME STATE ===
-  function saveGame() {
-    if (!gameActive) {
-      localStorage.removeItem('gw_game');
-      return;
-    }
-    const state = {
-      bombs, level, openedCells, gameFields, currentCoef, stake
+      bombs = +opt.dataset.bombs;
+      level=0; openedCells=[]; gameFields=[]; currentCoef=1; stake=0; gameActive=false;
+      resultArea.style.display='none'; collectBtn.style.display='none';
+      stakePanel.style.display=''; playBtn.disabled=false;
+      gameStatusEl.textContent=''; gameStatusEl.className='gw-status';
+      renderLevels(); saveGame();
     };
-    localStorage.setItem('gw_game', JSON.stringify(state));
-  }
+  });
 
-  function loadGame() {
-    const saved = localStorage.getItem('gw_game');
-    if (!saved) return false;
-    try {
-      const state = JSON.parse(saved);
-      bombs = state.bombs;
-      level = state.level;
-      openedCells = state.openedCells;
-      gameFields = state.gameFields;
-      currentCoef = state.currentCoef;
-      stake = state.stake;
-      gameActive = true;
-      return true;
-    } catch(e) {
-      localStorage.removeItem('gw_game');
-      return false;
-    }
-  }
+  quickBtns.forEach(b => b.onclick = () => {
+    const a = +b.dataset.amount, c = +stakeInput.value || 0;
+    stakeInput.value = Math.min(200, Math.max(0.5, c + a)).toFixed(2);
+  });
+  halfBtn.onclick = () => { const v=+stakeInput.value||0; stakeInput.value=Math.max(0.5,v/2).toFixed(2); };
+  doubleBtn.onclick = () => { const v=+stakeInput.value||0; stakeInput.value=Math.min(200,v*2).toFixed(2); };
 
-  // === INIT ===
   document.addEventListener('click', () => initAudio(), { once: true });
   document.querySelectorAll('.balance-value').forEach(el => el.textContent = getBalance().toFixed(2));
 
-  // Try to restore game
   if (loadGame()) {
-    // Restore UI
-    bombOptions.forEach(b => {
-      b.classList.toggle('active', parseInt(b.dataset.bombs) === bombs);
-      b.style.pointerEvents = 'none';
-    });
-    stakePanel.style.display = 'none';
-    playBtn.disabled = true;
+    bombOptions.forEach(b => { b.classList.toggle('active', +b.dataset.bombs === bombs); b.style.pointerEvents = 'none'; });
+    stakePanel.style.display = 'none'; playBtn.disabled = true;
     collectBtn.style.display = openedCells.length > 0 ? '' : 'none';
     resultArea.style.display = 'none';
-    gameStatusEl.textContent = `Уровень ${level + 1}. Выберите ячейку`;
+    gameStatusEl.textContent = `Уровень ${level+1}. Выберите ячейку`;
     gameStatusEl.className = 'gw-status';
     renderLevels();
   } else {
     renderLevels();
   }
+});

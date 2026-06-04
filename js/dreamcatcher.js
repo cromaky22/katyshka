@@ -29,17 +29,16 @@ document.addEventListener('DOMContentLoaded', function() {
     { num: '5x', color: '#9c27b0', label: '5x', count: 1 },
   ];
 
-  const wheelData = [];
+  // Create segments array with uniform distribution
+  const wheelData = new Array(54).fill(null);
   SEGMENTS.forEach(seg => {
+    const step = 54 / seg.count;
     for (let i = 0; i < seg.count; i++) {
-      wheelData.push({ num: seg.num, color: seg.color, label: seg.label });
+      let slot = Math.round(i * step + step / 2) % 54;
+      while (wheelData[slot] !== null) slot = (slot + 1) % 54;
+      wheelData[slot] = { num: seg.num, color: seg.color, label: seg.label };
     }
   });
-
-  for (let i = wheelData.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [wheelData[i], wheelData[j]] = [wheelData[j], wheelData[i]];
-  }
 
   const TOTAL_SEGMENTS = wheelData.length;
   const SEGMENT_ANGLE = 360 / TOTAL_SEGMENTS;
@@ -267,8 +266,9 @@ document.addEventListener('DOMContentLoaded', function() {
         resultNum.textContent = firstResult.num.toUpperCase();
         resultBadge.className = 'result-badge mult';
         resultStake.textContent = '$' + currentStake.toFixed(2);
-        resultWin.textContent = 'БОНУСНЫЙ ВРАЩЕНИЕ!';
+        resultWin.textContent = 'БОНУСНОЕ ВРАЩЕНИЕ!';
         resultWin.className = 'result-detail-value';
+        continueBtn.style.display = 'none';
         resultPanel.style.display = 'flex';
 
         const multValue = parseInt(firstResult.num);
