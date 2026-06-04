@@ -1,10 +1,10 @@
 const express = require('express');
 const path = require('path');
 const http = require('http');
-const io = require('socket.io')(server, { cors: { origin: '*' } });
 
 const app = express();
 const server = http.createServer(app);
+const io = require('socket.io')(server, { cors: { origin: '*' } });
 
 // In-memory database (data lost on restart, but works everywhere)
 const users = {};
