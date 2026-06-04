@@ -295,6 +295,19 @@ document.addEventListener('DOMContentLoaded', function(){
       bombOptions.forEach(b => b.classList.remove('active'));
       opt.classList.add('active');
       bombs = parseInt(opt.dataset.bombs);
+      // Reset game state when bomb count changes
+      level = 0;
+      openedCells = [];
+      gameFields = [];
+      currentCoef = 1;
+      stake = 0;
+      gameActive = false;
+      resultArea.style.display = 'none';
+      collectBtn.style.display = 'none';
+      stakePanel.style.display = '';
+      playBtn.disabled = false;
+      gameStatusEl.textContent = '';
+      gameStatusEl.className = 'gw-status';
       renderLevels();
     });
   });
