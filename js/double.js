@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   // === CANVAS ===
   const dpr = window.devicePixelRatio || 1;
-  const displaySize = Math.min(280, window.innerWidth - 40);
+  const displaySize = 260;
   canvas.width = displaySize * dpr;
   canvas.height = displaySize * dpr;
   canvas.style.width = displaySize + 'px';
