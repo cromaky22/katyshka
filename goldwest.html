@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GoldWest — Nvuti</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/goldwest.css">
+</head>
+<body class="page-goldwest">
+  <header class="app-header">
+    <div class="left-controls"></div>
+    <div class="header-title">GOLDWEST</div>
+    <div class="right-controls">
+      <div class="balance-pill">
+        <span class="wallet-icon">💠</span>
+        <span class="balance-value">0.00</span>
+        <span class="currency">$</span>
+      </div>
+      <a href="menu.html" class="profile" title="Профиль" aria-label="Профиль"><img class="profile-icon" src="" alt="Аватар" onerror="this.style.display='none'"></a>
+    </div>
+  </header>
+
+  <main class="content">
+    <section class="goldwest-game">
+      <div class="gw-board">
+
+        <!-- Выбор бомб -->
+        <div class="gw-bomb-select" id="bombSelect">
+          <div class="gw-bomb-option active" data-bombs="1">
+            <div class="gw-bomb-label">1 бомба</div>
+            <div class="gw-bomb-coef">x2</div>
+          </div>
+          <div class="gw-bomb-option" data-bombs="2">
+            <div class="gw-bomb-label">2 бомбы</div>
+            <div class="gw-bomb-coef">x3</div>
+          </div>
+        </div>
+
+        <!-- Коэффициенты -->
+        <div class="gw-coefs" id="coefsRow"></div>
+
+        <!-- Уровни -->
+        <div class="gw-levels" id="levelsArea"></div>
+
+        <!-- Результат -->
+        <div class="gw-result" id="resultArea" style="display:none">
+          <div class="gw-result-text" id="resultText"></div>
+          <div class="gw-result-coef" id="resultCoef"></div>
+        </div>
+
+        <!-- Кнопка забрать -->
+        <button class="gw-btn gw-collect-btn" id="collectBtn" style="display:none">💰 Забрать выигрыш</button>
+
+        <!-- Кнопка продолжить -->
+        <button class="gw-btn gw-continue-btn" id="continueBtn" style="display:none">▶ Продолжить</button>
+
+        <!-- Ставка -->
+        <div class="gw-stake-panel" id="stakePanel">
+          <div class="gw-stake-header">
+            <label>Ставка</label>
+            <span class="gw-stake-range">От $0.50 до $200</span>
+          </div>
+          <div class="gw-quick-bets">
+            <button class="gw-quick-btn" data-amount="0.5"><span class="dollar">$</span>+0.5</button>
+            <button class="gw-quick-btn" data-amount="1"><span class="dollar">$</span>+1</button>
+            <button class="gw-quick-btn" data-amount="5"><span class="dollar">$</span>+5</button>
+            <button class="gw-quick-btn" data-amount="10"><span class="dollar">$</span>+10</button>
+          </div>
+          <div class="gw-stake-row">
+            <input id="stakeInput" type="number" min="0.5" max="200" step="0.5" value="1">
+            <div class="gw-stake-btns">
+              <button id="halfBtn" class="gw-stake-btn">½</button>
+              <button id="doubleBtn" class="gw-stake-btn">×2</button>
+            </div>
+          </div>
+          <button class="gw-btn gw-play-btn" id="playBtn">🎰 ИГРАТЬ</button>
+        </div>
+
+        <div id="gameStatus" class="gw-status" aria-live="polite"></div>
+
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <a href="home.html#games" class="nav-item" data-name="games"><span class="icon">🎮</span><span class="label">Games</span></a>
+    <a href="wallet.html" class="nav-item" data-name="wallet"><span class="icon">💼</span><span class="label">Wallet</span></a>
+    <a href="home.html" class="nav-item center" data-name=""><span class="icon">💎</span></a>
+    <a href="bonus.html" class="nav-item" data-name="bonus"><span class="icon">🎁</span><span class="label">Bonus</span></a>
+    <a href="menu.html" class="nav-item" data-name="menu"><span class="icon">☰</span><span class="label">Menu</span></a>
+  </nav>
+
+  <script src="js/app.js"></script>
+  <script src="js/goldwest.js"></script>
+</body>
+</html>
