@@ -1,9 +1,8 @@
 document.addEventListener('DOMContentLoaded', function(){
-  // Elements
   const $ = id => document.getElementById(id);
-  const dice1 = $('dice1'), dice2 = $('dice2'), dice3 = $('dice3');
-  const wrap1 = $('diceWrap1'), wrap2 = $('diceWrap2'), wrap3 = $('diceWrap3');
-  const diceResult = $('diceResult'), timerValueEl = $('timerValue');
+  const diceEls = [$('dice1'), $('dice2'), $('dice3')];
+  const wrapEls = [$('diceWrap1'), $('diceWrap2'), $('diceWrap3')];
+  const diceResult = $('diceResult'), timerEl = $('timerValue');
   const gameStatusEl = $('gameStatus'), historyScroll = $('historyScroll');
   const stakeInput = $('stakeInput'), halfBtn = $('halfBtn'), doubleBtn = $('doubleBtn');
   const bettingGrid = $('bettingGrid');
@@ -14,7 +13,6 @@ document.addEventListener('DOMContentLoaded', function(){
   const modeBtns = document.querySelectorAll('.mode-btn');
   const quickBetBtns = document.querySelectorAll('.quick-bet-btn');
 
-  // State
   let currentMode = '1dice';
   let currentBets = [];
   let playerName = 'Player';
@@ -27,6 +25,7 @@ document.addEventListener('DOMContentLoaded', function(){
   let roundActive = false;
 
   const PARITY = ['odd', 'notodd'];
+  const DICE_COUNT = { '1dice': 1, '2dice': 2, '3dice': 3 };
 
   const BET_CONFIGS = {
     '1dice': [
@@ -76,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function(){
     ]
   };
 
-  // Build dice faces with dots
+  // Build 3D dice faces
   function buildDiceEl(diceEl) {
     diceEl.innerHTML = '';
     const faces = ['one','two','three','four','five','six'];
@@ -91,18 +90,26 @@ document.addEventListener('DOMContentLoaded', function(){
       }
       diceEl.appendChild(div);
     });
+    // Set initial state
+    diceEl.className = 'dice show-1';
   }
-  buildDiceEl(dice1);
-  buildDiceEl(dice2);
-  buildDiceEl(dice3);
+  diceEls.forEach(el => buildDiceEl(el));
+
+  // Get visible dice elements based on current mode
+  function getVisibleDice() {
+    const count = DICE_COUNT[currentMode];
+    return diceEls.slice(0, count);
+  }
 
   function setDiceVal(el, val) {
     el.classList.remove('rolling');
+    // Force reflow
+    void el.offsetWidth;
     el.className = `dice show-${val}`;
   }
 
   function showRolling() {
-    [dice1, dice2, dice3].forEach(d => {
+    getVisibleDice().forEach(d => {
       d.classList.remove('rolling');
       void d.offsetWidth;
       d.classList.add('rolling');
@@ -116,12 +123,9 @@ document.addEventListener('DOMContentLoaded', function(){
       addRow(cfg.slice(0, 2));
       addRow(cfg.slice(2, 5));
       addRow(cfg.slice(5));
-    } else if (currentMode === '2dice') {
-      addRow(cfg.slice(0, 2));
-      for (let i = 2; i < cfg.length; i += 4) addRow(cfg.slice(i, i + 4));
     } else {
       addRow(cfg.slice(0, 2));
-      for (let i = 2; i < cfg.length; i += 4) addRow(cfg.slice(i, i + 4));
+      for (let i = 2; i < cfg.length; i += 4) addRow(cfg.slice(i, Math.min(i + 4, cfg.length)));
     }
   }
 
@@ -146,9 +150,9 @@ document.addEventListener('DOMContentLoaded', function(){
     updateBetsUI();
     updateTimer(30, 'waiting');
     modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-    wrap1.classList.toggle('hidden', mode !== '1dice');
-    wrap2.classList.toggle('hidden', mode !== '2dice');
-    wrap3.classList.toggle('hidden', mode !== '3dice');
+    wrapEls[0].classList.toggle('hidden', mode !== '1dice');
+    wrapEls[1].classList.toggle('hidden', mode !== '2dice');
+    wrapEls[2].classList.toggle('hidden', mode !== '3dice');
     buildBettingGrid();
     resetDisplay();
   }
@@ -156,9 +160,8 @@ document.addEventListener('DOMContentLoaded', function(){
   function resetDisplay() {
     diceResult.classList.remove('show');
     diceResult.textContent = '';
-    setDiceVal(dice1, 1);
-    setDiceVal(dice2, 1);
-    setDiceVal(dice3, 1);
+    // Reset all dice to 1
+    diceEls.forEach(d => { d.className = 'dice show-1'; });
   }
 
   modeBtns.forEach(b => b.addEventListener('click', () => switchMode(b.dataset.mode)));
@@ -228,7 +231,6 @@ document.addEventListener('DOMContentLoaded', function(){
     if (stake > 200) { gameStatusEl.textContent = 'Макс. ставка $200'; gameStatusEl.className = 'game-status error'; return; }
     const total = currentBets.reduce((s, b) => s + b.amount, 0);
     if (total + stake > getBalance()) { gameStatusEl.textContent = 'Недостаточно средств'; gameStatusEl.className = 'game-status error'; return; }
-    // Parity check
     if (PARITY.includes(type)) {
       const existing = currentBets.find(b => PARITY.includes(b.type));
       if (existing && existing.type !== type) {
@@ -269,8 +271,8 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function updateTimer(t, phase) {
-    timerValueEl.textContent = t;
-    timerValueEl.classList.toggle('urgent', t <= 5 && phase !== 'waiting');
+    timerEl.textContent = t;
+    timerEl.classList.toggle('urgent', t <= 5 && phase !== 'waiting');
     if (phase === 'waiting') {
       gameStatusEl.textContent = 'Ожидание ставок...';
       gameStatusEl.className = 'game-status';
@@ -306,9 +308,11 @@ document.addEventListener('DOMContentLoaded', function(){
     const myWin = resultData ? resultData.win : 0;
     const myBet = resultData ? resultData.bet : 0;
 
-    setDiceVal(dice1, nums[0]);
-    if (nums[1] !== undefined) setDiceVal(dice2, nums[1]);
-    if (nums[2] !== undefined) setDiceVal(dice3, nums[2]);
+    // Set visible dice values
+    const visible = getVisibleDice();
+    visible.forEach((d, i) => {
+      setDiceVal(d, nums[i]);
+    });
 
     diceResult.textContent = `Сумма: ${sum}`;
     diceResult.classList.add('show');
@@ -374,7 +378,6 @@ document.addEventListener('DOMContentLoaded', function(){
         if (diceType !== currentMode) return;
         if (data.myBets) { currentBets = data.myBets; updateBetsUI(); }
         if (data.allBets) updateAllBets(data.allBets);
-        // First bet starts the round
         if (!roundActive && !isRolling) {
           roundActive = true;
           startLocalTimer(30, 'betting');
@@ -425,7 +428,6 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 
-  // Quick bet buttons
   quickBetBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       const a = parseFloat(btn.dataset.amount);
@@ -439,7 +441,6 @@ document.addEventListener('DOMContentLoaded', function(){
   document.addEventListener('click', () => initAudio(), { once: true });
   document.querySelectorAll('.balance-value').forEach(el => el.textContent = getBalance().toFixed(2));
 
-  // Telegram user
   try {
     const tg = window.Telegram && window.Telegram.WebApp;
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
