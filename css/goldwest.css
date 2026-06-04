@@ -10,13 +10,12 @@
 .page-goldwest .gw-bomb-label{font-size:11px;color:var(--muted);margin-bottom:4px}
 .page-goldwest .gw-bomb-coef{font-size:22px;font-weight:800}
 
-/* Coefs */
-.page-goldwest .gw-coefs{display:flex;overflow-x:auto;gap:6px;padding:8px;background:var(--card);border-radius:12px}
-.page-goldwest .gw-coef-item{flex-shrink:0;min-width:55px;text-align:center;padding:8px;background:rgba(255,255,255,0.05);border-radius:8px}
-.page-goldwest .gw-coef-lvl{font-size:10px;color:var(--muted);font-weight:300}
-.page-goldwest .gw-coef-val{font-size:14px;font-weight:700}
-
-/* Levels */
+/* Buttons */
+.page-goldwest .gw-btn{width:100%;padding:12px;border-radius:10px;border:none;font-weight:600;font-size:14px;cursor:pointer;transition:all 0.2s;margin-top:8px}
+.page-goldwest .gw-btn:hover{transform:translateY(-1px);filter:brightness(1.1)}
+.page-goldwest .gw-play-btn{background:linear-gradient(135deg,#4caf50,#2e7d32);color:#fff;font-size:16px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;padding:14px;box-shadow:0 8px 20px rgba(76,175,80,0.25)}
+.page-goldwest .gw-play-btn:disabled{opacity:0.5;cursor:not-allowed}
+.page-goldwest .gw-collect-btn{background:linear-gradient(135deg,#ffc107,#ff9800);color:#000}
 .page-goldwest .gw-levels{background:var(--card);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px}
 .page-goldwest .gw-level{display:flex;align-items:center;gap:10px;opacity:0.4;transition:all 0.3s}
 .page-goldwest .gw-level.gw-level-current{opacity:1}
