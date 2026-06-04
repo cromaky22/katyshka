@@ -8,26 +8,22 @@
   <link rel="stylesheet" href="css/wheel.css">
 </head>
 <body class="page-wheel">
-  <header class="header">
-    <div class="header-left">
-      <span class="game-title">Wheel</span>
-    </div>
-    <div class="header-right">
-      <div class="balance-header">
-        <span class="balance-emoji">💠</span>
-        <span class="balance-value" id="headerBalance">0.00</span>
+  <header class="app-header">
+    <div class="left-controls"></div>
+    <div class="header-title" style="margin-right:0">WHEEL</div>
+    <div class="right-controls">
+      <div class="balance-pill">
+        <span class="wallet-icon">💠</span>
+        <span class="balance-value">0.00</span>
         <span class="currency">$</span>
+        <span class="caret">▾</span>
       </div>
-      <a href="menu.html" class="profile-link">Профиль ▾</a>
+      <a href="menu.html" class="profile" title="Профиль" aria-label="Профиль"><img class="profile-icon" src="" alt="Аватар" onerror="this.style.display='none'"></a>
     </div>
   </header>
 
   <main class="wheel-game">
     <div class="wheel-board">
-      <div class="balance-card">
-        <span class="balance-icon">💰</span>
-        <span class="balance-amount" id="gameBalance">0.00</span>
-      </div>
 
       <div class="history-section">
         <div class="history-label">История игр</div>

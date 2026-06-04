@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function(){
     const n = Math.round(Number(v) * 100) / 100;
     if (isNaN(n)) return;
     localStorage.setItem('mc_balance', n.toFixed(2));
-    document.querySelectorAll('.balance-value, .balance-amount').forEach(el => el.textContent = n.toFixed(2));
+    document.querySelectorAll('.balance-value').forEach(el => el.textContent = n.toFixed(2));
   }
 
   function getBetLabel(type) {
@@ -357,7 +357,7 @@ document.addEventListener('DOMContentLoaded', function(){
   doubleBtn.addEventListener('click', () => { const v = parseFloat(stakeInput.value) || 0; stakeInput.value = Math.min(200, v * 2).toFixed(2); });
 
   document.addEventListener('click', () => initAudio(), { once: true });
-  document.querySelectorAll('.balance-value, .balance-amount').forEach(el => el.textContent = getBalance().toFixed(2));
+  document.querySelectorAll('.balance-value').forEach(el => el.textContent = getBalance().toFixed(2));
 
   try {
     const tg = window.Telegram && window.Telegram.WebApp;
