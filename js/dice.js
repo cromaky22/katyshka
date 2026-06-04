@@ -237,11 +237,6 @@ document.addEventListener('DOMContentLoaded', function(){
     currentBets.push({ type, amount: stake });
     updateBetsUI();
     gameStatusEl.textContent = '';
-    // Start timer locally on first bet
-    if (!roundActive && !isRolling) {
-      roundActive = true;
-      startLocalTimer(30, 'betting');
-    }
     socket.emit('dice:bet', { type, amount: stake, diceType: currentMode, playerName, playerAvatar });
   }
 
@@ -298,19 +293,7 @@ document.addEventListener('DOMContentLoaded', function(){
     updateTimer(t, phase);
     localTimer = setInterval(() => {
       t--;
-      if (t <= 0) {
-        clearInterval(localTimer);
-        updateTimer(0, phase);
-        // Show rolling animation while waiting for server
-        if (!isRolling) {
-          isRolling = true;
-          showRolling();
-          gameStatusEl.textContent = 'Бросаем...';
-          gameStatusEl.className = 'game-status';
-          document.querySelectorAll('.bet-btn').forEach(b => b.disabled = true);
-        }
-        return;
-      }
+      if (t < 0) { clearInterval(localTimer); return; }
       updateTimer(t, phase);
     }, 1000);
   }
@@ -388,6 +371,11 @@ document.addEventListener('DOMContentLoaded', function(){
         if (diceType !== currentMode) return;
         if (data.myBets) { currentBets = data.myBets; updateBetsUI(); }
         if (data.allBets) updateAllBets(data.allBets);
+        // Start timer on first bet if not already running
+        if (!roundActive && !isRolling) {
+          roundActive = true;
+          startLocalTimer(30, 'betting');
+        }
       });
 
       socket.on(`${p}:roll`, (data) => {

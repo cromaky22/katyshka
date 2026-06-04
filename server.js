@@ -375,13 +375,16 @@ function startDiceTimer(diceType) {
   state.timer = 30;
   state.phase = 'betting';
   state.hash = generateHash();
+  console.log(`[DICE] Starting timer for ${diceType}, hash: ${state.hash}`);
   io.emit(`dice:${diceType}:timer`, { timer: 30, phase: 'betting' });
   
   diceTimerIntervals[diceType] = setInterval(() => {
     state.timer--;
+    console.log(`[DICE] ${diceType} timer: ${state.timer}`);
     io.emit(`dice:${diceType}:timer`, { timer: state.timer, phase: state.phase });
     if (state.timer <= 0) {
       clearInterval(diceTimerIntervals[diceType]);
+      console.log(`[DICE] ${diceType} timer ended, rolling...`);
       rollDice(diceType);
     }
   }, 1000);
