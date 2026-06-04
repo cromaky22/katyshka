@@ -19,6 +19,7 @@
 .page-wheel .wheel-display{position:relative;width:260px;height:260px}
 .page-wheel .wheel-wrapper{position:relative;width:100%;height:100%;border-radius:50%;box-shadow:0 0 0 4px rgba(255,255,255,0.05),0 0 30px rgba(0,0,0,0.5)}
 .page-wheel .wheel-wrapper canvas{width:100%;height:100%;border-radius:50%}
+.page-wheel .wheel-pointer{position:absolute;top:8px;left:50%;transform:translateX(-50%) rotate(180deg);font-size:22px;color:#fff;z-index:10;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.6));pointer-events:none}
 .page-wheel .wheel-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;background:#1a1a2e;border:2px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;z-index:5;pointer-events:none}
 .page-wheel .wheel-timer-center{font-size:22px;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.8)}
 .page-wheel .wheel-timer-center.urgent{color:#f44336}
@@ -44,8 +45,8 @@
 .page-wheel .toggle-numbers-btn:hover{background:rgba(255,255,255,0.1)}
 
 /* Numbers table */
-.page-wheel .numbers-table{display:none;flex-direction:column;gap:8px}
-.page-wheel .numbers-table.hidden{display:none}
+.page-wheel .numbers-table{display:flex;flex-direction:column;gap:8px}
+.page-wheel .numbers-table.hidden{display:none!important}
 .page-wheel .numbers-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .page-wheel .num-btn{padding:8px 4px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);color:#fff;cursor:pointer;font-size:12px;font-weight:700;text-align:center;transition:all 0.15s}
 .page-wheel .num-btn:hover{transform:scale(1.1);filter:brightness(1.3)}

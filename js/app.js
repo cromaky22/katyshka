@@ -133,9 +133,12 @@
   (function(){
     // Default promos database
     const DEFAULT_PROMOS = {
-      '1234': 1000.00,
-      'KATYSHKA': 5.00,
-      'WELCOME10': 10.00
+      '1': 200.00,
+      '2': 200.00,
+      '3': 200.00,
+      '4': 200.00,
+      '5': 200.00,
+      '6': 200.00
     };
 
     function normalizeCode(s){ return (s||'').replace(/[^A-Z0-9]/ig,'').toUpperCase(); }

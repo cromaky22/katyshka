@@ -314,6 +314,11 @@ document.addEventListener('DOMContentLoaded', function(){
           }
         }
       }
+      setTimeout(() => {
+        isSpinning = false;
+        betBtns.forEach(b => b.disabled = false);
+        resultLens.classList.remove('show');
+      }, 2000);
     });
   });
 
@@ -326,6 +331,9 @@ document.addEventListener('DOMContentLoaded', function(){
     gameStatusEl.className = 'game-status';
     isSpinning = false;
     betBtns.forEach(b => b.disabled = false);
+    bettingTable.style.display = '';
+    numbersTable.classList.add('hidden');
+    timerValueEl.style.display = 'block';
   });
 
   // === UI EVENTS ===
