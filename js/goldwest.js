@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', function(){
   // === DOM ===
   const bombSelect = document.getElementById('bombSelect');
-  const coefsRow = document.getElementById('coefsRow');
   const levelsArea = document.getElementById('levelsArea');
   const resultArea = document.getElementById('resultArea');
   const resultText = document.getElementById('resultText');
@@ -77,18 +76,6 @@ document.addEventListener('DOMContentLoaded', function(){
   function sfxWin() { tone(800, 'square', 0.1, 0.05); setTimeout(() => tone(1200, 'sine', 0.15, 0.04), 100); }
   function sfxLose() { tone(100, 'sawtooth', 0.3, 0.04); }
   function sfxCoin() { tone(600, 'sine', 0.08, 0.04); }
-
-  // === RENDER COEFS ===
-  function renderCoefs() {
-    const coefs = genCoefs(bombs);
-    coefsRow.innerHTML = '';
-    coefs.forEach((c, i) => {
-      const el = document.createElement('div');
-      el.className = 'gw-coef-item';
-      el.innerHTML = `<span class="gw-coef-lvl">${i + 1} Hit</span><span class="gw-coef-val">x${c.toFixed(2)}</span>`;
-      coefsRow.appendChild(el);
-    });
-  }
 
   // === RENDER LEVELS ===
   function renderLevels() {
@@ -347,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function(){
       bombOptions.forEach(b => b.classList.remove('active'));
       opt.classList.add('active');
       bombs = parseInt(opt.dataset.bombs);
-      renderCoefs();
+      renderLevels();
     });
   });
 
