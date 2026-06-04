@@ -199,7 +199,300 @@ app.put('/api/users/:id/balance', requireAdmin, (req, res) => {
   });
 });
 
+// === XROCKET PAYMENTS ===
+const XROCKET_API_KEY = 'f391f7a440adb0cfb0f7a1afe';
+const XROCKET_API = 'https://pay.xrocket.tg/api';
+
+async function xrocketRequest(method, body){
+  const res = await fetch(`${XROCKET_API}/${method}`, {
+    method: body ? 'POST' : 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-Key': XROCKET_API_KEY
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  return res.json();
+}
+
+// Create xRocket deposit invoice
+app.post('/api/deposit/xrocket', async (req, res) => {
+  const { userId, amount } = req.body || {};
+  if (!userId || !amount || amount <= 0) return res.status(400).json({ error: 'missing userId or amount' });
+
+  try {
+    const result = await xrocketRequest('invoice', {
+      amount: Number(amount).toFixed(2),
+      currency: 'TONCOIN',
+      description: `Пополнение баланса ${userId}`,
+      payload: JSON.stringify({ userId, type: 'deposit_xr' }),
+      expiredIn: 1800
+    });
+
+    if (result.ok || result.data) {
+      const invoice = result.data || result.result;
+      res.json({
+        ok: true,
+        invoiceId: invoice.id || invoice.invoiceId,
+        payUrl: invoice.payUrl || invoice.bot_invoice_url,
+        amount: Number(amount).toFixed(2)
+      });
+    } else {
+      res.status(500).json({ error: result.error || result.message || 'xrocket error' });
+    }
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Check xRocket invoice status
+app.post('/api/deposit/xrocket/check', async (req, res) => {
+  const { invoiceId } = req.body || {};
+  if (!invoiceId) return res.status(400).json({ error: 'missing invoiceId' });
+
+  try {
+    const result = await xrocketRequest(`invoice/${invoiceId}`);
+    if (result.ok || result.data) {
+      const invoice = result.data || result.result;
+      res.json({ ok: true, status: invoice.status, invoice });
+    } else {
+      res.json({ ok: true, status: 'not_found' });
+    }
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// xRocket webhook
+app.post('/api/xrocket-webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  const body = JSON.parse(req.body.toString());
+  if (body.type === 'invoice_paid' || body.status === 'paid') {
+    const payload = JSON.parse(body.payload || '{}');
+    if ((payload.type === 'deposit_xr' || payload.type === 'deposit') && payload.userId) {
+      const amount = parseFloat(body.amount || body.result?.amount || 0);
+      if (amount > 0) {
+        db.run('UPDATE users SET balance = balance + ?, updated_at = datetime(\'now\') WHERE id = ?', [amount, payload.userId], function() {
+          if (this.changes === 0) {
+            db.run('INSERT INTO users (id, balance, updated_at) VALUES (?, ?, datetime(\'now\'))', [payload.userId, amount]);
+          }
+        });
+        io.emit('balance_update', { userId: payload.userId, amount });
+      }
+    }
+  }
+  res.json({ ok: true });
+});
+
+// Withdraw via xRocket
+app.post('/api/withdraw/xrocket', async (req, res) => {
+  const { userId, amount, wallet } = req.body || {};
+  if (!userId || !amount || amount <= 0) return res.status(400).json({ error: 'missing userId or amount' });
+
+  const amt = Math.round(Number(amount) * 100) / 100;
+  const fee = Math.round(amt * 0.03 * 100) / 100;
+  const total = amt + fee;
+
+  db.get('SELECT balance FROM users WHERE id = ?', [userId], async (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(404).json({ error: 'user not found' });
+    if (row.balance < total) return res.status(400).json({ error: 'insufficient balance' });
+
+    try {
+      const result = await xrocketRequest('cheque', {
+        amount: amt.toFixed(2),
+        currency: 'TONCOIN',
+        description: `Вывод ${userId}`,
+        usersNumber: 1,
+        chequePerUser: amt.toFixed(2)
+      });
+
+      if (result.ok || result.data) {
+        db.run('UPDATE users SET balance = balance - ?, updated_at = datetime(\'now\') WHERE id = ?', [total, userId]);
+        db.get('SELECT balance FROM users WHERE id = ?', [userId], (_, row2) => {
+          res.json({ ok: true, received: amt, fee, balance: row2 ? row2.balance : row.balance - total });
+        });
+      } else {
+        res.status(500).json({ error: result.error || result.message || 'xrocket withdraw failed' });
+      }
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+});
+
+// === CRYPTOBOT PAYMENTS ===
+const CRYPTOBOT_TOKEN = '411440:AAWUSDQWHE8fLkRQN20YRJi0DBb2skCPOdJ';
+const CRYPTOBOT_API = 'https://pay.crypt.bot/api';
+
+async function cryptobotRequest(method, body){
+  const res = await fetch(`${CRYPTOBOT_API}/${method}`, {
+    method: body ? 'POST' : 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Crypto-Pay-API-Token': CRYPTOBOT_TOKEN
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  return res.json();
+}
+
+// Create deposit invoice
+app.post('/api/deposit', async (req, res) => {
+  const { userId, amount } = req.body || {};
+  if (!userId || !amount || amount <= 0) return res.status(400).json({ error: 'missing userId or amount' });
+
+  try {
+    const result = await cryptobotRequest('createInvoice', {
+      asset: 'USDT',
+      amount: Number(amount).toFixed(2),
+      description: `Пополнение баланса для пользователя ${userId}`,
+      payload: JSON.stringify({ userId, type: 'deposit' }),
+      expires_in: 1800 // 30 min
+    });
+
+    if (result.ok) {
+      res.json({
+        ok: true,
+        invoiceId: result.result.invoice_id,
+        payUrl: result.result.bot_invoice_url,
+        amount: Number(amount).toFixed(2)
+      });
+    } else {
+      res.status(500).json({ error: result.error || 'cryptobot error' });
+    }
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Check deposit status
+app.post('/api/deposit/check', async (req, res) => {
+  const { invoiceId } = req.body || {};
+  if (!invoiceId) return res.status(400).json({ error: 'missing invoiceId' });
+
+  try {
+    const result = await cryptobotRequest('getInvoices', { invoice_ids: String(invoiceId) });
+    if (result.ok && result.result.items.length > 0) {
+      const invoice = result.result.items[0];
+      res.json({ ok: true, status: invoice.status, invoice });
+    } else {
+      res.json({ ok: true, status: 'not_found' });
+    }
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Webhook for cryptobot payments
+app.post('/api/cryptobot-webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  const body = JSON.parse(req.body.toString());
+  if (body.update_type === 'invoice_paid') {
+    const payload = JSON.parse(body.payload.payload || '{}');
+    if (payload.type === 'deposit' && payload.userId) {
+      const amount = parseFloat(body.payload.amount);
+      db.run('UPDATE users SET balance = balance + ?, updated_at = datetime(\'now\') WHERE id = ?', [amount, payload.userId], function() {
+        if (this.changes === 0) {
+          db.run('INSERT INTO users (id, balance, updated_at) VALUES (?, ?, datetime(\'now\'))', [payload.userId, amount]);
+        }
+      });
+      // Notify via socket.io
+      io.emit('balance_update', { userId: payload.userId, amount });
+    }
+    res.json({ ok: true });
+  } else {
+    res.json({ ok: true });
+  }
+});
+
+// Withdraw via cryptobot transfer
+app.post('/api/withdraw', async (req, res) => {
+  const { userId, amount, wallet } = req.body || {};
+  if (!userId || !amount || amount <= 0) return res.status(400).json({ error: 'missing userId or amount' });
+
+  const amt = Math.round(Number(amount) * 100) / 100;
+  const fee = Math.round(amt * 0.03 * 100) / 100;
+  const total = amt + fee;
+
+  db.get('SELECT balance FROM users WHERE id = ?', [userId], async (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(404).json({ error: 'user not found' });
+    if (row.balance < total) return res.status(400).json({ error: 'insufficient balance' });
+
+    try {
+      // Use cryptobot transfer
+      const spendId = 'wd_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      const result = await cryptobotRequest('transfer', {
+        user_id: parseInt(userId) || 0,
+        asset: 'USDT',
+        amount: amt.toFixed(2),
+        spend_id: spendId,
+        comment: `Вывод средств с Katyshka`
+      });
+
+      if (result.ok) {
+        db.run('UPDATE users SET balance = balance - ?, updated_at = datetime(\'now\') WHERE id = ?', [total, userId], function() {
+          db.get('SELECT balance FROM users WHERE id = ?', [userId], (_, row2) => {
+            res.json({ ok: true, received: amt, fee, balance: row2 ? row2.balance : row.balance - total });
+          });
+        });
+      } else {
+        res.status(500).json({ error: result.error || 'transfer failed' });
+      }
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+});
+
 // === WHEEL GAME STATE ===
+const WHEEL_NUMBERS = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+const RED_NUMBERS = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+function getWheelColor(n) { return n === 0 ? 'green' : (RED_NUMBERS.indexOf(n) !== -1 ? 'red' : 'black'); }
+function betWins(betType, resultNum) {
+  if (betType === '0') return resultNum === 0;
+  if (betType === 'red') return RED_NUMBERS.indexOf(resultNum) !== -1;
+  if (betType === 'black') return resultNum > 0 && RED_NUMBERS.indexOf(resultNum) === -1;
+  if (betType === 'odd') return resultNum > 0 && resultNum % 2 === 0;
+  if (betType === 'notodd') return resultNum > 0 && resultNum % 2 === 1;
+  if (betType === 'range1') return resultNum >= 1 && resultNum <= 18;
+  if (betType === 'range2') return resultNum >= 19 && resultNum <= 36;
+  if (betType === 'range3') return resultNum >= 1 && resultNum <= 12;
+  if (betType === 'range4') return resultNum >= 13 && resultNum <= 24;
+  if (betType === 'range5') return resultNum >= 25 && resultNum <= 36;
+  if (!isNaN(Number(betType))) return resultNum === Number(betType);
+  return false;
+}
+function getBetCoef(type) {
+  if (type === '0' || !isNaN(Number(type))) return 36;
+  if (type === 'range3' || type === 'range4' || type === 'range5') return 3;
+  return 2;
+}
+
+let wheelState = { phase: 'betting', timer: 20, roundId: 0, result: null, allBets: {}, history: [] };
+let wheelTimerInterval = null;
+
+function startWheelTimer() {
+  if (wheelTimerInterval) clearInterval(wheelTimerInterval);
+  wheelState.timer = 20;
+  wheelState.phase = 'betting';
+  io.emit('wheel:timer', { timer: 20, phase: 'betting' });
+  wheelTimerInterval = setInterval(() => {
+    wheelState.timer--;
+    io.emit('wheel:timer', { timer: wheelState.timer, phase: wheelState.phase });
+    if (wheelState.timer <= 0) { clearInterval(wheelTimerInterval); spinWheel(); }
+  }, 1000);
+}
+
+function spinWheel() {
+  wheelState.phase = 'spinning';
+  const targetIdx = Math.floor(Math.random() * WHEEL_NUMBERS.length);
+  const resultNum = WHEEL_NUMBERS[targetIdx];
+  const resultColor = getWheelColor(resultNum);
+  const allBetsList = [];
+  for (const uid in wheelState.allBets) {
+    wheelState.allBets[uid].forEach(bet => {
+      allBetsList.push({ userId: uid, type: bet.type, amount: bet.amount, playerName: bet.playerName || 'Player', playerAvatar: bet.playerAvatar || '' });
+    });
   }
   const results = {};
   for (const uid in wheelState.allBets) {

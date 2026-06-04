@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function(){
     let stored = localStorage.getItem('mc_balance');
     if (stored === null || stored === 'NaN') { stored = '100.00'; localStorage.setItem('mc_balance', stored); }
     const val = parseFloat(stored);
-    if (isNaN(val) || val < 0.5) { localStorage.setItem('mc_balance', '100.00'); return 100; }
+    if (isNaN(val) || val < 0.1) { localStorage.setItem('mc_balance', '100.00'); return 100; }
     return val;
   }
   function setBalance(v) {
@@ -148,10 +148,10 @@ document.addEventListener('DOMContentLoaded', function(){
     btn.addEventListener('click', () => {
       const a = parseFloat(btn.dataset.amount);
       const cur = parseFloat(stakeInput.value) || 0;
-      stakeInput.value = Math.min(200, Math.max(0.5, cur + a)).toFixed(2);
+      stakeInput.value = Math.min(200, Math.max(0.1, cur + a)).toFixed(2);
     });
   });
-  halfBtn.addEventListener('click', () => { const v = parseFloat(stakeInput.value) || 0; stakeInput.value = Math.max(0.5, v / 2).toFixed(2); });
+  halfBtn.addEventListener('click', () => { const v = parseFloat(stakeInput.value) || 0; stakeInput.value = Math.max(0.1, v / 2).toFixed(2); });
   doubleBtn.addEventListener('click', () => { const v = parseFloat(stakeInput.value) || 0; stakeInput.value = Math.min(200, v * 2).toFixed(2); });
 
   // === SPIN ===
