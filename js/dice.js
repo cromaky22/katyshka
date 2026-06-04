@@ -90,20 +90,16 @@ document.addEventListener('DOMContentLoaded', function(){
       }
       diceEl.appendChild(div);
     });
-    // Set initial state
     diceEl.className = 'dice show-1';
   }
   diceEls.forEach(el => buildDiceEl(el));
 
-  // Get visible dice elements based on current mode
   function getVisibleDice() {
-    const count = DICE_COUNT[currentMode];
-    return diceEls.slice(0, count);
+    return diceEls.slice(0, DICE_COUNT[currentMode]);
   }
 
   function setDiceVal(el, val) {
     el.classList.remove('rolling');
-    // Force reflow
     void el.offsetWidth;
     el.className = `dice show-${val}`;
   }
@@ -150,8 +146,9 @@ document.addEventListener('DOMContentLoaded', function(){
     updateBetsUI();
     updateTimer(30, 'waiting');
     modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-    wrapEls[0].classList.toggle('hidden', mode !== '1dice');
-    wrapEls[1].classList.toggle('hidden', mode !== '2dice');
+    // Show/hide dice wrappers based on mode
+    wrapEls[0].classList.remove('hidden');
+    wrapEls[1].classList.toggle('hidden', mode === '1dice');
     wrapEls[2].classList.toggle('hidden', mode !== '3dice');
     buildBettingGrid();
     resetDisplay();
@@ -160,7 +157,6 @@ document.addEventListener('DOMContentLoaded', function(){
   function resetDisplay() {
     diceResult.classList.remove('show');
     diceResult.textContent = '';
-    // Reset all dice to 1
     diceEls.forEach(d => { d.className = 'dice show-1'; });
   }
 
@@ -184,7 +180,6 @@ document.addEventListener('DOMContentLoaded', function(){
   function winSfx() { tone(800,'square',0.1,0.05); setTimeout(() => tone(1200,'sine',0.15,0.04), 100); }
   function loseSfx() { tone(100,'sawtooth',0.3,0.04); }
 
-  // Balance
   function getBalance() {
     let s = localStorage.getItem('mc_balance');
     if (s === null || s === 'NaN') { s = '100.00'; localStorage.setItem('mc_balance', s); }
@@ -242,6 +237,11 @@ document.addEventListener('DOMContentLoaded', function(){
     currentBets.push({ type, amount: stake });
     updateBetsUI();
     gameStatusEl.textContent = '';
+    // Start timer locally on first bet
+    if (!roundActive && !isRolling) {
+      roundActive = true;
+      startLocalTimer(30, 'betting');
+    }
     socket.emit('dice:bet', { type, amount: stake, diceType: currentMode, playerName, playerAvatar });
   }
 
@@ -298,7 +298,11 @@ document.addEventListener('DOMContentLoaded', function(){
     updateTimer(t, phase);
     localTimer = setInterval(() => {
       t--;
-      if (t < 0) { clearInterval(localTimer); return; }
+      if (t <= 0) {
+        clearInterval(localTimer);
+        updateTimer(0, phase);
+        return;
+      }
       updateTimer(t, phase);
     }, 1000);
   }
@@ -308,7 +312,6 @@ document.addEventListener('DOMContentLoaded', function(){
     const myWin = resultData ? resultData.win : 0;
     const myBet = resultData ? resultData.bet : 0;
 
-    // Set visible dice values
     const visible = getVisibleDice();
     visible.forEach((d, i) => {
       setDiceVal(d, nums[i]);
@@ -335,7 +338,6 @@ document.addEventListener('DOMContentLoaded', function(){
     gameStatusEl.className = myWin > 0 ? 'game-status success' : myBet > 0 ? 'game-status error' : 'game-status';
   }
 
-  // Socket
   function setupSocket() {
     if (socket) socket.disconnect();
     socket = io({ query: { userId } });
@@ -378,10 +380,6 @@ document.addEventListener('DOMContentLoaded', function(){
         if (diceType !== currentMode) return;
         if (data.myBets) { currentBets = data.myBets; updateBetsUI(); }
         if (data.allBets) updateAllBets(data.allBets);
-        if (!roundActive && !isRolling) {
-          roundActive = true;
-          startLocalTimer(30, 'betting');
-        }
       });
 
       socket.on(`${p}:roll`, (data) => {
