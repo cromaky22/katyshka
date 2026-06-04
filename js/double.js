@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function(){
   const canvas = document.getElementById('doubleWheel');
-  const resultDisplay = document.getElementById('resultDisplay');
+  const ctx = canvas.getContext('2d');
+  const resultLens = document.getElementById('resultLens');
   const stakeInput = document.getElementById('stakeInput');
   const playBtn = document.getElementById('playBtn');
   const gameStatusEl = document.getElementById('gameStatus');
@@ -10,265 +11,236 @@ document.addEventListener('DOMContentLoaded', function(){
   const betBtns = document.querySelectorAll('.bet-btn');
   const quickBetBtns = document.querySelectorAll('.quick-bet-btn');
 
-  const ctx = canvas.getContext('2d');
-  const dpr = window.devicePixelRatio || 1;
-
-  const SEGMENTS = [
-    { num: 2, color: '#3498db', label: 'x2', name: 'blue' },
-    { num: 3, color: '#f39c12', label: 'x3', name: 'yellow' },
-    { num: 5, color: '#e74c3c', label: 'x5', name: 'orange' },
-    { num: 50, color: '#1abc9c', label: 'x50', name: 'teal' },
-    { num: 50, color: '#2ecc71', label: 'x50', name: 'green' },
+  // === СЕГМЕНТЫ ===
+  const SEG_DEF = [
+    { num: 2,  color: '#3498db', label: 'x2',  name: 'blue',   count: 24 },
+    { num: 3,  color: '#f39c12', label: 'x3',  name: 'yellow', count: 15 },
+    { num: 5,  color: '#e74c3c', label: 'x5',  name: 'orange', count: 8  },
+    { num: 50, color: '#2ecc71', label: 'x50', name: 'green',  count: 1  },
   ];
 
-  const TOTAL_SEGMENTS = SEGMENTS.length;
-  const SEGMENT_ANGLE = 360 / TOTAL_SEGMENTS;
+  // Создаём массив 48 сегментов с равномерным распределением
+  const wheelData = [];
+  const TOTAL = SEG_DEF.reduce((s, seg) => s + seg.count, 0);
+  const ANGLE = 360 / TOTAL;
 
-  let selectedBet = null;
-  let selectedColor = null;
-  let gameActive = false;
-  let history = [];
-  let rotation = 0;
-  let soundEnabled = true;
-  let audioCtx = null;
-  const baseSize = 340;
-
-  function initAudio() {
-    if (!audioCtx) {
-      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-      catch (e) { soundEnabled = false; }
+  // Заполняем позиции равномерно
+  const positions = new Array(TOTAL).fill(null);
+  let posIdx = 0;
+  SEG_DEF.forEach(seg => {
+    const step = TOTAL / seg.count;
+    for (let i = 0; i < seg.count; i++) {
+      let slot = Math.round(i * step + step / 2) % TOTAL;
+      while (positions[slot] !== null) slot = (slot + 1) % TOTAL;
+      positions[slot] = { num: seg.num, color: seg.color, label: seg.label, name: seg.name };
     }
-  }
+  });
+  wheelData.push(...positions);
 
-  function playTone(freq, type, duration, vol = 0.06) {
-    if (!soundEnabled || !audioCtx) return;
-    try {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start(audioCtx.currentTime);
-      osc.stop(audioCtx.currentTime + duration);
-    } catch (e) {}
-  }
+  let selectedColor = 'blue';
+  let spinning = false;
+  let rotation = 0;
+  let audioCtx = null;
 
-  function sfxTick() { playTone(600 + Math.random() * 300, 'sine', 0.04, 0.03); }
-  function sfxWin() { playTone(800, 'square', 0.1, 0.05); playTone(1200, 'sine', 0.15, 0.04); }
-  function sfxLose() { playTone(100, 'sawtooth', 0.3, 0.04); }
-
-  function getBalance(){ 
-    return parseFloat(localStorage.getItem('mc_balance') || '0') || 0; 
-  }
-  function setBalance(v){ 
-    const n = Math.round(Number(v) * 100) / 100; 
-    localStorage.setItem('mc_balance', n.toFixed(2)); 
-    document.querySelectorAll('.balance-value').forEach(el=>el.textContent = n.toFixed(2)); 
-  }
-
-  canvas.width = baseSize * dpr;
-  canvas.height = baseSize * dpr;
+  // === CANVAS ===
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = 600 * dpr;
+  canvas.height = 600 * dpr;
+  canvas.style.width = '280px';
+  canvas.style.height = '280px';
   ctx.scale(dpr, dpr);
-  const size = baseSize;
+  const CX = 300, CY = 300, R = 296;
 
   function drawWheel() {
-    ctx.clearRect(0, 0, size, size);
-    ctx.save();
-    const cx = size / 2;
-    const cy = size / 2;
-    const radius = size / 2 - 4;
-
-    ctx.translate(cx, cy);
-    ctx.rotate(rotation * Math.PI / 180);
-    ctx.translate(-cx, -cy);
-
-    for (let i = 0; i < TOTAL_SEGMENTS; i++) {
-      const startAngle = (i * SEGMENT_ANGLE - 90) * Math.PI / 180;
-      const endAngle = ((i + 1) * SEGMENT_ANGLE - 90) * Math.PI / 180;
+    ctx.clearRect(0, 0, 600, 600);
+    for (let i = 0; i < TOTAL; i++) {
+      const seg = wheelData[i];
+      const startAngle = (i * ANGLE - 90 + rotation) * Math.PI / 180;
+      const endAngle = ((i + 1) * ANGLE - 90 + rotation) * Math.PI / 180;
 
       ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.arc(cx, cy, radius, startAngle, endAngle);
+      ctx.moveTo(CX, CY);
+      ctx.arc(CX, CY, R, startAngle, endAngle);
       ctx.closePath();
-      ctx.fillStyle = SEGMENTS[i].color;
+      ctx.fillStyle = seg.color;
       ctx.fill();
-      ctx.strokeStyle = 'rgba(0,0,0,0.25)';
-      ctx.lineWidth = 2;
+
+      ctx.beginPath();
+      ctx.moveTo(CX, CY);
+      ctx.lineTo(CX + R * Math.cos(startAngle), CY + R * Math.sin(startAngle));
+      ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+      ctx.lineWidth = 1;
       ctx.stroke();
 
       ctx.save();
-      ctx.translate(cx, cy);
-      const midAngle = (startAngle + endAngle) / 2;
-      ctx.rotate(midAngle);
+      ctx.translate(CX, CY);
+      ctx.rotate((startAngle + endAngle) / 2);
       ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
       ctx.fillStyle = '#fff';
-      ctx.font = 'bold 14px Inter, Arial, sans-serif';
-      ctx.shadowColor = 'rgba(0,0,0,0.7)';
-      ctx.shadowBlur = 4;
-      ctx.fillText(SEGMENTS[i].label, radius * 0.70, 4);
+      ctx.font = 'bold 11px Arial';
+      ctx.shadowColor = 'rgba(0,0,0,0.6)';
+      ctx.shadowBlur = 2;
+      ctx.fillText(seg.label, R * 0.72, 0);
       ctx.restore();
     }
-
     ctx.beginPath();
-    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-    ctx.lineWidth = 4;
+    ctx.arc(CX, CY, R * 0.18, 0, Math.PI * 2);
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 2;
     ctx.stroke();
+  }
+  drawWheel();
 
-    ctx.restore();
+  // === AUDIO ===
+  function initAudio() {
+    if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+  }
+  function tone(freq, type, dur, vol) {
+    if (!audioCtx) return;
+    try {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      g.gain.setValueAtTime(vol, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+      osc.connect(g).connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + dur);
+    } catch (e) {}
+  }
+  function tickSfx() { tone(600 + Math.random() * 300, 'sine', 0.04, 0.03); }
+  function winSfx() { tone(800, 'square', 0.1, 0.05); setTimeout(() => tone(1200, 'sine', 0.15, 0.04), 100); }
+  function loseSfx() { tone(100, 'sawtooth', 0.3, 0.04); }
+
+  // === BALANCE ===
+  function getBalance() {
+    let stored = localStorage.getItem('mc_balance');
+    if (stored === null || stored === 'NaN') { stored = '100.00'; localStorage.setItem('mc_balance', stored); }
+    const val = parseFloat(stored);
+    if (isNaN(val) || val < 0.5) { localStorage.setItem('mc_balance', '100.00'); return 100; }
+    return val;
+  }
+  function setBalance(v) {
+    const n = Math.round(Number(v) * 100) / 100;
+    if (isNaN(n)) return;
+    localStorage.setItem('mc_balance', n.toFixed(2));
+    document.querySelectorAll('.balance-value').forEach(el => el.textContent = n.toFixed(2));
   }
 
+  // === BETS ===
   betBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      if (gameActive) return;
+      if (spinning) return;
       betBtns.forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
-      selectedBet = parseInt(btn.dataset.multiplier);
       selectedColor = btn.dataset.color;
     });
   });
-
-  if (betBtns[0]) betBtns[0].classList.add('selected');
-  selectedBet = 2;
-  selectedColor = 'blue';
+  betBtns[0].classList.add('selected');
 
   quickBetBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      const amount = parseFloat(btn.dataset.amount);
-      const currentValue = parseFloat(stakeInput.value) || 0;
-      const newValue = currentValue + amount;
-      stakeInput.value = Math.min(200, Math.max(0.5, newValue)).toFixed(2);
+      const a = parseFloat(btn.dataset.amount);
+      const cur = parseFloat(stakeInput.value) || 0;
+      stakeInput.value = Math.min(200, Math.max(0.5, cur + a)).toFixed(2);
     });
   });
+  halfBtn.addEventListener('click', () => { const v = parseFloat(stakeInput.value) || 0; stakeInput.value = Math.max(0.5, v / 2).toFixed(2); });
+  doubleBtn.addEventListener('click', () => { const v = parseFloat(stakeInput.value) || 0; stakeInput.value = Math.min(200, v * 2).toFixed(2); });
 
-  halfBtn.addEventListener('click', () => {
-    const val = parseFloat(stakeInput.value) || 0;
-    stakeInput.value = Math.max(0.5, val / 2);
-  });
+  // === SPIN ===
+  function resultAtPointer() {
+    const norm = ((-rotation % 360) + 360) % 360;
+    const idx = Math.floor(norm / ANGLE) % TOTAL;
+    return wheelData[idx];
+  }
 
-  doubleBtn.addEventListener('click', () => {
-    const val = parseFloat(stakeInput.value) || 0;
-    stakeInput.value = Math.min(200, val * 2);
-  });
+  function spinToTarget(targetIdx, dur, done) {
+    const desiredNorm = (targetIdx * ANGLE + ANGLE / 2) % 360;
+    const currentNorm = (((-rotation) % 360) + 360) % 360;
+    let diff = desiredNorm - currentNorm;
+    while (diff < 0) diff += 360;
+    const totalRot = 360 * 8 + diff;
+    const startRot = rotation;
+    const t0 = performance.now();
+    let lastTick = -1;
 
-  function spinToIndex(targetIndex, duration, onComplete) {
-    const startRotation = rotation;
-    const targetSegmentCenter = targetIndex * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
-    const targetAngle = (360 - targetSegmentCenter) % 360;
-    const totalRotation = 360 * 7 + targetAngle;
-    const startTime = Date.now();
-    let lastSegmentPassed = -1;
-
-    function animate() {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      rotation = startRotation + totalRotation * eased;
-
+    function tick(now) {
+      const p = Math.min((now - t0) / dur, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      rotation = startRot - totalRot * ease;
       drawWheel();
-
-      const normalizedRot = ((rotation % 360) + 360) % 360;
-      const currentSegment = Math.floor(normalizedRot / SEGMENT_ANGLE);
-      if (currentSegment !== lastSegmentPassed && progress < 0.9) {
-        lastSegmentPassed = currentSegment;
-        sfxTick();
-      }
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      } else {
-        rotation = rotation % 360;
-        onComplete();
-      }
+      const norm = ((-rotation % 360) + 360) % 360;
+      const seg = Math.floor(norm / ANGLE);
+      if (seg !== lastTick && p < 0.9) { lastTick = seg; tickSfx(); }
+      if (p < 1) requestAnimationFrame(tick);
+      else { rotation = startRot - totalRot; drawWheel(); done(); }
     }
-
-    requestAnimationFrame(animate);
+    requestAnimationFrame(tick);
   }
 
-  function getResultAtPointer() {
-    const normalizedRotation = ((rotation % 360) + 360) % 360;
-    const segmentIndex = Math.floor(normalizedRotation / SEGMENT_ANGLE);
-    return SEGMENTS[segmentIndex];
-  }
-
-  function addHistoryItem(num, color) {
-    const item = document.createElement('div');
-    item.className = 'history-item';
-    item.style.backgroundColor = color;
-    item.textContent = 'x' + num;
-    historyScroll.insertBefore(item, historyScroll.firstChild);
-    while(historyScroll.children.length > 20){
-      historyScroll.removeChild(historyScroll.lastChild);
-    }
+  function addHistory(num, color) {
+    const el = document.createElement('div');
+    el.className = 'history-item';
+    el.style.backgroundColor = color;
+    el.textContent = 'x' + num;
+    historyScroll.insertBefore(el, historyScroll.firstChild);
+    while (historyScroll.children.length > 20) historyScroll.removeChild(historyScroll.lastChild);
   }
 
   playBtn.addEventListener('click', () => {
     initAudio();
-    if (gameActive) return;
-    if (selectedBet === null) {
-      gameStatusEl.textContent = 'Выберите цвет/множитель';
-      gameStatusEl.className = 'game-status error';
-      return;
-    }
-
+    if (spinning) return;
     const stake = parseFloat(stakeInput.value);
-    if (isNaN(stake) || stake <= 0) {
-      gameStatusEl.textContent = 'Введите корректную ставку';
-      gameStatusEl.className = 'game-status error';
-      return;
-    }
+    if (isNaN(stake) || stake < 0.5) { gameStatusEl.textContent = 'Мин. ставка $0.50'; gameStatusEl.className = 'game-status error'; return; }
+    if (stake > 200) { gameStatusEl.textContent = 'Макс. ставка $200'; gameStatusEl.className = 'game-status error'; return; }
+    if (getBalance() < stake) { gameStatusEl.textContent = 'Недостаточно средств'; gameStatusEl.className = 'game-status error'; return; }
 
-    const balance = getBalance();
-    if (balance < stake) {
-      gameStatusEl.textContent = 'Недостаточно средств';
-      gameStatusEl.className = 'game-status error';
-      return;
-    }
-
-    gameActive = true;
+    spinning = true;
     playBtn.disabled = true;
+    betBtns.forEach(b => b.disabled = true);
     setBalance(getBalance() - stake);
-    resultDisplay.style.display = 'none';
+    resultLens.classList.remove('show');
     gameStatusEl.textContent = '';
 
-    const targetIndex = Math.floor(Math.random() * TOTAL_SEGMENTS);
-    spinToIndex(targetIndex, 4000, () => {
-      const result = getResultAtPointer();
-      const win = (result.name === selectedColor);
-      const winAmount = win ? Math.round(stake * result.num * 100) / 100 : 0;
+    const target = Math.floor(Math.random() * TOTAL);
+    spinToTarget(target, 4200, () => {
+      const res = resultAtPointer();
+      const won = res.name === selectedColor;
+      const winAmt = won ? Math.round(stake * res.num * 100) / 100 : 0;
 
-      if (win) {
-        setBalance(getBalance() + winAmount);
-        gameStatusEl.textContent = `Вы выиграли $${winAmount.toFixed(2)}! ✓`;
+      if (won) {
+        setBalance(getBalance() + winAmt);
+        gameStatusEl.textContent = `Выиграли $${winAmt.toFixed(2)}!`;
         gameStatusEl.className = 'game-status success';
-        sfxWin();
+        winSfx();
       } else {
-        gameStatusEl.textContent = `Вы проиграли. Выпало ${result.label}`;
+        gameStatusEl.textContent = `Проиграло. Выпало ${res.label}`;
         gameStatusEl.className = 'game-status error';
-        sfxLose();
+        loseSfx();
       }
 
-      resultDisplay.textContent = result.label;
-      resultDisplay.style.backgroundColor = result.color;
-      resultDisplay.style.display = 'flex';
-      addHistoryItem(result.num, result.color);
+      resultLens.textContent = res.label;
+      resultLens.style.backgroundColor = res.color;
+      resultLens.style.boxShadow = `0 0 26px ${res.color}99, 0 6px 18px rgba(0,0,0,0.5)`;
+      resultLens.classList.remove('show');
+      void resultLens.offsetWidth;
+      resultLens.classList.add('show');
+      addHistory(res.num, res.color);
 
       setTimeout(() => {
-        gameActive = false;
+        spinning = false;
         playBtn.disabled = false;
-        resultDisplay.style.display = 'none';
-      }, 2000);
+        betBtns.forEach(b => b.disabled = false);
+      }, 2200);
     });
   });
 
-  document.querySelectorAll('.balance-value').forEach(el => {
-    el.textContent = getBalance().toFixed(2);
-  });
-
-  drawWheel();
   document.addEventListener('click', () => initAudio(), { once: true });
+  document.querySelectorAll('.balance-value').forEach(el => el.textContent = getBalance().toFixed(2));
 });
