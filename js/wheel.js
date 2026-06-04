@@ -1,473 +1,371 @@
-(function() {
-  'use strict';
-
-  // DOM элементы
-  const headerBalance = document.getElementById('headerBalance');
-  const gameBalance = document.getElementById('gameBalance');
+document.addEventListener('DOMContentLoaded', function(){
+  const canvas = document.getElementById('wheelCanvas');
+  const ctx = canvas.getContext('2d');
+  const resultLens = document.getElementById('resultLens');
+  const stakeInput = document.getElementById('stakeInput');
+  const gameStatusEl = document.getElementById('gameStatus');
   const historyScroll = document.getElementById('historyScroll');
-  const wheelImage = document.getElementById('wheelImage');
-  const wheelWrapper = document.getElementById('wheelWrapper');
-  const ballWrapper = document.getElementById('ballWrapper');
-  const ballContainer = document.getElementById('ballContainer');
-  const wheelWaiting = document.getElementById('wheelWaiting');
+  const halfBtn = document.getElementById('halfBtn');
+  const doubleBtn = document.getElementById('doubleBtn');
+  const betBtns = document.querySelectorAll('.bet-btn[data-bet]');
+  const quickBetBtns = document.querySelectorAll('.quick-bet-btn');
+  const numbersToggle = document.getElementById('toggleNumbersBtn');
+  const numbersBack = document.getElementById('toggleDefaultBtn');
   const bettingTable = document.getElementById('bettingTable');
   const numbersTable = document.getElementById('numbersTable');
   const numbersGrid = document.getElementById('numbersGrid');
-  const stakeInput = document.getElementById('stakeInput');
-  const gameStatus = document.getElementById('gameStatus');
-  const toggleNumbersBtn = document.getElementById('toggleNumbersBtn');
-  const toggleDefaultBtn = document.getElementById('toggleDefaultBtn');
-  const halfBtn = document.getElementById('halfBtn');
-  const doubleBtn = document.getElementById('doubleBtn');
-  const playerBetDisplay = document.getElementById('playerBet');
+  const activeBets = document.getElementById('activeBets');
+  const activeBetsList = document.getElementById('activeBetsList');
+  const timerValueEl = document.getElementById('timerValue');
+  const allPlayersBetsEl = document.getElementById('allPlayersBets');
+  const allPlayersBetsList = document.getElementById('allPlayersBetsList');
 
-  // Константы
-  const RED_NUMBERS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
-  const MIN_STAKE = 0.5;
-  const MAX_STAKE = 200;
-  const HISTORY_LIMIT = 15;
+  const RED_NUMBERS = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+  function isRed(n) { return RED_NUMBERS.indexOf(n) !== -1; }
 
-  // Состояние игры
-  let gameState = {
-    balance: 100,
-    history: [],
-    currentBet: null,
-    isSpinning: false,
-    selectedNumbers: new Set(),
-    wheelRotation: 0,
-    autoStartTimer: null,
-    autoStartCountdown: 0
-  };
+  const WHEEL_NUMBERS = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+  const TOTAL = WHEEL_NUMBERS.length;
+  const SEG_ANGLE = 360 / TOTAL;
 
-  // Инициализация
-  function init() {
-    loadBalance();
-    createNumbersGrid();
-    attachEventListeners();
-    updateDisplay();
+  const SEGMENTS = WHEEL_NUMBERS.map(n => ({
+    num: n,
+    color: n === 0 ? '#8bc34a' : (isRed(n) ? '#f44336' : '#101010'),
+    label: String(n)
+  }));
+
+  let rotation = 0;
+  let audioCtx = null;
+  let currentBets = [];
+  let playerName = 'Player';
+  let playerAvatar = '';
+  let userId = 'user_' + Math.random().toString(36).substr(2, 9);
+  let isSpinning = false;
+  let localTimer = null;
+
+  const CX = canvas.width / 2;
+  const CY = canvas.height / 2;
+  const R = canvas.width / 2 - 4;
+
+  function drawWheel() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < TOTAL; i++) {
+      const seg = SEGMENTS[i];
+      const startAngle = (i * SEG_ANGLE - 90 + rotation) * Math.PI / 180;
+      const endAngle = ((i + 1) * SEG_ANGLE - 90 + rotation) * Math.PI / 180;
+      ctx.beginPath(); ctx.moveTo(CX, CY); ctx.arc(CX, CY, R, startAngle, endAngle); ctx.closePath();
+      ctx.fillStyle = seg.color; ctx.fill();
+      ctx.beginPath(); ctx.moveTo(CX, CY); ctx.lineTo(CX + R * Math.cos(startAngle), CY + R * Math.sin(startAngle));
+      ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.save(); ctx.translate(CX, CY); ctx.rotate((startAngle + endAngle) / 2);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff';
+      ctx.font = 'bold 14px Arial'; ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 3;
+      ctx.fillText(seg.label, R * 0.72, 0); ctx.restore();
+    }
+    ctx.beginPath(); ctx.arc(CX, CY, R * 0.15, 0, Math.PI * 2); ctx.fillStyle = '#1a1a2e'; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.beginPath(); ctx.arc(CX, CY, R, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 3; ctx.stroke();
   }
+  drawWheel();
 
-  // Управление балансом
+  function initAudio() {
+    if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+  }
+  function tone(freq, type, dur, vol) {
+    if (!audioCtx) return;
+    try {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
+      osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      g.gain.setValueAtTime(vol, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+      osc.connect(g).connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + dur);
+    } catch (e) {}
+  }
+  function tickSfx() { tone(600 + Math.random() * 300, 'sine', 0.04, 0.03); }
+  function winSfx() { tone(800, 'square', 0.1, 0.05); setTimeout(() => tone(1200, 'sine', 0.15, 0.04), 100); }
+  function loseSfx() { tone(100, 'sawtooth', 0.3, 0.04); }
+
   function getBalance() {
-    const saved = localStorage.getItem('mc_balance');
-    return parseFloat(saved) || 100;
+    let stored = localStorage.getItem('mc_balance');
+    if (stored === null || stored === 'NaN') { stored = '100.00'; localStorage.setItem('mc_balance', stored); }
+    const val = parseFloat(stored);
+    if (isNaN(val) || val < 0.5) { localStorage.setItem('mc_balance', '100.00'); return 100; }
+    return val;
+  }
+  function setBalance(v) {
+    const n = Math.round(Number(v) * 100) / 100;
+    if (isNaN(n)) return;
+    localStorage.setItem('mc_balance', n.toFixed(2));
+    document.querySelectorAll('.balance-value, .balance-amount').forEach(el => el.textContent = n.toFixed(2));
   }
 
-  function setBalance(amount) {
-    gameState.balance = Math.max(0, parseFloat(amount).toFixed(2));
-    localStorage.setItem('mc_balance', gameState.balance);
-    updateDisplay();
+  function getBetLabel(type) {
+    const map = { red: 'Красное', black: 'Черное', odd: 'Чётное', notodd: 'Нечётное', range1: '1-18', range2: '19-36', range3: '1-12', range4: '13-24', range5: '25-36', '0': '0' };
+    return map[type] || (isNaN(type) ? type : '№' + type);
+  }
+  function getBetColor(type) {
+    if (type === 'red') return '#f44336';
+    if (type === 'black') return '#333';
+    if (type === 'odd') return '#009688';
+    if (type === 'notodd') return '#607d8b';
+    if (type === '0') return '#8bc34a';
+    if (type.indexOf('range') === 0) return '#3f51b5';
+    const n = Number(type);
+    return !isNaN(n) ? (isRed(n) ? '#f44336' : '#333') : '#666';
+  }
+  function getBetCoef(type) {
+    if (type === '0' || !isNaN(Number(type))) return 36;
+    if (type === 'range3' || type === 'range4' || type === 'range5') return 3;
+    return 2;
+  }
+  function betWins(betType, resultNum) {
+    if (betType === '0') return resultNum === 0;
+    if (betType === 'red') return isRed(resultNum);
+    if (betType === 'black') return resultNum > 0 && !isRed(resultNum);
+    if (betType === 'odd') return resultNum > 0 && resultNum % 2 === 0;
+    if (betType === 'notodd') return resultNum > 0 && resultNum % 2 === 1;
+    if (betType === 'range1') return resultNum >= 1 && resultNum <= 18;
+    if (betType === 'range2') return resultNum >= 19 && resultNum <= 36;
+    if (betType === 'range3') return resultNum >= 1 && resultNum <= 12;
+    if (betType === 'range4') return resultNum >= 13 && resultNum <= 24;
+    if (betType === 'range5') return resultNum >= 25 && resultNum <= 36;
+    if (!isNaN(Number(betType))) return resultNum === Number(betType);
+    return false;
   }
 
-  function loadBalance() {
-    gameState.balance = getBalance();
+  const BET_GROUPS = { color: ['red', 'black'], parity: ['odd', 'notodd'] };
+  function getBetGroup(type) {
+    for (const g in BET_GROUPS) { if (BET_GROUPS[g].indexOf(type) !== -1) return g; }
+    return null;
   }
 
-  // Обновление дисплея
-  function updateDisplay() {
-    const formatted = gameState.balance.toFixed(2);
-    headerBalance.textContent = formatted;
-    gameBalance.textContent = formatted;
+  function updateMyBetsDisplay() {
+    if (currentBets.length === 0) { activeBets.style.display = 'none'; return; }
+    activeBets.style.display = 'flex';
+    activeBetsList.innerHTML = '';
+    const grouped = {};
+    currentBets.forEach((bet, i) => {
+      if (!grouped[bet.type]) grouped[bet.type] = { type: bet.type, amount: 0 };
+      grouped[bet.type].amount += bet.amount;
+    });
+    Object.values(grouped).forEach((group) => {
+      const el = document.createElement('div');
+      el.className = 'active-bet-item';
+      el.style.background = getBetColor(group.type);
+      el.innerHTML = `<span>${getBetLabel(group.type)}</span><span>$${group.amount.toFixed(2)}</span>`;
+      activeBetsList.appendChild(el);
+    });
   }
 
-  // Создание сетки чисел
-  function createNumbersGrid() {
-    numbersGrid.innerHTML = '';
-    for (let i = 0; i <= 36; i++) {
-      const btn = document.createElement('button');
-      btn.className = 'bet-btn';
-      btn.dataset.bet = i;
-      btn.textContent = i;
-      btn.innerHTML = `${i}<div class="coef">x36</div>`;
-      btn.addEventListener('click', () => placeBet(i.toString()));
-      numbersGrid.appendChild(btn);
-    }
-  }
-
-  // Прикрепление слушателей событий
-  function attachEventListeners() {
-    // Быстрые кнопки ставок
-    document.querySelectorAll('.quick-bet-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const amount = parseFloat(btn.dataset.amount);
-        changeStake(amount);
-      });
-    });
-
-    // Таблица ставок - ставят сразу при клике
-    document.querySelectorAll('.betting-table .bet-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (gameState.isSpinning) return;
-        const betType = btn.dataset.bet;
-        placeBetAndSpin(betType);
-      });
-    });
-
-    // Кнопки числа - ставят сразу при клике
-    document.querySelectorAll('.numbers-grid .bet-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (gameState.isSpinning) return;
-        const betType = btn.dataset.bet;
-        placeBetAndSpin(betType);
-      });
-    });
-
-    // Управление ставкой
-    stakeInput.addEventListener('change', (e) => {
-      let value = parseFloat(e.target.value);
-      value = Math.max(MIN_STAKE, Math.min(MAX_STAKE, value));
-      stakeInput.value = value.toFixed(2);
-    });
-
-    halfBtn.addEventListener('click', () => {
-      let newStake = parseFloat(stakeInput.value) / 2;
-      newStake = Math.max(MIN_STAKE, Math.min(MAX_STAKE, newStake));
-      stakeInput.value = newStake.toFixed(2);
-    });
-    
-    doubleBtn.addEventListener('click', () => {
-      let newStake = parseFloat(stakeInput.value) * 2;
-      newStake = Math.max(MIN_STAKE, Math.min(MAX_STAKE, newStake));
-      stakeInput.value = newStake.toFixed(2);
-    });
-
-    // Кнопки переключения таблиц
-    toggleNumbersBtn.addEventListener('click', () => {
-      bettingTable.classList.add('hidden');
-      numbersTable.classList.remove('hidden');
-    });
-
-    toggleDefaultBtn.addEventListener('click', () => {
-      numbersTable.classList.add('hidden');
-      bettingTable.classList.remove('hidden');
-    });
-
-    toggleDefaultBtn.addEventListener('click', () => {
-      numbersTable.classList.add('hidden');
-      bettingTable.classList.remove('hidden');
-    });
-
-    // Кнопка ЗАБРАТЬ
-    collectBtn.addEventListener('click', () => collectWin());
-  }
-
-  // Размещение ставки и запуск таймера автоматического старта
-  function placeBetAndSpin(betType) {
-    const stake = parseFloat(stakeInput.value);
-
-    // Проверка достаточности средств
-    if (stake > gameState.balance) {
-      showStatus('Недостаточно средств!', 'error');
-      return;
-    }
-
-    // Если уже есть активная ставка, отмена
-    if (gameState.currentBet && gameState.autoStartTimer) {
-      return;
-    }
-
-    // Установить текущую ставку
-    gameState.currentBet = {
-      type: betType,
-      amount: stake,
-      result: null,
-      winAmount: null
-    };
-
-    // Обновить дисплей информации игрока
-    updatePlayerBetDisplay();
-
-    // Запустить таймер на 30 секунд до автоматического старта
-    startAutoStartTimer();
-  }
-
-  // Запуск таймера автоматического старта (30 секунд)
-  function startAutoStartTimer() {
-    // Если таймер уже работает, отменить его и начать заново
-    if (gameState.autoStartTimer) {
-      clearInterval(gameState.autoStartTimer);
-    }
-
-    gameState.autoStartCountdown = 30;
-    const countdownTimer = document.getElementById('countdownTimer');
-    
-    // Показать таймер
-    wheelWaiting.style.display = 'flex';
-    if (countdownTimer) {
-      countdownTimer.textContent = gameState.autoStartCountdown;
-    }
-
-    gameState.autoStartTimer = setInterval(() => {
-      gameState.autoStartCountdown--;
-
-      if (gameState.autoStartCountdown > 0) {
-        if (countdownTimer) {
-          countdownTimer.textContent = gameState.autoStartCountdown;
-        }
-      } else {
-        // Время истекло, запустить игру
-        clearInterval(gameState.autoStartTimer);
-        gameState.autoStartTimer = null;
-        if (countdownTimer) {
-          countdownTimer.textContent = '';
-        }
-        startGame();
+  function addBet(type) {
+    if (isSpinning) return;
+    const stake = parseFloat(stakeInput.value) || 0;
+    if (stake < 0.5) { gameStatusEl.textContent = 'Мин. ставка $0.50'; gameStatusEl.className = 'game-status error'; return; }
+    if (stake > 200) { gameStatusEl.textContent = 'Макс. ставка $200'; gameStatusEl.className = 'game-status error'; return; }
+    const totalCurrent = currentBets.reduce((s, b) => s + b.amount, 0);
+    if (totalCurrent + stake > getBalance()) { gameStatusEl.textContent = 'Недостаточно средств'; gameStatusEl.className = 'game-status error'; return; }
+    const group = getBetGroup(type);
+    if (group) {
+      const existing = currentBets.find(b => getBetGroup(b.type) === group);
+      if (existing && existing.type !== type) {
+        const labels = { color: 'цвет', parity: 'чётность' };
+        gameStatusEl.textContent = `Только один ${labels[group]}`;
+        gameStatusEl.className = 'game-status error';
+        return;
       }
+    }
+    currentBets.push({ type, amount: stake });
+    updateMyBetsDisplay();
+    gameStatusEl.textContent = '';
+    socket.emit('wheel:bet', { type, amount: stake, playerName, playerAvatar });
+  }
+
+  function updateAllPlayersBets(allBets) {
+    if (!allBets || allBets.length === 0) { allPlayersBetsEl.style.display = 'none'; return; }
+    allPlayersBetsEl.style.display = 'flex';
+    allPlayersBetsList.innerHTML = '';
+    allBets.forEach(bet => {
+      const el = document.createElement('div');
+      el.className = 'player-bet-item';
+      el.style.borderLeftColor = getBetColor(bet.type);
+      const avatarHtml = bet.playerAvatar
+        ? `<img class="player-bet-avatar" src="${bet.playerAvatar}" alt="" onerror="this.style.display='none'">`
+        : `<div class="player-bet-avatar player-bet-avatar-empty">${(bet.playerName||'?')[0].toUpperCase()}</div>`;
+      el.innerHTML = `<div class="player-bet-left">${avatarHtml}<div class="player-bet-info"><span class="player-bet-name">${bet.playerName||'Player'}</span><span class="player-bet-type">${getBetLabel(bet.type)}</span></div></div><span class="player-bet-amount">$${bet.amount.toFixed(2)}</span>`;
+      allPlayersBetsList.appendChild(el);
+    });
+  }
+
+  function addHistory(num) {
+    const el = document.createElement('div');
+    el.className = 'history-item';
+    el.style.backgroundColor = num === 0 ? '#8bc34a' : (isRed(num) ? '#f44336' : '#101010');
+    el.style.color = num === 0 ? '#000' : '#fff';
+    el.textContent = num;
+    historyScroll.insertBefore(el, historyScroll.firstChild);
+    while (historyScroll.children.length > 20) historyScroll.removeChild(historyScroll.lastChild);
+  }
+
+  function spinToTarget(targetIdx, dur, done) {
+    const desiredNorm = (targetIdx * SEG_ANGLE + SEG_ANGLE / 2) % 360;
+    const currentNorm = (((-rotation) % 360) + 360) % 360;
+    let diff = desiredNorm - currentNorm;
+    while (diff < 0) diff += 360;
+    const totalRot = 360 * 8 + diff;
+    const startRot = rotation;
+    const t0 = performance.now();
+    let lastTick = -1;
+    function tick(now) {
+      const p = Math.min((now - t0) / dur, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      rotation = startRot - totalRot * ease;
+      drawWheel();
+      const norm = ((-rotation % 360) + 360) % 360;
+      const seg = Math.floor(norm / SEG_ANGLE);
+      if (seg !== lastTick && p < 0.9) { lastTick = seg; tickSfx(); }
+      if (p < 1) requestAnimationFrame(tick);
+      else { rotation = startRot - totalRot; drawWheel(); done(); }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function updateTimerDisplay(t, phase) {
+    timerValueEl.textContent = t;
+    timerValueEl.classList.toggle('urgent', t <= 5);
+    if (phase === 'betting') {
+      gameStatusEl.textContent = `Ставки... ${t}с`;
+      gameStatusEl.className = 'game-status';
+      isSpinning = false;
+      betBtns.forEach(b => b.disabled = false);
+    } else if (phase === 'spinning') {
+      gameStatusEl.textContent = 'Крутится...';
+      gameStatusEl.className = 'game-status';
+      isSpinning = true;
+      betBtns.forEach(b => b.disabled = true);
+    }
+  }
+
+  function startLocalTimer(seconds, phase) {
+    if (localTimer) clearInterval(localTimer);
+    let t = seconds;
+    updateTimerDisplay(t, phase);
+    localTimer = setInterval(() => {
+      t--;
+      if (t < 0) { clearInterval(localTimer); return; }
+      updateTimerDisplay(t, phase);
     }, 1000);
   }
 
-  // Отмена таймера автоматического старта
-  function cancelAutoStartTimer() {
-    if (gameState.autoStartTimer) {
-      clearInterval(gameState.autoStartTimer);
-      gameState.autoStartTimer = null;
-      gameState.autoStartCountdown = 0;
-    }
-  }
+  // === SOCKET ===
+  const socket = io({ query: { userId } });
 
-  // Обновление информации о текущей ставке
-  function updatePlayerBetDisplay() {
-    if (gameState.currentBet) {
-      playerBetDisplay.textContent = `Ставка: $${gameState.currentBet.amount.toFixed(2)} на ${getBetLabel(gameState.currentBet.type)}`;
-    } else {
-      playerBetDisplay.textContent = 'Ставка: нет';
-    }
-  }
+  socket.on('connect', () => { gameStatusEl.textContent = 'Подключено'; });
 
-  // Получить название ставки
-  function getBetLabel(betType) {
-    const labels = {
-      'red': 'Красное',
-      'black': 'Черное',
-      'odd': 'Четное',
-      'notodd': 'Нечетное',
-      'range1': '1-18',
-      '0': '0',
-      'range2': '19-36',
-      'range3': '1-12',
-      'range4': '13-24',
-      'range5': '25-36'
-    };
-    return labels[betType] || `Число ${betType}`;
-  }
+  socket.on('wheel:state', (state) => {
+    currentBets = state.myBets || [];
+    updateMyBetsDisplay();
+    if (state.history) state.history.forEach(h => addHistory(h.num));
+    if (state.phase === 'betting' && state.timer > 0) startLocalTimer(state.timer, 'betting');
+  });
 
-  // Изменение ставки
-  function changeStake(amount) {
-    let newStake = parseFloat(stakeInput.value) + parseFloat(amount);
-    newStake = Math.max(MIN_STAKE, Math.min(MAX_STAKE, newStake));
-    stakeInput.value = newStake.toFixed(2);
-  }
+  socket.on('wheel:timer', (data) => startLocalTimer(data.timer, data.phase));
 
-  // Начать игру
-  function startGame() {
-    if (!gameState.currentBet) {
-      showStatus('Выберите ставку', 'error');
-      return;
-    }
+  socket.on('wheel:betsUpdate', (data) => {
+    if (data.myBets) { currentBets = data.myBets; updateMyBetsDisplay(); }
+    if (data.allBets) updateAllPlayersBets(data.allBets);
+  });
 
-    // Отменить таймер автоматического старта если он еще работает
-    cancelAutoStartTimer();
-
-    const stake = gameState.currentBet.amount;
-    if (stake > gameState.balance) {
-      showStatus('Недостаточно средств!', 'error');
-      return;
-    }
-
-    // Отключить кнопки ставок
-    gameState.isSpinning = true;
-    document.querySelectorAll('.betting-table .bet-btn, .numbers-grid .bet-btn').forEach(btn => {
-      btn.disabled = true;
-    });
-    collectBtn.classList.add('hidden');
-    wheelWaiting.style.display = 'none';
-
-    // Отчислить ставку
-    setBalance(gameState.balance - stake);
-    showStatus('🎡 Вращение колеса...', '');
-
-    // Генерировать результат
-    const resultNumber = Math.floor(Math.random() * 37);
-
-    // Запустить анимацию спина
-    spinWheel(resultNumber, () => {
-      // Определить выигрыш
-      const won = checkWin(resultNumber, gameState.currentBet.type);
-      const winAmount = won ? getWinMultiplier(gameState.currentBet.type) * stake : 0;
-
-      gameState.currentBet.result = resultNumber;
-      gameState.currentBet.winAmount = winAmount;
-
-      // Обновить историю
-      addToHistory(resultNumber);
-
-      // Показать статус
-      if (won) {
-        setBalance(gameState.balance + winAmount);
-        showStatus(`✅ Выигрыш! +$${winAmount.toFixed(2)}`, 'success');
-        collectBtn.classList.remove('hidden');
-        // Кнопки ставок остаются отключены до нажатия ЗАБРАТЬ
+  socket.on('wheel:spin', (data) => {
+    isSpinning = true;
+    betBtns.forEach(b => b.disabled = true);
+    gameStatusEl.textContent = 'Крутится...';
+    const targetIdx = data.result.index;
+    spinToTarget(targetIdx, 5000, () => {
+      const res = data.result;
+      let myWin = 0;
+      if (data.results && data.results[userId] !== undefined) myWin = data.results[userId];
+      if (myWin > 0) {
+        setBalance(getBalance() + myWin);
+        gameStatusEl.textContent = `Выиграли $${myWin.toFixed(2)}! Выпало ${res.num}`;
+        gameStatusEl.className = 'game-status success';
+        winSfx();
       } else {
-        showStatus(`❌ Проиграно ставку $${stake.toFixed(2)}`, 'error');
-        gameState.currentBet = null;
-        updatePlayerBetDisplay();
-        // Включить кнопки ставок для следующего раунда
-        document.querySelectorAll('.betting-table .bet-btn, .numbers-grid .bet-btn').forEach(btn => {
-          btn.disabled = false;
-        });
-        wheelWaiting.style.display = 'flex';
-        // Очистить таймер
-        const countdownTimer = document.getElementById('countdownTimer');
-        if (countdownTimer) {
-          countdownTimer.textContent = '';
+        gameStatusEl.textContent = `Выпало ${res.num}`;
+        gameStatusEl.className = 'game-status error';
+        loseSfx();
+      }
+      resultLens.textContent = res.num;
+      resultLens.style.backgroundColor = res.color === 'green' ? '#8bc34a' : (res.color === 'red' ? '#f44336' : '#101010');
+      resultLens.style.color = res.color === 'green' ? '#000' : '#fff';
+      resultLens.classList.remove('show');
+      void resultLens.offsetWidth;
+      resultLens.classList.add('show');
+      addHistory(res.num);
+      const winList = document.getElementById('winList');
+      if (winList && data.results) {
+        winList.innerHTML = '';
+        for (const uid in data.results) {
+          if (data.results[uid] > 0) {
+            const bet = data.allBets.find(b => b.userId === uid);
+            const name = bet ? bet.playerName : 'Player';
+            const el = document.createElement('div');
+            el.className = 'win-item';
+            el.innerHTML = `<span>${name}</span><span>+$${data.results[uid].toFixed(2)}</span>`;
+            winList.appendChild(el);
+          }
         }
       }
-
-      // Разблокировать
-      gameState.isSpinning = false;
     });
-  }
+  });
 
-  // Проверка выигрыша
-  function checkWin(resultNumber, betType) {
-    if (betType === '0') return resultNumber === 0;
-    if (betType === 'red') return RED_NUMBERS.includes(resultNumber);
-    if (betType === 'black') return !RED_NUMBERS.includes(resultNumber) && resultNumber !== 0;
-    if (betType === 'odd') return resultNumber % 2 === 0 && resultNumber !== 0;
-    if (betType === 'notodd') return resultNumber % 2 === 1;
-    if (betType === 'range1') return resultNumber >= 1 && resultNumber <= 18;
-    if (betType === 'range2') return resultNumber >= 19 && resultNumber <= 36;
-    if (betType === 'range3') return resultNumber >= 1 && resultNumber <= 12;
-    if (betType === 'range4') return resultNumber >= 13 && resultNumber <= 24;
-    if (betType === 'range5') return resultNumber >= 25 && resultNumber <= 36;
-    return parseInt(betType) === resultNumber;
-  }
+  socket.on('wheel:newRound', (data) => {
+    currentBets = [];
+    updateMyBetsDisplay();
+    allPlayersBetsEl.style.display = 'none';
+    resultLens.classList.remove('show');
+    gameStatusEl.textContent = 'Новый раунд! Делайте ставки';
+    gameStatusEl.className = 'game-status';
+    isSpinning = false;
+    betBtns.forEach(b => b.disabled = false);
+  });
 
-  // Получить множитель выигрыша (с house edge 6%)
-  const WHEEL_HOUSE_EDGE = 0.06;
-  function getWinMultiplier(betType) {
-    const base = (betType === '0') ? 36 : (betType.match(/^\d+$/) && betType !== '0') ? 36 : (betType === 'range3' || betType === 'range4' || betType === 'range5') ? 3 : 2;
-    return +((base * (1 - WHEEL_HOUSE_EDGE)).toFixed(2));
-  }
+  // === UI EVENTS ===
+  betBtns.forEach(btn => btn.addEventListener('click', () => addBet(btn.dataset.bet)));
 
-  // Спин колеса с шариком
-  function spinWheel(resultNumber, onComplete) {
-    // Градусы для каждого числа (360 / 37)
-    const degreesPerNumber = 360 / 37;
-    const targetDegrees = resultNumber * degreesPerNumber;
-    const randomOffset = (Math.random() - 0.5) * degreesPerNumber * 0.8;
-    
-    // Финальный угол для колеса (10 полных оборотов)
-    const wheelFinalRotation = 360 * 10 + targetDegrees + randomOffset;
-    
-    // Добавляем стили анимации
-    const style = document.createElement('style');
-    const timestamp = Date.now();
-    const wheelAnimName = `wheel-spin-${timestamp}`;
-    const ballSettleAnimName = `ball-settle-${timestamp}`;
-    
-    style.textContent = `
-      @keyframes ${wheelAnimName} {
-        from { transform: translate(-50%, -50%) rotateZ(0deg); }
-        to { transform: translate(-50%, -50%) rotateZ(${wheelFinalRotation}deg); }
-      }
-      @keyframes ${ballSettleAnimName} {
-        0% { opacity: 1; transform: translateX(-50%) scale(1); }
-        90% { opacity: 1; transform: translateX(-50%) scale(1); }
-        100% { opacity: 1; transform: translateX(-50%) scale(0.8) translateY(2px); }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    // Запускаем анимацию колеса - оно вращается на месте
-    wheelWrapper.style.animation = `${wheelAnimName} 10s ease-out forwards`;
-    
-    // Шарик вращается вместе с колесом
-    ballWrapper.style.animation = `${wheelAnimName} 10s ease-out forwards`;
-    
-    // Шарик закатывается в конечное число
-    ballContainer.style.animation = `${ballSettleAnimName} 10s ease-out forwards`;
-    ballContainer.style.opacity = '1';
+  numbersToggle.addEventListener('click', () => { bettingTable.style.display = 'none'; numbersTable.classList.remove('hidden'); });
+  numbersBack.addEventListener('click', () => { numbersTable.classList.add('hidden'); bettingTable.style.display = ''; });
 
-    setTimeout(() => {
-      onComplete();
-    }, 11000);
-  }
-
-  // Добавить в историю
-  function addToHistory(resultNumber) {
-    const color = getNumberColor(resultNumber);
-    const item = document.createElement('div');
-    item.className = 'history-item';
-    item.style.background = color;
-    item.style.color = '#fff';
-    item.textContent = resultNumber;
-    historyScroll.insertBefore(item, historyScroll.firstChild);
-
-    while (historyScroll.children.length > HISTORY_LIMIT) {
-      historyScroll.removeChild(historyScroll.lastChild);
-    }
-
-    gameState.history.push({
-      number: resultNumber,
-      color: color,
-      timestamp: new Date()
-    });
-  }
-
-  // Получить цвет числа
-  function getNumberColor(num) {
-    if (num === 0) return '#8bc34a';
-    if (RED_NUMBERS.includes(num)) return '#f44336';
-    return '#2c3e50';
-  }
-
-  // Показать статус
-  function showStatus(message, type) {
-    gameStatus.textContent = message;
-    gameStatus.className = 'game-status';
-    if (type) gameStatus.classList.add(type);
-  }
-
-  // Собрать выигрыш
-  function collectWin() {
-    // Отменить таймер автоматического старта если он еще работает
-    cancelAutoStartTimer();
-    
-    collectBtn.classList.add('hidden');
-    gameState.currentBet = null;
-    updatePlayerBetDisplay();
-    showStatus('', '');
-    
-    // Включить обратно кнопки ставок
-    document.querySelectorAll('.betting-table .bet-btn, .numbers-grid .bet-btn').forEach(btn => {
-      btn.disabled = false;
-      btn.style.opacity = '1';
-    });
-    
-    gameState.isSpinning = false;
-    wheelWaiting.style.display = 'flex';
-    
-    // Сброс анимации колеса
-    wheelWrapper.style.animation = 'none';
-    wheelWrapper.style.transform = 'translate(-50%, -50%) rotateZ(0deg)';
-    ballWrapper.style.animation = 'none';
-    ballWrapper.style.transform = 'none';
-    ballContainer.style.animation = 'none';
-    ballContainer.style.opacity = '1';
-    ballContainer.style.transform = 'translateX(-50%)';
-    
-    // Очистить таймер
-    const countdownTimer = document.getElementById('countdownTimer');
-    if (countdownTimer) {
-      countdownTimer.textContent = '';
+  function buildNumbersGrid() {
+    numbersGrid.innerHTML = '';
+    for (let n = 0; n <= 36; n++) {
+      const btn = document.createElement('button');
+      btn.className = 'num-btn'; btn.textContent = n;
+      btn.style.background = n === 0 ? '#8bc34a' : (isRed(n) ? '#f44336' : '#101010');
+      btn.addEventListener('click', () => addBet(String(n)));
+      numbersGrid.appendChild(btn);
     }
   }
+  buildNumbersGrid();
 
-  // Инициализировать при загрузке страницы
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-})();
+  quickBetBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const a = parseFloat(btn.dataset.amount);
+      const cur = parseFloat(stakeInput.value) || 0;
+      stakeInput.value = Math.min(200, Math.max(0.5, cur + a)).toFixed(2);
+    });
+  });
+  halfBtn.addEventListener('click', () => { const v = parseFloat(stakeInput.value) || 0; stakeInput.value = Math.max(0.5, v / 2).toFixed(2); });
+  doubleBtn.addEventListener('click', () => { const v = parseFloat(stakeInput.value) || 0; stakeInput.value = Math.min(200, v * 2).toFixed(2); });
+
+  document.addEventListener('click', () => initAudio(), { once: true });
+  document.querySelectorAll('.balance-value, .balance-amount').forEach(el => el.textContent = getBalance().toFixed(2));
+
+  try {
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+      const u = tg.initDataUnsafe.user;
+      playerName = u.first_name + (u.last_name ? ' ' + u.last_name : '');
+      playerAvatar = u.photo_url || '';
+      userId = String(u.id);
+    }
+  } catch(e) {}
+});

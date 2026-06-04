@@ -622,3 +622,169 @@
   flex-shrink: 0;
   min-width: 100px;
 }
+
+/* === TIMER IN CENTER === */
+.wheel-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #1a1a2e;
+  border: 2px solid rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.wheel-timer-center {
+  font-size: 24px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+}
+.wheel-timer-center.urgent { color: #f44336; }
+
+.result-lens {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 900;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 6;
+}
+.result-lens.show { opacity: 1; animation: popIn 0.3s ease; }
+
+/* === ACTIVE BETS === */
+.active-bets {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
+  padding: 10px;
+}
+.section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.active-bets-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.active-bet-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+/* === WIN ANNOUNCEMENT === */
+.win-announcement {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(76,175,80,0.15);
+  border-radius: 10px;
+  padding: 12px;
+  border: 1px solid rgba(76,175,80,0.3);
+}
+.win-title { font-size: 16px; font-weight: 800; text-align: center; }
+.win-list { display: flex; flex-direction: column; gap: 4px; }
+.win-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.08);
+  font-size: 13px;
+  font-weight: 600;
+}
+.win-item span:last-child { color: #4caf50; font-weight: 800; }
+
+/* === ALL PLAYERS BETS === */
+.all-players-bets {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
+  padding: 10px;
+}
+.all-bets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+.player-bet-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  border-left: 3px solid #666;
+}
+.player-bet-left { display: flex; align-items: center; gap: 8px; }
+.player-bet-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.player-bet-avatar-empty {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+}
+.player-bet-info { display: flex; flex-direction: column; gap: 1px; }
+.player-bet-name { font-size: 12px; font-weight: 700; color: #fff; }
+.player-bet-type { font-size: 10px; color: rgba(255,255,255,0.5); }
+.player-bet-amount { font-weight: 800; color: #4caf50; font-size: 13px; }
+
+.quick-bet-btn .dollar { color: #4caf50; font-weight: 800; margin-right: 2px; }
+
+.game-status {
+  padding: 10px;
+  border-radius: 10px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 13px;
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.8);
+}
+.game-status.success { background: rgba(76,175,80,0.2); color: #4caf50; }
+.game-status.error { background: rgba(244,67,54,0.2); color: #f44336; }
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}

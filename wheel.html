@@ -24,39 +24,28 @@
 
   <main class="wheel-game">
     <div class="wheel-board">
-      <!-- Баланс карточка -->
       <div class="balance-card">
         <span class="balance-icon">💰</span>
         <span class="balance-amount" id="gameBalance">0.00</span>
       </div>
 
-      <!-- История игр -->
       <div class="history-section">
         <div class="history-label">История игр</div>
         <div class="history-scroll" id="historyScroll"></div>
       </div>
 
-      <!-- Колесо РУЛЕТКА с шариком -->
       <div class="wheel-container">
         <div class="wheel-display" id="wheelDisplay">
           <div class="wheel-wrapper" id="wheelWrapper">
-            <img id="wheelImage" src="assets/wheel_img.png" alt="Wheel" class="wheel-image">
-            <!-- Шарик внутри колеса -->
-            <div class="ball-wrapper" id="ballWrapper">
-              <div class="ball-container" id="ballContainer">
-                <div class="ball-image"></div>
-              </div>
+            <canvas id="wheelCanvas" width="600" height="600"></canvas>
+            <div class="wheel-center">
+              <span class="wheel-timer-center" id="timerValue">20</span>
             </div>
-          </div>
-          <div class="wheel-waiting" id="wheelWaiting">
-            <div class="waiting-icon">⏱️</div>
-            <div class="waiting-text">Ждём ставок...</div>
-            <div class="countdown-timer" id="countdownTimer"></div>
+            <div class="result-lens" id="resultLens"></div>
           </div>
         </div>
       </div>
 
-      <!-- Таблица ставок -->
       <div class="betting-table" id="bettingTable">
         <div class="betting-buttons">
           <button class="bet-btn btn-red" data-bet="red">Красное<div class="coef">x2</div></button>
@@ -79,73 +68,59 @@
         <button class="toggle-numbers-btn" id="toggleNumbersBtn">Поставить на число</button>
       </div>
 
-      <!-- Таблица чисел (скрытая по умолчанию) -->
       <div class="numbers-table hidden" id="numbersTable">
         <div class="numbers-grid" id="numbersGrid"></div>
         <button class="toggle-numbers-btn" id="toggleDefaultBtn">Назад</button>
       </div>
 
-      <!-- Панель ставки -->
+      <div class="active-bets" id="activeBets" style="display:none">
+        <div class="section-title">Ваши ставки</div>
+        <div class="active-bets-list" id="activeBetsList"></div>
+      </div>
+
       <div class="stake-panel">
         <div class="stake-header">
           <label>Ставка</label>
           <span class="stake-range">От $0.50 до $200</span>
         </div>
-
         <div class="quick-bet-buttons">
-          <button class="quick-bet-btn" data-amount="100">+100</button>
-          <button class="quick-bet-btn" data-amount="1000">+1K</button>
-          <button class="quick-bet-btn" data-amount="5000">+5K</button>
-          <button class="quick-bet-btn" data-amount="25000">+25K</button>
+          <button class="quick-bet-btn" data-amount="0.5"><span class="dollar">$</span>+0.5</button>
+          <button class="quick-bet-btn" data-amount="1"><span class="dollar">$</span>+1</button>
+          <button class="quick-bet-btn" data-amount="5"><span class="dollar">$</span>+5</button>
+          <button class="quick-bet-btn" data-amount="10"><span class="dollar">$</span>+10</button>
         </div>
-
         <div class="stake-input-group">
           <input type="number" id="stakeInput" value="1" min="0.5" max="200" step="0.5">
           <div class="stake-controls">
-            <button class="stake-btn" id="halfBtn">1/2</button>
-            <button class="stake-btn" id="doubleBtn">x2</button>
+            <button class="stake-btn" id="halfBtn">½</button>
+            <button class="stake-btn" id="doubleBtn">×2</button>
           </div>
         </div>
-
-        <div class="game-status" id="gameStatus"></div>
       </div>
 
-      <!-- Информация игрока внизу -->
-      <div class="player-info-section">
-        <div class="player-card">
-          <div class="player-avatar" id="playerAvatar">👤</div>
-          <div class="player-details">
-            <div class="player-nick" id="playerNick">Guest</div>
-            <div class="player-current-bet" id="playerBet">Ставка: нет</div>
-          </div>
-        </div>
-        <button class="btn-collect hidden" id="collectBtn">ЗАБРАТЬ</button>
+      <div class="win-announcement" id="winAnnouncement" style="display:none">
+        <div class="win-title">🎉 Победители</div>
+        <div class="win-list" id="winList"></div>
+      </div>
+
+      <div class="game-status" id="gameStatus">Подключение...</div>
+
+      <div class="all-players-bets" id="allPlayersBets">
+        <div class="section-title">Ставки игроков на этот раунд</div>
+        <div class="all-bets-list" id="allPlayersBetsList"></div>
       </div>
     </div>
   </main>
 
   <nav class="bottom-nav">
-    <a href="home.html#games" class="nav-item">
-      <span class="nav-emoji">🎮</span>
-      <span class="nav-label">Games</span>
-    </a>
-    <a href="wallet.html" class="nav-item">
-      <span class="nav-emoji">💼</span>
-      <span class="nav-label">Wallet</span>
-    </a>
-    <a href="home.html" class="nav-item">
-      <span class="nav-emoji">💎</span>
-    </a>
-    <a href="bonus.html" class="nav-item">
-      <span class="nav-emoji">🎁</span>
-      <span class="nav-label">Bonus</span>
-    </a>
-    <a href="menu.html" class="nav-item">
-      <span class="nav-emoji">☰</span>
-      <span class="nav-label">Menu</span>
-    </a>
+    <a href="home.html#games" class="nav-item"><span class="nav-emoji">🎮</span><span class="nav-label">Games</span></a>
+    <a href="wallet.html" class="nav-item"><span class="nav-emoji">💼</span><span class="nav-label">Wallet</span></a>
+    <a href="home.html" class="nav-item"><span class="nav-emoji">💎</span></a>
+    <a href="bonus.html" class="nav-item"><span class="nav-emoji">🎁</span><span class="nav-label">Bonus</span></a>
+    <a href="menu.html" class="nav-item"><span class="nav-emoji">☰</span><span class="nav-label">Menu</span></a>
   </nav>
 
+  <script src="/socket.io/socket.io.js"></script>
   <script src="js/wheel.js"></script>
 </body>
 </html>
