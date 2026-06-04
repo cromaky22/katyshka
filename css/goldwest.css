@@ -24,11 +24,12 @@
 .page-goldwest .gw-level-num{font-size:10px;color:var(--muted);font-weight:300}
 .page-goldwest .gw-level-coef{font-size:13px;font-weight:700}
 .page-goldwest .gw-cells{flex:1;display:flex;gap:4px}
-.page-goldwest .gw-cell{flex:1;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all 0.2s}
+.page-goldwest .gw-cell{flex:1;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all 0.2s;cursor:default}
 .page-goldwest .gw-cell-closed{background:rgba(255,255,255,0.08);cursor:pointer}
 .page-goldwest .gw-cell-closed:hover{background:rgba(255,255,255,0.15);transform:scale(1.05)}
 .page-goldwest .gw-cell-coin{background:rgba(76,175,80,0.3)}
 .page-goldwest .gw-cell-bomb{background:rgba(244,67,54,0.3)}
+.page-goldwest .gw-cell-empty{background:rgba(255,255,255,0.02)}
 
 /* Result */
 .page-goldwest .gw-result{background:var(--card);border-radius:12px;padding:16px;text-align:center}

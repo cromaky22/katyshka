@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function(){
-  // === DOM ===
   const bombSelect = document.getElementById('bombSelect');
   const levelsArea = document.getElementById('levelsArea');
   const resultArea = document.getElementById('resultArea');
@@ -15,7 +14,6 @@ document.addEventListener('DOMContentLoaded', function(){
   const quickBtns = document.querySelectorAll('.gw-quick-btn');
   const bombOptions = document.querySelectorAll('.gw-bomb-option');
 
-  // === GAME STATE ===
   let bombs = 1;
   let level = 0;
   let openedCells = [];
@@ -25,7 +23,6 @@ document.addEventListener('DOMContentLoaded', function(){
   let gameActive = false;
   let audioCtx = null;
 
-  // === COEFS GENERATION ===
   function genCoefs(bombCount) {
     let a = 1, coefs = [];
     let i = 1, r = 2;
@@ -38,7 +35,6 @@ document.addEventListener('DOMContentLoaded', function(){
     return coefs;
   }
 
-  // === BALANCE ===
   function getBalance() {
     let stored = localStorage.getItem('mc_balance');
     if (stored === null || stored === 'NaN') { stored = '100.00'; localStorage.setItem('mc_balance', stored); }
@@ -53,23 +49,17 @@ document.addEventListener('DOMContentLoaded', function(){
     document.querySelectorAll('.balance-value').forEach(el => el.textContent = n.toFixed(2));
   }
 
-  // === AUDIO ===
-  function initAudio() {
-    if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
-  }
+  function initAudio() { if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } }
   function tone(freq, type, dur, vol) {
     if (!audioCtx) return;
     try {
       if (audioCtx.state === 'suspended') audioCtx.resume();
       const osc = audioCtx.createOscillator();
       const g = audioCtx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
       g.gain.setValueAtTime(vol, audioCtx.currentTime);
       g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
-      osc.connect(g).connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + dur);
+      osc.connect(g).connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + dur);
     } catch (e) {}
   }
   function sfxClick() { tone(400, 'sine', 0.05, 0.03); }
@@ -114,37 +104,61 @@ document.addEventListener('DOMContentLoaded', function(){
         } else if (isCurrent && !isOpened) {
           cell.classList.add('gw-cell-closed');
           cell.innerHTML = '💰';
-          cell.addEventListener('click', () => openCell(i, j));
+        } else {
+          cell.classList.add('gw-cell-empty');
         }
 
         cellsWrap.appendChild(cell);
       }
-
       row.appendChild(cellsWrap);
       levelsArea.appendChild(row);
     }
+
+    // Attach click handlers to current level cells
+    if (gameActive) {
+      const currentRow = levelsArea.children[level];
+      if (currentRow) {
+        const cells = currentRow.querySelectorAll('.gw-cell-closed');
+        cells.forEach((cell, idx) => {
+          cell.addEventListener('click', function handler() {
+            cell.removeEventListener('click', handler);
+            handleCellClick(level, idx);
+          });
+        });
+      }
+    }
   }
 
-  // === OPEN CELL ===
-  function openCell(lvl, cellIdx) {
+  // === HANDLE CELL CLICK ===
+  function handleCellClick(lvl, cellIdx) {
     if (!gameActive || lvl !== level) return;
     sfxClick();
 
     const isBomb = gameFields[lvl][cellIdx] === true;
 
     if (isBomb) {
+      // Game over
       sfxLose();
       openedCells.push(lvl);
       currentCoef = 0;
       gameActive = false;
 
-      revealAllBombs();
+      // Reveal all bombs
+      const allCells = levelsArea.querySelectorAll('.gw-cell');
+      allCells.forEach(c => {
+        const cl = parseInt(c.dataset.level);
+        const ci = parseInt(c.dataset.cell);
+        if (gameFields[cl] && gameFields[cl][ci] === true) {
+          c.classList.remove('gw-cell-closed', 'gw-cell-empty');
+          c.classList.add('gw-cell-bomb');
+          c.innerHTML = '💣';
+        }
+      });
 
       resultArea.style.display = 'flex';
       resultText.textContent = '💥 Бомба! Вы проиграли';
       resultText.style.color = '#f44336';
       resultCoef.textContent = '';
-
       gameStatusEl.textContent = `Проиграно. Потеря: $${stake.toFixed(2)}`;
       gameStatusEl.className = 'gw-status error';
 
@@ -154,17 +168,34 @@ document.addEventListener('DOMContentLoaded', function(){
       collectBtn.style.display = 'none';
       renderLevels();
     } else {
+      // Coin - level passed
       sfxCoin();
       openedCells.push(lvl);
       const coefs = genCoefs(bombs);
       currentCoef = coefs[lvl];
 
+      // Show coin in clicked cell
+      const currentRow = levelsArea.children[lvl];
+      if (currentRow) {
+        const cells = currentRow.querySelectorAll('.gw-cell');
+        cells.forEach((c, idx) => {
+          if (idx === cellIdx) {
+            c.classList.remove('gw-cell-closed');
+            c.classList.add('gw-cell-coin');
+            c.innerHTML = '💰';
+          } else {
+            c.classList.remove('gw-cell-closed', 'gw-cell-empty');
+            c.classList.add('gw-cell-empty');
+            c.innerHTML = '';
+          }
+        });
+      }
+
       gameStatusEl.textContent = `Уровень ${lvl + 1} пройден! Выигрыш: $${(stake * currentCoef).toFixed(2)} (x${currentCoef.toFixed(2)})`;
       gameStatusEl.className = 'gw-status success';
 
-      // Auto advance to next level
+      // Check if all levels passed
       if (lvl >= 9) {
-        // All levels passed - auto collect
         gameActive = false;
         const winAmount = Math.round(stake * currentCoef * 100) / 100;
         setBalance(getBalance() + winAmount);
@@ -174,7 +205,6 @@ document.addEventListener('DOMContentLoaded', function(){
         resultText.textContent = `🏆 Все уровни пройдены! Выигрыш: $${winAmount.toFixed(2)}`;
         resultText.style.color = '#4caf50';
         resultCoef.textContent = `x${currentCoef.toFixed(2)}`;
-
         gameStatusEl.textContent = `Поздравляем! Выиграли $${winAmount.toFixed(2)}!`;
         gameStatusEl.className = 'gw-status success';
 
@@ -184,25 +214,12 @@ document.addEventListener('DOMContentLoaded', function(){
         collectBtn.style.display = 'none';
         renderLevels();
       } else {
-      // Go to next level automatically, collect button stays visible
+        // Auto advance to next level
         level++;
         collectBtn.style.display = '';
         renderLevels();
       }
     }
-  }
-
-  // === REVEAL ALL BOMBS ===
-  function revealAllBombs() {
-    const cells = document.querySelectorAll('.gw-cell');
-    cells.forEach(cell => {
-      const lvl = parseInt(cell.dataset.level);
-      const idx = parseInt(cell.dataset.cell);
-      if (gameFields[lvl] && gameFields[lvl][idx] === true) {
-        cell.classList.add('gw-cell-bomb');
-        cell.innerHTML = '💣';
-      }
-    });
   }
 
   // === GENERATE FIELD ===
@@ -211,7 +228,6 @@ document.addEventListener('DOMContentLoaded', function(){
     gameFields = [];
     for (let i = 0; i < 10; i++) {
       const row = new Array(cellsPerRow).fill(false);
-      // Place bombs randomly
       const bombPositions = [];
       while (bombPositions.length < bombs) {
         const pos = Math.floor(Math.random() * cellsPerRow);
@@ -234,7 +250,6 @@ document.addEventListener('DOMContentLoaded', function(){
     resultText.textContent = `🎉 Выигрыш: $${winAmount.toFixed(2)}`;
     resultText.style.color = '#4caf50';
     resultCoef.textContent = `x${currentCoef.toFixed(2)}`;
-
     gameStatusEl.textContent = `Забрали $${winAmount.toFixed(2)}!`;
     gameStatusEl.className = 'gw-status success';
 
@@ -242,62 +257,9 @@ document.addEventListener('DOMContentLoaded', function(){
     playBtn.disabled = false;
     bombOptions.forEach(b => b.style.pointerEvents = '');
     collectBtn.style.display = 'none';
-    renderLevels();
 
-    setTimeout(() => {
-      resultArea.style.display = 'none';
-    }, 2000);
+    setTimeout(() => { resultArea.style.display = 'none'; renderLevels(); }, 2000);
   });
-
-  // === CONTINUE ===
-  continueBtn.addEventListener('click', () => {
-    sfxClick();
-    level++;
-    if (level >= 10) {
-      // All levels passed - auto collect
-      const coefs = genCoefs(bombs);
-      currentCoef = coefs[9];
-      const winAmount = Math.round(stake * currentCoef * 100) / 100;
-      setBalance(getBalance() + winAmount);
-      sfxWin();
-
-      resultArea.style.display = 'flex';
-      resultText.textContent = `🏆 Все уровни пройдены! Выигрыш: $${winAmount.toFixed(2)}`;
-      resultText.style.color = '#4caf50';
-      resultCoef.textContent = `x${currentCoef.toFixed(2)}`;
-
-      gameStatusEl.textContent = `Поздравляем! Выиграли $${winAmount.toFixed(2)}!`;
-      gameStatusEl.className = 'gw-status success';
-
-      resetGame();
-    } else {
-      renderLevels();
-      collectBtn.style.display = 'none';
-      continueBtn.style.display = 'none';
-      gameStatusEl.textContent = `Уровень ${level + 1}. Выберите ячейку`;
-      gameStatusEl.className = 'gw-status';
-    }
-  });
-
-  // === RESET GAME ===
-  function resetGame() {
-    level = 0;
-    openedCells = [];
-    gameFields = [];
-    currentCoef = 1;
-    gameActive = false;
-    stake = 0;
-
-    stakePanel.style.display = '';
-    playBtn.disabled = false;
-    bombOptions.forEach(b => b.style.pointerEvents = '');
-    collectBtn.style.display = 'none';
-
-    setTimeout(() => {
-      resultArea.style.display = 'none';
-      renderLevels();
-    }, 2000);
-  }
 
   // === PLAY ===
   playBtn.addEventListener('click', () => {
@@ -322,8 +284,7 @@ document.addEventListener('DOMContentLoaded', function(){
     bombOptions.forEach(b => b.style.pointerEvents = 'none');
     resultArea.style.display = 'none';
     collectBtn.style.display = 'none';
-
-    gameStatusEl.textContent = `Уровень 1. Выберите ячейку`;
+    gameStatusEl.textContent = 'Уровень 1. Выберите ячейку';
     gameStatusEl.className = 'gw-status';
   });
 
@@ -346,7 +307,6 @@ document.addEventListener('DOMContentLoaded', function(){
       stakeInput.value = Math.min(200, Math.max(0.5, cur + a)).toFixed(2);
     });
   });
-
   halfBtn.addEventListener('click', () => { const v = parseFloat(stakeInput.value) || 0; stakeInput.value = Math.max(0.5, v / 2).toFixed(2); });
   doubleBtn.addEventListener('click', () => { const v = parseFloat(stakeInput.value) || 0; stakeInput.value = Math.min(200, v * 2).toFixed(2); });
 
