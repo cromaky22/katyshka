@@ -44,12 +44,13 @@ document.addEventListener('DOMContentLoaded', function(){
 
   // === CANVAS ===
   const dpr = window.devicePixelRatio || 1;
-  canvas.width = 600 * dpr;
-  canvas.height = 600 * dpr;
-  canvas.style.width = '280px';
-  canvas.style.height = '280px';
+  const displaySize = Math.min(280, window.innerWidth - 40);
+  canvas.width = displaySize * dpr;
+  canvas.height = displaySize * dpr;
+  canvas.style.width = displaySize + 'px';
+  canvas.style.height = displaySize + 'px';
   ctx.scale(dpr, dpr);
-  const CX = 300, CY = 300, R = 296;
+  const CX = displaySize / 2, CY = displaySize / 2, R = displaySize / 2 - 4;
 
   function drawWheel() {
     ctx.clearRect(0, 0, 600, 600);
