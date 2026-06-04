@@ -35,8 +35,11 @@ document.addEventListener('DOMContentLoaded', function(){
   let isRolling = false;
   let localTimer = null;
   let audioCtx = null;
+  let socket = null;
 
   const DICE_FACES = ['one', 'two', 'three', 'four', 'five', 'six'];
+
+  const PARITY_GROUP = ['odd', 'notodd'];
 
   const BET_CONFIGS = {
     '1dice': [
@@ -127,66 +130,40 @@ document.addEventListener('DOMContentLoaded', function(){
     if (currentMode === '1dice') {
       const row1 = document.createElement('div');
       row1.className = 'betting-row';
-      config.slice(0, 2).forEach(bet => {
-        row1.appendChild(createBetBtn(bet));
-      });
+      config.slice(0, 2).forEach(bet => row1.appendChild(createBetBtn(bet)));
       bettingGrid.appendChild(row1);
       
       const row2 = document.createElement('div');
       row2.className = 'betting-row';
-      config.slice(2, 5).forEach(bet => {
-        row2.appendChild(createBetBtn(bet));
-      });
+      config.slice(2, 5).forEach(bet => row2.appendChild(createBetBtn(bet)));
       bettingGrid.appendChild(row2);
       
       const row3 = document.createElement('div');
       row3.className = 'betting-row';
-      config.slice(5).forEach(bet => {
-        row3.appendChild(createBetBtn(bet));
-      });
+      config.slice(5).forEach(bet => row3.appendChild(createBetBtn(bet)));
       bettingGrid.appendChild(row3);
     } else if (currentMode === '2dice') {
       const row1 = document.createElement('div');
       row1.className = 'betting-row';
-      config.slice(0, 2).forEach(bet => {
-        row1.appendChild(createBetBtn(bet));
-      });
-      bettingGrid.appendChild(row1);
-      
-      const row2 = document.createElement('div');
-      row2.className = 'betting-row';
-      config.slice(2, 6).forEach(bet => {
-        row2.appendChild(createBetBtn(bet));
-      });
-      bettingGrid.appendChild(row2);
-      
-      const row3 = document.createElement('div');
-      row3.className = 'betting-row';
-      config.slice(6, 10).forEach(bet => {
-        row3.appendChild(createBetBtn(bet));
-      });
-      bettingGrid.appendChild(row3);
-      
-      const row4 = document.createElement('div');
-      row4.className = 'betting-row';
-      config.slice(10).forEach(bet => {
-        row4.appendChild(createBetBtn(bet));
-      });
-      bettingGrid.appendChild(row4);
-    } else {
-      const row1 = document.createElement('div');
-      row1.className = 'betting-row';
-      config.slice(0, 2).forEach(bet => {
-        row1.appendChild(createBetBtn(bet));
-      });
+      config.slice(0, 2).forEach(bet => row1.appendChild(createBetBtn(bet)));
       bettingGrid.appendChild(row1);
       
       for (let i = 2; i < config.length; i += 4) {
         const row = document.createElement('div');
         row.className = 'betting-row';
-        config.slice(i, i + 4).forEach(bet => {
-          row.appendChild(createBetBtn(bet));
-        });
+        config.slice(i, Math.min(i + 4, config.length)).forEach(bet => row.appendChild(createBetBtn(bet)));
+        bettingGrid.appendChild(row);
+      }
+    } else {
+      const row1 = document.createElement('div');
+      row1.className = 'betting-row';
+      config.slice(0, 2).forEach(bet => row1.appendChild(createBetBtn(bet)));
+      bettingGrid.appendChild(row1);
+      
+      for (let i = 2; i < config.length; i += 4) {
+        const row = document.createElement('div');
+        row.className = 'betting-row';
+        config.slice(i, Math.min(i + 4, config.length)).forEach(bet => row.appendChild(createBetBtn(bet)));
         bettingGrid.appendChild(row);
       }
     }
@@ -206,37 +183,26 @@ document.addEventListener('DOMContentLoaded', function(){
     currentBets = [];
     updateMyBetsDisplay();
     
-    modeBtns.forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.mode === mode);
-    });
+    modeBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === mode));
     
     diceWrapper1.classList.toggle('hidden', mode !== '1dice');
     diceWrapper2.classList.toggle('hidden', mode !== '2dice');
     diceWrapper3.classList.toggle('hidden', mode !== '3dice');
     
-    if (mode === '1dice') {
-      diceContainer.style.gap = '16px';
-    } else if (mode === '2dice') {
-      diceContainer.style.gap = '16px';
-    } else {
-      diceContainer.style.gap = '12px';
-    }
+    diceContainer.style.gap = mode === '3dice' ? '12px' : '16px';
     
     buildBettingGrid();
     resetDiceDisplay();
+    setupSocketListeners();
   }
 
   function resetDiceDisplay() {
     diceResult.classList.remove('show');
     diceResult.textContent = '';
-    [dice1, dice2, dice3].forEach(dice => {
-      dice.className = 'dice show-1';
-    });
+    [dice1, dice2, dice3].forEach(dice => { dice.className = 'dice show-1'; });
   }
 
-  modeBtns.forEach(btn => {
-    btn.addEventListener('click', () => switchMode(btn.dataset.mode));
-  });
+  modeBtns.forEach(btn => btn.addEventListener('click', () => switchMode(btn.dataset.mode)));
 
   function initAudio() {
     if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
@@ -256,7 +222,6 @@ document.addEventListener('DOMContentLoaded', function(){
       osc.stop(audioCtx.currentTime + dur);
     } catch (e) {}
   }
-  function rollSfx() { tone(200 + Math.random() * 100, 'square', 0.08, 0.05); }
   function winSfx() { tone(800, 'square', 0.1, 0.05); setTimeout(() => tone(1200, 'sine', 0.15, 0.04), 100); }
   function loseSfx() { tone(100, 'sawtooth', 0.3, 0.04); }
 
@@ -285,20 +250,6 @@ document.addEventListener('DOMContentLoaded', function(){
     return '#4caf50';
   }
 
-  function getBetCoef(type) {
-    const config = BET_CONFIGS[currentMode];
-    const bet = config.find(b => b.type === type);
-    return bet ? bet.coef : 1;
-  }
-
-  function betWins(betType, diceValues) {
-    const sum = diceValues.reduce((a, b) => a + b, 0);
-    if (betType === 'odd') return sum % 2 === 0;
-    if (betType === 'notodd') return sum % 2 !== 0;
-    if (!isNaN(Number(betType))) return sum === Number(betType);
-    return false;
-  }
-
   function updateMyBetsDisplay() {
     if (currentBets.length === 0) { activeBets.style.display = 'none'; return; }
     activeBets.style.display = 'flex';
@@ -325,12 +276,21 @@ document.addEventListener('DOMContentLoaded', function(){
     const totalCurrent = currentBets.reduce((s, b) => s + b.amount, 0);
     if (totalCurrent + stake > getBalance()) { gameStatusEl.textContent = 'Недостаточно средств'; gameStatusEl.className = 'game-status error'; return; }
     
+    // Check parity group - cannot bet on both odd and notodd
+    if (PARITY_GROUP.includes(type)) {
+      const existingParity = currentBets.find(b => PARITY_GROUP.includes(b.type));
+      if (existingParity && existingParity.type !== type) {
+        gameStatusEl.textContent = 'Можно ставить только на чет ИЛИ нечет';
+        gameStatusEl.className = 'game-status error';
+        return;
+      }
+    }
+    
     currentBets.push({ type, amount: stake });
     updateMyBetsDisplay();
     gameStatusEl.textContent = '';
     
-    const diceType = currentMode === '1dice' ? 'dice' : currentMode === '2dice' ? 'dice2' : 'dice3';
-    socket.emit('dice:bet', { type, amount: stake, diceType, playerName, playerAvatar });
+    socket.emit('dice:bet', { type, amount: stake, diceType: currentMode, playerName, playerAvatar });
   }
 
   function updateAllPlayersBets(allBets) {
@@ -349,11 +309,11 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 
-  function addHistory(num, isEven) {
+  function addHistory(sum, isEven) {
     const el = document.createElement('div');
     el.className = 'history-item';
     el.style.backgroundColor = isEven ? '#2196f3' : '#607d8b';
-    el.textContent = num;
+    el.textContent = sum;
     historyScroll.insertBefore(el, historyScroll.firstChild);
     while (historyScroll.children.length > 20) historyScroll.removeChild(historyScroll.lastChild);
   }
@@ -385,9 +345,12 @@ document.addEventListener('DOMContentLoaded', function(){
     }, 1000);
   }
 
-  function showResult(diceValues, myWin, totalBet) {
+  function showResult(diceValues, resultData) {
     const sum = diceValues.reduce((a, b) => a + b, 0);
     const isEven = sum % 2 === 0;
+    const myResult = resultData || { win: 0, bet: 0 };
+    const myWin = myResult.win || 0;
+    const totalBet = myResult.bet || 0;
     
     setDiceValue(dice1, diceValues[0]);
     if (diceValues[1]) setDiceValue(dice2, diceValues[1]);
@@ -416,71 +379,88 @@ document.addEventListener('DOMContentLoaded', function(){
     gameStatusEl.className = myWin > 0 ? 'game-status success' : totalBet > 0 ? 'game-status error' : 'game-status';
   }
 
-  const socket = io({ query: { userId } });
-
-  socket.on('connect', () => { gameStatusEl.textContent = 'Подключено'; });
-
-  socket.on('dice:state', (state) => {
-    currentBets = state.myBets || [];
-    updateMyBetsDisplay();
-    if (state.history) state.history.forEach(h => addHistory(h.num, h.num % 2 === 0));
-    if (state.phase === 'betting' && state.timer > 0) startLocalTimer(state.timer, 'betting');
-  });
-
-  socket.on('dice:timer', (data) => startLocalTimer(data.timer, data.phase));
-
-  socket.on('dice:betsUpdate', (data) => {
-    if (data.myBets) { currentBets = data.myBets; updateMyBetsDisplay(); }
-    if (data.allBets) updateAllPlayersBets(data.allBets);
-  });
-
-  socket.on('dice:roll', (data) => {
-    isRolling = true;
-    document.querySelectorAll('.bet-btn').forEach(b => b.disabled = true);
-    gameStatusEl.textContent = 'Бросаем...';
+  function setupSocketListeners() {
+    if (socket) {
+      socket.off();
+    }
     
-    showRollingAnimation();
+    socket = io({ query: { userId } });
     
-    setTimeout(() => {
-      const diceValues = data.result.nums || [data.result.num];
-      let myWin = 0;
-      let totalBet = 0;
+    socket.on('connect', () => { gameStatusEl.textContent = 'Подключено'; });
+    
+    // Listen for all dice types
+    ['1dice', '2dice', '3dice'].forEach(diceType => {
+      const eventPrefix = `dice:${diceType}`;
       
-      if (data.results && data.results[userId] !== undefined) {
-        myWin = data.results[userId].win;
-      }
+      socket.on(`${eventPrefix}:state`, (state) => {
+        if (diceType !== currentMode) return;
+        currentBets = state.myBets || [];
+        updateMyBetsDisplay();
+        if (state.history) {
+          historyScroll.innerHTML = '';
+          state.history.forEach(h => addHistory(h.sum, h.sum % 2 === 0));
+        }
+        if (state.phase === 'betting' && state.timer > 0) startLocalTimer(state.timer, 'betting');
+      });
       
-      currentBets.forEach(bet => totalBet += bet.amount);
+      socket.on(`${eventPrefix}:timer`, (data) => {
+        if (diceType !== currentMode) return;
+        startLocalTimer(data.timer, data.phase);
+      });
       
-      if (myWin > 0) {
-        setBalance(getBalance() + myWin);
-      }
+      socket.on(`${eventPrefix}:betsUpdate`, (data) => {
+        if (diceType !== currentMode) return;
+        if (data.myBets) { currentBets = data.myBets; updateMyBetsDisplay(); }
+        if (data.allBets) updateAllPlayersBets(data.allBets);
+      });
       
-      showResult(diceValues, myWin, totalBet);
+      socket.on(`${eventPrefix}:roll`, (data) => {
+        if (diceType !== currentMode) return;
+        isRolling = true;
+        document.querySelectorAll('.bet-btn').forEach(b => b.disabled = true);
+        gameStatusEl.textContent = 'Бросаем...';
+        
+        showRollingAnimation();
+        
+        setTimeout(() => {
+          const diceValues = data.result.nums || [data.result.num];
+          const myResult = (data.results && data.results[userId]) || { win: 0, bet: 0 };
+          
+          let totalBet = 0;
+          currentBets.forEach(bet => totalBet += bet.amount);
+          
+          if (myResult.win > 0) {
+            setBalance(getBalance() + myResult.win);
+          }
+          
+          showResult(diceValues, { win: myResult.win, bet: totalBet });
+          
+          hashDisplay.style.display = 'block';
+          hashValue.textContent = data.hash || '';
+          
+          setTimeout(() => {
+            isRolling = false;
+            document.querySelectorAll('.bet-btn').forEach(b => b.disabled = false);
+            winAnnouncement.style.display = 'none';
+          }, 3000);
+        }, 1500);
+      });
       
-      hashDisplay.style.display = 'block';
-      hashValue.textContent = data.hash || '';
-      
-      setTimeout(() => {
+      socket.on(`${eventPrefix}:newRound`, (data) => {
+        if (diceType !== currentMode) return;
+        currentBets = [];
+        updateMyBetsDisplay();
+        allPlayersBetsEl.style.display = 'none';
+        winAnnouncement.style.display = 'none';
+        hashDisplay.style.display = 'none';
+        gameStatusEl.textContent = 'Новый раунд! Делайте ставки';
+        gameStatusEl.className = 'game-status';
         isRolling = false;
         document.querySelectorAll('.bet-btn').forEach(b => b.disabled = false);
-        winAnnouncement.style.display = 'none';
-      }, 3000);
-    }, 1500);
-  });
-
-  socket.on('dice:newRound', (data) => {
-    currentBets = [];
-    updateMyBetsDisplay();
-    allPlayersBetsEl.style.display = 'none';
-    winAnnouncement.style.display = 'none';
-    hashDisplay.style.display = 'none';
-    gameStatusEl.textContent = 'Новый раунд! Делайте ставки';
-    gameStatusEl.className = 'game-status';
-    isRolling = false;
-    document.querySelectorAll('.bet-btn').forEach(b => b.disabled = false);
-    resetDiceDisplay();
-  });
+        resetDiceDisplay();
+      });
+    });
+  }
 
   quickBetBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -506,4 +486,5 @@ document.addEventListener('DOMContentLoaded', function(){
   } catch(e) {}
 
   buildBettingGrid();
+  setupSocketListeners();
 });
