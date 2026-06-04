@@ -42,30 +42,45 @@ document.addEventListener('DOMContentLoaded', function(){
   let isSpinning = false;
   let localTimer = null;
 
-  const CX = canvas.width / 2;
-  const CY = canvas.height / 2;
-  const R = canvas.width / 2 - 4;
+  let canvasSize = 600;
+
+  function setupCanvas() {
+    const wrapper = document.getElementById('wheelWrapper');
+    if (!wrapper) return;
+    const size = wrapper.offsetWidth;
+    if (size < 50) return;
+    canvasSize = size * 2;
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
+    drawWheel();
+  }
+
+  const CX = () => canvas.width / 2;
+  const CY = () => canvas.height / 2;
+  const R = () => canvas.width / 2 - 4;
 
   function drawWheel() {
+    const cx = CX(), cy = CY(), r = R();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     for (let i = 0; i < TOTAL; i++) {
       const seg = SEGMENTS[i];
       const startAngle = (i * SEG_ANGLE - 90 + rotation) * Math.PI / 180;
       const endAngle = ((i + 1) * SEG_ANGLE - 90 + rotation) * Math.PI / 180;
-      ctx.beginPath(); ctx.moveTo(CX, CY); ctx.arc(CX, CY, R, startAngle, endAngle); ctx.closePath();
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, r, startAngle, endAngle); ctx.closePath();
       ctx.fillStyle = seg.color; ctx.fill();
-      ctx.beginPath(); ctx.moveTo(CX, CY); ctx.lineTo(CX + R * Math.cos(startAngle), CY + R * Math.sin(startAngle));
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + r * Math.cos(startAngle), cy + r * Math.sin(startAngle));
       ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 1; ctx.stroke();
-      ctx.save(); ctx.translate(CX, CY); ctx.rotate((startAngle + endAngle) / 2);
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate((startAngle + endAngle) / 2);
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff';
-      ctx.font = 'bold 14px Arial'; ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 3;
-      ctx.fillText(seg.label, R * 0.72, 0); ctx.restore();
+      ctx.font = `bold ${Math.round(r * 0.09)}px Arial`; ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 3;
+      ctx.fillText(seg.label, r * 0.72, 0); ctx.restore();
     }
-    ctx.beginPath(); ctx.arc(CX, CY, R * 0.15, 0, Math.PI * 2); ctx.fillStyle = '#1a1a2e'; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx, cy, r * 0.15, 0, Math.PI * 2); ctx.fillStyle = '#1a1a2e'; ctx.fill();
     ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 2; ctx.stroke();
-    ctx.beginPath(); ctx.arc(CX, CY, R, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 3; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 3; ctx.stroke();
   }
-  drawWheel();
+  setupCanvas();
+  window.addEventListener('resize', setupCanvas);
 
   function initAudio() {
     if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
