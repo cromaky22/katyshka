@@ -14,15 +14,18 @@ document.addEventListener('DOMContentLoaded', function(){
   const quickBetBtns = document.querySelectorAll('.quick-bet-btn');
 
   let currentMode = '1dice';
-  let currentBets = [];
   let playerName = 'Player';
   let playerAvatar = '';
   let userId = 'user_' + Math.random().toString(36).substr(2, 9);
-  let isRolling = false;
-  let localTimer = null;
   let audioCtx = null;
   let socket = null;
-  let roundActive = false;
+
+  // State for all dice modes
+  let allStates = {
+    '1dice': { bets: [], roundActive: false, localTimer: null },
+    '2dice': { bets: [], roundActive: false, localTimer: null },
+    '3dice': { bets: [], roundActive: false, localTimer: null }
+  };
 
   const PARITY = ['odd', 'notodd'];
   const DICE_COUNT = { '1dice': 1, '2dice': 2, '3dice': 3 };
@@ -138,20 +141,39 @@ document.addEventListener('DOMContentLoaded', function(){
     bettingGrid.appendChild(row);
   }
 
+  function getCurrentState() {
+    return allStates[currentMode];
+  }
+
+  function isRolling() {
+    return getCurrentState().roundActive === 'rolling';
+  }
+
   function switchMode(mode) {
+    // Save current state
     currentMode = mode;
-    currentBets = [];
-    roundActive = false;
-    isRolling = false;
-    updateBetsUI();
-    updateTimer(30, 'waiting');
+    const state = getCurrentState();
+
     modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-    // Show/hide dice wrappers based on mode
-    wrapEls[0].classList.toggle('hidden', mode !== '1dice' && mode !== '2dice' && mode !== '3dice');
+
+    // Show correct number of dice
+    wrapEls[0].classList.remove('hidden');
     wrapEls[1].classList.toggle('hidden', mode === '1dice');
     wrapEls[2].classList.toggle('hidden', mode !== '3dice');
+
     buildBettingGrid();
+    updateBetsUI();
     resetDisplay();
+
+    // Restore state for this mode
+    if (state.roundActive === 'rolling') {
+      showRolling();
+      updateTimer(timerEl.textContent, 'rolling');
+    } else if (state.roundActive === true) {
+      updateTimer(timerEl.textContent, 'betting');
+    } else {
+      updateTimer(30, 'waiting');
+    }
   }
 
   function resetDisplay() {
@@ -202,11 +224,12 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function updateBetsUI() {
-    if (!currentBets.length) { activeBets.style.display = 'none'; return; }
+    const state = getCurrentState();
+    if (!state.bets.length) { activeBets.style.display = 'none'; return; }
     activeBets.style.display = 'flex';
     activeBetsList.innerHTML = '';
     const grouped = {};
-    currentBets.forEach(b => {
+    state.bets.forEach(b => {
       if (!grouped[b.type]) grouped[b.type] = { type: b.type, amount: 0 };
       grouped[b.type].amount += b.amount;
     });
@@ -220,21 +243,23 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function placeBet(type) {
-    if (isRolling) return;
+    const state = getCurrentState();
+    if (state.roundActive === 'rolling') return;
+
     const stake = parseFloat(stakeInput.value) || 0;
     if (stake < 0.5) { gameStatusEl.textContent = 'Мин. ставка $0.50'; gameStatusEl.className = 'game-status error'; return; }
     if (stake > 200) { gameStatusEl.textContent = 'Макс. ставка $200'; gameStatusEl.className = 'game-status error'; return; }
-    const total = currentBets.reduce((s, b) => s + b.amount, 0);
+    const total = state.bets.reduce((s, b) => s + b.amount, 0);
     if (total + stake > getBalance()) { gameStatusEl.textContent = 'Недостаточно средств'; gameStatusEl.className = 'game-status error'; return; }
     if (PARITY.includes(type)) {
-      const existing = currentBets.find(b => PARITY.includes(b.type));
+      const existing = state.bets.find(b => PARITY.includes(b.type));
       if (existing && existing.type !== type) {
         gameStatusEl.textContent = 'Только чет ИЛИ нечет!';
         gameStatusEl.className = 'game-status error';
         return;
       }
     }
-    currentBets.push({ type, amount: stake });
+    state.bets.push({ type, amount: stake });
     updateBetsUI();
     gameStatusEl.textContent = '';
     socket.emit('dice:bet', { type, amount: stake, diceType: currentMode, playerName, playerAvatar });
@@ -267,35 +292,36 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function updateTimer(t, phase) {
     timerEl.textContent = t;
-    timerEl.classList.toggle('urgent', t <= 5 && phase !== 'waiting');
+    timerEl.classList.toggle('urgent', t <= 5 && phase !== 'waiting' && t > 0);
     if (phase === 'waiting') {
       gameStatusEl.textContent = 'Ожидание ставок...';
       gameStatusEl.className = 'game-status';
-      isRolling = false;
       document.querySelectorAll('.bet-btn').forEach(b => b.disabled = false);
     } else if (phase === 'betting') {
       gameStatusEl.textContent = `Ставки... ${t}с`;
       gameStatusEl.className = 'game-status';
-      isRolling = false;
       document.querySelectorAll('.bet-btn').forEach(b => b.disabled = false);
     } else if (phase === 'rolling') {
       gameStatusEl.textContent = 'Бросаем...';
       gameStatusEl.className = 'game-status';
-      isRolling = true;
       document.querySelectorAll('.bet-btn').forEach(b => b.disabled = true);
     }
   }
 
-  function startLocalTimer(secs, phase) {
-    if (localTimer) clearInterval(localTimer);
-    roundActive = true;
+  function startLocalTimer(secs, phase, state) {
+    if (state.localTimer) clearInterval(state.localTimer);
+    state.roundActive = true;
     let t = secs;
     updateTimer(t, phase);
-    localTimer = setInterval(() => {
+    state.localTimer = setInterval(() => {
       t--;
-      if (t < 0) { clearInterval(localTimer); return; }
-      updateTimer(t, phase);
+      if (t < 0) { clearInterval(state.localTimer); state.localTimer = null; return; }
+      if (currentMode === state.mode) updateTimer(t, phase);
     }, 1000);
+  }
+
+  function stopLocalTimer(state) {
+    if (state.localTimer) { clearInterval(state.localTimer); state.localTimer = null; }
   }
 
   function showResult(nums, resultData) {
@@ -335,89 +361,97 @@ document.addEventListener('DOMContentLoaded', function(){
 
     socket.on('connect', () => {
       gameStatusEl.textContent = 'Подключено';
-      roundActive = false;
+      // Reset all states
+      Object.keys(allStates).forEach(k => {
+        allStates[k].roundActive = false;
+        stopLocalTimer(allStates[k]);
+      });
       updateTimer(30, 'waiting');
     });
 
+    // Listen for ALL dice types
     ['1dice', '2dice', '3dice'].forEach(diceType => {
       const p = `dice:${diceType}`;
+      const state = allStates[diceType];
+      state.mode = diceType;
 
-      socket.on(`${p}:state`, (state) => {
-        if (diceType !== currentMode) return;
-        currentBets = state.myBets || [];
-        updateBetsUI();
-        if (state.history) {
-          historyScroll.innerHTML = '';
-          state.history.forEach(h => addHistory(h.sum));
-        }
-        if (state.phase === 'betting' && state.timer > 0) {
-          roundActive = true;
-          startLocalTimer(state.timer, 'betting');
-        } else if (state.phase === 'waiting') {
-          roundActive = false;
-          updateTimer(30, 'waiting');
+      socket.on(`${p}:state`, (data) => {
+        state.bets = data.myBets || [];
+        if (diceType === currentMode) {
+          updateBetsUI();
+          if (data.history) {
+            historyScroll.innerHTML = '';
+            data.history.forEach(h => addHistory(h.sum));
+          }
+          if (data.phase === 'betting' && data.timer > 0) {
+            startLocalTimer(data.timer, 'betting', state);
+          } else if (data.phase === 'waiting') {
+            state.roundActive = false;
+            stopLocalTimer(state);
+            updateTimer(30, 'waiting');
+          }
         }
       });
 
       socket.on(`${p}:timer`, (data) => {
-        if (diceType !== currentMode) return;
         if (data.phase === 'betting') {
-          roundActive = true;
-          startLocalTimer(data.timer, 'betting');
+          startLocalTimer(data.timer, 'betting', state);
         }
       });
 
       socket.on(`${p}:betsUpdate`, (data) => {
-        if (diceType !== currentMode) return;
-        if (data.myBets) { currentBets = data.myBets; updateBetsUI(); }
-        if (data.allBets) updateAllBets(data.allBets);
-        // Start timer on first bet if not already running
-        if (!roundActive && !isRolling) {
-          roundActive = true;
-          startLocalTimer(30, 'betting');
+        if (data.myBets) {
+          state.bets = data.myBets;
+          if (diceType === currentMode) updateBetsUI();
         }
+        if (data.allBets && diceType === currentMode) updateAllBets(data.allBets);
       });
 
       socket.on(`${p}:roll`, (data) => {
-        if (diceType !== currentMode) return;
-        isRolling = true;
-        roundActive = false;
-        document.querySelectorAll('.bet-btn').forEach(b => b.disabled = true);
-        gameStatusEl.textContent = 'Бросаем...';
-        showRolling();
+        state.roundActive = 'rolling';
+        stopLocalTimer(state);
 
-        setTimeout(() => {
-          const nums = data.result.nums || [data.result.num];
-          const myRes = (data.results && data.results[userId]) || { win: 0, bet: 0 };
-          let totalBet = 0;
-          currentBets.forEach(b => totalBet += b.amount);
-          if (myRes.win > 0) setBalance(getBalance() + myRes.win);
-          showResult(nums, { win: myRes.win, bet: totalBet });
-          hashDisplay.style.display = 'block';
-          hashValue.textContent = data.hash || '';
-        }, 1500);
+        if (diceType === currentMode) {
+          showRolling();
+          gameStatusEl.textContent = 'Бросаем...';
+          gameStatusEl.className = 'game-status';
+          document.querySelectorAll('.bet-btn').forEach(b => b.disabled = true);
 
-        setTimeout(() => {
-          isRolling = false;
-          document.querySelectorAll('.bet-btn').forEach(b => b.disabled = false);
-          winAnnounce.style.display = 'none';
-        }, 5000);
+          setTimeout(() => {
+            const nums = data.result.nums || [data.result.num];
+            const myRes = (data.results && data.results[userId]) || { win: 0, bet: 0 };
+            let totalBet = 0;
+            state.bets.forEach(b => totalBet += b.amount);
+            if (myRes.win > 0) setBalance(getBalance() + myRes.win);
+            showResult(nums, { win: myRes.win, bet: totalBet });
+            hashDisplay.style.display = 'block';
+            hashValue.textContent = data.hash || '';
+          }, 1500);
+
+          setTimeout(() => {
+            state.roundActive = false;
+            document.querySelectorAll('.bet-btn').forEach(b => b.disabled = false);
+            winAnnounce.style.display = 'none';
+          }, 5000);
+        }
       });
 
       socket.on(`${p}:newRound`, (data) => {
-        if (diceType !== currentMode) return;
-        currentBets = [];
-        roundActive = false;
-        isRolling = false;
-        updateBetsUI();
-        allPlayersBets.style.display = 'none';
-        winAnnounce.style.display = 'none';
-        hashDisplay.style.display = 'none';
-        gameStatusEl.textContent = 'Ожидание ставок...';
-        gameStatusEl.className = 'game-status';
-        document.querySelectorAll('.bet-btn').forEach(b => b.disabled = false);
-        resetDisplay();
-        updateTimer(30, 'waiting');
+        state.bets = [];
+        state.roundActive = false;
+        stopLocalTimer(state);
+
+        if (diceType === currentMode) {
+          updateBetsUI();
+          allPlayersBets.style.display = 'none';
+          winAnnounce.style.display = 'none';
+          hashDisplay.style.display = 'none';
+          gameStatusEl.textContent = 'Ожидание ставок...';
+          gameStatusEl.className = 'game-status';
+          document.querySelectorAll('.bet-btn').forEach(b => b.disabled = false);
+          resetDisplay();
+          updateTimer(30, 'waiting');
+        }
       });
     });
   }
