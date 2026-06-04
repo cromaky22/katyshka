@@ -167,6 +167,7 @@ document.addEventListener('DOMContentLoaded', function(){
       bombOptions.forEach(b => b.style.pointerEvents = '');
       collectBtn.style.display = 'none';
       renderLevels();
+      saveGame();
     } else {
       // Coin - level passed
       sfxCoin();
@@ -213,11 +214,13 @@ document.addEventListener('DOMContentLoaded', function(){
         bombOptions.forEach(b => b.style.pointerEvents = '');
         collectBtn.style.display = 'none';
         renderLevels();
+        saveGame();
       } else {
-        // Auto advance to next level
+      // Go to next level automatically, collect button stays visible
         level++;
         collectBtn.style.display = '';
         renderLevels();
+        saveGame();
       }
     }
   }
@@ -259,6 +262,7 @@ document.addEventListener('DOMContentLoaded', function(){
     collectBtn.style.display = 'none';
 
     setTimeout(() => { resultArea.style.display = 'none'; renderLevels(); }, 2000);
+    saveGame();
   });
 
   // === PLAY ===
@@ -278,6 +282,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     generateField();
     renderLevels();
+    saveGame();
 
     stakePanel.style.display = 'none';
     playBtn.disabled = true;
@@ -309,6 +314,7 @@ document.addEventListener('DOMContentLoaded', function(){
       gameStatusEl.textContent = '';
       gameStatusEl.className = 'gw-status';
       renderLevels();
+      saveGame();
     });
   });
 
@@ -323,8 +329,55 @@ document.addEventListener('DOMContentLoaded', function(){
   halfBtn.addEventListener('click', () => { const v = parseFloat(stakeInput.value) || 0; stakeInput.value = Math.max(0.5, v / 2).toFixed(2); });
   doubleBtn.addEventListener('click', () => { const v = parseFloat(stakeInput.value) || 0; stakeInput.value = Math.min(200, v * 2).toFixed(2); });
 
+  // === SAVE/LOAD GAME STATE ===
+  function saveGame() {
+    if (!gameActive) {
+      localStorage.removeItem('gw_game');
+      return;
+    }
+    const state = {
+      bombs, level, openedCells, gameFields, currentCoef, stake
+    };
+    localStorage.setItem('gw_game', JSON.stringify(state));
+  }
+
+  function loadGame() {
+    const saved = localStorage.getItem('gw_game');
+    if (!saved) return false;
+    try {
+      const state = JSON.parse(saved);
+      bombs = state.bombs;
+      level = state.level;
+      openedCells = state.openedCells;
+      gameFields = state.gameFields;
+      currentCoef = state.currentCoef;
+      stake = state.stake;
+      gameActive = true;
+      return true;
+    } catch(e) {
+      localStorage.removeItem('gw_game');
+      return false;
+    }
+  }
+
   // === INIT ===
   document.addEventListener('click', () => initAudio(), { once: true });
   document.querySelectorAll('.balance-value').forEach(el => el.textContent = getBalance().toFixed(2));
-  renderLevels();
-});
+
+  // Try to restore game
+  if (loadGame()) {
+    // Restore UI
+    bombOptions.forEach(b => {
+      b.classList.toggle('active', parseInt(b.dataset.bombs) === bombs);
+      b.style.pointerEvents = 'none';
+    });
+    stakePanel.style.display = 'none';
+    playBtn.disabled = true;
+    collectBtn.style.display = openedCells.length > 0 ? '' : 'none';
+    resultArea.style.display = 'none';
+    gameStatusEl.textContent = `Уровень ${level + 1}. Выберите ячейку`;
+    gameStatusEl.className = 'gw-status';
+    renderLevels();
+  } else {
+    renderLevels();
+  }
