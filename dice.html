@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dice — Nvuti</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dice.css">
+</head>
+<body class="page-dice">
+  <header class="app-header">
+    <div class="left-controls"></div>
+    <div class="header-title" style="margin-right:0">DICE</div>
+    <div class="right-controls">
+      <div class="balance-pill">
+        <span class="wallet-icon">💠</span>
+        <span class="balance-value">0.00</span>
+        <span class="currency">$</span>
+        <span class="caret">▾</span>
+      </div>
+      <a href="menu.html" class="profile" title="Профиль" aria-label="Профиль"><img class="profile-icon" src="" alt="Аватар" onerror="this.style.display='none'"></a>
+    </div>
+  </header>
+
+  <main class="dice-game">
+    <div class="dice-board">
+
+      <div class="dice-mode-selector">
+        <button class="mode-btn active" data-mode="1dice">1 кубик</button>
+        <button class="mode-btn" data-mode="2dice">2 кубика</button>
+        <button class="mode-btn" data-mode="3dice">3 кубика</button>
+      </div>
+
+      <div class="history-section">
+        <div class="history-label">История игр</div>
+        <div class="history-scroll" id="historyScroll"></div>
+      </div>
+
+      <div class="dice-display" id="diceDisplay">
+        <div class="dice-container" id="diceContainer">
+          <div class="dice-wrapper n1" id="diceWrapper1">
+            <div class="dice" id="dice1">
+              <div class="face one"><span class="dot"></span></div>
+            </div>
+          </div>
+          <div class="dice-wrapper n2 hidden" id="diceWrapper2">
+            <div class="dice" id="dice2">
+              <div class="face one"><span class="dot"></span></div>
+            </div>
+          </div>
+          <div class="dice-wrapper n3 hidden" id="diceWrapper3">
+            <div class="dice" id="dice3">
+              <div class="face one"><span class="dot"></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="dice-result" id="diceResult"></div>
+        <div class="dice-timer-overlay" id="timerOverlay">
+          <span class="timer-value" id="timerValue">30</span>
+        </div>
+      </div>
+
+      <div class="game-status" id="gameStatus">Подключение...</div>
+
+      <div class="betting-section" id="bettingSection">
+        <div class="section-title">Стол ставок</div>
+        <div class="betting-grid" id="bettingGrid"></div>
+      </div>
+
+      <div class="active-bets" id="activeBets" style="display:none">
+        <div class="section-title">Ваши ставки</div>
+        <div class="active-bets-list" id="activeBetsList"></div>
+      </div>
+
+      <div class="win-announcement" id="winAnnouncement" style="display:none">
+        <div class="win-title" id="winTitle">🎉 Результат</div>
+        <div class="win-details" id="winDetails"></div>
+      </div>
+
+      <div class="all-players-bets" id="allPlayersBets" style="display:none">
+        <div class="section-title">Ставки игроков</div>
+        <div class="all-bets-list" id="allPlayersBetsList"></div>
+      </div>
+
+      <div class="stake-panel">
+        <div class="stake-header">
+          <label>Ставка</label>
+          <span class="stake-range">От $0.50 до $200</span>
+        </div>
+        <div class="quick-bet-buttons">
+          <button class="quick-bet-btn" data-amount="0.5"><span class="dollar">$</span>+0.5</button>
+          <button class="quick-bet-btn" data-amount="1"><span class="dollar">$</span>+1</button>
+          <button class="quick-bet-btn" data-amount="5"><span class="dollar">$</span>+5</button>
+          <button class="quick-bet-btn" data-amount="10"><span class="dollar">$</span>+10</button>
+        </div>
+        <div class="stake-input-group">
+          <input type="number" id="stakeInput" value="1" min="0.5" max="200" step="0.5">
+          <div class="stake-controls">
+            <button class="stake-btn" id="halfBtn">½</button>
+            <button class="stake-btn" id="doubleBtn">×2</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="hash-display" id="hashDisplay" style="display:none">
+        <span class="hash-label">Hash:</span>
+        <span class="hash-value" id="hashValue"></span>
+      </div>
+    </div>
+  </main>
+
+  <nav class="bottom-nav">
+    <a href="home.html#games" class="nav-item"><span class="nav-emoji">🎮</span><span class="nav-label">Games</span></a>
+    <a href="wallet.html" class="nav-item"><span class="nav-emoji">💼</span><span class="nav-label">Wallet</span></a>
+    <a href="home.html" class="nav-item"><span class="nav-emoji">💎</span></a>
+    <a href="bonus.html" class="nav-item"><span class="nav-emoji">🎁</span><span class="nav-label">Bonus</span></a>
+    <a href="menu.html" class="nav-item"><span class="nav-emoji">☰</span><span class="nav-label">Menu</span></a>
+  </nav>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="js/dice.js"></script>
+</body>
+</html>

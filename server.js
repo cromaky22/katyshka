@@ -296,6 +296,214 @@ io.on('connection', (socket) => {
 
 startWheelTimer();
 
+// === DICE GAME STATE ===
+const DICE_CONFIGS = {
+  '1dice': {
+    bets: {
+      'odd': { coef: 1.9, check: (nums) => nums.reduce((a,b) => a+b, 0) % 2 === 0 },
+      'notodd': { coef: 1.9, check: (nums) => nums.reduce((a,b) => a+b, 0) % 2 !== 0 },
+      '1': { coef: 5, check: (nums) => nums[0] === 1 },
+      '2': { coef: 5, check: (nums) => nums[0] === 2 },
+      '3': { coef: 5, check: (nums) => nums[0] === 3 },
+      '4': { coef: 5, check: (nums) => nums[0] === 4 },
+      '5': { coef: 5, check: (nums) => nums[0] === 5 },
+      '6': { coef: 5, check: (nums) => nums[0] === 6 }
+    },
+    diceCount: 1
+  },
+  '2dice': {
+    bets: {
+      'odd': { coef: 1.75, check: (nums) => nums.reduce((a,b) => a+b, 0) % 2 === 0 },
+      'notodd': { coef: 2.1, check: (nums) => nums.reduce((a,b) => a+b, 0) % 2 !== 0 },
+      '2': { coef: 34, check: (nums) => nums.reduce((a,b) => a+b, 0) === 2 },
+      '3': { coef: 17, check: (nums) => nums.reduce((a,b) => a+b, 0) === 3 },
+      '4': { coef: 11, check: (nums) => nums.reduce((a,b) => a+b, 0) === 4 },
+      '5': { coef: 8, check: (nums) => nums.reduce((a,b) => a+b, 0) === 5 },
+      '6': { coef: 6, check: (nums) => nums.reduce((a,b) => a+b, 0) === 6 },
+      '7': { coef: 6, check: (nums) => nums.reduce((a,b) => a+b, 0) === 7 },
+      '8': { coef: 6, check: (nums) => nums.reduce((a,b) => a+b, 0) === 8 },
+      '9': { coef: 8, check: (nums) => nums.reduce((a,b) => a+b, 0) === 9 },
+      '10': { coef: 11, check: (nums) => nums.reduce((a,b) => a+b, 0) === 10 },
+      '11': { coef: 17, check: (nums) => nums.reduce((a,b) => a+b, 0) === 11 },
+      '12': { coef: 34, check: (nums) => nums.reduce((a,b) => a+b, 0) === 12 }
+    },
+    diceCount: 2
+  },
+  '3dice': {
+    bets: {
+      'odd': { coef: 1.5, check: (nums) => nums.reduce((a,b) => a+b, 0) % 2 === 0 },
+      'notodd': { coef: 2.5, check: (nums) => nums.reduce((a,b) => a+b, 0) % 2 !== 0 },
+      '3': { coef: 216, check: (nums) => nums.reduce((a,b) => a+b, 0) === 3 },
+      '4': { coef: 72, check: (nums) => nums.reduce((a,b) => a+b, 0) === 4 },
+      '5': { coef: 36, check: (nums) => nums.reduce((a,b) => a+b, 0) === 5 },
+      '6': { coef: 21, check: (nums) => nums.reduce((a,b) => a+b, 0) === 6 },
+      '7': { coef: 14, check: (nums) => nums.reduce((a,b) => a+b, 0) === 7 },
+      '8': { coef: 10, check: (nums) => nums.reduce((a,b) => a+b, 0) === 8 },
+      '9': { coef: 8, check: (nums) => nums.reduce((a,b) => a+b, 0) === 9 },
+      '10': { coef: 7, check: (nums) => nums.reduce((a,b) => a+b, 0) === 10 },
+      '11': { coef: 7, check: (nums) => nums.reduce((a,b) => a+b, 0) === 11 },
+      '12': { coef: 8, check: (nums) => nums.reduce((a,b) => a+b, 0) === 12 },
+      '13': { coef: 10, check: (nums) => nums.reduce((a,b) => a+b, 0) === 13 },
+      '14': { coef: 14, check: (nums) => nums.reduce((a,b) => a+b, 0) === 14 },
+      '15': { coef: 21, check: (nums) => nums.reduce((a,b) => a+b, 0) === 15 },
+      '16': { coef: 36, check: (nums) => nums.reduce((a,b) => a+b, 0) === 16 },
+      '17': { coef: 72, check: (nums) => nums.reduce((a,b) => a+b, 0) === 17 },
+      '18': { coef: 216, check: (nums) => nums.reduce((a,b) => a+b, 0) === 18 }
+    },
+    diceCount: 3
+  }
+};
+
+let diceStates = {
+  '1dice': { phase: 'betting', timer: 30, roundId: 0, nums: null, allBets: {}, history: [], hash: '' },
+  '2dice': { phase: 'betting', timer: 30, roundId: 0, nums: null, allBets: {}, history: [], hash: '' },
+  '3dice': { phase: 'betting', timer: 30, roundId: 0, nums: null, allBets: {}, history: [], hash: '' }
+};
+
+let diceTimerIntervals = {};
+
+function generateHash() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < 32; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
+  return result;
+}
+
+function startDiceTimer(diceType) {
+  if (diceTimerIntervals[diceType]) clearInterval(diceTimerIntervals[diceType]);
+  const state = diceStates[diceType];
+  state.timer = 30;
+  state.phase = 'betting';
+  state.hash = generateHash();
+  io.emit(`dice:${diceType}:timer`, { timer: 30, phase: 'betting' });
+  
+  diceTimerIntervals[diceType] = setInterval(() => {
+    state.timer--;
+    io.emit(`dice:${diceType}:timer`, { timer: state.timer, phase: state.phase });
+    if (state.timer <= 0) {
+      clearInterval(diceTimerIntervals[diceType]);
+      rollDice(diceType);
+    }
+  }, 1000);
+}
+
+function rollDice(diceType) {
+  const state = diceStates[diceType];
+  const config = DICE_CONFIGS[diceType];
+  state.phase = 'rolling';
+  
+  const nums = [];
+  for (let i = 0; i < config.diceCount; i++) {
+    nums.push(Math.floor(Math.random() * 6) + 1);
+  }
+  
+  const results = {};
+  for (const uid in state.allBets) {
+    let totalWin = 0;
+    let totalBet = 0;
+    state.allBets[uid].forEach(bet => {
+      totalBet += bet.amount;
+      const betConfig = config.bets[bet.type];
+      if (betConfig && betConfig.check(nums)) {
+        totalWin += bet.amount * betConfig.coef;
+      }
+    });
+    totalWin = Math.round(totalWin * 100) / 100;
+    results[uid] = { win: totalWin, bet: totalBet };
+    if (totalWin > 0) {
+      db.run('UPDATE users SET balance = balance + ?, updated_at = datetime(\'now\') WHERE id = ?', [totalWin, uid]);
+    }
+    const net = totalWin - totalBet;
+    const sign = net > 0 ? '+' : net < 0 ? '-' : '';
+    results[uid].net = { num: Math.abs(net), str: sign };
+  }
+  
+  state.nums = nums;
+  state.hash = `${generateHash()}|${nums.join(',')}|${generateHash()}`;
+  
+  const allBetsList = [];
+  for (const uid in state.allBets) {
+    state.allBets[uid].forEach(bet => {
+      allBetsList.push({ userId: uid, type: bet.type, amount: bet.amount, playerName: bet.playerName || 'Player', playerAvatar: bet.playerAvatar || '' });
+    });
+  }
+  
+  const sum = nums.reduce((a, b) => a + b, 0);
+  state.history.unshift({ nums: nums, sum: sum });
+  if (state.history.length > 20) state.history.pop();
+  
+  io.emit(`dice:${diceType}:roll`, {
+    result: { nums: nums, sum: sum },
+    allBets: allBetsList,
+    results: results,
+    hash: state.hash,
+    history: state.history
+  });
+  
+  setTimeout(() => {
+    state.allBets = {};
+    state.nums = null;
+    state.roundId++;
+    startDiceTimer(diceType);
+    io.emit(`dice:${diceType}:newRound`, { roundId: state.roundId, history: state.history });
+  }, 7000);
+}
+
+Object.keys(diceStates).forEach(type => startDiceTimer(type));
+
+io.on('connection', (socket) => {
+  const userId = socket.handshake.query.userId || '0';
+  
+  // Send dice states
+  Object.keys(diceStates).forEach(type => {
+    const state = diceStates[type];
+    socket.emit(`dice:${type}:state`, {
+      phase: state.phase,
+      timer: state.timer,
+      roundId: state.roundId,
+      nums: state.nums,
+      history: state.history,
+      myBets: state.allBets[userId] || []
+    });
+  });
+  
+  socket.on('dice:bet', (data) => {
+    const { type, amount, diceType, playerName, playerAvatar } = data;
+    if (!DICE_CONFIGS[diceType]) return;
+    const state = diceStates[diceType];
+    if (state.phase !== 'betting') return;
+    if (!type || !amount || amount <= 0) return;
+    
+    const config = DICE_CONFIGS[diceType];
+    if (!config.bets[type]) return;
+    
+    db.get('SELECT balance FROM users WHERE id = ?', [userId], (err, row) => {
+      if (err || !row) return;
+      const balance = row.balance;
+      const currentBetTotal = (state.allBets[userId] || []).reduce((s, b) => s + b.amount, 0);
+      if (currentBetTotal + amount > balance) return;
+      
+      if (!state.allBets[userId]) state.allBets[userId] = [];
+      state.allBets[userId].push({
+        type,
+        amount,
+        playerName: playerName || 'Player',
+        playerAvatar: playerAvatar || ''
+      });
+      
+      db.run('UPDATE users SET balance = balance - ?, updated_at = datetime(\'now\') WHERE id = ?', [amount, userId]);
+      
+      const allBetsList = [];
+      for (const uid in state.allBets) {
+        state.allBets[uid].forEach(bet => {
+          allBetsList.push({ userId: uid, type: bet.type, amount: bet.amount, playerName: bet.playerName, playerAvatar: bet.playerAvatar });
+        });
+      }
+      io.emit(`dice:${diceType}:betsUpdate`, { allBets: allBetsList, myBets: state.allBets[userId] || [] });
+    });
+  });
+});
+
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Server listening on http://localhost:${PORT}`));
 
