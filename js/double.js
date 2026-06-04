@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', function(){
     spinToIndex(targetIndex, 4000, () => {
       const result = getResultAtPointer();
       const win = (result.name === selectedColor);
-      const winAmount = win ? Math.round(stake * result.num * (1 - 0.06) * 100) / 100 : 0;
+      const winAmount = win ? Math.round(stake * result.num * 100) / 100 : 0;
 
       if (win) {
         setBalance(getBalance() + winAmount);
