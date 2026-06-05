@@ -6,131 +6,116 @@
   <title>Кошелёк — KATYSHKA</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
-    .wallet-wrap{max-width:480px;margin:0 auto;padding:12px}
-    .wallet-card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px}
-    .wallet-tabs{display:flex;gap:4px;margin-bottom:16px}
-    .wallet-tabs .tab{flex:1;padding:10px;border:none;border-radius:10px;background:rgba(255,255,255,0.06);color:var(--muted);cursor:pointer;font-size:11px;font-weight:700;text-align:center;transition:all 0.2s}
-    .wallet-tabs .tab.active{background:linear-gradient(135deg,#ff6b9d,#ffd700);color:#000}
-    .panel{display:none}
-    .panel.active{display:block}
-    .bal-box{text-align:center;padding:16px;background:rgba(0,0,0,0.2);border-radius:12px;margin-bottom:16px}
-    .bal-label{font-size:11px;color:var(--muted);margin-bottom:4px}
-    .bal-val{font-size:32px;font-weight:900;color:#ffd700}
-    .pay-methods{display:flex;gap:8px;margin-bottom:12px}
-    .pay-method{flex:1;padding:12px;border-radius:12px;border:2px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);cursor:pointer;text-align:center;transition:all 0.2s}
-    .pay-method.sel{border-color:#ff6b9d;background:rgba(255,107,157,0.12)}
-    .pay-method .icon{font-size:28px;display:block;margin-bottom:4px}
-    .pay-method .name{font-size:11px;font-weight:600}
-    .field-label{font-size:11px;color:var(--muted);margin-bottom:6px}
-    .field-input{width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.2);color:#fff;font-size:16px;font-weight:600;outline:none;box-sizing:border-box}
-    .field-input:focus{border-color:#ff6b9d}
-    .quick-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px;margin-bottom:12px}
-    .qbtn{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7);cursor:pointer;font-size:11px;font-weight:600;text-align:center}
-    .qbtn:hover{background:rgba(255,255,255,0.1)}
-    .action-btn{width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:800;cursor:pointer;transition:all 0.2s;text-transform:uppercase;letter-spacing:0.5px}
-    .action-btn:hover{transform:translateY(-2px)}
-    .action-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
-    .deposit-btn{background:linear-gradient(135deg,#4caf50,#2e7d32);color:#fff;box-shadow:0 8px 20px rgba(76,175,80,0.25)}
-    .withdraw-btn{background:linear-gradient(135deg,#2196f3,#1565c0);color:#fff;box-shadow:0 8px 20px rgba(33,150,243,0.25)}
-    .status-msg{padding:10px;border-radius:8px;text-align:center;font-weight:600;font-size:12px;margin-top:8px;display:none}
-    .status-msg.show{display:block}
-    .status-msg.ok{background:rgba(76,175,80,0.15);color:#4caf50}
-    .status-msg.err{background:rgba(244,67,54,0.15);color:#f44336}
-    .status-msg.info{background:rgba(33,150,243,0.15);color:#2196f3}
-    .withdraw-info{font-size:10px;color:var(--muted);margin-top:8px}
-    .receive-box{font-size:20px;font-weight:900;color:#4caf50;padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;margin-top:8px}
-    .history-item{display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:6px;font-size:12px}
-    .history-item .amount{font-weight:700}
-    .history-item .amount.plus{color:#4caf50}
-    .history-item .amount.minus{color:#f44336}
-    .history-empty{text-align:center;padding:30px;color:var(--muted);font-size:12px}
+    .wallet-wrap{max-width:480px;margin:0 auto;padding:12px 12px 80px}
+    .w-card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px}
+    .w-tabs{display:flex;gap:4px;margin-bottom:16px}
+    .w-tabs .tab{flex:1;padding:10px;border:none;border-radius:10px;background:rgba(255,255,255,0.06);color:var(--muted);cursor:pointer;font-size:10px;font-weight:700;text-align:center}
+    .w-tabs .tab.active{background:linear-gradient(135deg,#ff6b9d,#ffd700);color:#000}
+    .w-panel{display:none}
+    .w-panel.active{display:block}
+    .w-bal{text-align:center;padding:16px;background:rgba(0,0,0,0.2);border-radius:12px;margin-bottom:16px}
+    .w-bal-label{font-size:11px;color:var(--muted)}
+    .w-bal-val{font-size:32px;font-weight:900;color:#ffd700;margin-top:4px}
+    .w-methods{display:flex;gap:8px;margin-bottom:12px}
+    .w-method{flex:1;padding:14px 8px;border-radius:12px;border:2px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);cursor:pointer;text-align:center;transition:all 0.2s}
+    .w-method.sel{border-color:#4caf50;background:rgba(76,175,80,0.12)}
+    .w-method .ico{font-size:28px;display:block;margin-bottom:4px}
+    .w-method .nm{font-size:11px;font-weight:600}
+    .w-label{font-size:11px;color:var(--muted);margin-bottom:6px;display:block}
+    .w-input{width:100%;padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.2);color:#fff;font-size:18px;font-weight:700;outline:none;box-sizing:border-box}
+    .w-input:focus{border-color:#ffd700}
+    .w-quick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px;margin-bottom:14px}
+    .w-q{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7);cursor:pointer;font-size:11px;font-weight:600;text-align:center}
+    .w-q:hover{background:rgba(255,255,255,0.1)}
+    .w-btn{width:100%;padding:16px;border-radius:12px;border:none;font-size:16px;font-weight:800;cursor:pointer;transition:all 0.2s;text-transform:uppercase;letter-spacing:0.5px;margin-top:8px}
+    .w-btn:hover{transform:translateY(-2px)}
+    .w-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+    .w-dep-btn{background:linear-gradient(135deg,#4caf50,#2e7d32);color:#fff;box-shadow:0 8px 24px rgba(76,175,80,0.25)}
+    .w-wd-btn{background:linear-gradient(135deg,#2196f3,#1565c0);color:#fff;box-shadow:0 8px 24px rgba(33,150,243,0.25)}
+    .w-msg{padding:12px;border-radius:10px;text-align:center;font-weight:600;font-size:13px;margin-top:10px;display:none}
+    .w-msg.show{display:block}
+    .w-msg.ok{background:rgba(76,175,80,0.15);color:#4caf50}
+    .w-msg.err{background:rgba(244,67,54,0.15);color:#f44336}
+    .w-msg.info{background:rgba(33,150,243,0.15);color:#64b5f6}
+    .w-receive{font-size:22px;font-weight:900;color:#4caf50;padding:12px;background:rgba(0,0,0,0.2);border-radius:10px;margin-top:8px;text-align:center}
+    .w-wd-info{font-size:10px;color:var(--muted);margin-top:8px;line-height:1.4}
   </style>
 </head>
 <body>
   <header class="app-header">
-    <div class="left-controls"><a href="home.html" style="color:#fff;text-decoration:none;font-size:20px">←</a></div>
+    <div class="left-controls"><a href="home.html" style="color:var(--muted);text-decoration:none;font-size:20px">←</a></div>
     <div class="header-title">WALLET</div>
     <div class="right-controls">
-      <div class="balance-pill">
-        <span class="wallet-icon">💠</span>
-        <span class="balance-value" id="headerBal">0.00</span>
-        <span class="currency">$</span>
-      </div>
+      <div class="balance-pill"><span class="balance-value" id="hbal">100.00</span><span class="currency">$</span></div>
     </div>
   </header>
   <main class="content">
     <div class="wallet-wrap">
-      <!-- Tabs -->
-      <div class="wallet-card">
-        <div class="wallet-tabs">
-          <button class="tab active" data-tab="deposit">📥 ПОПОЛНЕНИЕ</button>
-          <button class="tab" data-tab="withdraw">📤 ВЫВОД</button>
-          <button class="tab" data-tab="history">📋 ИСТОРИЯ</button>
+      <div class="w-card">
+        <div class="w-tabs">
+          <button class="tab active" onclick="showTab('dep')">📥 ПОПОЛНЕНИЕ</button>
+          <button class="tab" onclick="showTab('wd')">📤 ВЫВОД</button>
         </div>
 
         <!-- DEPOSIT -->
-        <div class="panel active" id="tab-deposit">
-          <div class="bal-box">
-            <div class="bal-label">Текущий баланс</div>
-            <div class="bal-val">$<span id="depBal">0.00</span></div>
+        <div class="w-panel active" id="tab-dep">
+          <div class="w-bal">
+            <div class="w-bal-label">Баланс</div>
+            <div class="w-bal-val">$<span id="dbal">100.00</span></div>
           </div>
-          <div class="field-label">Способ оплаты</div>
-          <div class="pay-methods">
-            <div class="pay-method sel" data-pay="cryptobot">
-              <span class="icon">🤖</span>
-              <span class="name">CryptoBot</span>
+
+          <div class="w-label">Способ оплаты</div>
+          <div class="w-methods">
+            <div class="w-method sel" id="m-cb" onclick="setPay('cb')">
+              <span class="ico">🤖</span><span class="nm">CryptoBot</span>
             </div>
-            <div class="pay-method" data-pay="xrocket">
-              <span class="icon">🚀</span>
-              <span class="name">xRocket</span>
+            <div class="w-method" id="m-xr" onclick="setPay('xr')">
+              <span class="ico">🚀</span><span class="nm">xRocket</span>
             </div>
           </div>
-          <div class="field-label">Сумма (USDT)</div>
-          <input class="field-input" id="depAmount" type="number" min="0.1" step="0.1" value="10" placeholder="Мин. $0.1">
-          <div class="quick-row">
-            <button class="qbtn" data-v="1">$1</button>
-            <button class="qbtn" data-v="5">$5</button>
-            <button class="qbtn" data-v="10">$10</button>
-            <button class="qbtn" data-v="25">$25</button>
-            <button class="qbtn" data-v="50">$50</button>
-            <button class="qbtn" data-v="100">$100</button>
-            <button class="qbtn" data-v="200">$200</button>
-            <button class="qbtn" data-v="500">$500</button>
+
+          <div class="w-label">Сумма (USDT)</div>
+          <input class="w-input" id="damt" type="number" min="0.1" step="0.1" value="10">
+          <div class="w-quick">
+            <button class="w-q" onclick="sd(1)">$1</button>
+            <button class="w-q" onclick="sd(5)">$5</button>
+            <button class="w-q" onclick="sd(10)">$10</button>
+            <button class="w-q" onclick="sd(25)">$25</button>
+            <button class="w-q" onclick="sd(50)">$50</button>
+            <button class="w-q" onclick="sd(100)">$100</button>
           </div>
-          <button class="action-btn deposit-btn" id="depositBtn">💳 Пополнить</button>
-          <div class="status-msg" id="depStatus"></div>
+
+          <button class="w-btn w-dep-btn" id="dbtn" onclick="doDeposit()">💳 Пополнить</button>
+          <div class="w-msg" id="dmsg"></div>
         </div>
 
         <!-- WITHDRAW -->
-        <div class="panel" id="tab-withdraw">
-          <div class="bal-box">
-            <div class="bal-label">Доступно к выводу</div>
-            <div class="bal-val">$<span id="wdBal">0.00</span></div>
+        <div class="w-panel" id="tab-wd">
+          <div class="w-bal">
+            <div class="w-bal-label">Доступно</div>
+            <div class="w-bal-val">$<span id="wbal">100.00</span></div>
           </div>
-          <div class="field-label">Способ вывода</div>
-          <div class="pay-methods">
-            <div class="pay-method sel" data-pay="cryptobot">
-              <span class="icon">🤖</span>
-              <span class="name">CryptoBot</span>
-            </div>
-            <div class="pay-method" data-pay="xrocket">
-              <span class="icon">🚀</span>
-              <span class="name">xRocket</span>
-            </div>
-          </div>
-          <div class="field-label">Кошелёк (USDT TRC-20)</div>
-          <input class="field-input" id="wdWallet" type="text" placeholder="T...">
-          <div class="field-label">Сумма вывода</div>
-          <input class="field-input" id="wdAmount" type="number" min="1" step="0.1" value="" placeholder="Мин. $1">
-          <div class="receive-box">К получению: $<span id="wdReceive">0.00</span> <span style="font-size:11px;color:var(--muted)">(комиссия 3%)</span></div>
-          <button class="action-btn withdraw-btn" id="withdrawBtn">📤 Вывести</button>
-          <div class="withdraw-info">Мин. вывод: $1.05 (с учётом комиссии 3%)</div>
-          <div class="status-msg" id="wdStatus"></div>
-        </div>
 
-        <!-- HISTORY -->
-        <div class="panel" id="tab-history">
-          <div class="history-empty">История пуста</div>
+          <div class="w-label">Способ вывода</div>
+          <div class="w-methods">
+            <div class="w-method sel" id="mw-cb" onclick="setPay('cb')">
+              <span class="ico">🤖</span><span class="nm">CryptoBot</span>
+            </div>
+            <div class="w-method" id="mw-xr" onclick="setPay('xr')">
+              <span class="ico">🚀</span><span class="nm">xRocket</span>
+            </div>
+          </div>
+
+          <div class="w-label">Кошелёк USDT (TRC-20)</div>
+          <input class="w-input" id="wwallet" type="text" placeholder="T... (адрес кошелька)">
+
+          <div class="w-label">Сумма вывода</div>
+          <input class="w-input" id="wamt" type="number" min="1" step="0.1" value="" placeholder="Мин. $1">
+          <div class="w-receive">Получите: $<span id="wrec">0.00</span> <span style="font-size:11px;color:var(--muted)">(комиссия 3%)</span></div>
+
+          <button class="w-btn w-wd-btn" id="wbtn" onclick="doWithdraw()" disabled>📤 Вывести</button>
+          <div class="w-wd-info">Мин. вывод $1.05 / Комиссия 3% / Вывод вручную через поддержку</div>
+          <div class="w-msg" id="wmsg"></div>
         </div>
       </div>
     </div>
@@ -145,141 +130,95 @@
   <script src="js/app.js"></script>
   <script>
   (function(){
-    const appEl=document.querySelector('.wallet-wrap');
-    if(!appEl) return;
+    var uid='u'+Math.random().toString(36).substr(2,9);
+    try{var tg=window.Telegram&&window.Telegram.WebApp;if(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user)uid=String(tg.initDataUnsafe.user.id);}catch(e){}
+    try{var s=localStorage.getItem('tg_uid');if(s)uid=s;}catch(e){}
 
-    let userId='user_'+Math.random().toString(36).substr(2,9);
-    try{const tg=window.Telegram&&window.Telegram.WebApp;if(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user)userId=String(tg.initDataUnsafe.user.id);}catch(e){}
-
-    const depBal=document.getElementById('depBal');
-    const wdBal=document.getElementById('wdBal');
-    const headerBal=document.getElementById('headerBal');
-    const depAmount=document.getElementById('depAmount');
-    const wdAmount=document.getElementById('wdAmount');
-    const wdWallet=document.getElementById('wdWallet');
-    const wdReceive=document.getElementById('wdReceive');
-    const depositBtn=document.getElementById('depositBtn');
-    const withdrawBtn=document.getElementById('withdrawBtn');
-    const depStatus=document.getElementById('depStatus');
-    const wdStatus=document.getElementById('wdStatus');
-
-    let payMethod='cryptobot';
+    var bal=parseFloat(localStorage.getItem('mc_balance'))||100;
+    var pay='cb';
+    var invChk=null;
 
     function fmt(n){return Number(n).toFixed(2);}
-    function updBal(v){depBal.textContent=fmt(v);wdBal.textContent=fmt(v);headerBal.textContent=fmt(v);localStorage.setItem('mc_balance',fmt(v));document.querySelectorAll('.balance-value').forEach(el=>el.textContent=fmt(v));}
-    function showStatus(el,msg,type){el.textContent=msg;el.className='status-msg show '+type;}
-    function hideStatus(el){el.className='status-msg';}
+    function upd(v){bal=v;localStorage.setItem('mc_balance',fmt(v));document.getElementById('dbal').textContent=fmt(v);document.getElementById('wbal').textContent=fmt(v);document.getElementById('hbal').textContent=fmt(v);document.querySelectorAll('.balance-value').forEach(function(el){el.textContent=fmt(v);});}
+    function msg(el,t,y){el.textContent=t;el.className='w-msg show '+(y||'info');}
+    function clr(el){el.className='w-msg';}
 
-    // Init balance
-    const bal=parseFloat(localStorage.getItem('mc_balance'))||100;
-    updBal(bal);
+    window.showTab=function(t){document.querySelectorAll('.w-tabs .tab').forEach(function(x,i){x.classList.toggle('active',(t==='dep'&&i===0)||(t==='wd'&&i===1));});document.getElementById('tab-dep').classList.toggle('active',t==='dep');document.getElementById('tab-wd').classList.toggle('active',t==='wd');};
+    window.setPay=function(p){pay=p;document.getElementById('m-cb').classList.toggle('sel',p==='cb');document.getElementById('m-xr').classList.toggle('sel',p==='xr');document.getElementById('mw-cb').classList.toggle('sel',p==='cb');document.getElementById('mw-xr').classList.toggle('sel',p==='xr');};
+    window.sd=function(v){document.getElementById('damt').value=v;};
 
-    // Tabs
-    document.querySelectorAll('.wallet-tabs .tab').forEach(tab=>{
-      tab.onclick=()=>{
-        document.querySelectorAll('.wallet-tabs .tab').forEach(t=>t.classList.remove('active'));
-        tab.classList.add('active');
-        const target=tab.dataset.tab;
-        document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-        document.getElementById('tab-'+target).classList.add('active');
-      };
-    });
+    document.getElementById('wamt').oninput=function(){var v=parseFloat(this.value)||0;var r=Math.max(0,v*0.97);document.getElementById('wrec').textContent=fmt(r);document.getElementById('wbtn').disabled=v<1.05;};
 
-    // Payment methods
-    document.querySelectorAll('.pay-method').forEach(m=>{
-      m.onclick=()=>{
-        const panel=m.closest('.panel');
-        panel.querySelectorAll('.pay-method').forEach(x=>x.classList.remove('sel'));
-        m.classList.add('sel');
-        payMethod=m.dataset.pay;
-      };
-    });
-
-    // Quick amounts
-    document.querySelectorAll('.qbtn').forEach(b=>{
-      b.onclick=()=>{depAmount.value=parseFloat(b.dataset.v)||0;};
-    });
-
-    // Withdraw calc
-    wdAmount.oninput=()=>{
-      const v=parseFloat(wdAmount.value)||0;
-      const fee=Math.round(v*0.03*100)/100;
-      wdReceive.textContent=fmt(Math.max(0,v-fee));
-    };
-
-    // DEPOSIT - create invoice and redirect to payment
-    depositBtn.onclick=async()=>{
-      const amt=parseFloat(depositAmount.value)||0;
-      if(amt<0.1){showStatus(depStatus,'Мин. сумма: $0.1','err');return;}
-      depositBtn.disabled=true;depositBtn.textContent='Создание...';
-      hideStatus(depStatus);
-      try{
-        const endpoint=payMethod==='xrocket'?'/api/deposit/xrocket':'/api/deposit/invoice';
-        const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId,amount:amt})});
-        const data=await res.json();
-        console.log('Deposit response:',data);
-        if(data.ok&&data.payUrl){
-          showStatus(depStatus,'✅ Счёт создан! Переход на оплату...','ok');
-          // Open payment URL
-          try{
-            if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openLink){
-              window.Telegram.WebApp.openLink(data.payUrl);
-            }else{
-              window.open(data.payUrl,'_blank');
-            }
-          }catch(e){
-            window.open(data.payUrl,'_blank');
+    window.doDeposit=function(){
+      var amt=parseFloat(document.getElementById('damt').value)||0;
+      if(amt<0.1){msg(document.getElementById('dmsg'),'Мин. сумма $0.1','err');return;}
+      var btn=document.getElementById('dbtn');btn.disabled=true;btn.textContent='⏳ Создание...';
+      clr(document.getElementById('dmsg'));
+      var ep=pay==='xr'?'/api/deposit/xrocket':'/api/deposit/invoice';
+      fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid,amount:amt})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        console.log('deposit resp:',d);
+        if(d.ok&&d.payUrl){
+          msg(document.getElementById('dmsg'),'✅ Счёт создан! Переход на оплату...','ok');
+          // redirect to payment
+          if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openLink){
+            window.Telegram.WebApp.openLink(d.payUrl,{try_instant_view:false});
+          }else{
+            window.location.href=d.payUrl;
           }
-          // Start checking payment
-          checkPayment(data.invoiceId,amt);
+          // check payment
+          if(invChk)clearInterval(invChk);
+         .invChk=setInterval(function(){
+            fetch('/api/deposit/check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({invoiceId:d.invoiceId})})
+            .then(function(r){return r.json();})
+            .then(function(cd){
+              if(cd.status==='paid'){clearInterval(invChk);upd(bal+amt);msg(document.getElementById('dmsg'),'✅ Оплачено! +$'+fmt(amt),'ok');}
+            }).catch(function(){});
+          },3000);
         }else{
-          showStatus(depStatus,'Ошибка: '+(data.error||'Не удалось создать счёт'),'err');
-          console.error('Deposit error:',data);
+          msg(document.getElementById('dmsg'),'Ошибка: '+(d.error||'unknown'),'err');
         }
-      }catch(e){showStatus(depStatus,'Ошибка сети: '+e.message,'err');}
-      depositBtn.disabled=false;depositBtn.textContent='💳 Пополнить';
+      }).catch(function(e){msg(document.getElementById('dmsg'),'Ошибка сети','err');})
+      .finally(function(){btn.disabled=false;btn.textContent='💳 Пополнить';});
     };
 
-    // Check payment status
-    async function checkPayment(invoiceId,amount){
-      const iv=setInterval(async()=>{
-        try{
-          const res=await fetch('/api/deposit/check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({invoiceId})});
-          const data=await res.json();
-          if(data.status==='paid'){
-            clearInterval(iv);
-            const newBal=parseFloat(localStorage.getItem('mc_balance'))||0;
-            updBal(newBal+amount);
-            showStatus(depStatus,'✅ Оплачено! Баланс: $'+fmt(newBal+amount),'ok');
-          }
-        }catch(e){}
-      },3000);
-      // Stop checking after 30 min
-      setTimeout(()=>clearInterval(iv),1800000);
-    }
+    window.doWithdraw=function(){
+      var amt=parseFloat(document.getElementById('wamt').value)||0;
+      var wallet=document.getElementById('wwallet').value.trim();
+      if(amt<1.05){msg(document.getElementById('wmsg'),'Мин. вывод $1.05','err');return;}
+      if(!wallet){msg(document.getElementById('wmsg'),'Введите кошелёк','err');return;}
+      if(amt>bal){msg(document.getElementById('wmsg'),'Недостаточно средств','err');return;}
+      var btn=document.getElementById('wbtn');btn.disabled=true;btn.textContent='⏳ Заявка...';
+      clr(document.getElementById('wmsg'));
 
-    // WITHDRAW
-    withdrawBtn.onclick=async()=>{
-      const amt=parseFloat(wdAmount.value)||0;
-      const wallet=wdWallet.value.trim();
-      if(amt<1){showStatus(wdStatus,'Мин. вывод: $1','err');return;}
-      if(!wallet){showStatus(wdStatus,'Введите адрес кошелька','err');return;}
-      withdrawBtn.disabled=true;withdrawBtn.textContent='Обработка...';
-      hideStatus(wdStatus);
-      try{
-        const endpoint=payMethod==='xrocket'?'/api/withdraw/xrocket':'/api/withdraw';
-        const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId,amount:amt,wallet})});
-        const data=await res.json();
-        if(data.ok){
-          updBal(data.balance);
-          showStatus(wdStatus,'✅ Вывод выполнен! Получите: $'+fmt(data.received),'ok');
-          wdAmount.value='';wdAmount.dispatchEvent(new Event('input'));
+      // Save withdrawal request to localStorage (admin will process)
+      var requests=JSON.parse(localStorage.getItem('wd_requests')||'[]');
+      requests.push({userId:uid,amount:amt,wallet:wallet,fee:Math.round(amt*0.03*100)/100,net:Math.round(amt*0.97*100)/100,date:Date.now(),status:'pending'});
+      localStorage.setItem('wd_requests',JSON.stringify(requests));
+
+      // Also try API
+      var ep=pay==='xr'?'/api/withdraw/xrocket':'/api/withdraw';
+      fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid,amount:amt,wallet:wallet})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        console.log('withdraw resp:',d);
+        if(d.ok){
+          upd(d.balance);
+          msg(document.getElementById('wmsg'),'✅ Вывод обработан! Получите: $'+fmt(d.net),'ok');
+          document.getElementById('wamt').value='';document.getElementById('wamt').dispatchEvent(new Event('input'));
         }else{
-          showStatus(wdStatus,'Ошибка: '+(data.error||'Не удалось вывести'),'err');
+          msg(document.getElementById('wmsg'),'Заявка создана! Ожидайте обработки в поддержке.','info');
         }
-      }catch(e){showStatus(wdStatus,'Ошибка сети: '+e.message,'err');}
-      withdrawBtn.disabled=false;withdrawBtn.textContent='📤 Вывести';
+      }).catch(function(e){
+        msg(document.getElementById('wmsg'),'Заявка сохранена! Обработаем в течение 24ч.','info');
+      })
+      .finally(function(){btn.disabled=false;btn.textContent='📤 Вывести';});
     };
+
+    // Init
+    upd(bal);
+    document.getElementById('wamt').dispatchEvent(new Event('input'));
   })();
   </script>
 </body>
