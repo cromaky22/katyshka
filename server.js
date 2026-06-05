@@ -13,12 +13,35 @@ app.use(express.static(__dirname));
 const users = {};
 const promos = { '1': 200, '2': 200, '3': 200, '4': 200, '5': 200, '6': 200 };
 const activated = {};
+const transactions = []; // History of all transactions
 
 function getBalance(id) { return users[id]?.balance || 100; }
 function setBalance(id, amt) {
   if (!users[id]) users[id] = { balance: 100 };
   users[id].balance = Math.round(amt * 100) / 100;
 }
+
+// Add transaction to history
+function addTx(type, userId, amount, status, extra) {
+  transactions.push({
+    id: 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+    type, // 'deposit' or 'withdraw'
+    userId,
+    amount: Math.round(amount * 100) / 100,
+    status, // 'pending', 'completed', 'failed'
+    date: new Date().toISOString(),
+    ...extra
+  });
+}
+
+// Get transaction history for user
+app.get('/api/transactions/:userId', (req, res) => {
+  const txs = transactions
+    .filter(t => t.userId === req.params.userId)
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 50);
+  res.json({ ok: true, transactions: txs });
+});
 
 // === CRYPTOBOT API ===
 const CRYPTOBOT_TOKEN = '411440:AAWUSDQWHE8fLkRQN20YRJi0DBb2skCPOdJ';
@@ -127,7 +150,89 @@ app.post('/api/cryptobot-hook', express.raw({ type: 'application/json' }), (req,
   res.json({ ok: true });
 });
 
-// === PROMOS ===
+// === XROCKET API ===
+const XROCKET_KEY = 'f391f7a440adb0cfb0f7a1afe';
+const XROCKET_URL = 'https://pay.xrocket.tg/api';
+
+async function xrocket(method, params) {
+  const headers = { 'Content-Type': 'application/json' };
+  // xRocket uses token in URL or header
+  const url = `${XROCKET_URL}/${method}`;
+  
+  const res = await fetch(url, {
+    method: params ? 'POST' : 'GET',
+    headers: { ...headers, 'Authorization': `Bearer ${XROCKET_KEY}` },
+    body: params ? JSON.stringify(params) : undefined
+  });
+  return res.json();
+}
+
+// Create xRocket invoice
+app.post('/api/invoice/xrocket', async (req, res) => {
+  try {
+    const { userId, amount } = req.body;
+    if (!userId || !amount || amount < 0.1) {
+      return res.status(400).json({ error: 'Min amount: $0.1' });
+    }
+
+    const result = await xrocket('invoice', {
+      amount: String(Number(amount).toFixed(2)),
+      currency: 'TONCOIN',
+      description: `Deposit for ${userId}`,
+      payload: JSON.stringify({ userId }),
+      expiredIn: 1800
+    });
+
+    console.log('xRocket response:', JSON.stringify(result));
+
+    // xRocket returns data in different format
+    if (result.ok || result.data || result.invoice_id) {
+      const invoice = result.data || result;
+      addTx('deposit', userId, Number(amount), 'pending', { provider: 'xrocket', invoiceId: invoice.invoice_id || invoice.id });
+      res.json({
+        ok: true,
+        invoiceId: invoice.invoice_id || invoice.id,
+        payUrl: invoice.pay_url || invoice.bot_invoice_url || invoice.mini_app_invoice_url
+      });
+    } else {
+      res.status(500).json({ error: result.error || result.message || 'Failed' });
+    }
+  } catch (e) {
+    console.error('xRocket error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Check xRocket invoice
+app.post('/api/invoice/check/xrocket', async (req, res) => {
+  try {
+    const { invoiceId } = req.body;
+    if (!invoiceId) return res.status(400).json({ error: 'Missing invoiceId' });
+
+    const result = await xrocket(`invoice/${invoiceId}`);
+    console.log('xRocket check:', JSON.stringify(result));
+
+    if (result.ok || result.data) {
+      const inv = result.data || result;
+      if (inv.status === 'paid' || inv.status === 'completed') {
+        try {
+          const payload = JSON.parse(inv.payload || '{}');
+          if (payload.userId) {
+            setBalance(payload.userId, getBalance(payload.userId) + parseFloat(inv.amount));
+            // Update transaction status
+            const tx = transactions.find(t => t.invoiceId === invoiceId);
+            if (tx) tx.status = 'completed';
+          }
+        } catch (e) {}
+      }
+      res.json({ ok: true, status: inv.status, amount: inv.amount });
+    } else {
+      res.json({ ok: true, status: 'not_found' });
+    }
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 app.post('/api/promos/:code/activate', (req, res) => {
   const code = (req.params.code || '').toUpperCase();
   const userId = req.body?.userId;
