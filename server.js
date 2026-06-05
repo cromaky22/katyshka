@@ -389,6 +389,31 @@ io.on('connection', (socket) => {
 
 startWheel();
 
+// === TELEGRAM PHOTO API ===
+const BOT_TOKEN = process.env.BOT_TOKEN || '8962248830:AAEoWT12lZEzttXXHxt3c48wLGh5HcZ6FoQ';
+
+app.get('/api/tg-photo/:id', async (req, res) => {
+  if (!BOT_TOKEN) return res.status(404).send('No bot token');
+  try {
+    const userId = req.params.id;
+    const photosRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUserProfilePhotos?user_id=${userId}&limit=1`);
+    const photos = await photosRes.json();
+    if (!photos.ok || !photos.result?.total_count) return res.status(404).send('No photo');
+    const fileId = photos.result.photos[0][0].file_id;
+    const fileRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`);
+    const file = await fileRes.json();
+    if (!file.ok || !file.result?.file_path) return res.status(404).send('No file');
+    const photoUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${file.result.file_path}`;
+    const imgRes = await fetch(photoUrl);
+    const buffer = await imgRes.buffer();
+    res.set('Content-Type', 'image/jpeg');
+    res.send(buffer);
+  } catch (e) {
+    console.error('Photo error:', e);
+    res.status(500).send('Error');
+  }
+});
+
 // === START ===
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

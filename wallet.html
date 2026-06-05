@@ -290,9 +290,25 @@
     upd(bal);
     document.getElementById('wamt').dispatchEvent(new Event('input'));
     
-    // Load profile photo from Telegram
-    if(tgUser&&tgUser.photo_url){var pImg=document.getElementById('profileImg');if(pImg){pImg.src=tgUser.photo_url;pImg.style.display='';}}
-    else if(tgUser&&tgUser.id){var pImg=document.getElementById('profileImg');if(pImg){pImg.src='/api/tg-photo/'+tgUser.id;pImg.style.display='';}}
+    // Load profile photo from Telegram WebApp
+    try{
+      var tg=window.Telegram&&window.Telegram.WebApp;
+      if(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user){
+        var u=tg.initDataUnsafe.user;
+        // Try to get photo from WebApp
+        if(u.photo_url){
+          var pImg=document.getElementById('profileImg');
+          if(pImg){pImg.src=u.photo_url;pImg.style.display='';}
+        }else if(u.id){
+          // Fallback: use tg-photo endpoint
+          var pImg=document.getElementById('profileImg');
+          if(pImg){pImg.src='/api/tg-photo/'+u.id;pImg.style.display='';}
+        }
+        // Fill name in header if element exists
+        var nameEl=document.getElementById('profileName');
+        if(nameEl){nameEl.textContent=(u.first_name||'')+(u.last_name?' '+u.last_name:'');}
+      }
+    }catch(e){console.log('Profile error:',e);}
   })();
   </script>
 </body>
