@@ -219,19 +219,21 @@
     // Create invoice
     createInvoiceBtn.onclick=async()=>{
       const amt=parseFloat(depositAmount.value)||0;
-      if(amt<1){alert('Мин. сумма: $1');return;}
+      if(amt<0.1){alert('Мин. сумма: $0.1');return;}
       createInvoiceBtn.disabled=true;createInvoiceBtn.textContent='Создание...';
       try{
-        const endpoint=currentMethod==='xrocket'?'/api/deposit/xrocket':'/api/deposit';
+        const endpoint=currentMethod==='xrocket'?'/api/deposit/xrocket':'/api/deposit/invoice';
+        console.log('Creating invoice:', endpoint, {userId,amount:amt});
         const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId,amount:amt})});
         const data=await res.json();
+        console.log('Invoice response:', data);
         if(data.ok){
           currentInvoiceId=data.invoiceId;
           invoiceLink.href=data.payUrl;
+          invoiceLink.textContent='💳 Оплатить в '+(currentMethod==='xrocket'?'xRocket':'CryptoBot');
           invoiceBox.classList.add('show');
           invoiceStatus.textContent='⏳ Ожидание оплаты...';
           invoiceStatus.className='invoice-status';
-          // Start checking
           if(checkInterval)clearInterval(checkInterval);
           checkInterval=setInterval(async()=>{
             const checkRes=await fetch('/api/deposit/check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({invoiceId:currentInvoiceId})});
@@ -247,6 +249,9 @@
         }else{
           alert('Ошибка: '+(data.error||'unknown'));
         }
+      }catch(e){alert('Ошибка сети: '+e.message);}
+      createInvoiceBtn.disabled=false;createInvoiceBtn.textContent='💳 Создать счёт';
+    };
       }catch(e){alert('Ошибка сети: '+e.message);}
       createInvoiceBtn.disabled=false;createInvoiceBtn.textContent='💳 Создать счёт';
     };

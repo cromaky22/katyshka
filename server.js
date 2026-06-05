@@ -241,5 +241,10 @@ io.on('connection',(socket)=>{
 
 startWheel();
 
+// Test endpoint
+app.get('/api/test', (req, res) => {
+  res.json({ ok: true, message: 'Server is working!', timestamp: Date.now() });
+});
+
 const PORT=process.env.PORT||3000;
 server.listen(PORT,()=>console.log(`Server on ${PORT}`));
