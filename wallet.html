@@ -100,21 +100,28 @@
         <!-- WITHDRAW -->
         <div class="w-panel" id="tab-wd">
           <div class="w-bal">
-            <div class="w-bal-label">Доступно</div>
+            <div class="w-bal-label">Доступно к выводу</div>
             <div class="w-bal-val">$<span id="wbal">100.00</span></div>
           </div>
+
           <div class="w-label">Способ вывода</div>
           <div class="w-methods">
-            <div class="w-method sel" id="mw-cb" onclick="setPay('cb')"><span class="ico">🤖</span><span class="nm">CryptoBot</span></div>
-            <div class="w-method" id="mw-xr" onclick="setPay('xr')"><span class="ico">🚀</span><span class="nm">xRocket</span></div>
+            <div class="w-method sel" id="mw-cb" onclick="setPay('cb')"><span class="ico"><img src="assets/cryptobot.jpg" alt="CryptoBot" style="width:32px;height:32px;border-radius:50%;object-fit:cover"></span><span class="nm">CryptoBot</span></div>
+            <div class="w-method" id="mw-xr" onclick="setPay('xr')"><span class="ico"><img src="assets/xrocket.jpg" alt="xRocket" style="width:32px;height:32px;border-radius:50%;object-fit:cover"></span><span class="nm">xRocket</span></div>
           </div>
-          <div class="w-label">Кошелёк USDT (TRC-20)</div>
-          <input class="w-input" id="wwallet" type="text" placeholder="T... (адрес кошелька)">
-          <div class="w-label">Сумма вывода</div>
+
+          <div class="w-label">Ваш Telegram ник</div>
+          <input class="w-input" id="wnick" type="text" placeholder="@username">
+
+          <div class="w-label">Ваш Telegram ID</div>
+          <input class="w-input" id="wid" type="text" placeholder="123456789">
+
+          <div class="w-label">Сумма вывода (USDT)</div>
           <input class="w-input" id="wamt" type="number" min="1" step="0.1" value="" placeholder="Мин. $1">
-          <div class="w-receive">Получите: $<span id="wrec">0.00</span> <span style="font-size:10px;color:var(--muted)">(комиссия 3%)</span></div>
+          <div class="w-receive">К получению: $<span id="wrec">0.00</span> <span style="font-size:10px;color:var(--muted)">(комиссия 3%)</span></div>
+
           <button class="w-btn w-wd-btn" id="wbtn" onclick="doWithdraw()" disabled>📤 Вывести</button>
-          <div class="w-wd-info">Мин. вывод $1.05 / Комиссия 3% / Вывод вручную</div>
+          <div class="w-wd-info">Мин. вывод $1.05 / Комиссия 3% / Вывод вручную через поддержку</div>
           <div class="w-msg" id="wmsg"></div>
         </div>
 
@@ -143,7 +150,12 @@
     var pay='cb';
     var invChk=null;
 
-    function fmt(n){return Number(n).toFixed(2);}
+    function addTx(type,userId,amount,status,extra){
+      var txs=JSON.parse(localStorage.getItem('tx_history')||'[]');
+      txs.unshift({type,userId,amount:Number(amount).toFixed(2),status,date:new Date().toISOString(),...extra});
+      if(txs.length>50)txs=txs.slice(0,50);
+      localStorage.setItem('tx_history',JSON.stringify(txs));
+    }
     function upd(v){bal=v;localStorage.setItem('mc_balance',fmt(v));document.getElementById('dbal').textContent=fmt(v);document.getElementById('wbal').textContent=fmt(v);document.getElementById('hbal').textContent=fmt(v);document.querySelectorAll('.balance-value').forEach(function(el){el.textContent=fmt(v);});}
     function msg(el,t,y){el.textContent=t;el.className='w-msg show '+(y||'info');}
     function clr(el){el.className='w-msg';}
@@ -169,29 +181,27 @@
     // Load transaction history
     function loadHistory(){
       var el=document.getElementById('txList');
-      el.innerHTML='<div class="tx-empty">Загрузка...</div>';
-      fetch('/api/transactions/'+uid)
-      .then(function(r){return r.json();})
-      .then(function(d){
-        if(!d.transactions||d.transactions.length===0){el.innerHTML='<div class="tx-empty">История пуста</div>';return;}
-        el.innerHTML='';
-        d.transactions.forEach(function(tx){
-          var div=document.createElement('div');
-          div.className='tx-item';
-          var isDep=tx.type==='deposit';
-          var icon=isDep?'📥':'📤';
-          var typeText=isDep?'Пополнение':'Вывод';
-          var provider=tx.provider?' ('+tx.provider+')':'';
-          var amtClass=isDep?'plus':'minus';
-          var amtStr=(isDep?'+':'')+'$'+fmt(tx.amount);
-          var stClass=tx.status==='completed'?'completed':'pending';
-          var stText=tx.status==='completed'?'Выполнено':'Ожидание';
-          var dt=new Date(tx.date);
-          var dtStr=dt.toLocaleDateString('ru')+' '+dt.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
-          div.innerHTML='<div class="tx-left"><span class="tx-icon">'+icon+'</span><div class="tx-info"><div class="tx-type">'+typeText+provider+'</div><div class="tx-date">'+dtStr+'</div></div></div><div class="tx-right"><div class="tx-amount '+amtClass+'">'+amtStr+'</div><span class="tx-status '+stClass+'">'+stText+'</span></div>';
-          el.appendChild(div);
-        });
-      }).catch(function(){el.innerHTML='<div class="tx-empty">Ошибка загрузки</div>';});
+      var txs=JSON.parse(localStorage.getItem('tx_history')||'[]');
+      if(txs.length===0){el.innerHTML='<div class="tx-empty">История пуста</div>';return;}
+      el.innerHTML='';
+      txs.forEach(function(tx){
+        var div=document.createElement('div');
+        div.className='tx-item';
+        var isDep=tx.type==='deposit';
+        var icon=isDep?'📥':'📤';
+        var typeText=isDep?'Пополнение':'Вывод';
+        var provider=tx.provider?' ('+tx.provider+')':'';
+        var amtClass=isDep?'plus':'minus';
+        var amtStr=(isDep?'+':'')+'$'+tx.amount;
+        var stClass=tx.status==='completed'?'completed':'pending';
+        var stText=tx.status==='completed'?'Выполнено':'Ожидание';
+        var dt=new Date(tx.date);
+        var dtStr=dt.toLocaleDateString('ru')+' '+dt.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
+        var extraInfo='';
+        if(tx.nick)extraInfo='<br><span style="font-size:9px;color:var(--muted)">'+tx.nick+'</span>';
+        div.innerHTML='<div class="tx-left"><span class="tx-icon">'+icon+'</span><div class="tx-info"><div class="tx-type">'+typeText+provider+extraInfo+'</div><div class="tx-date">'+dtStr+'</div></div></div><div class="tx-right"><div class="tx-amount '+amtClass+'">'+amtStr+'</div><span class="tx-status '+stClass+'">'+stText+'</span></div>';
+        el.appendChild(div);
+      });
     }
 
     window.doDeposit=function(){
@@ -230,26 +240,21 @@
 
     window.doWithdraw=function(){
       var amt=parseFloat(document.getElementById('wamt').value)||0;
-      var wallet=document.getElementById('wwallet').value.trim();
+      var nick=document.getElementById('wnick').value.trim();
+      var tid=document.getElementById('wid').value.trim();
       if(amt<1.05){msg(document.getElementById('wmsg'),'Мин. вывод $1.05','err');return;}
-      if(!wallet){msg(document.getElementById('wmsg'),'Введите кошелёк','err');return;}
+      if(!nick){msg(document.getElementById('wmsg'),'Введите Telegram ник','err');return;}
+      if(!tid){msg(document.getElementById('wmsg'),'Введите Telegram ID','err');return;}
       if(amt>bal){msg(document.getElementById('wmsg'),'Недостаточно средств','err');return;}
       var btn=document.getElementById('wbtn');btn.disabled=true;btn.textContent='⏳ Заявка...';
       clr(document.getElementById('wmsg'));
-      var ep=pay==='xr'?'/api/withdraw/xrocket':'/api/withdraw';
-      fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid,amount:amt,wallet:wallet})})
-      .then(function(r){return r.json();})
-      .then(function(d){
-        if(d.ok){upd(d.balance);msg(document.getElementById('wmsg'),'✅ Вывод выполнен!','ok');document.getElementById('wamt').value='';document.getElementById('wamt').dispatchEvent(new Event('input'));}
-        else{msg(document.getElementById('wmsg'),d.error||'Заявка сохранена. Ожидайте обработки.','info');}
-      }).catch(function(e){
-        // Save request locally if API fails
-        var reqs=JSON.parse(localStorage.getItem('wd_requests')||'[]');
-        reqs.push({userId:uid,amount:amt,wallet:wallet,date:Date.now()});
-        localStorage.setItem('wd_requests',JSON.stringify(reqs));
-        msg(document.getElementById('wmsg'),'✅ Заявка сохранена! Ожидайте обработки.','info');
-      })
-      .finally(function(){btn.disabled=false;btn.textContent='📤 Вывести';});
+      // Save request
+      var reqs=JSON.parse(localStorage.getItem('wd_requests')||'[]');
+      reqs.push({userId:uid,amount:amt,nick:nick,tgId:tid,fee:Math.round(amt*0.03*100)/100,net:Math.round(amt*0.97*100)/100,date:Date.now(),status:'pending',provider:pay});
+      localStorage.setItem('wd_requests',JSON.stringify(reqs));
+      addTx('withdraw',uid,amt,'pending',{provider:pay,nick:nick,tgId:tid});
+      msg(document.getElementById('wmsg'),'✅ Заявка создана! Ожидайте обработки.','info');
+      setTimeout(function(){btn.disabled=false;btn.textContent='📤 Вывести';},2000);
     };
 
     upd(bal);
