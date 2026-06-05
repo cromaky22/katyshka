@@ -53,6 +53,7 @@
     .tx-status.completed{background:rgba(76,175,80,0.2);color:#4caf50}
     .tx-status.pending{background:rgba(255,193,7,0.2);color:#ffc107}
     .tx-empty{text-align:center;padding:30px;color:var(--muted);font-size:12px}
+    .profile-icon{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.15)}
   </style>
 </head>
 <body>
@@ -61,6 +62,7 @@
     <div class="header-title">WALLET</div>
     <div class="right-controls">
       <div class="balance-pill"><span class="balance-value" id="hbal">100.00</span><span class="currency">$</span></div>
+      <a href="menu.html" class="profile" title="Профиль" aria-label="Профиль" id="profileLink"><img class="profile-icon" id="profileImg" src="" alt="Аватар" onerror="this.style.display='none'"></a>
     </div>
   </header>
   <main class="content">
@@ -143,22 +145,50 @@
   <script>
   (function(){
     var uid='u'+Math.random().toString(36).substr(2,9);
-    try{var tg=window.Telegram&&window.Telegram.WebApp;if(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user)uid=String(tg.initDataUnsafe.user.id);}catch(e){}
-    try{var s=localStorage.getItem('tg_uid');if(s)uid=s;}catch(e){}
+    var tgUser=null;
+    
+    // Get user data from Telegram WebApp
+    try{
+      var tg=window.Telegram&&window.Telegram.WebApp;
+      if(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user){
+        tgUser=tg.initDataUnsafe.user;
+        uid=String(tgUser.id);
+        localStorage.setItem('tg_uid',uid);
+        localStorage.setItem('tg_user',JSON.stringify(tgUser));
+        // Auto-fill withdraw fields
+        if(document.getElementById('wnick')){
+          document.getElementById('wnick').value='@'+(tgUser.username||'');
+        }
+        if(document.getElementById('wid')){
+          document.getElementById('wid').value=String(tgUser.id);
+        }
+      }
+    }catch(e){console.log('TG error:',e);}
+    
+    // Fallback: load from localStorage
+    if(!tgUser){
+      try{
+        var s=localStorage.getItem('tg_user');
+        if(s)tgUser=JSON.parse(s);
+        var savedUid=localStorage.getItem('tg_uid');
+        if(savedUid)uid=savedUid;
+      }catch(e){}
+    }
 
     var bal=parseFloat(localStorage.getItem('mc_balance'))||100;
     var pay='cb';
     var invChk=null;
 
+    function fmt(n){return Number(n).toFixed(2);}
+    function upd(v){bal=v;localStorage.setItem('mc_balance',fmt(v));document.getElementById('dbal').textContent=fmt(v);document.getElementById('wbal').textContent=fmt(v);document.getElementById('hbal').textContent=fmt(v);document.querySelectorAll('.balance-value').forEach(function(el){el.textContent=fmt(v);});}
+    function msg(el,t,y){el.textContent=t;el.className='w-msg show '+(y||'info');}
+    function clr(el){el.className='w-msg';}
     function addTx(type,userId,amount,status,extra){
       var txs=JSON.parse(localStorage.getItem('tx_history')||'[]');
       txs.unshift({type,userId,amount:Number(amount).toFixed(2),status,date:new Date().toISOString(),...extra});
       if(txs.length>50)txs=txs.slice(0,50);
       localStorage.setItem('tx_history',JSON.stringify(txs));
     }
-    function upd(v){bal=v;localStorage.setItem('mc_balance',fmt(v));document.getElementById('dbal').textContent=fmt(v);document.getElementById('wbal').textContent=fmt(v);document.getElementById('hbal').textContent=fmt(v);document.querySelectorAll('.balance-value').forEach(function(el){el.textContent=fmt(v);});}
-    function msg(el,t,y){el.textContent=t;el.className='w-msg show '+(y||'info');}
-    function clr(el){el.className='w-msg';}
 
     window.showTab=function(t){
       document.querySelectorAll('.w-tabs .tab').forEach(function(x,i){x.classList.toggle('active',(t==='dep'&&i===0)||(t==='wd'&&i===1)||(t==='hist'&&i===2));});
@@ -259,6 +289,10 @@
 
     upd(bal);
     document.getElementById('wamt').dispatchEvent(new Event('input'));
+    
+    // Load profile photo from Telegram
+    if(tgUser&&tgUser.photo_url){var pImg=document.getElementById('profileImg');if(pImg){pImg.src=tgUser.photo_url;pImg.style.display='';}}
+    else if(tgUser&&tgUser.id){var pImg=document.getElementById('profileImg');if(pImg){pImg.src='/api/tg-photo/'+tgUser.id;pImg.style.display='';}}
   })();
   </script>
 </body>
