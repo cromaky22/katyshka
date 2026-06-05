@@ -441,7 +441,7 @@
       try{
         const profileImg = document.querySelector('.app-header .profile img');
         if(profileImg){
-          const candidate = user.photo_url || user.avatar || (user.id ? ('/api/tg-photo/' + user.id) : null);
+          const candidate = user.photo_url || user.avatar;
           console.log('🖼️ Avatar URL:', candidate);
           if(candidate){
             profileImg.src = candidate;
@@ -450,6 +450,19 @@
             profileImg.onerror = function(){ console.warn('❌ Avatar failed to load'); this.style.display = 'none'; };
           } else {
             console.warn('⚠️ No avatar URL found in user data');
+            // Show initials as fallback
+            const name = (user.first_name || '') + (user.last_name ? ' ' + user.last_name : '');
+            const initials = name.trim() ? name.trim().split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : (user.username ? user.username[0].toUpperCase() : '?');
+            profileImg.style.display = 'none';
+            // Create or update initials element
+            let initialsEl = profileImg.parentElement.querySelector('.avatar-initials');
+            if (!initialsEl) {
+              initialsEl = document.createElement('div');
+              initialsEl.className = 'avatar-initials';
+              profileImg.parentElement.appendChild(initialsEl);
+            }
+            initialsEl.textContent = initials;
+            initialsEl.style.display = 'flex';
           }
         }
       }catch(e){ console.error('❌ Error setting avatar:', e); }
