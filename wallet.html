@@ -6,7 +6,7 @@
   <title>Кошелёк — KATYSHKA</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
-    .wallet-wrap{max-width:480px;margin:0 auto;padding:12px 12px 80px}
+    .w-wrap{max-width:480px;margin:0 auto;padding:12px 12px 80px}
     .w-card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px}
     .w-tabs{display:flex;gap:4px;margin-bottom:16px}
     .w-tabs .tab{flex:1;padding:10px;border:none;border-radius:10px;background:rgba(255,255,255,0.06);color:var(--muted);cursor:pointer;font-size:10px;font-weight:700;text-align:center}
@@ -50,7 +50,7 @@
     </div>
   </header>
   <main class="content">
-    <div class="wallet-wrap">
+    <div class="w-wrap">
       <div class="w-card">
         <div class="w-tabs">
           <button class="tab active" onclick="showTab('dep')">📥 ПОПОЛНЕНИЕ</button>
@@ -63,17 +63,10 @@
             <div class="w-bal-label">Баланс</div>
             <div class="w-bal-val">$<span id="dbal">100.00</span></div>
           </div>
-
           <div class="w-label">Способ оплаты</div>
           <div class="w-methods">
-            <div class="w-method sel" id="m-cb" onclick="setPay('cb')">
-              <span class="ico">🤖</span><span class="nm">CryptoBot</span>
-            </div>
-            <div class="w-method" id="m-xr" onclick="setPay('xr')">
-              <span class="ico">🚀</span><span class="nm">xRocket</span>
-            </div>
+            <div class="w-method sel" id="m-cb" onclick="setPay('cb')"><span class="ico">🤖</span><span class="nm">CryptoBot</span></div>
           </div>
-
           <div class="w-label">Сумма (USDT)</div>
           <input class="w-input" id="damt" type="number" min="0.1" step="0.1" value="10">
           <div class="w-quick">
@@ -84,7 +77,6 @@
             <button class="w-q" onclick="sd(50)">$50</button>
             <button class="w-q" onclick="sd(100)">$100</button>
           </div>
-
           <button class="w-btn w-dep-btn" id="dbtn" onclick="doDeposit()">💳 Пополнить</button>
           <div class="w-msg" id="dmsg"></div>
         </div>
@@ -95,24 +87,11 @@
             <div class="w-bal-label">Доступно</div>
             <div class="w-bal-val">$<span id="wbal">100.00</span></div>
           </div>
-
-          <div class="w-label">Способ вывода</div>
-          <div class="w-methods">
-            <div class="w-method sel" id="mw-cb" onclick="setPay('cb')">
-              <span class="ico">🤖</span><span class="nm">CryptoBot</span>
-            </div>
-            <div class="w-method" id="mw-xr" onclick="setPay('xr')">
-              <span class="ico">🚀</span><span class="nm">xRocket</span>
-            </div>
-          </div>
-
           <div class="w-label">Кошелёк USDT (TRC-20)</div>
           <input class="w-input" id="wwallet" type="text" placeholder="T... (адрес кошелька)">
-
           <div class="w-label">Сумма вывода</div>
           <input class="w-input" id="wamt" type="number" min="1" step="0.1" value="" placeholder="Мин. $1">
           <div class="w-receive">Получите: $<span id="wrec">0.00</span> <span style="font-size:11px;color:var(--muted)">(комиссия 3%)</span></div>
-
           <button class="w-btn w-wd-btn" id="wbtn" onclick="doWithdraw()" disabled>📤 Вывести</button>
           <div class="w-wd-info">Мин. вывод $1.05 / Комиссия 3% / Вывод вручную через поддержку</div>
           <div class="w-msg" id="wmsg"></div>
@@ -144,7 +123,7 @@
     function clr(el){el.className='w-msg';}
 
     window.showTab=function(t){document.querySelectorAll('.w-tabs .tab').forEach(function(x,i){x.classList.toggle('active',(t==='dep'&&i===0)||(t==='wd'&&i===1));});document.getElementById('tab-dep').classList.toggle('active',t==='dep');document.getElementById('tab-wd').classList.toggle('active',t==='wd');};
-    window.setPay=function(p){pay=p;document.getElementById('m-cb').classList.toggle('sel',p==='cb');document.getElementById('m-xr').classList.toggle('sel',p==='xr');document.getElementById('mw-cb').classList.toggle('sel',p==='cb');document.getElementById('mw-xr').classList.toggle('sel',p==='xr');};
+    window.setPay=function(p){pay=p;document.getElementById('m-cb').classList.toggle('sel',p==='cb');};
     window.sd=function(v){document.getElementById('damt').value=v;};
 
     document.getElementById('wamt').oninput=function(){var v=parseFloat(this.value)||0;var r=Math.max(0,v*0.97);document.getElementById('wrec').textContent=fmt(r);document.getElementById('wbtn').disabled=v<1.05;};
@@ -154,26 +133,24 @@
       if(amt<0.1){msg(document.getElementById('dmsg'),'Мин. сумма $0.1','err');return;}
       var btn=document.getElementById('dbtn');btn.disabled=true;btn.textContent='⏳ Создание...';
       clr(document.getElementById('dmsg'));
-      var ep=pay==='xr'?'/api/deposit/xrocket':'/api/deposit/invoice';
-      fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid,amount:amt})})
+      fetch('/api/invoice',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid,amount:amt})})
       .then(function(r){return r.json();})
       .then(function(d){
-        console.log('deposit resp:',d);
+        console.log('invoice resp:',d);
         if(d.ok&&d.payUrl){
           msg(document.getElementById('dmsg'),'✅ Счёт создан! Переход на оплату...','ok');
-          // redirect to payment
           if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openLink){
             window.Telegram.WebApp.openLink(d.payUrl,{try_instant_view:false});
           }else{
             window.location.href=d.payUrl;
           }
-          // check payment
           if(invChk)clearInterval(invChk);
-         .invChk=setInterval(function(){
-            fetch('/api/deposit/check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({invoiceId:d.invoiceId})})
+          invChk=setInterval(function(){
+            fetch('/api/invoice/check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({invoiceId:d.invoiceId})})
             .then(function(r){return r.json();})
             .then(function(cd){
-              if(cd.status==='paid'){clearInterval(invChk);upd(bal+amt);msg(document.getElementById('dmsg'),'✅ Оплачено! +$'+fmt(amt),'ok');}
+              console.log('check:',cd);
+              if(cd.status==='paid'){clearInterval(invChk);upd(bal+parseFloat(cd.amount));msg(document.getElementById('dmsg'),'✅ Оплачено! +$'+fmt(cd.amount),'ok');}
             }).catch(function(){});
           },3000);
         }else{
@@ -191,32 +168,13 @@
       if(amt>bal){msg(document.getElementById('wmsg'),'Недостаточно средств','err');return;}
       var btn=document.getElementById('wbtn');btn.disabled=true;btn.textContent='⏳ Заявка...';
       clr(document.getElementById('wmsg'));
-
-      // Save withdrawal request to localStorage (admin will process)
       var requests=JSON.parse(localStorage.getItem('wd_requests')||'[]');
       requests.push({userId:uid,amount:amt,wallet:wallet,fee:Math.round(amt*0.03*100)/100,net:Math.round(amt*0.97*100)/100,date:Date.now(),status:'pending'});
       localStorage.setItem('wd_requests',JSON.stringify(requests));
-
-      // Also try API
-      var ep=pay==='xr'?'/api/withdraw/xrocket':'/api/withdraw';
-      fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid,amount:amt,wallet:wallet})})
-      .then(function(r){return r.json();})
-      .then(function(d){
-        console.log('withdraw resp:',d);
-        if(d.ok){
-          upd(d.balance);
-          msg(document.getElementById('wmsg'),'✅ Вывод обработан! Получите: $'+fmt(d.net),'ok');
-          document.getElementById('wamt').value='';document.getElementById('wamt').dispatchEvent(new Event('input'));
-        }else{
-          msg(document.getElementById('wmsg'),'Заявка создана! Ожидайте обработки в поддержке.','info');
-        }
-      }).catch(function(e){
-        msg(document.getElementById('wmsg'),'Заявка сохранена! Обработаем в течение 24ч.','info');
-      })
-      .finally(function(){btn.disabled=false;btn.textContent='📤 Вывести';});
+      msg(document.getElementById('wmsg'),'✅ Заявка создана! Ожидайте обработки в поддержке.','info');
+      setTimeout(function(){btn.disabled=false;btn.textContent='📤 Вывести';},2000);
     };
 
-    // Init
     upd(bal);
     document.getElementById('wamt').dispatchEvent(new Event('input'));
   })();
