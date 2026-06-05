@@ -78,12 +78,19 @@ app.post('/api/deposit/invoice', async(req,res)=>{
   if(!userId||!amount||amount<0.1) return res.status(400).json({error:'min $0.1'});
   try{
     console.log('Creating cryptobot invoice:', {userId, amount});
-    const body = {asset:'USDT',amount:Number(amount).toFixed(6),description:`Deposit ${userId}`,payload:JSON.stringify({userId}),expires_in:1800};
+    const body = {
+      asset:'USDT',
+      amount:String(Number(amount).toFixed(2)),
+      description:`Deposit ${userId}`,
+      payload:JSON.stringify({userId}),
+      expires_in:1800,
+      allow_anonymous:false
+    };
     console.log('Request body:', JSON.stringify(body));
     const r=await cryptobotReq('createInvoice',body);
     console.log('Cryptobot response:', JSON.stringify(r));
     if(r.ok) res.json({ok:true,invoiceId:r.result.invoice_id,payUrl:r.result.bot_invoice_url});
-    else res.status(500).json({error:r.error||JSON.stringify(r)});
+    else res.status(500).json({error:JSON.stringify(r)});
   }catch(e){console.error('Cryptobot error:',e);res.status(500).json({error:e.message});}
 });
 
@@ -91,42 +98,29 @@ app.post('/api/deposit/check', async(req,res)=>{
   const {invoiceId}=req.body||{};
   if(!invoiceId) return res.status(400).json({error:'missing'});
   try{
-    const r=await cryptobotReq('getInvoices',{invoice_ids:String(invoiceId)});
-    if(r.ok&&r.result.items?.length>0){
+    const r=await cryptobotReq('getInvoices',{invoice_ids:String(invoiceId),count:1});
+    console.log('Check response:', JSON.stringify(r));
+    if(r.ok&&r.result?.items?.length>0){
       const inv=r.result.items[0];
       if(inv.status==='paid'){
-        const payload=JSON.parse(inv.payload||'{}');
-        setBalance(payload.userId, getBalance(payload.userId)+parseFloat(inv.amount));
+        try{const payload=JSON.parse(inv.payload||'{}');if(payload.userId)setBalance(payload.userId,getBalance(payload.userId)+parseFloat(inv.amount));}catch(e){}
       }
-      res.json({ok:true,status:inv.status});
+      res.json({ok:true,status:inv.status,amount:inv.amount});
     }else res.json({ok:true,status:'not_found'});
   }catch(e){res.status(500).json({error:e.message});}
 });
 
-app.post('/api/cryptobot-webhook', express.raw({type:'application/json'}), (req,res)=>{
-  try{
-    const body=JSON.parse(req.body.toString());
-    if(body.update_type==='invoice_paid'){
-      const payload=JSON.parse(body.payload.payload||'{}');
-      if(payload.userId){
-        setBalance(payload.userId, getBalance(payload.userId)+parseFloat(body.payload.amount));
-        io.emit('balance_update',{userId:payload.userId,amount:parseFloat(body.payload.amount)});
-      }
-    }
-  }catch(e){}
-  res.json({ok:true});
-});
-
-app.post('/api/withdraw/cryptobot', async(req,res)=>{
+app.post('/api/withdraw', async(req,res)=>{
   const {userId,amount}=req.body||{};
   if(!userId||!amount||amount<1) return res.status(400).json({error:'min $1'});
   const amt=Math.round(Number(amount)*100)/100, fee=Math.round(amt*0.03*100)/100, total=amt+fee;
   if(getBalance(userId)<total) return res.status(400).json({error:'insufficient'});
   try{
     const spendId='wd_'+Date.now()+'_'+Math.random().toString(36).substr(2,9);
-    const r=await cryptobotReq('transfer',{user_id:parseInt(userId)||0,asset:'USDT',amount:amt.toFixed(6),spend_id:spendId,comment:'Katyshka withdraw'});
+    const r=await cryptobotReq('transfer',{user_id:parseInt(userId)||0,asset:'USDT',amount:String(amt.toFixed(2)),spend_id:spendId,comment:'Katyshka withdraw'});
+    console.log('Transfer response:', JSON.stringify(r));
     if(r.ok){setBalance(userId,getBalance(userId)-total);res.json({ok:true,received:amt,fee,balance:getBalance(userId)});}
-    else res.status(500).json({error:r.error});
+    else res.status(500).json({error:JSON.stringify(r)});
   }catch(e){res.status(500).json({error:e.message});}
 });
 
