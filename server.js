@@ -152,18 +152,25 @@ app.post('/api/cryptobot-hook', express.raw({ type: 'application/json' }), (req,
 
 // === XROCKET API ===
 const XROCKET_KEY = 'f391f7a440adb0cfb0f7a1afe';
-const XROCKET_URL = 'https://pay.xrocket.tg/api';
+const XROCKET_URL = 'https://pay.xrocket.tg/api/v1';
 
 async function xrocket(method, params) {
-  const headers = { 'Content-Type': 'application/json' };
-  // xRocket uses token in URL or header
+  const isGet = !params;
   const url = `${XROCKET_URL}/${method}`;
   
-  const res = await fetch(url, {
-    method: params ? 'POST' : 'GET',
-    headers: { ...headers, 'Authorization': `Bearer ${XROCKET_KEY}` },
-    body: params ? JSON.stringify(params) : undefined
-  });
+  const options = {
+    method: isGet ? 'GET' : 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'XR-API-Key': XROCKET_KEY
+    }
+  };
+  
+  if (!isGet) {
+    options.body = JSON.stringify(params);
+  }
+  
+  const res = await fetch(url, options);
   return res.json();
 }
 
@@ -175,27 +182,29 @@ app.post('/api/invoice/xrocket', async (req, res) => {
       return res.status(400).json({ error: 'Min amount: $0.1' });
     }
 
-    const result = await xrocket('invoice', {
+    console.log('Creating xRocket invoice:', { userId, amount });
+
+    const result = await xrocket('invoices', {
       amount: String(Number(amount).toFixed(2)),
-      currency: 'TONCOIN',
+      currency: 'TON',
       description: `Deposit for ${userId}`,
       payload: JSON.stringify({ userId }),
-      expiredIn: 1800
+      expire: 1800
     });
 
     console.log('xRocket response:', JSON.stringify(result));
 
-    // xRocket returns data in different format
-    if (result.ok || result.data || result.invoice_id) {
+    if (result.success || result.data || result.invoice_id || result.id) {
       const invoice = result.data || result;
-      addTx('deposit', userId, Number(amount), 'pending', { provider: 'xrocket', invoiceId: invoice.invoice_id || invoice.id });
-      res.json({
-        ok: true,
-        invoiceId: invoice.invoice_id || invoice.id,
-        payUrl: invoice.pay_url || invoice.bot_invoice_url || invoice.mini_app_invoice_url
-      });
+      const invoiceId = invoice.invoice_id || invoice.id;
+      const payUrl = invoice.pay_url || invoice.bot_invoice_url || invoice.mini_app_invoice_url || `https://t.me/xRocket?start=invoice_${invoiceId}`;
+      
+      addTx('deposit', userId, Number(amount), 'pending', { provider: 'xrocket', invoiceId: String(invoiceId) });
+      
+      res.json({ ok: true, invoiceId: String(invoiceId), payUrl });
     } else {
-      res.status(500).json({ error: result.error || result.message || 'Failed' });
+      console.error('xRocket error:', result);
+      res.status(500).json({ error: result.message || result.error || 'Failed to create invoice' });
     }
   } catch (e) {
     console.error('xRocket error:', e);
@@ -209,27 +218,62 @@ app.post('/api/invoice/check/xrocket', async (req, res) => {
     const { invoiceId } = req.body;
     if (!invoiceId) return res.status(400).json({ error: 'Missing invoiceId' });
 
-    const result = await xrocket(`invoice/${invoiceId}`);
+    const result = await xrocket(`invoices/${invoiceId}`);
     console.log('xRocket check:', JSON.stringify(result));
 
-    if (result.ok || result.data) {
+    if (result.success || result.data) {
       const inv = result.data || result;
-      if (inv.status === 'paid' || inv.status === 'completed') {
+      const status = inv.status || inv.state;
+      
+      if (status === 'paid' || status === 'completed' || status === 'success') {
         try {
           const payload = JSON.parse(inv.payload || '{}');
           if (payload.userId) {
             setBalance(payload.userId, getBalance(payload.userId) + parseFloat(inv.amount));
-            // Update transaction status
-            const tx = transactions.find(t => t.invoiceId === invoiceId);
+            const tx = transactions.find(t => t.invoiceId === String(invoiceId));
             if (tx) tx.status = 'completed';
+            console.log(`xRocket: Credited $${inv.amount} to ${payload.userId}`);
           }
         } catch (e) {}
       }
-      res.json({ ok: true, status: inv.status, amount: inv.amount });
+      res.json({ ok: true, status, amount: inv.amount });
     } else {
       res.json({ ok: true, status: 'not_found' });
     }
   } catch (e) {
+    console.error('xRocket check error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Withdraw via xRocket
+app.post('/api/withdraw/xrocket', async (req, res) => {
+  try {
+    const { userId, amount, wallet } = req.body;
+    if (!userId || !amount || amount < 1) return res.status(400).json({ error: 'Min $1' });
+    
+    const amt = Math.round(Number(amount) * 100) / 100;
+    const fee = Math.round(amt * 0.03 * 100) / 100;
+    const total = amt + fee;
+    
+    if (getBalance(userId) < total) return res.status(400).json({ error: 'Insufficient balance' });
+
+    const result = await xrocket('transfers', {
+      user_id: parseInt(userId) || 0,
+      amount: String(amt.toFixed(2)),
+      currency: 'TON',
+      comment: 'Katyshka withdraw'
+    });
+
+    if (result.success || result.data) {
+      setBalance(userId, getBalance(userId) - total);
+      addTx('withdraw', userId, amt, 'completed', { provider: 'xrocket' });
+      res.json({ ok: true, received: amt, fee, balance: getBalance(userId) });
+    } else {
+      res.status(500).json({ error: result.message || result.error || 'Transfer failed' });
+    }
+  } catch (e) {
+    console.error('xRocket withdraw error:', e);
     res.status(500).json({ error: e.message });
   }
 });
