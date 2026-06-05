@@ -221,15 +221,20 @@
         if(data.ok&&data.payUrl){
           showStatus(depStatus,'✅ Счёт создан! Переход на оплату...','ok');
           // Open payment URL
-          if(window.Telegram&&window.Telegram.WebApp){
-            window.Telegram.WebApp.openLink(data.payUrl);
-          }else{
+          try{
+            if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openLink){
+              window.Telegram.WebApp.openLink(data.payUrl);
+            }else{
+              window.open(data.payUrl,'_blank');
+            }
+          }catch(e){
             window.open(data.payUrl,'_blank');
           }
           // Start checking payment
           checkPayment(data.invoiceId,amt);
         }else{
           showStatus(depStatus,'Ошибка: '+(data.error||'Не удалось создать счёт'),'err');
+          console.error('Deposit error:',data);
         }
       }catch(e){showStatus(depStatus,'Ошибка сети: '+e.message,'err');}
       depositBtn.disabled=false;depositBtn.textContent='💳 Пополнить';

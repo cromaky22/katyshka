@@ -77,10 +77,14 @@ app.post('/api/deposit/invoice', async(req,res)=>{
   const {userId,amount}=req.body||{};
   if(!userId||!amount||amount<0.1) return res.status(400).json({error:'min $0.1'});
   try{
-    const r=await cryptobotReq('createInvoice',{asset:'USDT',amount:Number(amount).toFixed(6),description:`Deposit ${userId}`,payload:JSON.stringify({userId}),expires_in:1800});
+    console.log('Creating cryptobot invoice:', {userId, amount});
+    const body = {asset:'USDT',amount:Number(amount).toFixed(6),description:`Deposit ${userId}`,payload:JSON.stringify({userId}),expires_in:1800};
+    console.log('Request body:', JSON.stringify(body));
+    const r=await cryptobotReq('createInvoice',body);
+    console.log('Cryptobot response:', JSON.stringify(r));
     if(r.ok) res.json({ok:true,invoiceId:r.result.invoice_id,payUrl:r.result.bot_invoice_url});
-    else res.status(500).json({error:r.error});
-  }catch(e){res.status(500).json({error:e.message});}
+    else res.status(500).json({error:r.error||JSON.stringify(r)});
+  }catch(e){console.error('Cryptobot error:',e);res.status(500).json({error:e.message});}
 });
 
 app.post('/api/deposit/check', async(req,res)=>{
