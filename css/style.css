@@ -45,7 +45,7 @@ html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;back
 }
 
 /* Profile dropdown */
-.profile-dropdown{position:absolute;top:52px;right:0;width:240px;background:linear-gradient(180deg, rgba(12,16,30,0.98), rgba(8,12,24,0.98));border-radius:14px;border:1px solid rgba(255,255,255,0.06);box-shadow:0 20px 60px rgba(0,0,0,0.6);z-index:200;opacity:0;pointer-events:none;transform:translateY(-8px);transition:opacity .2s,transform .2s}
+.profile-dropdown{position:absolute;top:52px;right:0;width:240px;background:linear-gradient(180deg, rgba(12,16,30,0.98), rgba(8,12,24,0.98));border-radius:14px;border:1px solid rgba(255,255,255,0.06);box-shadow:0 20px 60px rgba(0,0,0,0.6);z-index:9999;opacity:0;pointer-events:none;transform:translateY(-8px);transition:opacity .2s,transform .2s}
 .profile-dropdown.open{opacity:1;pointer-events:auto;transform:translateY(0)}
 .profile-dropdown::before{content:'';position:fixed;inset:0;z-index:-1}
 .pd-header{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.04)}
@@ -58,7 +58,7 @@ html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;back
 .pd-btn:hover{background:rgba(255,255,255,0.05)}
 .pd-btn .pd-btn-icon{font-size:18px;width:24px;text-align:center}
 .pd-btn .pd-btn-arrow{margin-left:auto;font-size:12px;color:var(--muted)}
-.pd-overlay{position:fixed;inset:0;z-index:199;display:none}
+.pd-overlay{position:fixed;inset:0;z-index:9998;display:none}
 .pd-overlay.open{display:block}
 .content{padding:20px;padding-bottom:90px;background:transparent}
 .btn{background:var(--accent);border:none;padding:10px 14px;border-radius:8px;color:#041017}
@@ -154,7 +154,7 @@ html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;back
 
 /* Clickable game tile with background image */
 .games-grid .game-tile{display:flex;flex-direction:column;align-items:center;padding:0;border-radius:12px;overflow:hidden;background:none;box-shadow:none}
-.games-grid .game-thumb-link{display:block;width:100%;height:120px;overflow:hidden;border-radius:12px}
+.games-grid .game-thumb-link{display:flex;align-items:center;justify-content:center;width:100%;height:120px;overflow:hidden;border-radius:12px;background:linear-gradient(135deg,rgba(255,193,7,0.12),rgba(255,152,0,0.08))}
 .games-grid .game-thumb{width:100%;height:100%;object-fit:cover;display:block;border-radius:12px}
 .games-grid .game-caption{padding:8px 10px;text-align:center;width:100%;background:transparent;margin-top:6px}
 .games-grid .game-name{color:var(--text);font-weight:700;display:block}

@@ -198,6 +198,17 @@
       '6': 200.00
     };
 
+    // Inject promo modal into DOM if missing
+    if(!document.getElementById('promoModal')){
+      var pm = document.createElement('div');
+      pm.className = 'promo-modal';
+      pm.id = 'promoModal';
+      pm.setAttribute('aria-hidden','true');
+      pm.style.display = 'none';
+      pm.innerHTML = '<div class="promo-card"><button class="promo-close" id="promoClose" aria-label="Close">✕</button><div class="promo-illustration"><img src="assets/promo_card.png" alt="promo" onerror="this.style.display=\'none\'"></div><h3>Активируй промокод и получи бонус</h3><p class="promo-sub">Введите код</p><input id="promoCodeInput" class="promo-input" placeholder="katyshka" maxlength="40"><div class="promo-actions"><button id="promoActivate" class="btn">Активировать</button></div><div id="promoMessage" class="promo-message" aria-live="polite"></div></div>';
+      document.body.appendChild(pm);
+    }
+
     function normalizeCode(s){ return (s||'').replace(/[^A-Z0-9]/ig,'').toUpperCase(); }
 
     const promoButtons = document.querySelectorAll('[data-action="promo"]');
