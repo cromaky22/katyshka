@@ -201,7 +201,8 @@ html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;back
 }
 
 /* Ensure main UI sits above hearts */
-.app-header,.content,.site-footer{position:relative;z-index:1}
+.app-header{position:relative;z-index:1000}
+.content,.site-footer{position:relative;z-index:10}
 
 /* Page loader overlay */
 .page-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(11,12,20,0.6), rgba(11,6,25,0.6));backdrop-filter:blur(6px);z-index:9999;opacity:0;pointer-events:none;transition:opacity .28s ease}
