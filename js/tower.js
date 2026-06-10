@@ -242,11 +242,12 @@ document.addEventListener('DOMContentLoaded', function(){
       return;
     }
 
-    startGame(stake);
-  });
+     startGame(stake);
+   });
 
-  collectBtn.addEventListener('click', () => {
-    setBalance(getBalance() + currentWinnings);
+   collectBtn.addEventListener('click', () => {
+     if(window.mcStats) mcStats.addWin(currentWinnings, 'Tower', `Уровень ${currentLevel}, ${bombCount} бомб`);
+     setBalance(getBalance() + currentWinnings);
     gameStatus.textContent = `Вы забрали $${currentWinnings.toFixed(2)}`;
     gameStatus.className = 'game-status success';
     // Добавляем в историю ставку на уровне, где остановился
@@ -280,8 +281,9 @@ document.addEventListener('DOMContentLoaded', function(){
     currentWinnings = 0;
     gameState = 'playing';
 
-    setBalance(getBalance() - stake);
-    generateTower();
+     setBalance(getBalance() - stake);
+     if(window.mcStats) mcStats.addBet(Math.abs(stake), 'Tower', `${bombCount} бомб`);
+     generateTower();
 
     stakePanel.style.display = 'none';
     gamePanel.style.display = 'flex';
@@ -317,9 +319,10 @@ document.addEventListener('DOMContentLoaded', function(){
     const cell = towerData[levelIndex][cellCol];
     cell.opened = true;
     
-    if(cell.isBomb) {
-      gameStatus.textContent = '✗ Вы попали на бомбу!';
-      gameStatus.className = 'game-status error';
+     if(cell.isBomb) {
+       gameStatus.textContent = '✗ Вы попали на бомбу!';
+       if(window.mcStats) mcStats.addLoss(Math.abs(currentBet), 'Tower', `Уровень ${levelIndex + 1}, ${bombCount} бомб`);
+       gameStatus.className = 'game-status error';
       gameState = 'result';
       showAllBombs = true; // Сразу показываем остальные бомбы
       continueBtn.style.display = 'none'; // Скрываем кнопку ПРОДОЛЖИТЬ

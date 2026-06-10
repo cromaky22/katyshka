@@ -243,9 +243,10 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
-    currentStake = stake;
-    setBalance(getBalance() - stake);
-    gameState = 'spinning';
+     currentStake = stake;
+     setBalance(getBalance() - stake);
+     if(window.mcStats) mcStats.addBet(Math.abs(stake), 'DreamCatcher', `Ставка на x${selectedBet}`);
+     gameState = 'spinning';
 
     playBtn.disabled = true;
     betsPanel.style.opacity = '0.5';
@@ -299,9 +300,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (won) {
       const HOUSE_EDGE = 0.06;
       const payouts = { 1: 2.0, 2: 3.0, 5: 5.0, 10: 10.0, 20: 20.0, 40: 40.0 };
-      winAmount = Math.round(currentStake * (payouts[betValue] || 0) * (1 - HOUSE_EDGE) * 100) / 100;
-      setBalance(getBalance() + winAmount);
-    }
+       winAmount = Math.round(currentStake * (payouts[betValue] || 0) * (1 - HOUSE_EDGE) * 100) / 100;
+       setBalance(getBalance() + winAmount);
+        if(window.mcStats) mcStats.addWin(winAmount, 'DreamCatcher', `Выпало x${finalNum}`);
+     } else {
+       if(window.mcStats) mcStats.addLoss(currentStake, 'DreamCatcher', `Выпало x${finalNum}, ставка на x${betValue}`);
+     }
 
     resultEmoji.textContent = won ? '🎉' : '💫';
     resultEmoji.style.animation = 'none';

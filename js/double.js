@@ -205,8 +205,9 @@ document.addEventListener('DOMContentLoaded', function(){
     spinning = true;
     playBtn.disabled = true;
     betBtns.forEach(b => b.disabled = true);
-    setBalance(getBalance() - stake);
-    resultLens.classList.remove('show');
+     setBalance(getBalance() - stake);
+     if(window.mcStats) mcStats.addBet(Math.abs(stake), 'Double', `Цвет: ${selectedColor}`);
+     resultLens.classList.remove('show');
     gameStatusEl.textContent = '';
 
     const target = Math.floor(Math.random() * TOTAL);
@@ -215,14 +216,16 @@ document.addEventListener('DOMContentLoaded', function(){
       const won = res.name === selectedColor;
       const winAmt = won ? Math.round(stake * res.num * 100) / 100 : 0;
 
-      if (won) {
-        setBalance(getBalance() + winAmt);
-        gameStatusEl.textContent = `Выиграли $${winAmt.toFixed(2)}!`;
+       if (won) {
+         setBalance(getBalance() + winAmt);
+         if(window.mcStats) mcStats.addWin(winAmt, 'Double', `Выпало x${res.num} (${res.name})`);
+         gameStatusEl.textContent = `Выиграли $${winAmt.toFixed(2)}!`;
         gameStatusEl.className = 'game-status success';
         winSfx();
-      } else {
-        gameStatusEl.textContent = `Проиграло. Выпало ${res.label}`;
-        gameStatusEl.className = 'game-status error';
+       } else {
+         gameStatusEl.textContent = `Проиграло. Выпало ${res.label}`;
+         if(window.mcStats) mcStats.addLoss(Math.abs(stake), 'Double', `Выпало ${res.label}`);
+         gameStatusEl.className = 'game-status error';
         loseSfx();
       }
 

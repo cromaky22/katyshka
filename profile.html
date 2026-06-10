@@ -28,7 +28,6 @@
           <div class="pd-id-label">ID игрока</div>
           <div class="pd-id-value">
             <span id="pdUserId">—</span>
-            <span class="copy-id" id="copyIdBtn" title="Копировать ID">📋</span>
           </div>
         </div>
         <div class="pd-body">
@@ -41,6 +40,8 @@
   </header>
 
   <main class="content">
+
+    <!-- User card -->
     <section class="profile-section">
       <div class="profile-card">
         <div class="profile-avatar-wrap">
@@ -51,38 +52,94 @@
         <div class="profile-name" id="profileName">Игрок</div>
         <div class="profile-id-display">ID: <span id="profileIdDisplay">—</span></div>
       </div>
+    </section>
 
+    <!-- Finances -->
+    <section class="profile-section">
+      <div class="section-heading">💰 Финансы</div>
       <div class="profile-stats">
         <div class="stat-card">
-          <div class="stat-icon">💠</div>
+          <div class="stat-icon">📥</div>
           <div class="stat-info">
-            <div class="stat-label">Баланс</div>
-            <div class="stat-value" id="profileBalance">$0.00</div>
+            <div class="stat-label">Пополнений</div>
+            <div class="stat-value" id="statDeposit">$0.00</div>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon">🎮</div>
+          <div class="stat-icon">📤</div>
           <div class="stat-info">
-            <div class="stat-label">Игр сыграно</div>
-            <div class="stat-value" id="profileGames">0</div>
+            <div class="stat-label">Выводы</div>
+            <div class="stat-value" id="statWithdraw">$0.00</div>
           </div>
         </div>
         <div class="stat-card">
           <div class="stat-icon">🏆</div>
           <div class="stat-info">
-            <div class="stat-label">Выигрыш</div>
-            <div class="stat-value" id="profileWins">$0.00</div>
+            <div class="stat-label">Общий выигрыш</div>
+            <div class="stat-value" id="statTotalWin">$0.00</div>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon">🎁</div>
+          <div class="stat-icon">🔥</div>
           <div class="stat-info">
-            <div class="stat-label">Промокодов</div>
-            <div class="stat-value" id="profilePromos">0</div>
+            <div class="stat-label">Макс. выигрыш</div>
+            <div class="stat-value" id="statMaxWin">$0.00</div>
           </div>
         </div>
       </div>
     </section>
+
+    <!-- Game stats -->
+    <section class="profile-section">
+      <div class="section-heading">🎮 Статистика игр</div>
+      <div class="profile-stats">
+        <div class="stat-card">
+          <div class="stat-icon">🎲</div>
+          <div class="stat-info">
+            <div class="stat-label">Всего игр</div>
+            <div class="stat-value" id="statGames">0</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">✅</div>
+          <div class="stat-info">
+            <div class="stat-label">Побед</div>
+            <div class="stat-value" id="statWins">0</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">❌</div>
+          <div class="stat-info">
+            <div class="stat-label">Поражений</div>
+            <div class="stat-value" id="statLosses">0</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📊</div>
+          <div class="stat-info">
+            <div class="stat-label">Рейтинг побед</div>
+            <div class="stat-value" id="statWinRate">0%</div>
+          </div>
+        </div>
+        <div class="stat-card stat-card-wide">
+          <div class="stat-icon">💸</div>
+          <div class="stat-info">
+            <div class="stat-label">Сумма ставок</div>
+            <div class="stat-value" id="statTotalBets">$0.00</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- History -->
+    <section class="profile-section">
+      <div class="section-heading">📋 История операций</div>
+      <div class="history-wrap" id="historyWrap">
+        <div class="history-empty" id="historyEmpty">Нет операций</div>
+        <div class="history-list" id="historyList"></div>
+      </div>
+    </section>
+
   </main>
 
   <!-- Promo modal -->

@@ -191,6 +191,7 @@ document.addEventListener('DOMContentLoaded', function(){
     currentBets.push({ type, amount: stake });
     updateMyBetsDisplay();
     gameStatusEl.textContent = '';
+    if(window.mcStats) mcStats.addBet(stake, 'Wheel', getBetLabel(type));
     socket.emit('wheel:bet', { type, amount: stake, playerName, playerAvatar });
   }
 
@@ -303,10 +304,13 @@ document.addEventListener('DOMContentLoaded', function(){
         gameStatusEl.textContent = `Выиграли $${myWin.toFixed(2)}! Выпало ${res.num}`;
         gameStatusEl.className = 'game-status success';
         winSfx();
+        if(window.mcStats) mcStats.addWin(myWin, 'Wheel', 'Выпало ' + res.num);
       } else {
         gameStatusEl.textContent = `Выпало ${res.num}`;
         gameStatusEl.className = 'game-status error';
         loseSfx();
+        const totalBet = currentBets.reduce((s,b)=>s+b.amount,0);
+        if(window.mcStats && totalBet > 0) mcStats.addLoss(totalBet, 'Wheel', 'Выпало ' + res.num);
       }
       resultLens.textContent = res.num;
       resultLens.style.backgroundColor = res.color === 'green' ? '#8bc34a' : (res.color === 'red' ? '#f44336' : '#101010');

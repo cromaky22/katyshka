@@ -143,8 +143,9 @@ document.addEventListener('DOMContentLoaded', function(){
     const v = parseInt(probabilitySlider.value);
     const t = selectedType;
     
-    // Deduct stake
-    setBalance(getBalance() - bet);
+     // Deduct stake
+     setBalance(getBalance() - bet);
+     if(window.mcStats) mcStats.addBet(Math.abs(bet), 'Nvuti', `${selectedType === 0 ? 'Меньше' : 'Больше'} ${v}%`);
     
     // Hide stake panel, show result panel
     stakePanel.style.display = 'none';
@@ -180,10 +181,13 @@ document.addEventListener('DOMContentLoaded', function(){
       coef: coef
     };
     
-    // Add to balance if win
-    if(win) {
-      setBalance(getBalance() + winAmount);
-    }
+     // Add to balance if win
+     if(win) {
+       setBalance(getBalance() + winAmount);
+       if(window.mcStats) mcStats.addWin(winAmount, 'Nvuti', `${selectedType === 0 ? 'Меньше' : 'Больше'} ${v}%, число ${number}`);
+     } else {
+       if(window.mcStats) mcStats.addLoss(Math.abs(bet), 'Nvuti', `${selectedType === 0 ? 'Меньше' : 'Больше'} ${v}%, число ${number}`);
+     }
     
     // Show result with rolling animation
     animateResultNumber(number, () => {

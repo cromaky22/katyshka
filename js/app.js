@@ -6,6 +6,63 @@
     return;
   }
 
+  // === Stats & History helpers ===
+  window.mcStats = {
+    addBet: function(amount, game, detail){
+      amount = Math.abs(parseFloat(amount)||0);
+      if(amount <= 0) return;
+      var games = parseInt(localStorage.getItem('mc_games_played')||'0') + 1;
+      var bets = parseFloat(localStorage.getItem('mc_total_bets')||'0') + amount;
+      localStorage.setItem('mc_games_played', games);
+      localStorage.setItem('mc_total_bets', bets.toFixed(2));
+      this._addHistory('bet', amount, game, detail);
+    },
+    addWin: function(amount, game, detail){
+      amount = Math.abs(parseFloat(amount)||0);
+      if(amount <= 0) return;
+      var wins = parseInt(localStorage.getItem('mc_wins_count')||'0') + 1;
+      var totalWin = parseFloat(localStorage.getItem('mc_total_win_amount')||'0') + amount;
+      var maxWin = parseFloat(localStorage.getItem('mc_max_win')||'0');
+      if(amount > maxWin) maxWin = amount;
+      localStorage.setItem('mc_wins_count', wins);
+      localStorage.setItem('mc_total_win_amount', totalWin.toFixed(2));
+      localStorage.setItem('mc_max_win', maxWin.toFixed(2));
+      this._addHistory('win', amount, game, detail);
+    },
+    addLoss: function(amount, game, detail){
+      amount = Math.abs(parseFloat(amount)||0);
+      var losses = parseInt(localStorage.getItem('mc_losses_count')||'0') + 1;
+      localStorage.setItem('mc_losses_count', losses);
+      this._addHistory('loss', amount, game, detail);
+    },
+    addDeposit: function(amount, detail){
+      amount = Math.abs(parseFloat(amount)||0);
+      var total = parseFloat(localStorage.getItem('mc_deposits_total')||'0') + amount;
+      localStorage.setItem('mc_deposits_total', total.toFixed(2));
+      this._addHistory('deposit', amount, null, detail);
+    },
+    addWithdraw: function(amount, detail){
+      amount = Math.abs(parseFloat(amount)||0);
+      var total = parseFloat(localStorage.getItem('mc_withdraws_total')||'0') + amount;
+      localStorage.setItem('mc_withdraws_total', total.toFixed(2));
+      this._addHistory('withdraw', amount, null, detail);
+    },
+    addPromo: function(amount, code){
+      amount = Math.abs(parseFloat(amount)||0);
+      var total = parseFloat(localStorage.getItem('mc_deposits_total')||'0') + amount;
+      localStorage.setItem('mc_deposits_total', total.toFixed(2));
+      this._addHistory('promo', amount, null, 'Код: ' + code);
+    },
+    _addHistory: function(type, amount, game, detail){
+      try{
+        var history = JSON.parse(localStorage.getItem('mc_history')||'[]');
+        history.push({ type:type, amount:amount, game:game||null, detail:detail||null, time:Date.now() });
+        if(history.length > 200) history = history.slice(-200);
+        localStorage.setItem('mc_history', JSON.stringify(history));
+      }catch(e){}
+    }
+  };
+
   // Initialize activation system (max 10 activations)
   (function(){
     const MAX_ACTIVATIONS = 10;
@@ -218,7 +275,10 @@
         // Mark as activated
         activated.push(code);
         setActivated(activated);
-        
+
+        // Track promo stats
+        if(window.mcStats) mcStats.addPromo(amount, code);
+
         // Success message
         showMessage('✅ Промокод активирован! +$' + Number(amount).toFixed(2), true);
         
@@ -418,7 +478,6 @@
   const btn = document.getElementById('profileBtn');
   const dd = document.getElementById('profileDropdown');
   const overlay = document.getElementById('pdOverlay');
-  const copyBtn = document.getElementById('copyIdBtn');
   const pdUserId = document.getElementById('pdUserId');
   const pdPromoBtn = document.getElementById('pdPromoBtn');
   if(!btn || !dd) return;
@@ -428,8 +487,8 @@
       const tg = window.Telegram && window.Telegram.WebApp;
       if(tg && tg.initDataUnsafe && tg.initDataUnsafe.user) return String(tg.initDataUnsafe.user.id);
     }catch(e){}
-    let sid = sessionStorage.getItem('mc_user_id');
-    if(!sid){ sid = 'mc_' + Math.random().toString(36).substr(2,8); sessionStorage.setItem('mc_user_id', sid); }
+    let sid = localStorage.getItem('mc_user_id');
+    if(!sid){ sid = String(Math.floor(Math.random() * 900000) + 1); localStorage.setItem('mc_user_id', sid); }
     return sid;
   }
 
@@ -438,15 +497,6 @@
 
   btn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); dd.classList.contains('open') ? close() : open(); });
   if(overlay) overlay.addEventListener('click', close);
-
-  if(copyBtn){
-    copyBtn.addEventListener('click', function(){
-      const id = getId();
-      try{ navigator.clipboard && navigator.clipboard.writeText(id); }catch(e){}
-      copyBtn.textContent = '✅';
-      setTimeout(()=>{ copyBtn.textContent = '📋'; }, 1200);
-    });
-  }
 
   if(pdPromoBtn){
     pdPromoBtn.addEventListener('click', function(){

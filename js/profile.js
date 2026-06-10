@@ -2,28 +2,23 @@ document.addEventListener('DOMContentLoaded', function(){
   function getUser(){
     try{
       const tg = window.Telegram && window.Telegram.WebApp;
-      if(tg && tg.initDataUnsafe && tg.initDataUnsafe.user){
-        return tg.initDataUnsafe.user;
-      }
+      if(tg && tg.initDataUnsafe && tg.initDataUnsafe.user) return tg.initDataUnsafe.user;
     }catch(e){}
-    try{
-      const saved = localStorage.getItem('tg_user');
-      if(saved) return JSON.parse(saved);
-    }catch(e){}
+    try{ const s = localStorage.getItem('tg_user'); if(s) return JSON.parse(s); }catch(e){}
     return null;
   }
 
   function getUserId(){
     const u = getUser();
     if(u && u.id) return String(u.id);
-    let sid = sessionStorage.getItem('mc_user_id');
-    if(!sid){ sid = 'mc_' + Math.random().toString(36).substr(2,8); sessionStorage.setItem('mc_user_id', sid); }
+    let sid = localStorage.getItem('mc_user_id');
+    if(!sid){ sid = String(Math.floor(Math.random() * 900000) + 1); localStorage.setItem('mc_user_id', sid); }
     return sid;
   }
 
   function getUserName(){
     const u = getUser();
-    if(u) return (u.first_name || '') + (u.last_name ? ' ' + u.last_name : '') || u.username || 'Игрок';
+    if(u) return ((u.first_name||'') + (u.last_name?' '+u.last_name:'')).trim() || u.username || 'Игрок';
     return 'Игрок';
   }
 
@@ -34,11 +29,11 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function getUserInitials(){
-    const name = getUserName();
-    return name.trim().split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) || '?';
+    const n = getUserName();
+    return n.trim().split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2) || '?';
   }
 
-  // Fill profile data
+  // === Fill user card ===
   const userId = getUserId();
   const userName = getUserName();
   const userAvatar = getUserAvatar();
@@ -47,52 +42,142 @@ document.addEventListener('DOMContentLoaded', function(){
   const idDisplay = document.getElementById('profileIdDisplay');
   const avatarImg = document.getElementById('profileAvatarImg');
   const avatarWrap = document.getElementById('profileAvatarBig');
-  const balanceEl = document.getElementById('profileBalance');
 
   if(nameEl) nameEl.textContent = userName;
   if(idDisplay) idDisplay.textContent = userId;
-  if(balanceEl){
-    const bal = parseFloat(localStorage.getItem('mc_balance') || '100');
-    balanceEl.textContent = '$' + bal.toFixed(2);
-  }
 
-  if(avatarImg && userAvatar){
-    avatarImg.src = userAvatar;
-    avatarImg.style.display = '';
-    avatarImg.onerror = function(){ this.style.display = 'none'; };
-  }
+  if(avatarImg && userAvatar){ avatarImg.src = userAvatar; avatarImg.style.display=''; avatarImg.onerror=function(){this.style.display='none';}; }
   if(avatarWrap){
-    let initialsEl = avatarWrap.querySelector('.avatar-initials');
-    if(!initialsEl){
-      initialsEl = document.createElement('div');
-      initialsEl.className = 'avatar-initials';
-      avatarWrap.appendChild(initialsEl);
+    let el = avatarWrap.querySelector('.avatar-initials');
+    if(!el){ el=document.createElement('div'); el.className='avatar-initials'; avatarWrap.appendChild(el); }
+    el.textContent = getUserInitials();
+    el.style.display = userAvatar ? 'none' : 'flex';
+  }
+
+  // === Collect stats from localStorage ===
+  // Each game writes to localStorage keys like:
+  // mc_games_played, mc_total_wins, mc_total_bets, mc_max_win
+  // mc_deposits_total, mc_withdraws_total
+  // mc_history (JSON array of operations)
+
+  let gamesPlayed = 0;
+  let totalWins = 0;
+  let totalLosses = 0;
+  let totalWinAmount = 0;
+  let maxWin = 0;
+  let totalBets = 0;
+  let totalDeposits = 0;
+  let totalWithdraws = 0;
+
+  // Read from localStorage keys written by games
+  gamesPlayed = parseInt(localStorage.getItem('mc_games_played') || '0');
+  totalWins = parseInt(localStorage.getItem('mc_wins_count') || '0');
+  totalLosses = parseInt(localStorage.getItem('mc_losses_count') || '0');
+  totalWinAmount = parseFloat(localStorage.getItem('mc_total_win_amount') || '0');
+  maxWin = parseFloat(localStorage.getItem('mc_max_win') || '0');
+  totalBets = parseFloat(localStorage.getItem('mc_total_bets') || '0');
+  totalDeposits = parseFloat(localStorage.getItem('mc_deposits_total') || '0');
+  totalWithdraws = parseFloat(localStorage.getItem('mc_withdraws_total') || '0');
+
+  // If no detailed stats, try to derive from history
+  let history = [];
+  try{ history = JSON.parse(localStorage.getItem('mc_history') || '[]'); }catch(e){}
+
+  if(gamesPlayed === 0 && history.length > 0){
+    history.forEach(h=>{
+      if(h.type === 'bet'){ gamesPlayed++; totalBets += Math.abs(h.amount); }
+      if(h.type === 'win'){ totalWins++; totalWinAmount += h.amount; if(h.amount > maxWin) maxWin = h.amount; }
+      if(h.type === 'loss'){ totalLosses++; }
+      if(h.type === 'deposit'){ totalDeposits += h.amount; }
+      if(h.type === 'withdraw'){ totalWithdraws += Math.abs(h.amount); }
+      if(h.type === 'promo'){ totalDeposits += h.amount; }
+    });
+  }
+
+  // If still no win/loss counts, estimate from games and history
+  if(totalWins === 0 && totalLosses === 0 && gamesPlayed > 0){
+    const winItems = history.filter(h=>h.type==='win');
+    const lossItems = history.filter(h=>h.type==='loss');
+    totalWins = winItems.length;
+    totalLosses = lossItems.length;
+    winItems.forEach(h=>{ totalWinAmount+=h.amount; if(h.amount>maxWin)maxWin=h.amount; });
+  }
+
+  const winRate = gamesPlayed > 0 ? Math.round((totalWins / gamesPlayed) * 100) : 0;
+
+  // === Fill finance stats ===
+  const elDeposit = document.getElementById('statDeposit');
+  const elWithdraw = document.getElementById('statWithdraw');
+  const elTotalWin = document.getElementById('statTotalWin');
+  const elMaxWin = document.getElementById('statMaxWin');
+  if(elDeposit) elDeposit.textContent = '$' + totalDeposits.toFixed(2);
+  if(elWithdraw) elWithdraw.textContent = '$' + totalWithdraws.toFixed(2);
+  if(elTotalWin) elTotalWin.textContent = '$' + totalWinAmount.toFixed(2);
+  if(elMaxWin) elMaxWin.textContent = '$' + maxWin.toFixed(2);
+
+  // === Fill game stats ===
+  const elGames = document.getElementById('statGames');
+  const elWins = document.getElementById('statWins');
+  const elLosses = document.getElementById('statLosses');
+  const elWinRate = document.getElementById('statWinRate');
+  const elTotalBets = document.getElementById('statTotalBets');
+  if(elGames) elGames.textContent = gamesPlayed;
+  if(elWins) elWins.textContent = totalWins;
+  if(elLosses) elLosses.textContent = totalLosses;
+  if(elWinRate) elWinRate.textContent = winRate + '%';
+  if(elTotalBets) elTotalBets.textContent = '$' + totalBets.toFixed(2);
+
+  // === Fill history ===
+  const historyEmpty = document.getElementById('historyEmpty');
+  const historyList = document.getElementById('historyList');
+
+  if(history.length === 0){
+    if(historyEmpty) historyEmpty.style.display = '';
+    if(historyList) historyList.innerHTML = '';
+  } else {
+    if(historyEmpty) historyEmpty.style.display = 'none';
+    if(historyList){
+      // Sort newest first
+      history.sort((a,b) => (b.time||0) - (a.time||0));
+      // Show last 50
+      const items = history.slice(0, 50);
+      historyList.innerHTML = '';
+      items.forEach(h=>{
+        const el = document.createElement('div');
+        el.className = 'history-item';
+
+        const iconMap = { bet:'🎰', win:'🏆', loss:'💀', deposit:'📥', withdraw:'📤', promo:'🎁' };
+        const titleMap = { bet:'Ставка', win:'Выигрыш', loss:'Проигрыш', deposit:'Пополнение', withdraw:'Вывод', promo:'Промокод' };
+        const icon = iconMap[h.type] || '📋';
+        const title = h.title || titleMap[h.type] || h.type;
+        const sub = h.game ? h.game + (h.detail ? ' · ' + h.detail : '') : (h.detail || '');
+        const amountClass = h.type === 'win' || h.type === 'deposit' || h.type === 'promo' ? 'positive' : 'negative';
+        const amountPrefix = h.type === 'win' || h.type === 'deposit' || h.type === 'promo' ? '+' : '-';
+        const amountVal = h.type === 'loss' ? Math.abs(h.amount) : h.amount;
+
+        let dateStr = '';
+        if(h.time){
+          const d = new Date(h.time);
+          dateStr = d.toLocaleDateString('ru-RU', {day:'2-digit',month:'2-digit'}) + ' ' + d.toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'});
+        }
+
+        el.innerHTML = `
+          <div class="history-icon type-${h.type}">${icon}</div>
+          <div class="history-main">
+            <div class="history-title">${title}</div>
+            ${sub ? `<div class="history-sub">${sub}</div>` : ''}
+          </div>
+          <div class="history-right">
+            <div class="history-amount ${amountClass}">${amountPrefix}$${amountVal.toFixed(2)}</div>
+            ${dateStr ? `<div class="history-date">${dateStr}</div>` : ''}
+          </div>
+        `;
+        historyList.appendChild(el);
+      });
     }
-    initialsEl.textContent = getUserInitials();
-    initialsEl.style.display = userAvatar ? 'none' : 'flex';
   }
 
-  // Stats
-  const gamesEl = document.getElementById('profileGames');
-  const winsEl = document.getElementById('profileWins');
-  const promosEl = document.getElementById('profilePromos');
-
-  if(gamesEl){
-    const games = parseInt(localStorage.getItem('mc_games_played') || '0');
-    gamesEl.textContent = games;
-  }
-  if(winsEl){
-    const wins = parseFloat(localStorage.getItem('mc_total_wins') || '0');
-    winsEl.textContent = '$' + wins.toFixed(2);
-  }
-  if(promosEl){
-    try{
-      const activated = JSON.parse(localStorage.getItem('mc_activated_promos') || '[]');
-      promosEl.textContent = activated.length;
-    }catch(e){ promosEl.textContent = '0'; }
-  }
-
-  // Promo modal from profile page
+  // === Promo modal ===
   const promoBtn = document.getElementById('pdPromoBtn');
   const promoModal = document.getElementById('promoModal');
   if(promoBtn && promoModal){

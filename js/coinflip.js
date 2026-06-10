@@ -70,7 +70,8 @@ document.addEventListener('DOMContentLoaded', function(){
     const balBefore = getBalance();
     if(!skipDeduct){
       if(balBefore < baseStake){ resultEl.textContent = 'Недостаточно средств'; return }
-      setBalance(Math.round((balBefore - baseStake) * 100) / 100);
+       setBalance(Math.round((balBefore - baseStake) * 100) / 100);
+       if(window.mcStats) mcStats.addBet(Math.abs(baseStake), 'Coinflip', `Выбор: ${choice === 'head' ? 'Орел' : 'Решка'}`);
     }
     const pendingResult = randomResult();
         coin.classList.remove('show-head','show-tail');
@@ -112,8 +113,9 @@ document.addEventListener('DOMContentLoaded', function(){
           // short delay so user sees result, then end chain
           setTimeout(()=>{ endChain(); }, 800);
         }
-      } else {
-        resultEl.textContent += ' — Проигрыш';
+       } else {
+         resultEl.textContent += ' — Проигрыш';
+         if(window.mcStats) mcStats.addLoss(Math.abs(baseStake), 'Coinflip', `Выбор: ${choice === 'head' ? 'Орел' : 'Решка'}, выпал ${pendingResult === 'head' ? 'Орел' : 'Решка'}`);
         resetProgress();
         inChain = false;
         // clear stake input so user must enter new amount
@@ -136,8 +138,9 @@ document.addEventListener('DOMContentLoaded', function(){
     collectBtn.addEventListener('click', ()=>{
       const toAdd = Number(accumulated) || 0;
       if(toAdd <= 0) return;
-      const balNow = getBalance();
-      setBalance(Math.round((balNow + toAdd) * 100) / 100);
+       const balNow = getBalance();
+       setBalance(Math.round((balNow + toAdd) * 100) / 100);
+       if(window.mcStats) mcStats.addWin(toAdd, 'Coinflip', `Выигрыш цепочки`);
       // after collecting, clear accumulated and hide collect button
       accumulated = 0; chainPayout = 0;
       if(accumulatedDisplay) accumulatedDisplay.textContent = `$ ${Number(accumulated).toFixed(2)}`;

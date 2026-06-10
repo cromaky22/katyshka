@@ -259,8 +259,9 @@ document.addEventListener('DOMContentLoaded', function(){
         return;
       }
     }
-    state.bets.push({ type, amount: stake });
-    updateBetsUI();
+     state.bets.push({ type, amount: stake });
+     if(window.mcStats) mcStats.addBet(Math.abs(stake), 'Dice', `${getBetLabel(type)} (${currentMode})`);
+     updateBetsUI();
     gameStatusEl.textContent = '';
     socket.emit('dice:bet', { type, amount: stake, diceType: currentMode, playerName, playerAvatar });
   }
@@ -422,8 +423,13 @@ document.addEventListener('DOMContentLoaded', function(){
             const myRes = (data.results && data.results[userId]) || { win: 0, bet: 0 };
             let totalBet = 0;
             state.bets.forEach(b => totalBet += b.amount);
-            if (myRes.win > 0) setBalance(getBalance() + myRes.win);
-            showResult(nums, { win: myRes.win, bet: totalBet });
+             if (myRes.win > 0) {
+               setBalance(getBalance() + myRes.win);
+               if(window.mcStats) mcStats.addWin(myRes.win, 'Dice', `Выигрыш: ${getBetLabel(state.bets[0]?.type)} (${currentMode})`);
+             } else if (totalBet > 0) {
+               if(window.mcStats) mcStats.addLoss(totalBet, 'Dice', `Проигрыш (${currentMode})`);
+             }
+             showResult(nums, { win: myRes.win, bet: totalBet });
             hashDisplay.style.display = 'block';
             hashValue.textContent = data.hash || '';
           }, 1500);

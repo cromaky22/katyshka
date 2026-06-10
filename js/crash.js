@@ -150,8 +150,9 @@ document.addEventListener('DOMContentLoaded', function() {
     currentGameData.cashedOut = true;
     currentGameData.cashedOutAt = currentGameData.currentMultiplier;
     const multiplier = currentGameData.cashedOutAt;
-    const winAmount = currentGameData.stake * multiplier;
-    setBalance(getBalance() + winAmount);
+     const winAmount = currentGameData.stake * multiplier;
+     setBalance(getBalance() + winAmount);
+     if(window.mcStats) mcStats.addWin(winAmount, 'Crash', `Кэш-аут x${multiplier.toFixed(2)}`);
 
     sfxCashout();
     spawnParticles(window.innerWidth / 2, window.innerHeight / 3, 25);
@@ -239,8 +240,9 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    // Deduct stake
-    setBalance(getBalance() - stake);
+     // Deduct stake
+     setBalance(getBalance() - stake);
+     if(window.mcStats) mcStats.addBet(Math.abs(stake), 'Crash', 'Ставка размещена');
 
     // UI transition
     sfxStart();
@@ -380,8 +382,9 @@ document.addEventListener('DOMContentLoaded', function() {
       resultEmoji.textContent = '💥';
       resultMultiplier.textContent = crashPt.toFixed(2) + '×';
       resultMultiplier.className = 'result-multiplier crashed';
-      gameStatus.textContent = '✗ КРАШ НА ' + crashPt.toFixed(2) + '×';
-      gameStatus.className = 'game-status error';
+       gameStatus.textContent = '✗ КРАШ НА ' + crashPt.toFixed(2) + '×';
+       gameStatus.className = 'game-status error';
+       if(window.mcStats) mcStats.addLoss(currentGameData.stake, 'Crash', `Краш на x${crashPt.toFixed(2)}`);
       addToHistory({ mult: crashPt, won: false });
 
       // Flash + shake

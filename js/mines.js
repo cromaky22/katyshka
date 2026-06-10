@@ -266,8 +266,9 @@
       // Показываем ВСЕ реальные мины
       revealAll(mineSet);
       
-      gameActive = false;
-        updateStatus('Проигрыш — мина найдена');
+       gameActive = false;
+       updateStatus('Проигрыш — мина найдена');
+       if(window.mcStats) mcStats.addLoss(Math.abs(currentStake), 'Mines', `Мина на шаге ${revealedCount + 1}`);
         // reset controls and clear field after showing result
           if(cashoutBtn) cashoutBtn.style.display = 'none';
           if(playBtn) playBtn.style.display = '';
@@ -299,9 +300,10 @@
     if(revealedCount >= safeCount){
       // user cleared all safe cells — win
       const mult = multipliers[revealedCount - 1] || 1;
-      const payout = Math.round(currentStake * mult * (1 - HOUSE_EDGE) * 100) / 100;
-      setBalance(getBalance() + payout);
-      gameActive = false;
+       const payout = Math.round(currentStake * mult * (1 - HOUSE_EDGE) * 100) / 100;
+       setBalance(getBalance() + payout);
+       if(window.mcStats) mcStats.addWin(payout, 'Mines', `Все ${safeCount} ячеек открыты`);
+       gameActive = false;
       revealAll(mineSet);
       updateStatus(`Выигрыш! +$${payout.toFixed(2)}`);
       updateCompactStep();
@@ -383,9 +385,10 @@
     const balance = getBalance();
     if(stake > balance){ alert('Недостаточно средств'); return; }
 
-    // Deduct stake and start round
-    setBalance(balance - stake);
-    currentStake = stake;
+     // Deduct stake and start round
+     setBalance(balance - stake);
+     if(window.mcStats) mcStats.addBet(Math.abs(stake), 'Mines', `${mines} мин`);
+     currentStake = stake;
     currentMines = mines;
     mineSet = randomMines(mines);
     revealedCount = 0;
@@ -421,9 +424,10 @@
     cashoutBtn.addEventListener('click', ()=>{
       if(!gameActive) return;
       // calculate current win and award
-      const win = updateWinDisplay();
-      setBalance(getBalance() + win);
-      updateStatus(`Вы забрали $${win.toFixed(2)}`);
+       const win = updateWinDisplay();
+       setBalance(getBalance() + win);
+       if(window.mcStats) mcStats.addWin(win, 'Mines', `Кэш-аут на шаге ${revealedCount}`);
+       updateStatus(`Вы забрали $${win.toFixed(2)}`);
       gameActive = false;
       revealAll(mineSet);
       // reset buttons
