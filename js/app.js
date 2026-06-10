@@ -413,6 +413,52 @@
   })();
 })();
 
+// Profile dropdown
+(function(){
+  const btn = document.getElementById('profileBtn');
+  const dd = document.getElementById('profileDropdown');
+  const overlay = document.getElementById('pdOverlay');
+  const copyBtn = document.getElementById('copyIdBtn');
+  const pdUserId = document.getElementById('pdUserId');
+  const pdPromoBtn = document.getElementById('pdPromoBtn');
+  if(!btn || !dd) return;
+
+  function getId(){
+    try{
+      const tg = window.Telegram && window.Telegram.WebApp;
+      if(tg && tg.initDataUnsafe && tg.initDataUnsafe.user) return String(tg.initDataUnsafe.user.id);
+    }catch(e){}
+    let sid = sessionStorage.getItem('mc_user_id');
+    if(!sid){ sid = 'mc_' + Math.random().toString(36).substr(2,8); sessionStorage.setItem('mc_user_id', sid); }
+    return sid;
+  }
+
+  function close(){ dd.classList.remove('open'); if(overlay) overlay.classList.remove('open'); }
+  function open(){ if(pdUserId) pdUserId.textContent = getId(); dd.classList.add('open'); if(overlay) overlay.classList.add('open'); }
+
+  btn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); dd.classList.contains('open') ? close() : open(); });
+  if(overlay) overlay.addEventListener('click', close);
+
+  if(copyBtn){
+    copyBtn.addEventListener('click', function(){
+      const id = getId();
+      try{ navigator.clipboard && navigator.clipboard.writeText(id); }catch(e){}
+      copyBtn.textContent = '✅';
+      setTimeout(()=>{ copyBtn.textContent = '📋'; }, 1200);
+    });
+  }
+
+  if(pdPromoBtn){
+    pdPromoBtn.addEventListener('click', function(){
+      close();
+      const modal = document.getElementById('promoModal');
+      const input = document.getElementById('promoCodeInput');
+      if(modal){ modal.style.display = ''; modal.setAttribute('aria-hidden','false'); }
+      if(input) input.focus();
+    });
+  }
+})();
+
 // Populate recipient info from Telegram WebApp when available
 (function(){
   // CSS diagnostic: log any stylesheet access errors to console

@@ -1,0 +1,24 @@
+/* Profile page */
+.profile-section{display:flex;flex-direction:column;align-items:center;gap:20px;padding-top:10px}
+
+.profile-card{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;max-width:420px;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));border-radius:16px;padding:24px 20px}
+
+.profile-avatar-wrap{position:relative}
+.profile-avatar{width:80px;height:80px;border-radius:16px;overflow:hidden;background:linear-gradient(135deg, #667eea, #764ba2);display:flex;align-items:center;justify-content:center}
+.profile-avatar img{width:100%;height:100%;object-fit:cover;border-radius:16px}
+.profile-avatar .avatar-initials{font-size:28px;font-weight:900;color:#fff;text-transform:uppercase}
+
+.profile-name{font-size:20px;font-weight:800;color:var(--text)}
+.profile-id-display{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+
+.profile-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%;max-width:420px}
+.stat-card{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px}
+.stat-icon{font-size:24px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.04);border-radius:10px;flex-shrink:0}
+.stat-info{display:flex;flex-direction:column;gap:2px}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px}
+.stat-value{font-size:16px;font-weight:800;color:var(--text)}
+
+@media(max-width:420px){
+  .profile-stats{grid-template-columns:1fr}
+  .profile-card{padding:18px 14px}
+}

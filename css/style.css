@@ -14,7 +14,7 @@ html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;back
 .app-header .btn-icon{background:transparent;border:none;color:var(--muted);font-size:20px;padding:6px;border-radius:8px}
 .app-header .logo-small{width:34px;height:34px;object-fit:cover;border-radius:8px}
 .app-header .header-title{text-align:right;font-weight:700;font-size:17px;color:var(--text);margin-right:60px}
-.app-header .right-controls{display:flex;align-items:center;gap:10px}
+.app-header .right-controls{display:flex;align-items:center;gap:10px;position:relative}
 .balance-pill{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:6px 10px;border-radius:22px;color:var(--muted);display:flex;align-items:center;gap:8px}
 .balance-pill .wallet-icon{font-size:14px}
 .balance-pill .balance-value{color:var(--text);font-weight:700}
@@ -22,12 +22,12 @@ html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;back
 .balance-pill .caret{font-size:12px;color:var(--muted)}
 .app-header .profile img{width:38px;height:38px;border-radius:50%;object-fit:cover}
 
-/* profile anchor visible fallback */
-.app-header .profile{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.02);color:var(--muted);text-decoration:none;overflow:hidden}
-.app-header .profile img{width:100%;height:100%;display:block;border-radius:50%}
+/* profile square icon */
+.app-header .profile{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.04);color:var(--muted);text-decoration:none;overflow:hidden;cursor:pointer;border:none;padding:0;position:relative}
+.app-header .profile img{width:100%;height:100%;display:block;border-radius:10px}
 .app-header .profile:empty::before{content:'👤';font-size:18px}
-.app-header .profile .profile-icon{width:100%;height:100%;display:block;border-radius:50%;object-fit:cover}
-.app-header .profile:hover{background:rgba(255,255,255,0.04)}
+.app-header .profile .profile-icon{width:100%;height:100%;display:block;border-radius:10px;object-fit:cover}
+.app-header .profile:hover{background:rgba(255,255,255,0.08)}
 
 /* Avatar initials fallback */
 .app-header .profile .avatar-initials{
@@ -36,13 +36,30 @@ html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;back
   justify-content:center;
   width:100%;
   height:100%;
-  border-radius:50%;
+  border-radius:10px;
   background:linear-gradient(135deg, #667eea, #764ba2);
   color:#fff;
   font-weight:800;
   font-size:14px;
   text-transform:uppercase;
 }
+
+/* Profile dropdown */
+.profile-dropdown{position:absolute;top:52px;right:0;width:240px;background:linear-gradient(180deg, rgba(12,16,30,0.98), rgba(8,12,24,0.98));border-radius:14px;border:1px solid rgba(255,255,255,0.06);box-shadow:0 20px 60px rgba(0,0,0,0.6);z-index:200;opacity:0;pointer-events:none;transform:translateY(-8px);transition:opacity .2s,transform .2s}
+.profile-dropdown.open{opacity:1;pointer-events:auto;transform:translateY(0)}
+.profile-dropdown::before{content:'';position:fixed;inset:0;z-index:-1}
+.pd-header{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.04)}
+.pd-id-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+.pd-id-value{font-size:15px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px}
+.pd-id-value .copy-id{cursor:pointer;font-size:13px;opacity:0.5;transition:opacity .15s}
+.pd-id-value .copy-id:hover{opacity:1}
+.pd-body{padding:10px}
+.pd-btn{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;border-radius:10px;border:none;background:transparent;color:var(--text);font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;transition:background .15s;text-align:left}
+.pd-btn:hover{background:rgba(255,255,255,0.05)}
+.pd-btn .pd-btn-icon{font-size:18px;width:24px;text-align:center}
+.pd-btn .pd-btn-arrow{margin-left:auto;font-size:12px;color:var(--muted)}
+.pd-overlay{position:fixed;inset:0;z-index:199;display:none}
+.pd-overlay.open{display:block}
 .content{padding:20px;padding-bottom:90px;background:transparent}
 .btn{background:var(--accent);border:none;padding:10px 14px;border-radius:8px;color:#041017}
 
