@@ -10,24 +10,27 @@
     .bonus-title{font-size:24px;font-weight:900;margin-bottom:8px}
     .bonus-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
     .wheel-container{position:relative;width:100%;max-width:340px;margin:0 auto 24px}
-    .wheel-canvas{width:100%;aspect-ratio:1;border-radius:50%;box-shadow:0 0 0 6px rgba(255,255,255,0.08),0 0 40px rgba(107,47,160,0.4)}
+    .wheel-canvas{width:100%;aspect-ratio:1;border-radius:50%;box-shadow:0 0 0 6px rgba(255,255,255,0.08),0 0 40px rgba(107,47,160,0.4);background:#0a0118}
     .wheel-pointer{position:absolute;top:6px;left:50%;transform:translateX(-50%) rotate(180deg);font-size:28px;color:#ffd700;z-index:10;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.6))}
-    .bonus-status{padding:14px;border-radius:12px;font-weight:600;font-size:14px;background:rgba(255,255,255,0.04);margin-bottom:16px}
-    .bonus-status.win{background:rgba(76,175,80,0.15);color:#4caf50}
-    .bonus-status.wait{background:rgba(255,193,7,0.15);color:#ffc107}
+    .bonus-status{padding:14px;border-radius:12px;font-weight:600;font-size:14px;background:rgba(10,10,30,0.8);margin-bottom:16px;border:1px solid rgba(255,255,255,0.1)}
+    .bonus-status.win{background:rgba(76,175,80,0.2);color:#4caf50;border-color:rgba(76,175,80,0.4)}
+    .bonus-status.wait{background:rgba(255,193,7,0.2);color:#ffc107;border-color:rgba(255,193,7,0.4)}
     .bonus-btn{width:100%;padding:18px;border-radius:14px;border:none;font-size:18px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#ff6b9d,#ffd700);color:#000;text-transform:uppercase;letter-spacing:1px;transition:all 0.2s;box-shadow:0 8px 24px rgba(255,107,157,0.3)}
     .bonus-btn:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(255,107,157,0.4)}
     .bonus-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none}
     .timer-big{font-size:42px;font-weight:900;color:#ffd700;margin:12px 0 4px}
+    .timer-label{font-size:12px;color:var(--muted)}
+    .profile-icon{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.15)}
   </style>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
   <header class="app-header">
-    <div class="left-controls"><a href="home.html" style="color:var(--muted);text-decoration:none;font-size:20px">←</a></div>
+    <div class="left-controls" style="width:32px"></div>
     <div class="header-title">BONUS</div>
     <div class="right-controls">
       <div class="balance-pill"><span class="balance-value" id="hbal">0.00</span><span class="currency">$</span></div>
+      <button class="profile" id="profileBtn" title="Профиль" aria-label="Профиль"><img class="profile-icon" id="profileImg" src="" alt="Аватар" onerror="this.style.display='none'"></button>
     </div>
   </header>
 
@@ -47,7 +50,7 @@
       <div class="timer-label">до следующего бонуса</div>
     </div>
 
-    <button class="bonus-btn" id="spinBtn" onclick="spinWheel()">🎰 КРУТИТЬ</button>
+    <button class="bonus-btn" id="spinBtn">🎰 КРУТИТЬ</button>
   </main>
 
   <nav class="bottom-nav">
@@ -61,6 +64,7 @@
   <script src="js/app.js"></script>
   <script>
   (function(){
+    // Get user ID
     var uid = 'u' + Math.random().toString(36).substr(2, 9);
     try {
       var tg = window.Telegram && window.Telegram.WebApp;
@@ -72,15 +76,15 @@
     var savedUid = localStorage.getItem('tg_uid');
     if (savedUid) uid = savedUid;
 
-    // Fixed key for daily bonus (per user)
-    var LAST_SPIN_KEY = 'daily_bonus_spin_' + uid;
+    // DOM
+    var canvas = document.getElementById('bonusWheel');
     var ctx = canvas.getContext('2d');
     var spinBtn = document.getElementById('spinBtn');
     var bonusStatus = document.getElementById('bonusStatus');
     var timerBlock = document.getElementById('timerBlock');
     var timerVal = document.getElementById('timerVal');
 
-    // Wheel sectors
+    // Sectors
     var SECTORS = [
       { label: '$0.01', payout: 0.01, color: '#1a1a2e' },
       { label: '$0.10', payout: 0.10, color: '#2d2d44' },
@@ -100,7 +104,8 @@
     var SEG_ANGLE = 360 / TOTAL;
     var rotation = 0;
     var isSpinning = false;
-    var COOLDOWN = 24 * 60 * 60 * 1000; // 24 hours
+    var COOLDOWN = 24 * 60 * 60 * 1000;
+    var LAST_SPIN_KEY = 'daily_bonus_spin_' + uid;
 
     function setupCanvas() {
       var size = canvas.offsetWidth * 2;
@@ -118,42 +123,41 @@
 
       for (var i = 0; i < TOTAL; i++) {
         var seg = SECTORS[i];
-        var startAngle = (i * SEG_ANGLE - 90 + rotation) * Math.PI / 180;
-        var endAngle = ((i + 1) * SEG_ANGLE - 90 + rotation) * Math.PI / 180;
+        var sa = (i * SEG_ANGLE - 90 + rotation) * Math.PI / 180;
+        var ea = ((i + 1) * SEG_ANGLE - 90 + rotation) * Math.PI / 180;
 
         ctx.beginPath();
         ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, r, startAngle, endAngle);
+        ctx.arc(cx, cy, r, sa, ea);
         ctx.closePath();
         ctx.fillStyle = seg.color;
         ctx.fill();
 
         ctx.beginPath();
         ctx.moveTo(cx, cy);
-        ctx.lineTo(cx + r * Math.cos(startAngle), cy + r * Math.sin(startAngle));
+        ctx.lineTo(cx + r * Math.cos(sa), cy + r * Math.sin(sa));
         ctx.strokeStyle = 'rgba(255,255,255,0.2)';
         ctx.lineWidth = 1;
         ctx.stroke();
 
         ctx.save();
         ctx.translate(cx, cy);
-        ctx.rotate((startAngle + endAngle) / 2);
+        ctx.rotate((sa + ea) / 2);
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = (seg.payout >= 5) ? '#000' : '#fff';
         ctx.font = 'bold ' + Math.round(r * 0.1) + 'px Arial';
-        ctx.shadowColor = 'rgba(0,0,0,0.5)';
-        ctx.shadowBlur = 2;
+        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        ctx.shadowBlur = 3;
         ctx.fillText(seg.label, r * 0.65, 0);
         ctx.restore();
       }
 
-      // Center circle
       ctx.beginPath();
       ctx.arc(cx, cy, r * 0.1, 0, Math.PI * 2);
       ctx.fillStyle = '#ffd700';
       ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+      ctx.strokeStyle = '#fff';
       ctx.lineWidth = 2;
       ctx.stroke();
     }
@@ -170,14 +174,13 @@
       localStorage.setItem(LAST_SPIN_KEY, String(Date.now()));
     }
 
-    function getRemainingTime() {
+    function getRemaining() {
       var last = getLastSpin();
       if (!last) return 0;
-      var elapsed = Date.now() - last;
-      return Math.max(0, COOLDOWN - elapsed);
+      return Math.max(0, COOLDOWN - (Date.now() - last));
     }
 
-    function formatTime(ms) {
+    function fmtTime(ms) {
       var s = Math.floor(ms / 1000);
       var h = Math.floor(s / 3600);
       var m = Math.floor((s % 3600) / 60);
@@ -186,15 +189,15 @@
     }
 
     function updateStatus() {
-      var remaining = getRemainingTime();
-      if (remaining > 0) {
+      var rem = getRemaining();
+      if (rem > 0) {
         isSpinning = true;
         spinBtn.disabled = true;
         spinBtn.textContent = '⏳ ПОДОЖДИТЕ';
         timerBlock.style.display = 'block';
         bonusStatus.textContent = 'Бонус уже получен!';
         bonusStatus.className = 'bonus-status wait';
-        timerVal.textContent = formatTime(remaining);
+        timerVal.textContent = fmtTime(rem);
       } else {
         isSpinning = false;
         spinBtn.disabled = false;
@@ -208,10 +211,11 @@
     setInterval(updateStatus, 1000);
     updateStatus();
 
-    window.spinWheel = function() {
+    // Single click handler
+    spinBtn.addEventListener('click', function() {
       if (isSpinning) return;
-      var remaining = getRemainingTime();
-      if (remaining > 0) return;
+      var rem = getRemaining();
+      if (rem > 0) return;
 
       isSpinning = true;
       spinBtn.disabled = true;
@@ -219,18 +223,18 @@
       bonusStatus.textContent = 'Колесо крутится...';
       bonusStatus.className = 'bonus-status';
 
-      // Heavily weighted — small prizes ~80% of the time
+      // Weighted — small prizes ~80%
       var weights = SECTORS.map(function(s) {
-        if (s.payout >= 10) return 1;   // $10 — super rare
-        if (s.payout >= 5)  return 2;   // $5 — very rare
-        if (s.payout >= 1)  return 3;   // $1 — rare
-        if (s.payout >= 0.5) return 5;  // $0.50 — uncommon
-        if (s.payout >= 0.25) return 8; // $0.25 — medium
-        if (s.payout >= 0.10) return 15; // $0.10 — common
-        return 25; // $0.01-$0.07 — very common (25 each)
+        if (s.payout >= 10) return 1;
+        if (s.payout >= 5)  return 2;
+        if (s.payout >= 1)  return 3;
+        if (s.payout >= 0.5) return 5;
+        if (s.payout >= 0.25) return 8;
+        if (s.payout >= 0.10) return 15;
+        return 25;
       });
-      var totalWeight = weights.reduce(function(a,b){return a+b;}, 0);
-      var rand = Math.random() * totalWeight;
+      var totalW = weights.reduce(function(a,b){return a+b;}, 0);
+      var rand = Math.random() * totalW;
       var chosenIdx = 0;
       for (var i = 0; i < weights.length; i++) {
         rand -= weights[i];
@@ -238,17 +242,17 @@
       }
 
       var targetAngle = 360 - (chosenIdx * SEG_ANGLE + SEG_ANGLE / 2);
-      var currentNorm = (((-rotation) % 360) + 360) % 360;
-      var diff = targetAngle - currentNorm;
+      var curNorm = (((-rotation) % 360) + 360) % 360;
+      var diff = targetAngle - curNorm;
       while (diff < 0) diff += 360;
       var totalRot = 360 * 6 + diff;
 
       var startRot = rotation;
       var t0 = performance.now();
-      var duration = 5000;
+      var dur = 5000;
 
       function tick(now) {
-        var p = Math.min((now - t0) / duration, 1);
+        var p = Math.min((now - t0) / dur, 1);
         var ease = 1 - Math.pow(1 - p, 4);
         rotation = startRot - totalRot * ease;
         drawWheel();
@@ -257,27 +261,23 @@
         } else {
           rotation = startRot - totalRot;
           drawWheel();
-          onSpinComplete(chosenIdx);
+          finish(chosenIdx);
         }
       }
       requestAnimationFrame(tick);
-    };
+    });
 
-    function onSpinComplete(idx) {
+    function finish(idx) {
       var sector = SECTORS[idx];
-      var payout = sector.payout;
-
       setLastSpin();
 
-      // Update balance
       var curBal = parseFloat(localStorage.getItem('mc_balance')) || 0;
-      var newBal = Math.round((curBal + payout) * 100) / 100;
+      var newBal = Math.round((curBal + sector.payout) * 100) / 100;
       localStorage.setItem('mc_balance', newBal.toFixed(2));
       document.querySelectorAll('.balance-value, #hbal').forEach(function(el){
         el.textContent = newBal.toFixed(2);
       });
 
-      // Sync with server
       fetch('/api/users', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -288,6 +288,24 @@
       bonusStatus.className = 'bonus-status win';
       updateStatus();
     }
+
+    // Load profile photo
+    try {
+      var tg = window.Telegram && window.Telegram.WebApp;
+      if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        var u = tg.initDataUnsafe.user;
+        var pImg = document.getElementById('profileImg');
+        if (pImg) {
+          if (u.photo_url) {
+            pImg.src = u.photo_url;
+            pImg.style.display = '';
+          } else if (u.id) {
+            pImg.src = '/api/tg-photo/' + u.id;
+            pImg.style.display = '';
+          }
+        }
+      }
+    } catch(e) {}
   })();
   </script>
 </body>
