@@ -19,10 +19,6 @@
     .bonus-btn:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(255,107,157,0.4)}
     .bonus-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none}
     .timer-big{font-size:42px;font-weight:900;color:#ffd700;margin:12px 0 4px}
-    .timer-label{font-size:12px;color:var(--muted)}
-    .prize-list{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:20px}
-    .prize-item{padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);font-size:12px;font-weight:600}
-    .prize-item.big{background:rgba(255,215,0,0.15);color:#ffd700;border:1px solid rgba(255,215,0,0.3)}
   </style>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -52,21 +48,6 @@
     </div>
 
     <button class="bonus-btn" id="spinBtn" onclick="spinWheel()">🎰 КРУТИТЬ</button>
-
-    <div class="prize-list">
-      <div class="prize-item">$0.01</div>
-      <div class="prize-item">$0.02</div>
-      <div class="prize-item">$0.03</div>
-      <div class="prize-item">$0.05</div>
-      <div class="prize-item">$0.07</div>
-      <div class="prize-item">$0.10</div>
-      <div class="prize-item">$0.25</div>
-      <div class="prize-item">$0.50</div>
-      <div class="prize-item">$1</div>
-      <div class="prize-item big">$5</div>
-      <div class="prize-item big">$10</div>
-      <div class="prize-item">$0.01</div>
-    </div>
   </main>
 
   <nav class="bottom-nav">
@@ -91,7 +72,8 @@
     var savedUid = localStorage.getItem('tg_uid');
     if (savedUid) uid = savedUid;
 
-    var canvas = document.getElementById('bonusWheel');
+    // Fixed key for daily bonus (per user)
+    var LAST_SPIN_KEY = 'daily_bonus_spin_' + uid;
     var ctx = canvas.getContext('2d');
     var spinBtn = document.getElementById('spinBtn');
     var bonusStatus = document.getElementById('bonusStatus');
@@ -119,7 +101,6 @@
     var rotation = 0;
     var isSpinning = false;
     var COOLDOWN = 24 * 60 * 60 * 1000; // 24 hours
-    var LAST_SPIN_KEY = 'daily_bonus_' + uid;
 
     function setupCanvas() {
       var size = canvas.offsetWidth * 2;
@@ -238,15 +219,15 @@
       bonusStatus.textContent = 'Колесо крутится...';
       bonusStatus.className = 'bonus-status';
 
-      // Weighted random — big prizes are rare
+      // Heavily weighted — small prizes ~80% of the time
       var weights = SECTORS.map(function(s) {
-        if (s.payout >= 10) return 1;
-        if (s.payout >= 5) return 2;
-        if (s.payout >= 1) return 5;
-        if (s.payout >= 0.5) return 8;
-        if (s.payout >= 0.25) return 12;
-        if (s.payout >= 0.10) return 15;
-        return 20;
+        if (s.payout >= 10) return 1;   // $10 — super rare
+        if (s.payout >= 5)  return 2;   // $5 — very rare
+        if (s.payout >= 1)  return 3;   // $1 — rare
+        if (s.payout >= 0.5) return 5;  // $0.50 — uncommon
+        if (s.payout >= 0.25) return 8; // $0.25 — medium
+        if (s.payout >= 0.10) return 15; // $0.10 — common
+        return 25; // $0.01-$0.07 — very common (25 each)
       });
       var totalWeight = weights.reduce(function(a,b){return a+b;}, 0);
       var rand = Math.random() * totalWeight;
