@@ -355,7 +355,9 @@ function spinWheel() {
   wheel.history.unshift({ num, color });
   if (wheel.history.length > 20) wheel.history.pop();
 
-  io.emit('wheel:spin', { result: wheel.result, allBets, results, history: wheel.history });
+  const balances = {};
+  for (const uid in wheel.bets) { balances[uid] = getBalance(uid); }
+  io.emit('wheel:spin', { result: wheel.result, allBets, results, history: wheel.history, balances });
 
   setTimeout(() => {
     wheel.bets = {};
@@ -368,7 +370,7 @@ function spinWheel() {
 
 io.on('connection', (socket) => {
   const userId = socket.handshake.query.userId || '0';
-  socket.emit('wheel:state', { phase: wheel.phase, timer: wheel.timer, myBets: wheel.bets[userId] || [] });
+  socket.emit('wheel:state', { phase: wheel.phase, timer: wheel.timer, myBets: wheel.bets[userId] || [], balance: getBalance(userId), history: wheel.history });
 
   socket.on('wheel:bet', (data) => {
     if (wheel.phase !== 'betting') return;
@@ -384,7 +386,7 @@ io.on('connection', (socket) => {
       wheel.bets[uid].forEach(b => allBets.push({ userId: uid, type: b.type, amount: b.amount, playerName: b.playerName }));
     }
     io.emit('wheel:betsUpdate', { allBets });
-    socket.emit('wheel:myBets', { myBets: wheel.bets[userId] || [] });
+    socket.emit('wheel:myBets', { myBets: wheel.bets[userId] || [], balance: getBalance(userId) });
   });
 });
 

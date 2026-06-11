@@ -284,7 +284,11 @@ document.addEventListener('DOMContentLoaded', function(){
   socket.on('wheel:state', (state) => {
     currentBets = state.myBets || [];
     updateMyBetsDisplay();
-    if (state.history) state.history.forEach(h => addHistory(h.num));
+    if (state.balance !== undefined) setBalance(state.balance);
+    if (state.history) {
+      historyScroll.innerHTML = '';
+      state.history.forEach(h => addHistory(h.num));
+    }
     if (state.phase === 'betting' && state.timer > 0) startLocalTimer(state.timer, 'betting');
   });
 
@@ -296,6 +300,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   socket.on('wheel:myBets', (data) => {
     if (data.myBets) { currentBets = data.myBets; updateMyBetsDisplay(); }
+    if (data.balance !== undefined) setBalance(data.balance);
   });
 
   socket.on('wheel:spin', (data) => {
@@ -307,8 +312,12 @@ document.addEventListener('DOMContentLoaded', function(){
       const res = data.result;
       let myWin = 0;
       if (data.results && data.results[userId] !== undefined) myWin = data.results[userId];
-      if (myWin > 0) {
+      if (data.balances && data.balances[userId] !== undefined) {
+        setBalance(data.balances[userId]);
+      } else if (myWin > 0) {
         setBalance(getBalance() + myWin);
+      }
+      if (myWin > 0) {
         gameStatusEl.textContent = `Выиграли $${myWin.toFixed(2)}! Выпало ${res.num}`;
         gameStatusEl.className = 'game-status success';
         winSfx();
@@ -326,7 +335,10 @@ document.addEventListener('DOMContentLoaded', function(){
       resultLens.classList.remove('show');
       void resultLens.offsetWidth;
       resultLens.classList.add('show');
-      addHistory(res.num);
+      if (data.history) {
+        historyScroll.innerHTML = '';
+        data.history.forEach(h => addHistory(h.num));
+      }
       const winList = document.getElementById('winList');
       if (winList && data.results) {
         winList.innerHTML = '';
@@ -354,7 +366,11 @@ document.addEventListener('DOMContentLoaded', function(){
      updateMyBetsDisplay();
      allPlayersBetsEl.style.display = 'none';
      resultLens.classList.remove('show');
-    gameStatusEl.textContent = 'Новый раунд! Делайте ставки';
+     if (data.history) {
+       historyScroll.innerHTML = '';
+       data.history.forEach(h => addHistory(h.num));
+     }
+     gameStatusEl.textContent = 'Новый раунд! Делайте ставки';
     gameStatusEl.className = 'game-status';
     isSpinning = false;
     betBtns.forEach(b => b.disabled = false);
