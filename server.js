@@ -399,6 +399,19 @@ app.post('/api/admin/obnul', (req, res) => {
   res.json({ ok: true, message: 'All balances, bets, promos reset to 0' });
 });
 
+// === ADMIN: GIVE BALANCE ===
+app.post('/api/admin/give', (req, res) => {
+  const { secret, userId, amount } = req.body || {};
+  if (secret !== ADMIN_SECRET) return res.status(403).json({ error: 'Forbidden' });
+  if (!userId || !amount) return res.status(400).json({ error: 'Missing userId or amount' });
+  const amt = Math.round(parseFloat(amount) * 100) / 100;
+  if (amt <= 0) return res.status(400).json({ error: 'Amount must be positive' });
+  setBalance(userId, getBalance(userId) + amt);
+  console.log(`💰 Gave $${amt} to ${userId}, new balance: $${getBalance(userId)}`);
+  io.emit('balance_update', { userId, balance: getBalance(userId) });
+  res.json({ ok: true, balance: getBalance(userId) });
+});
+
 // === WHEEL GAME ===
 const WHEEL = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
 const RED = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
