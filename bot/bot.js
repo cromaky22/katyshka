@@ -60,6 +60,40 @@ bot.command('obnul', async (ctx) => {
   }
 });
 
+// === GIVE BALANCE ===
+bot.command('give', async (ctx) => {
+  if (!adminSessions.has(ctx.from.id)) {
+    ctx.reply('🔐 Сначала авторизуйтесь: /admin <пароль>');
+    return;
+  }
+  const args = ctx.message.text.split(' ');
+  if (args.length < 3) {
+    ctx.reply('💰 Использование: /give <userId> <amount>\nПример: /give 7239160695 10');
+    return;
+  }
+  const targetId = args[1];
+  const amount = parseFloat(args[2]);
+  if (isNaN(amount) || amount <= 0) {
+    ctx.reply('❌ Неверная сумма');
+    return;
+  }
+  try {
+    const res = await fetch(`${SERVER_URL}/api/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: targetId, balance: amount })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      ctx.reply(`✅ Выдано $${amount.toFixed(2)} пользователю ${targetId}\nТекущий баланс: $${data.balance.toFixed(2)}`);
+    } else {
+      ctx.reply(`❌ Ошибка: ${data.error || 'unknown'}`);
+    }
+  } catch (e) {
+    ctx.reply('❌ Ошибка соединения с сервером.');
+  }
+});
+
 // === ADMIN MENU KEYBOARD ===
 function adminMenuKeyboard() {
   return {
