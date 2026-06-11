@@ -25,29 +25,57 @@ app.post('/api/users', (req, res) => {
   res.json({ ok: true, balance: getBalance(id) });
 });
 
-// === DATABASE (in-memory) ===
-const users = {};
-const promos = { '1': 200, '2': 200, '3': 200, '4': 200, '5': 200, '6': 200 };
-const activated = {};
-const transactions = []; // History of all transactions
+// === DATABASE (in-memory with file persistence) ===
+const fs = require('fs');
+const DATA_FILE = './data.json';
+
+let users = {};
+let promos = { '1': 200, '2': 200, '3': 200, '4': 200, '5': 200, '6': 200 };
+let activated = {};
+let transactions = [];
+
+// Load data from file on start
+try {
+  if (fs.existsSync(DATA_FILE)) {
+    const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+    users = data.users || {};
+    promos = data.promos || promos;
+    activated = data.activated || {};
+    transactions = data.transactions || [];
+    console.log('📂 Loaded data from file:', Object.keys(users).length, 'users');
+  }
+} catch (e) {
+  console.error('Failed to load data:', e);
+}
+
+// Save data to file
+function saveData() {
+  try {
+    fs.writeFileSync(DATA_FILE, JSON.stringify({ users, promos, activated, transactions }));
+  } catch (e) {
+    console.error('Failed to save data:', e);
+  }
+}
 
 function getBalance(id) { return users[id]?.balance || 0; }
 function setBalance(id, amt) {
   if (!users[id]) users[id] = { balance: 0 };
   users[id].balance = Math.round(amt * 100) / 100;
+  saveData();
 }
 
 // Add transaction to history
 function addTx(type, userId, amount, status, extra) {
   transactions.push({
     id: 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-    type, // 'deposit' or 'withdraw'
+    type,
     userId,
     amount: Math.round(amount * 100) / 100,
-    status, // 'pending', 'completed', 'failed'
+    status,
     date: new Date().toISOString(),
     ...extra
   });
+  saveData();
 }
 
 // Get transaction history for user
