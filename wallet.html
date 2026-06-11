@@ -180,6 +180,8 @@
     function upd(v){
       bal = v;
       Balance.set(v);
+      var els = document.querySelectorAll('#dbal, #wbal, #hbal');
+      els.forEach(function(el){ el.textContent = fmt(v); });
     }
     
     function msg(el,t,y){el.textContent=t;el.className='w-msg show '+(y||'info');}
