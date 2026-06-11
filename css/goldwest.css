@@ -1,5 +1,5 @@
 /* ======= GOLDWEST GAME ======= */
-.page-goldwest{background:var(--bg);color:var(--text);min-height:100vh}
+.page-goldwest{background:#0a0118;color:var(--text);min-height:100vh}
 .page-goldwest .goldwest-game{display:flex;justify-content:center;padding:10px 0 80px}
 .page-goldwest .gw-board{width:100%;max-width:480px;display:flex;flex-direction:column;gap:12px;padding:0 12px}
 

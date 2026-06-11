@@ -1,6 +1,6 @@
 /* ======= DREAM CATCHER STYLES ======= */
 
-.page-dream { background: var(--bg); color: var(--text); }
+.page-dream { background: #0a0118; color: var(--text); }
 
 .dream { display: flex; justify-content: center; padding: 20px 0; min-height: 100vh; }
 

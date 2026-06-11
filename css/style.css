@@ -1,6 +1,6 @@
 /* Базовые стили */
 :root{
-  --bg:#1b0633;
+  --bg:#0a0118;
   --card:#0b1320;
   --accent:#ffb86b;
   --accent-green:#2ee36b;
@@ -8,7 +8,20 @@
   --text:#e6eef6;
 }
 *{box-sizing:border-box}
-html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+html,body{
+  height:100%;margin:0;
+  font-family:Inter,Arial,Helvetica,sans-serif;
+  color:var(--text);
+  overflow-x:hidden;
+  background: linear-gradient(135deg, #0a0118 0%, #1b0633 25%, #0d1a3d 50%, #1b0633 75%, #0a0118 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
 .app-header{padding:10px 14px;background:rgba(255,255,255,0.02);backdrop-filter:blur(6px);box-shadow:0 1px 0 rgba(0,0,0,0.4);display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px}
 .app-header .left-controls{display:flex;align-items:center;gap:8px}
 .app-header .btn-icon{background:transparent;border:none;color:var(--muted);font-size:20px;padding:6px;border-radius:8px}
