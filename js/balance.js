@@ -94,9 +94,9 @@
     if(_socket) return;
     ensureSocketIO(function(){
       try{
-        _socket = io({query: {userId: _userId, balance: _balance}});
+        _socket = io({query: {userId: getUserId(), balance: _balance}});
         _socket.on('balance_update', function(data){
-          if(data.userId === _userId && data.balance !== undefined){
+          if(data.userId === getUserId() && data.balance !== undefined){
             _balance = Math.round(parseFloat(data.balance) * 100) / 100;
             localStorage.setItem('mc_balance', fmt(_balance));
             updateDOM(_balance);
