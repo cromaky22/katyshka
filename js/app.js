@@ -185,8 +185,7 @@
   const balance = (stored !== null && stored !== 'NaN') ? parseFloat(stored).toFixed(2) : '0.00';
   balanceElems.forEach(el=>el.textContent = balance);
 
-  // Initialize Balance module (fetches from server)
-  if(window.Balance) Balance.init();
+  // Balance module auto-initializes from balance.js on DOMContentLoaded
 
   // Promo modal & activation logic
   (function(){

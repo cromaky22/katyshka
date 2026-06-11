@@ -48,6 +48,14 @@
 
   function loadFromServer(){
     _userId = getUserId();
+    var cached = localStorage.getItem('mc_balance');
+    if(cached !== null && cached !== 'NaN'){
+      var cv = parseFloat(cached);
+      if(!isNaN(cv) && cv >= 0){
+        _balance = Math.round(cv * 100) / 100;
+        updateDOM(_balance);
+      }
+    }
     return fetch('/api/users?id=' + encodeURIComponent(_userId))
       .then(function(r){ return r.json(); })
       .then(function(d){
@@ -146,4 +154,10 @@
     getUserId: function(){ return _userId || getUserId(); },
     getSocket: function(){ if(!_socket) initSocket(); return _socket; }
   };
+
+  if(document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){ Balance.init(); });
+  } else {
+    Balance.init();
+  }
 })();

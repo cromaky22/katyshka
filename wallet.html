@@ -144,11 +144,11 @@
     <a href="bonus.html" class="nav-item" data-name="bonus"><span class="icon">🎁</span><span class="label">Bonus</span></a>
     <a href="menu.html" class="nav-item" data-name="menu"><span class="icon">☰</span><span class="label">Menu</span></a>
   </nav>
-  <script src="js/app.js"></script>
   <script src="js/balance.js"></script>
+  <script src="js/app.js"></script>
   <script>
   (function(){
-    var uid='u'+Math.random().toString(36).substr(2,9);
+    var uid = window.Balance ? Balance.getUserId() : (localStorage.getItem('tg_uid') || 'u'+Math.random().toString(36).substr(2,9));
     var tgUser=null;
     
     // Get user data from Telegram WebApp
@@ -167,8 +167,6 @@
       try{
         var s=localStorage.getItem('tg_user');
         if(s)tgUser=JSON.parse(s);
-        var savedUid=localStorage.getItem('tg_uid');
-        if(savedUid)uid=savedUid;
       }catch(e){}
     }
 
@@ -194,18 +192,9 @@
       localStorage.setItem('tx_history',JSON.stringify(txs));
     }
 
-    // Load balance from server on start
-    fetch('/api/users?id='+encodeURIComponent(uid))
-      .then(function(r){return r.json();})
-      .then(function(d){
-        if(d && d.balance !== undefined){
-          upd(parseFloat(d.balance)||0);
-        }
-      }).catch(function(){
-        // Fallback to localStorage
-        var localBal = parseFloat(localStorage.getItem('mc_balance'))||0;
-        upd(localBal);
-      });
+    // Balance is loaded by Balance.init() via balance.js
+    // Just ensure local uid is synced
+    if(window.Balance) Balance.ready(function(bal){ upd(bal); });
 
     window.showTab=function(t){
       document.querySelectorAll('.w-tabs .tab').forEach(function(x,i){x.classList.toggle('active',(t==='dep'&&i===0)||(t==='wd'&&i===1)||(t==='hist'&&i===2));});
