@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function(){
     initAudio();
     if (spinning) return;
     const stake = parseFloat(stakeInput.value);
-    if (isNaN(stake) || stake < 0.5) { gameStatusEl.textContent = 'Мин. ставка $0.50'; gameStatusEl.className = 'game-status error'; return; }
+    if (isNaN(stake) || stake < 0.1) { gameStatusEl.textContent = 'Мин. ставка $0.10'; gameStatusEl.className = 'game-status error'; return; }
     if (stake > 200) { gameStatusEl.textContent = 'Макс. ставка $200'; gameStatusEl.className = 'game-status error'; return; }
     if (getBalance() < stake) { gameStatusEl.textContent = 'Недостаточно средств'; gameStatusEl.className = 'game-status error'; return; }
 

@@ -144,13 +144,12 @@ body{background:linear-gradient(135deg,#0f0520 0%,#1a0a2e 30%,#2d1b5e 60%,#0f052
   <div class="s-controls">
     <div class="s-bet-area">
       <div class="bet-row">
-        <input class="bet-inp" id="betInp" type="number" min="0.2" max="100" step="0.2" value="1">
+        <input class="bet-inp" id="betInp" type="number" min="0.1" max="100" step="0.1" value="0.1">
         <button class="bet-btn" id="halfB">½</button>
         <button class="bet-btn" id="dblB">×2</button>
       </div>
       <div class="quick-row">
-        <button class="qb" data-v="0.2">$0.2</button>
-        <button class="qb" data-v="0.5">$0.5</button>
+        <button class="qb" data-v="0.1">$0.1</button>
         <button class="qb" data-v="1">$1</button>
         <button class="qb" data-v="2">$2</button>
         <button class="qb" data-v="5">$5</button>
@@ -439,7 +438,7 @@ body{background:linear-gradient(135deg,#0f0520 0%,#1a0a2e 30%,#2d1b5e 60%,#0f052
   // Events
   spinB.onclick=spin;
   autoB.onclick=()=>{autoMode=!autoMode;autoB.classList.toggle('active',autoMode)};
-  halfB.onclick=()=>{betInp.value=Math.max(0.2,(parseFloat(betInp.value)||1)/2).toFixed(2)};
+  halfB.onclick=()=>{betInp.value=Math.max(0.1,(parseFloat(betInp.value)||0.1)/2).toFixed(2)};
   dblB.onclick=()=>{betInp.value=Math.min(100,(parseFloat(betInp.value)||1)*2).toFixed(2)};
   document.querySelectorAll('.qb').forEach(b=>b.onclick=()=>{betInp.value=b.dataset.v});
 

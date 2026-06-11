@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', function(){
   playBtn.onclick = () => {
     initAudio();
     const s = parseFloat(stakeInput.value);
-    if (isNaN(s) || s < 0.5) { gameStatusEl.textContent='Мин. ставка $0.50'; gameStatusEl.className='gw-status error'; return; }
+    if (isNaN(s) || s < 0.1) { gameStatusEl.textContent='Мин. ставка $0.10'; gameStatusEl.className='gw-status error'; return; }
     if (s > 200) { gameStatusEl.textContent='Макс. ставка $200'; gameStatusEl.className='gw-status error'; return; }
     if (getBalance() < s) { gameStatusEl.textContent='Недостаточно средств'; gameStatusEl.className='gw-status error'; return; }
      stake = s;
@@ -261,9 +261,9 @@ document.addEventListener('DOMContentLoaded', function(){
 
   quickBtns.forEach(b => b.onclick = () => {
     const a = +b.dataset.amount, c = +stakeInput.value || 0;
-    stakeInput.value = Math.min(200, Math.max(0.5, c + a)).toFixed(2);
+    stakeInput.value = Math.min(200, Math.max(0.1, c + a)).toFixed(2);
   });
-  halfBtn.onclick = () => { const v=+stakeInput.value||0; stakeInput.value=Math.max(0.5,v/2).toFixed(2); };
+  halfBtn.onclick = () => { const v=+stakeInput.value||0; stakeInput.value=Math.max(0.1,v/2).toFixed(2); };
   doubleBtn.onclick = () => { const v=+stakeInput.value||0; stakeInput.value=Math.min(200,v*2).toFixed(2); };
 
   document.addEventListener('click', () => initAudio(), { once: true });

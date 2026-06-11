@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   halfBtn.addEventListener('click', () => {
     const val = parseFloat(dreamStake.value) || 1;
-    dreamStake.value = Math.max(0.5, (val / 2).toFixed(2));
+    dreamStake.value = Math.max(0.1, (val / 2).toFixed(2));
   });
 
   doubleBtn.addEventListener('click', () => {
@@ -229,8 +229,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (gameState !== 'idle' && gameState !== 'betting') return;
 
     const stake = parseFloat(dreamStake.value);
-    if (isNaN(stake) || stake < 0.5) {
-      alert('Минимальная ставка $0.5');
+    if (isNaN(stake) || stake < 0.1) {
+      alert('Минимальная ставка $0.1');
       return;
     }
     if (getBalance() < stake) {

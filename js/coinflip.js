@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function(){
   function updateStakeDisplays(){
     const raw = stakeInput ? ('' + stakeInput.value).trim() : '';
     const val = raw !== '' ? (Number(stakeInput.value) || 0) : null;
-    const MIN_STAKE = 0.5, MAX_STAKE = 200;
+    const MIN_STAKE = 0.1, MAX_STAKE = 200;
     if(val !== null){
       const v = Number(Math.min(MAX_STAKE, Math.max(MIN_STAKE, val)));
       if(stakeHeadEl) stakeHeadEl.textContent = `$ ${v.toFixed(2)}`;
@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   play.addEventListener('click', ()=>{
-    const MIN_STAKE = 0.5, MAX_STAKE = 200;
+    const MIN_STAKE = 0.1, MAX_STAKE = 200;
     let raw = Number(stakeInput && stakeInput.value) || 0;
     if(isNaN(raw) || raw < MIN_STAKE) raw = MIN_STAKE;
     if(raw > MAX_STAKE) raw = MAX_STAKE;

@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function(){
   // Stake helpers
   halfBtn.addEventListener('click', () => {
     const val = parseFloat(stakeInput.value) || 0;
-    stakeInput.value = Math.max(0.2, (val / 2).toFixed(2));
+    stakeInput.value = Math.max(0.1, (val / 2).toFixed(2));
   });
 
   doubleBtn.addEventListener('click', () => {
@@ -103,8 +103,8 @@ document.addEventListener('DOMContentLoaded', function(){
     }
 
     // Minimum bet
-    if(stake < 0.2){
-      gameStatus.textContent = 'Минимальная ставка 0.2';
+    if(stake < 0.1){
+      gameStatus.textContent = 'Минимальная ставка 0.1';
       gameStatus.className = 'game-status error';
       return;
     }

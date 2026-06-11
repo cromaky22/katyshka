@@ -373,7 +373,7 @@
     if(gameActive){ alert('Раунд уже идёт'); return; }
     const stake = parseFloat(stakeInput.value) || 0;
     const mines = parseInt(minesSelect.value,10) || 5;
-    if(stake < 0.5){ alert('Минимальная ставка $0.50'); return; }
+    if(stake < 0.1){ alert('Минимальная ставка $0.10'); return; }
     if(stake > 200){ alert('Максимальная ставка $200'); return; }
     const balance = getBalance();
     if(stake > balance){ alert('Недостаточно средств'); return; }
@@ -473,7 +473,7 @@
   if(minesSelectBottom){ minesSelectBottom.addEventListener('change', ()=>{ minesSelect.value = minesSelectBottom.value; syncInputs(); }); }
 
   if(halfBtn){ halfBtn.addEventListener('click', ()=>{
-    const cur = parseFloat(stakeInput.value) || 0; stakeInput.value = Math.max(0.5, Math.round((cur/2)*100)/100); syncInputs();
+    const cur = parseFloat(stakeInput.value) || 0; stakeInput.value = Math.max(0.1, Math.round((cur/2)*100)/100); syncInputs();
   }); }
   if(doubleBtn){ doubleBtn.addEventListener('click', ()=>{
     const cur = parseFloat(stakeInput.value) || 0; stakeInput.value = Math.min(200, Math.round((cur*2)*100)/100); syncInputs();

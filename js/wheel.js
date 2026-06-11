@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function(){
   function addBet(type) {
     if (isSpinning) return;
     const stake = parseFloat(stakeInput.value) || 0;
-    if (stake < 0.5) { gameStatusEl.textContent = 'Мин. ставка $0.50'; gameStatusEl.className = 'game-status error'; return; }
+    if (stake < 0.1) { gameStatusEl.textContent = 'Мин. ставка $0.10'; gameStatusEl.className = 'game-status error'; return; }
     if (stake > 200) { gameStatusEl.textContent = 'Макс. ставка $200'; gameStatusEl.className = 'game-status error'; return; }
     const totalCurrent = currentBets.reduce((s, b) => s + b.amount, 0);
     if (totalCurrent + stake > Balance.get()) { gameStatusEl.textContent = 'Недостаточно средств'; gameStatusEl.className = 'game-status error'; return; }
@@ -390,10 +390,10 @@ document.addEventListener('DOMContentLoaded', function(){
     btn.addEventListener('click', () => {
       const a = parseFloat(btn.dataset.amount);
       const cur = parseFloat(stakeInput.value) || 0;
-      stakeInput.value = Math.min(200, Math.max(0.5, cur + a)).toFixed(2);
+      stakeInput.value = Math.min(200, Math.max(0.1, cur + a)).toFixed(2);
     });
   });
-  halfBtn.addEventListener('click', () => { const v = parseFloat(stakeInput.value) || 0; stakeInput.value = Math.max(0.5, v / 2).toFixed(2); });
+  halfBtn.addEventListener('click', () => { const v = parseFloat(stakeInput.value) || 0; stakeInput.value = Math.max(0.1, v / 2).toFixed(2); });
   doubleBtn.addEventListener('click', () => { const v = parseFloat(stakeInput.value) || 0; stakeInput.value = Math.min(200, v * 2).toFixed(2); });
 
   document.addEventListener('click', () => initAudio(), { once: true });
