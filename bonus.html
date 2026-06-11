@@ -3,112 +3,310 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Mini Casino — Bonus</title>
+  <title>Бонус — KATYSHKA</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
-    .bonus-section{padding:20px;max-width:480px;margin:0 auto}
-    .bonus-card{background:var(--card);border-radius:16px;padding:20px;margin-bottom:16px;text-align:center}
-    .bonus-icon{font-size:48px;margin-bottom:12px}
-    .bonus-title{font-size:18px;font-weight:700;margin-bottom:8px}
-    .bonus-desc{font-size:13px;color:var(--muted);margin-bottom:16px}
-    .bonus-btn{background:linear-gradient(135deg,#4caf50,#2e7d32);border:none;padding:14px 32px;border-radius:12px;color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s;width:100%}
-    .bonus-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(76,175,80,0.3)}
-    .bonus-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;box-shadow:none}
-    .bonus-timer{font-size:12px;color:var(--muted);margin-top:12px}
-    .bonus-success{font-size:14px;color:var(--accent-green);margin-top:12px;font-weight:600}
+    .bonus-section{padding:20px;max-width:480px;margin:0 auto;text-align:center}
+    .bonus-title{font-size:24px;font-weight:900;margin-bottom:8px}
+    .bonus-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+    .wheel-container{position:relative;width:100%;max-width:340px;margin:0 auto 24px}
+    .wheel-canvas{width:100%;aspect-ratio:1;border-radius:50%;box-shadow:0 0 0 6px rgba(255,255,255,0.08),0 0 40px rgba(107,47,160,0.4)}
+    .wheel-pointer{position:absolute;top:6px;left:50%;transform:translateX(-50%) rotate(180deg);font-size:28px;color:#ffd700;z-index:10;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.6))}
+    .bonus-status{padding:14px;border-radius:12px;font-weight:600;font-size:14px;background:rgba(255,255,255,0.04);margin-bottom:16px}
+    .bonus-status.win{background:rgba(76,175,80,0.15);color:#4caf50}
+    .bonus-status.wait{background:rgba(255,193,7,0.15);color:#ffc107}
+    .bonus-btn{width:100%;padding:18px;border-radius:14px;border:none;font-size:18px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#ff6b9d,#ffd700);color:#000;text-transform:uppercase;letter-spacing:1px;transition:all 0.2s;box-shadow:0 8px 24px rgba(255,107,157,0.3)}
+    .bonus-btn:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(255,107,157,0.4)}
+    .bonus-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none}
+    .timer-big{font-size:42px;font-weight:900;color:#ffd700;margin:12px 0 4px}
+    .timer-label{font-size:12px;color:var(--muted)}
+    .prize-list{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:20px}
+    .prize-item{padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);font-size:12px;font-weight:600}
+    .prize-item.big{background:rgba(255,215,0,0.15);color:#ffd700;border:1px solid rgba(255,215,0,0.3)}
   </style>
-
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
 <body>
   <header class="app-header">
-    <div class="left-controls">
-      <button class="btn-icon" aria-label="back">❀</button>
-      <img src="assets/logo.png" alt="Logo" class="logo-small" onerror="this.style.display='none'">
-    </div>
+    <div class="left-controls"><a href="home.html" style="color:var(--muted);text-decoration:none;font-size:20px">←</a></div>
     <div class="header-title">BONUS</div>
-    <div class="right-controls" style="position:relative">
-      <div class="balance-pill">
-        <span class="wallet-icon">💠</span>
-        <span class="balance-value">0.00</span>
-        <span class="currency">$</span>
-        <span class="caret">▾</span>
-      </div>
-      <button class="profile" id="profileBtn" title="Профиль" aria-label="Профиль"><img class="profile-icon" src="" alt="Аватар" onerror="this.style.display='none'"></button>
-      <div class="profile-dropdown" id="profileDropdown">
-        <div class="pd-header">
-          <div class="pd-id-label">ID игрока</div>
-          <div class="pd-id-value">
-            <span id="pdUserId">—</span>
-          </div>
-        </div>
-        <div class="pd-body">
-          <a href="profile.html" class="pd-btn"><span class="pd-btn-icon">👤</span>Профиль<span class="pd-btn-arrow">→</span></a>
-          <button class="pd-btn" id="pdPromoBtn"><span class="pd-btn-icon">🎟</span>Промокод<span class="pd-btn-arrow">→</span></button>
-        </div>
-      </div>
-      <div class="pd-overlay" id="pdOverlay"></div>
+    <div class="right-controls">
+      <div class="balance-pill"><span class="balance-value" id="hbal">0.00</span><span class="currency">$</span></div>
     </div>
   </header>
-  <main class="content">
-    <div class="bonus-section">
-      <div class="bonus-card">
-        <div class="bonus-icon">🎁</div>
-        <div class="bonus-title">Часовой бонус</div>
-        <div class="bonus-desc">Получай $100 каждый час!</div>
-        <button class="bonus-btn" id="hourlyBonusBtn">Получить $100</button>
-        <div class="bonus-timer" id="bonusTimer"></div>
-        <div class="bonus-success" id="bonusSuccess"></div>
-      </div>
+
+  <main class="bonus-section">
+    <div class="bonus-title">🎡 Колесо Удачи</div>
+    <div class="bonus-sub">Крути раз в день и выигрывай до $10!</div>
+
+    <div class="wheel-container">
+      <canvas id="bonusWheel" class="wheel-canvas"></canvas>
+      <div class="wheel-pointer">▼</div>
+    </div>
+
+    <div class="bonus-status" id="bonusStatus">Загрузка...</div>
+
+    <div id="timerBlock" style="display:none">
+      <div class="timer-big" id="timerVal">00:00:00</div>
+      <div class="timer-label">до следующего бонуса</div>
+    </div>
+
+    <button class="bonus-btn" id="spinBtn" onclick="spinWheel()">🎰 КРУТИТЬ</button>
+
+    <div class="prize-list">
+      <div class="prize-item">$0.01</div>
+      <div class="prize-item">$0.02</div>
+      <div class="prize-item">$0.03</div>
+      <div class="prize-item">$0.05</div>
+      <div class="prize-item">$0.07</div>
+      <div class="prize-item">$0.10</div>
+      <div class="prize-item">$0.25</div>
+      <div class="prize-item">$0.50</div>
+      <div class="prize-item">$1</div>
+      <div class="prize-item big">$5</div>
+      <div class="prize-item big">$10</div>
+      <div class="prize-item">$0.01</div>
     </div>
   </main>
+
   <nav class="bottom-nav">
     <a href="home.html#games" class="nav-item" data-name="games"><span class="icon">🎮</span><span class="label">Games</span></a>
     <a href="wallet.html" class="nav-item" data-name="wallet"><span class="icon">💼</span><span class="label">Wallet</span></a>
     <a href="home.html" class="nav-item center" data-name=""><span class="icon">💎</span></a>
-    <a href="bonus.html" class="nav-item" data-name="bonus"><span class="icon">🎁</span><span class="label">Bonus</span></a>
+    <a href="bonus.html" class="nav-item active" data-name="bonus"><span class="icon">🎁</span><span class="label">Bonus</span></a>
     <a href="menu.html" class="nav-item" data-name="menu"><span class="icon">☰</span><span class="label">Menu</span></a>
   </nav>
+
   <script src="js/app.js"></script>
   <script>
   (function(){
-    const btn = document.getElementById('hourlyBonusBtn');
-    const timer = document.getElementById('bonusTimer');
-    const success = document.getElementById('bonusSuccess');
-    const COOLDOWN = 3600000; // 1 hour in ms
-
-    function updateUI(){
-      const lastClaim = localStorage.getItem('mc_hourly_bonus');
-      if(lastClaim){
-        const elapsed = Date.now() - parseInt(lastClaim);
-        if(elapsed < COOLDOWN){
-          btn.disabled = true;
-          const remaining = COOLDOWN - elapsed;
-          const mins = Math.floor(remaining / 60000);
-          const secs = Math.floor((remaining % 60000) / 1000);
-          timer.textContent = 'Следующий бонус через ' + mins + 'м ' + secs + 'с';
-          return;
-        }
+    var uid = 'u' + Math.random().toString(36).substr(2, 9);
+    try {
+      var tg = window.Telegram && window.Telegram.WebApp;
+      if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        uid = String(tg.initDataUnsafe.user.id);
+        localStorage.setItem('tg_uid', uid);
       }
-      btn.disabled = false;
-      timer.textContent = 'Бонус доступен!';
+    } catch(e) {}
+    var savedUid = localStorage.getItem('tg_uid');
+    if (savedUid) uid = savedUid;
+
+    var canvas = document.getElementById('bonusWheel');
+    var ctx = canvas.getContext('2d');
+    var spinBtn = document.getElementById('spinBtn');
+    var bonusStatus = document.getElementById('bonusStatus');
+    var timerBlock = document.getElementById('timerBlock');
+    var timerVal = document.getElementById('timerVal');
+
+    // Wheel sectors
+    var SECTORS = [
+      { label: '$0.01', payout: 0.01, color: '#1a1a2e' },
+      { label: '$0.10', payout: 0.10, color: '#2d2d44' },
+      { label: '$0.50', payout: 0.50, color: '#1a1a2e' },
+      { label: '$0.02', payout: 0.02, color: '#2d2d44' },
+      { label: '$0.07', payout: 0.07, color: '#1a1a2e' },
+      { label: '$5',    payout: 5.00, color: '#ffd700' },
+      { label: '$0.03', payout: 0.03, color: '#2d2d44' },
+      { label: '$0.25', payout: 0.25, color: '#1a1a2e' },
+      { label: '$0.05', payout: 0.05, color: '#2d2d44' },
+      { label: '$1',    payout: 1.00, color: '#1a1a2e' },
+      { label: '$0.01', payout: 0.01, color: '#2d2d44' },
+      { label: '$10',   payout: 10.00, color: '#ff6b9d' }
+    ];
+
+    var TOTAL = SECTORS.length;
+    var SEG_ANGLE = 360 / TOTAL;
+    var rotation = 0;
+    var isSpinning = false;
+    var COOLDOWN = 24 * 60 * 60 * 1000; // 24 hours
+    var LAST_SPIN_KEY = 'daily_bonus_' + uid;
+
+    function setupCanvas() {
+      var size = canvas.offsetWidth * 2;
+      if (size < 100) size = 680;
+      canvas.width = size;
+      canvas.height = size;
+      drawWheel();
     }
 
-    btn.addEventListener('click', ()=>{
-      const lastClaim = localStorage.getItem('mc_hourly_bonus');
-      if(lastClaim && (Date.now() - parseInt(lastClaim)) < COOLDOWN) return;
+    function drawWheel() {
+      var cx = canvas.width / 2;
+      var cy = canvas.height / 2;
+      var r = canvas.width / 2 - 6;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      localStorage.setItem('mc_hourly_bonus', Date.now().toString());
-      const balance = parseFloat(localStorage.getItem('mc_balance') || '0') || 0;
-      const newBalance = Math.round((balance + 100) * 100) / 100;
-      localStorage.setItem('mc_balance', newBalance.toFixed(2));
-      document.querySelectorAll('.balance-value').forEach(el => el.textContent = newBalance.toFixed(2));
-      success.textContent = '✅ Получено +$100!';
-      updateUI();
-    });
+      for (var i = 0; i < TOTAL; i++) {
+        var seg = SECTORS[i];
+        var startAngle = (i * SEG_ANGLE - 90 + rotation) * Math.PI / 180;
+        var endAngle = ((i + 1) * SEG_ANGLE - 90 + rotation) * Math.PI / 180;
 
-    updateUI();
-    setInterval(updateUI, 1000);
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = seg.color;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + r * Math.cos(startAngle), cy + r * Math.sin(startAngle));
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate((startAngle + endAngle) / 2);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = (seg.payout >= 5) ? '#000' : '#fff';
+        ctx.font = 'bold ' + Math.round(r * 0.1) + 'px Arial';
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 2;
+        ctx.fillText(seg.label, r * 0.65, 0);
+        ctx.restore();
+      }
+
+      // Center circle
+      ctx.beginPath();
+      ctx.arc(cx, cy, r * 0.1, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffd700';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    setupCanvas();
+    window.addEventListener('resize', setupCanvas);
+
+    function getLastSpin() {
+      var v = localStorage.getItem(LAST_SPIN_KEY);
+      return v ? parseInt(v) : 0;
+    }
+
+    function setLastSpin() {
+      localStorage.setItem(LAST_SPIN_KEY, String(Date.now()));
+    }
+
+    function getRemainingTime() {
+      var last = getLastSpin();
+      if (!last) return 0;
+      var elapsed = Date.now() - last;
+      return Math.max(0, COOLDOWN - elapsed);
+    }
+
+    function formatTime(ms) {
+      var s = Math.floor(ms / 1000);
+      var h = Math.floor(s / 3600);
+      var m = Math.floor((s % 3600) / 60);
+      var sec = s % 60;
+      return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+    }
+
+    function updateStatus() {
+      var remaining = getRemainingTime();
+      if (remaining > 0) {
+        isSpinning = true;
+        spinBtn.disabled = true;
+        spinBtn.textContent = '⏳ ПОДОЖДИТЕ';
+        timerBlock.style.display = 'block';
+        bonusStatus.textContent = 'Бонус уже получен!';
+        bonusStatus.className = 'bonus-status wait';
+        timerVal.textContent = formatTime(remaining);
+      } else {
+        isSpinning = false;
+        spinBtn.disabled = false;
+        spinBtn.textContent = '🎰 КРУТИТЬ';
+        timerBlock.style.display = 'none';
+        bonusStatus.textContent = 'Нажмите кнопку чтобы крутить!';
+        bonusStatus.className = 'bonus-status';
+      }
+    }
+
+    setInterval(updateStatus, 1000);
+    updateStatus();
+
+    window.spinWheel = function() {
+      if (isSpinning) return;
+      var remaining = getRemainingTime();
+      if (remaining > 0) return;
+
+      isSpinning = true;
+      spinBtn.disabled = true;
+      spinBtn.textContent = '🎡 КРУТИТСЯ...';
+      bonusStatus.textContent = 'Колесо крутится...';
+      bonusStatus.className = 'bonus-status';
+
+      // Weighted random — big prizes are rare
+      var weights = SECTORS.map(function(s) {
+        if (s.payout >= 10) return 1;
+        if (s.payout >= 5) return 2;
+        if (s.payout >= 1) return 5;
+        if (s.payout >= 0.5) return 8;
+        if (s.payout >= 0.25) return 12;
+        if (s.payout >= 0.10) return 15;
+        return 20;
+      });
+      var totalWeight = weights.reduce(function(a,b){return a+b;}, 0);
+      var rand = Math.random() * totalWeight;
+      var chosenIdx = 0;
+      for (var i = 0; i < weights.length; i++) {
+        rand -= weights[i];
+        if (rand <= 0) { chosenIdx = i; break; }
+      }
+
+      var targetAngle = 360 - (chosenIdx * SEG_ANGLE + SEG_ANGLE / 2);
+      var currentNorm = (((-rotation) % 360) + 360) % 360;
+      var diff = targetAngle - currentNorm;
+      while (diff < 0) diff += 360;
+      var totalRot = 360 * 6 + diff;
+
+      var startRot = rotation;
+      var t0 = performance.now();
+      var duration = 5000;
+
+      function tick(now) {
+        var p = Math.min((now - t0) / duration, 1);
+        var ease = 1 - Math.pow(1 - p, 4);
+        rotation = startRot - totalRot * ease;
+        drawWheel();
+        if (p < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          rotation = startRot - totalRot;
+          drawWheel();
+          onSpinComplete(chosenIdx);
+        }
+      }
+      requestAnimationFrame(tick);
+    };
+
+    function onSpinComplete(idx) {
+      var sector = SECTORS[idx];
+      var payout = sector.payout;
+
+      setLastSpin();
+
+      // Update balance
+      var curBal = parseFloat(localStorage.getItem('mc_balance')) || 0;
+      var newBal = Math.round((curBal + payout) * 100) / 100;
+      localStorage.setItem('mc_balance', newBal.toFixed(2));
+      document.querySelectorAll('.balance-value, #hbal').forEach(function(el){
+        el.textContent = newBal.toFixed(2);
+      });
+
+      // Sync with server
+      fetch('/api/users', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({id: uid, balance: newBal})
+      }).catch(function(){});
+
+      bonusStatus.textContent = '🎉 Вы выиграли ' + sector.label + '!';
+      bonusStatus.className = 'bonus-status win';
+      updateStatus();
+    }
   })();
   </script>
 </body>
