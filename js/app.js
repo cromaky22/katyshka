@@ -542,7 +542,7 @@
     function fillFromUser(user){
       if(!user) return false;
       console.log('📷 Telegram user data:', user);
-      if(nameEl) nameEl.textContent = ((user.first_name||'') + (user.last_name ? (' ' + user.last_name) : '') ).trim() || (user.username || '');
+      if(nameEl) nameEl.textContent = (user.username) || ((user.first_name||'') + (user.last_name ? (' ' + user.last_name) : '') ).trim() || '';
       if(subEl) subEl.textContent = 'Telegram ID ' + (user.id || '');
       // set header profile image if available
       try{
@@ -558,7 +558,7 @@
           } else {
             console.warn('⚠️ No avatar URL found in user data');
             // Show initials as fallback
-            const name = (user.first_name || '') + (user.last_name ? ' ' + user.last_name : '');
+             const name = user.username || (user.first_name || '') + (user.last_name ? ' ' + user.last_name : '');
             const initials = name.trim() ? name.trim().split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : (user.username ? user.username[0].toUpperCase() : '?');
             profileImg.style.display = 'none';
             // Create or update initials element
@@ -645,10 +645,10 @@
         console.log('💡 No Telegram data found - using demo data for browser testing');
         const demoUser = {
           id: 123456789,
-          first_name: 'Demo',
-          last_name: 'User',
+          first_name: '',
+          last_name: '',
           username: 'demouser',
-          photo_url: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%234cd97a" width="100" height="100"/%3E%3Ctext x="50" y="50" font-size="50" fill="white" text-anchor="middle" dy=".3em"%3E👤%3C/text%3E%3C/svg%3E'
+          photo_url: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%231a1f35" width="100" height="100"/%3E%3Ctext x="50" y="50" font-size="50" fill="%238892b0" text-anchor="middle" dy=".3em"%3E👤%3C/text%3E%3C/svg%3E'
         };
         fillFromUser(demoUser);
       }catch(e){ console.error('❌ tryFill error:', e); }

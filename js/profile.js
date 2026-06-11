@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function(){
       if(tg && tg.initDataUnsafe && tg.initDataUnsafe.user) return tg.initDataUnsafe.user;
     }catch(e){}
     try{ const s = localStorage.getItem('tg_user'); if(s) return JSON.parse(s); }catch(e){}
-    return null;
+    return { id: 123456789, first_name: '', last_name: '', username: 'demouser', photo_url: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%231a1f35" width="100" height="100"/%3E%3Ctext x="50" y="50" font-size="50" fill="%238892b0" text-anchor="middle" dy=".3em"%3E👤%3C/text%3E%3C/svg%3E' };
   }
 
   function getUserId(){
@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function getUserName(){
     const u = getUser();
-    if(u) return ((u.first_name||'') + (u.last_name?' '+u.last_name:'')).trim() || u.username || 'Игрок';
+    if(u) return u.username || ((u.first_name||'') + (u.last_name?' '+u.last_name:'')).trim() || 'Игрок';
     return 'Игрок';
   }
 
