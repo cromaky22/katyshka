@@ -63,7 +63,7 @@
     <div class="left-controls"><a href="home.html" style="color:var(--muted);text-decoration:none;font-size:20px">←</a></div>
     <div class="header-title">WALLET</div>
     <div class="right-controls" style="position:relative">
-      <div class="balance-pill"><span class="balance-value" id="hbal">100.00</span><span class="currency">$</span></div>
+      <div class="balance-pill"><span class="balance-value" id="hbal">0.00</span><span class="currency">$</span></div>
       <button class="profile" id="profileBtn" title="Профиль" aria-label="Профиль"><img class="profile-icon" id="profileImg" src="" alt="Аватар" onerror="this.style.display='none'"></button>
       <div class="profile-dropdown" id="profileDropdown">
         <div class="pd-header">
@@ -93,7 +93,7 @@
         <div class="w-panel active" id="tab-dep">
           <div class="w-bal">
             <div class="w-bal-label">Баланс</div>
-            <div class="w-bal-val">$<span id="dbal">100.00</span></div>
+            <div class="w-bal-val">$<span id="dbal">0.00</span></div>
           </div>
           <div class="w-label">Способ оплаты</div>
           <div class="w-methods">
@@ -118,7 +118,7 @@
         <div class="w-panel" id="tab-wd">
           <div class="w-bal">
             <div class="w-bal-label">Доступно к выводу</div>
-            <div class="w-bal-val">$<span id="wbal">100.00</span></div>
+            <div class="w-bal-val">$<span id="wbal">0.00</span></div>
           </div>
 
           <div class="w-label">Способ вывода</div>
@@ -190,7 +190,7 @@
       }catch(e){}
     }
 
-    var bal=parseFloat(localStorage.getItem('mc_balance'))||100;
+    var bal=parseFloat(localStorage.getItem('mc_balance'))||0;
     var pay='cb';
     var invChk=null;
 
@@ -273,7 +273,17 @@
             .then(function(r){return r.json();})
             .then(function(cd){
               console.log('check:',cd);
-              if(cd.status==='paid'){clearInterval(invChk);upd(bal+parseFloat(cd.amount));msg(document.getElementById('dmsg'),'✅ Оплачено! +$'+fmt(cd.amount),'ok');}
+              if(cd.status==='paid'){
+                clearInterval(invChk);
+                upd(bal+parseFloat(cd.amount));
+                msg(document.getElementById('dmsg'),'✅ Оплачено! +$'+fmt(cd.amount),'ok');
+                // Sync with server
+                fetch('/api/users', {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify({id: uid, balance: bal + parseFloat(cd.amount)})
+                }).catch(function(){});
+              }
             }).catch(function(){});
           },3000);
         }else{

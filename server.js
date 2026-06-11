@@ -9,6 +9,16 @@ const io = new Server(server, { cors: { origin: '*' } });
 app.use(express.json());
 app.use(express.static(__dirname));
 
+// === SET USER BALANCE (for deposit sync) ===
+app.post('/api/users', (req, res) => {
+  const { id, balance } = req.body;
+  if (!id) return res.status(400).json({ error: 'Missing id' });
+  if (balance !== undefined) {
+    setBalance(id, parseFloat(balance) || 0);
+  }
+  res.json({ ok: true, balance: getBalance(id) });
+});
+
 // === DATABASE (in-memory) ===
 const users = {};
 const promos = { '1': 200, '2': 200, '3': 200, '4': 200, '5': 200, '6': 200 };
