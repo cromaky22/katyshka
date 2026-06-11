@@ -309,8 +309,7 @@ app.post('/api/withdraw/xrocket', async (req, res) => {
     const result = await xrocket('transfers', {
       user_id: parseInt(userId) || 0,
       amount: String(amt.toFixed(2)),
-      currency: 'TON',
-      comment: 'Katyshka withdraw'
+      currency: 'TON'
     });
 
     if (result.success || result.data) {
@@ -346,8 +345,7 @@ app.post('/api/withdraw/cryptobot', async (req, res) => {
       user_id: tgId,
       asset: 'USDT',
       amount: String(amt.toFixed(2)),
-      spend_id: spendId,
-      comment: 'Katyshka withdraw'
+      spend_id: spendId
     });
 
     console.log('CryptoBot transfer:', JSON.stringify(result));
