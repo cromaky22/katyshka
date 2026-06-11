@@ -316,10 +316,11 @@
           addTx('withdraw',uid,amt,'completed',{provider:pay,fee:fee});
           msg(document.getElementById('wmsg'),'✅ Вывод на $'+fmt(amt)+' выполнен! Комиссия: $'+fmt(fee),'ok');
         }else{
-          if(d.error&&d.error.indexOf('Insufficient')!==-1){
-            msg(document.getElementById('wmsg'),'❌ Недостаточно средств на сервере. Попробуйте позже или обратитесь в поддержку.','err');
+          var errMsg = typeof d.error === 'string' ? d.error : JSON.stringify(d.error) || 'unknown';
+          if(errMsg.indexOf('Insufficient')!==-1 || errMsg.indexOf('balance')!==-1){
+            msg(document.getElementById('wmsg'),'❌ Недостаточно средств. Пополните баланс.','err');
           }else{
-            msg(document.getElementById('wmsg'),'Ошибка: '+(d.error||'unknown'),'err');
+            msg(document.getElementById('wmsg'),'❌ Ошибка: '+errMsg,'err');
           }
         }
       }).catch(function(e){msg(document.getElementById('wmsg'),'Ошибка сети: '+e.message,'err');})
