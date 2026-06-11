@@ -9,7 +9,13 @@ const io = new Server(server, { cors: { origin: '*' } });
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// === SET USER BALANCE (for deposit sync) ===
+// === GET/SET USER BALANCE ===
+app.get('/api/users', (req, res) => {
+  const id = req.query.id;
+  if (!id) return res.status(400).json({ error: 'Missing id' });
+  res.json({ ok: true, balance: getBalance(id) });
+});
+
 app.post('/api/users', (req, res) => {
   const { id, balance } = req.body;
   if (!id) return res.status(400).json({ error: 'Missing id' });

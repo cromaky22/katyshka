@@ -188,6 +188,17 @@
     var pay='cb';
     var invChk=null;
 
+    // Sync balance from server on load
+    fetch('/api/users?id='+encodeURIComponent(uid))
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d.balance !== undefined){
+          bal = d.balance;
+          localStorage.setItem('mc_balance', bal.toFixed(2));
+          upd(bal);
+        }
+      }).catch(function(){});
+
     function fmt(n){return Number(n).toFixed(2);}
     function upd(v){bal=v;localStorage.setItem('mc_balance',fmt(v));document.getElementById('dbal').textContent=fmt(v);document.getElementById('wbal').textContent=fmt(v);document.getElementById('hbal').textContent=fmt(v);document.querySelectorAll('.balance-value').forEach(function(el){el.textContent=fmt(v);});}
     function msg(el,t,y){el.textContent=t;el.className='w-msg show '+(y||'info');}
@@ -269,13 +280,14 @@
               console.log('check:',cd);
               if(cd.status==='paid'){
                 clearInterval(invChk);
-                upd(bal+parseFloat(cd.amount));
+                var newBal=bal+parseFloat(cd.amount);
+                upd(newBal);
                 msg(document.getElementById('dmsg'),'✅ Оплачено! +$'+fmt(cd.amount),'ok');
                 // Sync with server
                 fetch('/api/users', {
                   method: 'POST',
                   headers: {'Content-Type': 'application/json'},
-                  body: JSON.stringify({id: uid, balance: bal + parseFloat(cd.amount)})
+                  body: JSON.stringify({id: uid, balance: newBal})
                 }).catch(function(){});
               }
             }).catch(function(){});
@@ -290,9 +302,6 @@
     window.doWithdraw=function(){
       var amt=parseFloat(document.getElementById('wamt').value)||0;
       if(amt<1){msg(document.getElementById('wmsg'),'Мин. вывод $1','err');return;}
-      var fee=Math.round(amt*0.03*100)/100;
-      var total=amt+fee;
-      if(total>bal){msg(document.getElementById('wmsg'),'Недостаточно средств (комиссия 3%)','err');return;}
       var btn=document.getElementById('wbtn');btn.disabled=true;btn.textContent='⏳ Вывод...';
       clr(document.getElementById('wmsg'));
       var ep=pay==='xr'?'/api/withdraw/xrocket':'/api/withdraw/cryptobot';
@@ -301,11 +310,17 @@
       .then(function(d){
         console.log('withdraw resp:',d);
         if(d.ok){
+          var fee=d.fee||Math.round(amt*0.03*100)/100;
+          var total=amt+fee;
           upd(bal-total);
           addTx('withdraw',uid,amt,'completed',{provider:pay,fee:fee});
           msg(document.getElementById('wmsg'),'✅ Вывод на $'+fmt(amt)+' выполнен! Комиссия: $'+fmt(fee),'ok');
         }else{
-          msg(document.getElementById('wmsg'),'Ошибка: '+(d.error||'unknown'),'err');
+          if(d.error&&d.error.indexOf('Insufficient')!==-1){
+            msg(document.getElementById('wmsg'),'❌ Недостаточно средств на сервере. Попробуйте позже или обратитесь в поддержку.','err');
+          }else{
+            msg(document.getElementById('wmsg'),'Ошибка: '+(d.error||'unknown'),'err');
+          }
         }
       }).catch(function(e){msg(document.getElementById('wmsg'),'Ошибка сети: '+e.message,'err');})
       .finally(function(){btn.disabled=false;btn.textContent='📤 Вывести';});
