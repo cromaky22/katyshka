@@ -15,10 +15,8 @@ document.addEventListener('DOMContentLoaded', function(){
   const numbersTable = document.getElementById('numbersTable');
   const numbersGrid = document.getElementById('numbersGrid');
   const activeBets = document.getElementById('activeBets');
-  const activeBetsList = document.getElementById('activeBetsList');
-  const timerValueEl = document.getElementById('timerValue');
-  const allPlayersBetsEl = document.getElementById('allPlayersBets');
-  const allPlayersBetsList = document.getElementById('allPlayersBetsList');
+   const activeBetsList = document.getElementById('activeBetsList');
+   const timerValueEl = document.getElementById('timerValue');
 
   const RED_NUMBERS = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
   function isRed(n) { return RED_NUMBERS.indexOf(n) !== -1; }
@@ -195,23 +193,7 @@ document.addEventListener('DOMContentLoaded', function(){
     socket.emit('wheel:bet', { type, amount: stake, playerName, playerAvatar });
   }
 
-  function updateAllPlayersBets(allBets) {
-    if (!allBets || allBets.length === 0) { allPlayersBetsEl.style.display = 'none'; return; }
-    allPlayersBetsEl.style.display = 'flex';
-    allPlayersBetsList.innerHTML = '';
-    allBets.forEach(bet => {
-      const el = document.createElement('div');
-      el.className = 'player-bet-item';
-      el.style.borderLeftColor = getBetColor(bet.type);
-      const avatarHtml = bet.playerAvatar
-        ? `<img class="player-bet-avatar" src="${bet.playerAvatar}" alt="" onerror="this.style.display='none'">`
-        : `<div class="player-bet-avatar player-bet-avatar-empty">${(bet.playerName||'?')[0].toUpperCase()}</div>`;
-      el.innerHTML = `<div class="player-bet-left">${avatarHtml}<div class="player-bet-info"><span class="player-bet-name">${bet.playerName||'Player'}</span><span class="player-bet-type">${getBetLabel(bet.type)}</span></div></div><span class="player-bet-amount">$${bet.amount.toFixed(2)}</span>`;
-      allPlayersBetsList.appendChild(el);
-    });
-  }
-
-  function addHistory(num) {
+   function addHistory(num) {
     const el = document.createElement('div');
     el.className = 'history-item';
     el.style.backgroundColor = num === 0 ? '#8bc34a' : (isRed(num) ? '#f44336' : '#101010');
@@ -287,7 +269,6 @@ document.addEventListener('DOMContentLoaded', function(){
 
   socket.on('wheel:betsUpdate', (data) => {
     if (data.myBets) { currentBets = data.myBets; updateMyBetsDisplay(); }
-    if (data.allBets) updateAllPlayersBets(data.allBets);
   });
 
   socket.on('wheel:spin', (data) => {
@@ -342,10 +323,9 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   socket.on('wheel:newRound', (data) => {
-    currentBets = [];
-    updateMyBetsDisplay();
-    allPlayersBetsEl.style.display = 'none';
-    resultLens.classList.remove('show');
+     currentBets = [];
+     updateMyBetsDisplay();
+     resultLens.classList.remove('show');
     gameStatusEl.textContent = 'Новый раунд! Делайте ставки';
     gameStatusEl.className = 'game-status';
     isSpinning = false;
