@@ -55,9 +55,8 @@
     .tx-empty{text-align:center;padding:30px;color:var(--muted);font-size:12px}
     .profile-icon{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.15)}
   </style>
-
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
 <body>
   <header class="app-header">
     <div class="left-controls"><a href="home.html" style="color:var(--muted);text-decoration:none;font-size:20px">←</a></div>
@@ -68,9 +67,7 @@
       <div class="profile-dropdown" id="profileDropdown">
         <div class="pd-header">
           <div class="pd-id-label">ID игрока</div>
-          <div class="pd-id-value">
-            <span id="pdUserId">—</span>
-          </div>
+          <div class="pd-id-value"><span id="pdUserId">—</span></div>
         </div>
         <div class="pd-body">
           <a href="profile.html" class="pd-btn"><span class="pd-btn-icon">👤</span>Профиль<span class="pd-btn-arrow">→</span></a>
@@ -120,17 +117,14 @@
             <div class="w-bal-label">Доступно к выводу</div>
             <div class="w-bal-val">$<span id="wbal">0.00</span></div>
           </div>
-
           <div class="w-label">Способ вывода</div>
           <div class="w-methods">
             <div class="w-method sel" id="mw-cb" onclick="setPay('cb')"><span class="ico"><img src="assets/cryptobot.jpg" alt="CryptoBot" style="width:32px;height:32px;border-radius:50%;object-fit:cover"></span><span class="nm">CryptoBot</span></div>
             <div class="w-method" id="mw-xr" onclick="setPay('xr')"><span class="ico"><img src="assets/xrocket.jpg" alt="xRocket" style="width:32px;height:32px;border-radius:50%;object-fit:cover"></span><span class="nm">xRocket</span></div>
           </div>
-
           <div class="w-label">Сумма вывода (USDT)</div>
           <input class="w-input" id="wamt" type="number" min="1" step="0.1" value="" placeholder="Мин. $1">
           <div class="w-receive">К получению: $<span id="wrec">0.00</span> <span style="font-size:10px;color:var(--muted)">(комиссия 3%)</span></div>
-
           <button class="w-btn w-wd-btn" id="wbtn" onclick="doWithdraw()" disabled>📤 Вывести</button>
           <div class="w-wd-info">Мин. вывод $1 / Комиссия 3% / Автоматический вывод через CryptoBot</div>
           <div class="w-msg" id="wmsg"></div>
@@ -164,13 +158,6 @@
         uid=String(tgUser.id);
         localStorage.setItem('tg_uid',uid);
         localStorage.setItem('tg_user',JSON.stringify(tgUser));
-        // Auto-fill withdraw fields
-        if(document.getElementById('wnick')){
-          document.getElementById('wnick').value='@'+(tgUser.username||'');
-        }
-        if(document.getElementById('wid')){
-          document.getElementById('wid').value=String(tgUser.id);
-        }
       }
     }catch(e){console.log('TG error:',e);}
     
@@ -184,20 +171,42 @@
       }catch(e){}
     }
 
-    var bal=parseFloat(localStorage.getItem('mc_balance'))||0;
-    var pay='cb';
-    var invChk=null;
+    // === SINGLE BALANCE FROM SERVER ===
+    var bal = 0;
+    var pay = 'cb';
+    var invChk = null;
 
     function fmt(n){return Number(n).toFixed(2);}
-    function upd(v){bal=v;localStorage.setItem('mc_balance',fmt(v));document.getElementById('dbal').textContent=fmt(v);document.getElementById('wbal').textContent=fmt(v);document.getElementById('hbal').textContent=fmt(v);document.querySelectorAll('.balance-value').forEach(function(el){el.textContent=fmt(v);});}
+    
+    function upd(v){
+      bal = v;
+      localStorage.setItem('mc_balance', fmt(v));
+      var els = document.querySelectorAll('.balance-value, #dbal, #wbal, #hbal');
+      els.forEach(function(el){ el.textContent = fmt(v); });
+    }
+    
     function msg(el,t,y){el.textContent=t;el.className='w-msg show '+(y||'info');}
     function clr(el){el.className='w-msg';}
+    
     function addTx(type,userId,amount,status,extra){
       var txs=JSON.parse(localStorage.getItem('tx_history')||'[]');
       txs.unshift({type,userId,amount:Number(amount).toFixed(2),status,date:new Date().toISOString(),...extra});
       if(txs.length>50)txs=txs.slice(0,50);
       localStorage.setItem('tx_history',JSON.stringify(txs));
     }
+
+    // Load balance from server on start
+    fetch('/api/users?id='+encodeURIComponent(uid))
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d && d.balance !== undefined){
+          upd(parseFloat(d.balance)||0);
+        }
+      }).catch(function(){
+        // Fallback to localStorage
+        var localBal = parseFloat(localStorage.getItem('mc_balance'))||0;
+        upd(localBal);
+      });
 
     window.showTab=function(t){
       document.querySelectorAll('.w-tabs .tab').forEach(function(x,i){x.classList.toggle('active',(t==='dep'&&i===0)||(t==='wd'&&i===1)||(t==='hist'&&i===2));});
@@ -215,9 +224,13 @@
     };
     window.sd=function(v){document.getElementById('damt').value=v;};
 
-    document.getElementById('wamt').oninput=function(){var v=parseFloat(this.value)||0;var r=Math.max(0,v*0.97);document.getElementById('wrec').textContent=fmt(r);document.getElementById('wbtn').disabled=v<1.05;};
+    document.getElementById('wamt').oninput=function(){
+      var v=parseFloat(this.value)||0;
+      var r=Math.max(0,v*0.97);
+      document.getElementById('wrec').textContent=fmt(r);
+      document.getElementById('wbtn').disabled=v<1;
+    };
 
-    // Load transaction history
     function loadHistory(){
       var el=document.getElementById('txList');
       var txs=JSON.parse(localStorage.getItem('tx_history')||'[]');
@@ -236,9 +249,7 @@
         var stText=tx.status==='completed'?'Выполнено':'Ожидание';
         var dt=new Date(tx.date);
         var dtStr=dt.toLocaleDateString('ru')+' '+dt.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
-        var extraInfo='';
-        if(tx.nick)extraInfo='<br><span style="font-size:9px;color:var(--muted)">'+tx.nick+'</span>';
-        div.innerHTML='<div class="tx-left"><span class="tx-icon">'+icon+'</span><div class="tx-info"><div class="tx-type">'+typeText+provider+extraInfo+'</div><div class="tx-date">'+dtStr+'</div></div></div><div class="tx-right"><div class="tx-amount '+amtClass+'">'+amtStr+'</div><span class="tx-status '+stClass+'">'+stText+'</span></div>';
+        div.innerHTML='<div class="tx-left"><span class="tx-icon">'+icon+'</span><div class="tx-info"><div class="tx-type">'+typeText+provider+'</div><div class="tx-date">'+dtStr+'</div></div></div><div class="tx-right"><div class="tx-amount '+amtClass+'">'+amtStr+'</div><span class="tx-status '+stClass+'">'+stText+'</span></div>';
         el.appendChild(div);
       });
     }
@@ -291,32 +302,29 @@
     window.doWithdraw=function(){
       var amt=parseFloat(document.getElementById('wamt').value)||0;
       if(amt<1){msg(document.getElementById('wmsg'),'Мин. вывод $1','err');return;}
+      var fee=Math.round(amt*0.03*100)/100;
+      var total=amt+fee;
+      if(total>bal){msg(document.getElementById('wmsg'),'❌ Недостаточно средств (комиссия 3%)','err');return;}
       var btn=document.getElementById('wbtn');btn.disabled=true;btn.textContent='⏳ Вывод...';
       clr(document.getElementById('wmsg'));
       var ep=pay==='xr'?'/api/withdraw/xrocket':'/api/withdraw/cryptobot';
-      fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid,amount:amt,clientBalance:bal})})
+      fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid,amount:amt})})
       .then(function(r){return r.json();})
       .then(function(d){
         console.log('withdraw resp:',d);
         if(d.ok){
-          var fee=d.fee||Math.round(amt*0.03*100)/100;
-          var total=amt+fee;
           upd(bal-total);
           addTx('withdraw',uid,amt,'completed',{provider:pay,fee:fee});
           msg(document.getElementById('wmsg'),'✅ Вывод на $'+fmt(amt)+' выполнен! Комиссия: $'+fmt(fee),'ok');
         }else{
           var errMsg = typeof d.error === 'string' ? d.error : JSON.stringify(d.error) || 'unknown';
-          if(errMsg.indexOf('Insufficient')!==-1 || errMsg.indexOf('balance')!==-1){
-            msg(document.getElementById('wmsg'),'❌ Недостаточно средств. Пополните баланс.','err');
-          }else{
-            msg(document.getElementById('wmsg'),'❌ Ошибка: '+errMsg,'err');
-          }
+          msg(document.getElementById('wmsg'),'❌ Ошибка: '+errMsg,'err');
         }
       }).catch(function(e){msg(document.getElementById('wmsg'),'Ошибка сети: '+e.message,'err');})
       .finally(function(){btn.disabled=false;btn.textContent='📤 Вывести';});
     };
 
-    upd(bal);
+    // Init
     document.getElementById('wamt').dispatchEvent(new Event('input'));
     
     // Load profile photo from Telegram WebApp
@@ -324,16 +332,13 @@
       var tg=window.Telegram&&window.Telegram.WebApp;
       if(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user){
         var u=tg.initDataUnsafe.user;
-        // Try to get photo from WebApp
         if(u.photo_url){
           var pImg=document.getElementById('profileImg');
           if(pImg){pImg.src=u.photo_url;pImg.style.display='';}
         }else if(u.id){
-          // Fallback: use tg-photo endpoint
           var pImg=document.getElementById('profileImg');
           if(pImg){pImg.src='/api/tg-photo/'+u.id;pImg.style.display='';}
         }
-        // Fill name in header if element exists
         var nameEl=document.getElementById('profileName');
         if(nameEl){nameEl.textContent=(u.first_name||'')+(u.last_name?' '+u.last_name:'');}
       }

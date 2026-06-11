@@ -328,17 +328,12 @@ app.post('/api/withdraw/xrocket', async (req, res) => {
 // Withdraw via CryptoBot (auto payout)
 app.post('/api/withdraw/cryptobot', async (req, res) => {
   try {
-    const { userId, amount, clientBalance } = req.body;
+    const { userId, amount } = req.body;
     if (!userId || !amount || amount < 1) return res.status(400).json({ error: 'Min $1' });
     
     const amt = Math.round(Number(amount) * 100) / 100;
     const fee = Math.round(amt * 0.03 * 100) / 100;
     const total = amt + fee;
-    
-    // Sync balance from client if provided
-    if (clientBalance !== undefined) {
-      setBalance(userId, parseFloat(clientBalance) || 0);
-    }
     
     if (getBalance(userId) < total) return res.status(400).json({ error: 'Insufficient balance' });
 
