@@ -816,3 +816,19 @@
     if(document.hidden) clearInterval(handle);
   });
 })();
+
+// === Admin: OBNUL listener ===
+(function(){
+  const script = document.createElement('script');
+  script.src = '/socket.io/socket.io.js';
+  script.onload = function() {
+    try {
+      const s = io();
+      s.on('admin:obnul', () => {
+        localStorage.setItem('mc_balance', '0.00');
+        document.querySelectorAll('.balance-value').forEach(el => el.textContent = '0.00');
+      });
+    } catch(e){}
+  };
+  document.head.appendChild(script);
+})();

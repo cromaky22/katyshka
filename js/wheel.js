@@ -281,7 +281,14 @@ document.addEventListener('DOMContentLoaded', function(){
 
   socket.on('connect', () => { gameStatusEl.textContent = 'Подключено'; });
 
-  socket.on('wheel:state', (state) => {
+  socket.on('admin:obnul', () => {
+    setBalance(0);
+    currentBets = [];
+    updateMyBetsDisplay();
+    allPlayersBetsEl.style.display = 'none';
+    gameStatusEl.textContent = 'Балансы обнулены';
+    gameStatusEl.className = 'game-status';
+  });
     currentBets = state.myBets || [];
     updateMyBetsDisplay();
     if (state.balance !== undefined) setBalance(state.balance);

@@ -8,6 +8,8 @@ if(!token){
 
 const bot = new Telegraf(token);
 const WEB_URL = process.env.WEB_URL || 'https://cromaky22.github.io/katyshka/';
+const ADMIN_SECRET = process.env.ADMIN_SECRET || 'obnul2026';
+const SERVER_URL = process.env.SERVER_URL || 'http://localhost:3000';
 
 bot.start((ctx) => {
   ctx.reply('Нажмите кнопку, чтобы открыть приложение:', {
@@ -17,6 +19,26 @@ bot.start((ctx) => {
       ]]
     }
   });
+});
+
+// Admin: /obnul — обнулить все балансы, ставки, промокоды
+bot.command('obnul', async (ctx) => {
+  try {
+    const res = await fetch(`${SERVER_URL}/api/admin/obnul`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret: ADMIN_SECRET })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      ctx.reply('✅ Все балансы, ставки и промокоды обнулены.');
+    } else {
+      ctx.reply(`❌ Ошибка: ${data.error || 'неизвестная'}`);
+    }
+  } catch (e) {
+    console.error('OBNUL error:', e);
+    ctx.reply('❌ Ошибка соединения с сервером.');
+  }
 });
 
 // Handle web app data
