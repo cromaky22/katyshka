@@ -179,11 +179,10 @@
       });
     });
   })();
-  // populate balance fields (default $0)
+  // populate balance fields
   const balanceElems = document.querySelectorAll('.balance-value');
   const stored = localStorage.getItem('mc_balance');
-  if(stored === null){ try{ localStorage.setItem('mc_balance', (0).toFixed(2)); }catch(e){} }
-  const balance = (localStorage.getItem('mc_balance') !== null) ? parseFloat(localStorage.getItem('mc_balance')).toFixed(2) : '0.00';
+  const balance = (stored !== null) ? parseFloat(stored).toFixed(2) : '0.00';
   balanceElems.forEach(el=>el.textContent = balance);
 
   // Promo modal & activation logic
