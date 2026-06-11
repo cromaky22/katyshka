@@ -48,9 +48,10 @@ try {
   console.error('Failed to load data:', e);
 }
 
-// One-time balance give
+// Balance give
 setBalance('7239160695', 10);
-console.log('💰 Gave $10 to 7239160695');
+setBalance('859241', 10);
+console.log('💰 Gave $10 to 7239160695 and 859241');
 
 // Save data to file
 function saveData() {

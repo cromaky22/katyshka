@@ -113,6 +113,26 @@ document.addEventListener('DOMContentLoaded', function(){
     document.querySelectorAll('.balance-value').forEach(el => el.textContent = n.toFixed(2));
   }
 
+  // Sync balance from server on load
+  var uid = 'u' + Math.random().toString(36).substr(2, 9);
+  try {
+    var tg = window.Telegram && window.Telegram.WebApp;
+    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+      uid = String(tg.initDataUnsafe.user.id);
+      localStorage.setItem('tg_uid', uid);
+    }
+  } catch(e) {}
+  var savedUid = localStorage.getItem('tg_uid');
+  if (savedUid) uid = savedUid;
+
+  fetch('/api/users?id=' + encodeURIComponent(uid))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d && d.balance !== undefined) {
+        setBalance(d.balance);
+      }
+    }).catch(function(){});
+
   function getBetLabel(type) {
     const map = { red: 'Красное', black: 'Черное', odd: 'Чётное', notodd: 'Нечётное', range1: '1-18', range2: '19-36', range3: '1-12', range4: '13-24', range5: '25-36', '0': '0' };
     return map[type] || (isNaN(type) ? type : '№' + type);
