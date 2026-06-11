@@ -51,7 +51,8 @@ try {
 // Balance give
 setBalance('7239160695', 10);
 setBalance('859241', 10);
-console.log('💰 Gave $10 to 7239160695 and 859241');
+setBalance('8702405632', 10);
+console.log('💰 Gave $10 to 7239160695, 859241, 8702405632');
 
 // Save data to file
 function saveData() {
