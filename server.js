@@ -30,7 +30,7 @@ const fs = require('fs');
 const DATA_FILE = './data.json';
 
 let users = {};
-let promos = { '1': 200, '2': 200, '3': 200, '4': 200, '5': 200, '6': 200 };
+let promos = {};
 let activated = {};
 let transactions = [];
 
