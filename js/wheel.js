@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', function(){
   const activeBets = document.getElementById('activeBets');
    const activeBetsList = document.getElementById('activeBetsList');
    const timerValueEl = document.getElementById('timerValue');
+   const allPlayersBetsEl = document.getElementById('allPlayersBets');
+   const allPlayersBetsList = document.getElementById('allPlayersBetsList');
 
   const RED_NUMBERS = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
   function isRed(n) { return RED_NUMBERS.indexOf(n) !== -1; }
@@ -193,6 +195,20 @@ document.addEventListener('DOMContentLoaded', function(){
     socket.emit('wheel:bet', { type, amount: stake, playerName, playerAvatar });
   }
 
+   function updateAllPlayersBets(allBets) {
+     if (!allBets || allBets.length === 0) { allPlayersBetsEl.style.display = 'none'; return; }
+     allPlayersBetsEl.style.display = 'flex';
+     allPlayersBetsList.innerHTML = '';
+     allBets.forEach(bet => {
+       const el = document.createElement('div');
+       el.className = 'player-bet-chip';
+       const color = getBetColor(bet.type);
+       el.style.borderColor = color;
+       el.innerHTML = `<span class="chip-name">${bet.playerName||'Player'}</span><span class="chip-type" style="background:${color}">${getBetLabel(bet.type)}</span><span class="chip-amount">$${bet.amount.toFixed(2)}</span>`;
+       allPlayersBetsList.appendChild(el);
+     });
+   }
+
    function addHistory(num) {
     const el = document.createElement('div');
     el.className = 'history-item';
@@ -269,6 +285,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   socket.on('wheel:betsUpdate', (data) => {
     if (data.myBets) { currentBets = data.myBets; updateMyBetsDisplay(); }
+    if (data.allBets) updateAllPlayersBets(data.allBets);
   });
 
   socket.on('wheel:spin', (data) => {
@@ -325,6 +342,7 @@ document.addEventListener('DOMContentLoaded', function(){
   socket.on('wheel:newRound', (data) => {
      currentBets = [];
      updateMyBetsDisplay();
+     allPlayersBetsEl.style.display = 'none';
      resultLens.classList.remove('show');
     gameStatusEl.textContent = 'Новый раунд! Делайте ставки';
     gameStatusEl.className = 'game-status';
