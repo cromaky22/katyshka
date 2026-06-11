@@ -188,19 +188,6 @@
     var pay='cb';
     var invChk=null;
 
-    // Sync balance from server on load (server is source of truth)
-    fetch('/api/users?id='+encodeURIComponent(uid))
-      .then(function(r){return r.json();})
-      .then(function(d){
-        if(d && d.balance !== undefined && d.balance !== null){
-          bal = parseFloat(d.balance) || 0;
-          localStorage.setItem('mc_balance', bal.toFixed(2));
-          upd(bal);
-        }
-      }).catch(function(e){
-        console.log('Server sync failed, using localStorage:', e);
-      });
-
     function fmt(n){return Number(n).toFixed(2);}
     function upd(v){bal=v;localStorage.setItem('mc_balance',fmt(v));document.getElementById('dbal').textContent=fmt(v);document.getElementById('wbal').textContent=fmt(v);document.getElementById('hbal').textContent=fmt(v);document.querySelectorAll('.balance-value').forEach(function(el){el.textContent=fmt(v);});}
     function msg(el,t,y){el.textContent=t;el.className='w-msg show '+(y||'info');}
@@ -307,7 +294,7 @@
       var btn=document.getElementById('wbtn');btn.disabled=true;btn.textContent='⏳ Вывод...';
       clr(document.getElementById('wmsg'));
       var ep=pay==='xr'?'/api/withdraw/xrocket':'/api/withdraw/cryptobot';
-      fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid,amount:amt})})
+      fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid,amount:amt,clientBalance:bal})})
       .then(function(r){return r.json();})
       .then(function(d){
         console.log('withdraw resp:',d);
