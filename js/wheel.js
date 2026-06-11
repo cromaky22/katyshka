@@ -195,19 +195,26 @@ document.addEventListener('DOMContentLoaded', function(){
     socket.emit('wheel:bet', { type, amount: stake, playerName, playerAvatar });
   }
 
-   function updateAllPlayersBets(allBets) {
-     if (!allBets || allBets.length === 0) { allPlayersBetsEl.style.display = 'none'; return; }
-     allPlayersBetsEl.style.display = 'flex';
-     allPlayersBetsList.innerHTML = '';
-     allBets.forEach(bet => {
-       const el = document.createElement('div');
-       el.className = 'player-bet-chip';
-       const color = getBetColor(bet.type);
-       el.style.borderColor = color;
-       el.innerHTML = `<span class="chip-name">${bet.playerName||'Player'}</span><span class="chip-type" style="background:${color}">${getBetLabel(bet.type)}</span><span class="chip-amount">$${bet.amount.toFixed(2)}</span>`;
-       allPlayersBetsList.appendChild(el);
-     });
-   }
+    function updateAllPlayersBets(allBets) {
+      if (!allBets || allBets.length === 0) { allPlayersBetsEl.style.display = 'none'; return; }
+      allPlayersBetsEl.style.display = 'flex';
+      allPlayersBetsList.innerHTML = '';
+      // Group by player+type to avoid duplicates
+      const grouped = {};
+      allBets.forEach(bet => {
+        const key = (bet.playerName||'Player') + '|' + bet.type;
+        if (!grouped[key]) grouped[key] = { playerName: bet.playerName||'Player', type: bet.type, amount: 0 };
+        grouped[key].amount += bet.amount;
+      });
+      Object.values(grouped).forEach(g => {
+        const el = document.createElement('div');
+        el.className = 'player-bet-chip';
+        const color = getBetColor(g.type);
+        el.style.borderColor = color;
+        el.innerHTML = `<span class="chip-name">${g.playerName}</span><span class="chip-type" style="background:${color}">${getBetLabel(g.type)}</span><span class="chip-amount">$${g.amount.toFixed(2)}</span>`;
+        allPlayersBetsList.appendChild(el);
+      });
+    }
 
    function addHistory(num) {
     const el = document.createElement('div');
