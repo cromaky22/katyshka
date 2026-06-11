@@ -32,7 +32,7 @@
 
   function getBalance(){
     const b = localStorage.getItem('mc_balance');
-    return b ? parseFloat(b) : 100;
+    return b ? parseFloat(b) : 0;
   }
   function setBalance(v){
     localStorage.setItem('mc_balance', (Math.round(v*100)/100).toFixed(2));

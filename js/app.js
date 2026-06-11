@@ -179,11 +179,11 @@
       });
     });
   })();
-  // populate balance fields (default $100)
+  // populate balance fields (default $0)
   const balanceElems = document.querySelectorAll('.balance-value');
   const stored = localStorage.getItem('mc_balance');
-  if(stored === null){ try{ localStorage.setItem('mc_balance', (100).toFixed(2)); }catch(e){} }
-  const balance = (localStorage.getItem('mc_balance') !== null) ? parseFloat(localStorage.getItem('mc_balance')).toFixed(2) : '100.00';
+  if(stored === null){ try{ localStorage.setItem('mc_balance', (0).toFixed(2)); }catch(e){} }
+  const balance = (localStorage.getItem('mc_balance') !== null) ? parseFloat(localStorage.getItem('mc_balance')).toFixed(2) : '0.00';
   balanceElems.forEach(el=>el.textContent = balance);
 
   // Promo modal & activation logic

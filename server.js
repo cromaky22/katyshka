@@ -15,9 +15,9 @@ const promos = { '1': 200, '2': 200, '3': 200, '4': 200, '5': 200, '6': 200 };
 const activated = {};
 const transactions = []; // History of all transactions
 
-function getBalance(id) { return users[id]?.balance || 100; }
+function getBalance(id) { return users[id]?.balance || 0; }
 function setBalance(id, amt) {
-  if (!users[id]) users[id] = { balance: 100 };
+  if (!users[id]) users[id] = { balance: 0 };
   users[id].balance = Math.round(amt * 100) / 100;
 }
 

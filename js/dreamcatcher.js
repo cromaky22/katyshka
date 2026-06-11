@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function sfxLose() { playTone(100, 'sawtooth', 0.3, 0.04); }
   function sfxMultiplier() { playTone(500, 'triangle', 0.15, 0.06); playTone(700, 'sine', 0.2, 0.05); }
 
-  function getBalance() { return parseFloat(localStorage.getItem('mc_balance') || '100') || 100; }
+  function getBalance() { return parseFloat(localStorage.getItem('mc_balance') || '0') || 0; }
 
   function setBalance(v) {
     const n = Math.round(Number(v) * 100) / 100;

@@ -121,9 +121,9 @@ document.addEventListener('DOMContentLoaded', function(){
   // === BALANCE ===
   function getBalance() {
     let stored = localStorage.getItem('mc_balance');
-    if (stored === null || stored === 'NaN') { stored = '100.00'; localStorage.setItem('mc_balance', stored); }
+    if (stored === null || stored === 'NaN') { stored = '0.00'; localStorage.setItem('mc_balance', stored); }
     const val = parseFloat(stored);
-    if (isNaN(val) || val < 0.1) { localStorage.setItem('mc_balance', '100.00'); return 100; }
+    if (isNaN(val) || val < 0.1) { localStorage.setItem('mc_balance', '0.00'); return 0; }
     return val;
   }
   function setBalance(v) {

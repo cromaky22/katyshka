@@ -37,9 +37,9 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function getBalance() {
     let stored = localStorage.getItem('mc_balance');
-    if (stored === null || stored === 'NaN') { stored = '100.00'; localStorage.setItem('mc_balance', stored); }
+    if (stored === null || stored === 'NaN') { stored = '0.00'; localStorage.setItem('mc_balance', stored); }
     const val = parseFloat(stored);
-    return isNaN(val) ? 100 : val;
+    return isNaN(val) ? 0 : val;
   }
   function setBalance(v) {
     const n = Math.round(Number(v) * 100) / 100;
