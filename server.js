@@ -337,14 +337,17 @@ app.post('/api/withdraw/cryptobot', async (req, res) => {
     
     if (getBalance(userId) < total) return res.status(400).json({ error: 'Insufficient balance' });
 
-    // Get user's Telegram ID for CryptoBot transfer
     const tgId = parseInt(userId) || 0;
     if (!tgId) return res.status(400).json({ error: 'Invalid user ID for transfer' });
+
+    // spend_id must be unique for each transfer
+    const spendId = 'wd_' + userId + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
 
     const result = await cryptobot('transfer', {
       user_id: tgId,
       asset: 'USDT',
       amount: String(amt.toFixed(2)),
+      spend_id: spendId,
       comment: 'Katyshka withdraw'
     });
 
