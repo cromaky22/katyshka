@@ -654,6 +654,16 @@
       }catch(e){ console.error('❌ tryFill error:', e); }
     }
 
+    // Initialize Telegram WebApp
+    try{
+      const tg = window.Telegram && window.Telegram.WebApp;
+      if(tg){
+        tg.ready();
+        tg.expand();
+        console.log('✅ Telegram WebApp initialized');
+      }
+    }catch(e){ console.error('❌ WebApp init error:', e); }
+
     // attempt multiple times in case WebApp initializes slightly later
     console.log('🚀 Starting Telegram user detection...');
     tryFill();
