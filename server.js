@@ -287,6 +287,45 @@ app.post('/api/withdraw/xrocket', async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+// Withdraw via CryptoBot (auto payout)
+app.post('/api/withdraw/cryptobot', async (req, res) => {
+  try {
+    const { userId, amount } = req.body;
+    if (!userId || !amount || amount < 1) return res.status(400).json({ error: 'Min $1' });
+    
+    const amt = Math.round(Number(amount) * 100) / 100;
+    const fee = Math.round(amt * 0.03 * 100) / 100;
+    const total = amt + fee;
+    
+    if (getBalance(userId) < total) return res.status(400).json({ error: 'Insufficient balance' });
+
+    // Get user's Telegram ID for CryptoBot transfer
+    const tgId = parseInt(userId) || 0;
+    if (!tgId) return res.status(400).json({ error: 'Invalid user ID for transfer' });
+
+    const result = await cryptobot('transfer', {
+      user_id: tgId,
+      asset: 'USDT',
+      amount: String(amt.toFixed(2)),
+      comment: 'Katyshka withdraw'
+    });
+
+    console.log('CryptoBot transfer:', JSON.stringify(result));
+
+    if (result.ok) {
+      setBalance(userId, getBalance(userId) - total);
+      addTx('withdraw', userId, amt, 'completed', { provider: 'cryptobot' });
+      io.emit('balance_update', { userId, balance: getBalance(userId) });
+      res.json({ ok: true, received: amt, fee, balance: getBalance(userId) });
+    } else {
+      res.status(500).json({ error: result.error || 'Transfer failed' });
+    }
+  } catch (e) {
+    console.error('CryptoBot withdraw error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post('/api/promos/:code/activate', (req, res) => {
   const code = (req.params.code || '').toUpperCase();
   const userId = req.body?.userId;

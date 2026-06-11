@@ -127,18 +127,12 @@
             <div class="w-method" id="mw-xr" onclick="setPay('xr')"><span class="ico"><img src="assets/xrocket.jpg" alt="xRocket" style="width:32px;height:32px;border-radius:50%;object-fit:cover"></span><span class="nm">xRocket</span></div>
           </div>
 
-          <div class="w-label">Ваш Telegram ник</div>
-          <input class="w-input" id="wnick" type="text" placeholder="@username">
-
-          <div class="w-label">Ваш Telegram ID</div>
-          <input class="w-input" id="wid" type="text" placeholder="123456789">
-
           <div class="w-label">Сумма вывода (USDT)</div>
           <input class="w-input" id="wamt" type="number" min="1" step="0.1" value="" placeholder="Мин. $1">
           <div class="w-receive">К получению: $<span id="wrec">0.00</span> <span style="font-size:10px;color:var(--muted)">(комиссия 3%)</span></div>
 
           <button class="w-btn w-wd-btn" id="wbtn" onclick="doWithdraw()" disabled>📤 Вывести</button>
-          <div class="w-wd-info">Мин. вывод $1.05 / Комиссия 3% / Вывод вручную через поддержку</div>
+          <div class="w-wd-info">Мин. вывод $1 / Комиссия 3% / Автоматический вывод через CryptoBot</div>
           <div class="w-msg" id="wmsg"></div>
         </div>
 
@@ -295,21 +289,26 @@
 
     window.doWithdraw=function(){
       var amt=parseFloat(document.getElementById('wamt').value)||0;
-      var nick=document.getElementById('wnick').value.trim();
-      var tid=document.getElementById('wid').value.trim();
-      if(amt<1.05){msg(document.getElementById('wmsg'),'Мин. вывод $1.05','err');return;}
-      if(!nick){msg(document.getElementById('wmsg'),'Введите Telegram ник','err');return;}
-      if(!tid){msg(document.getElementById('wmsg'),'Введите Telegram ID','err');return;}
-      if(amt>bal){msg(document.getElementById('wmsg'),'Недостаточно средств','err');return;}
-      var btn=document.getElementById('wbtn');btn.disabled=true;btn.textContent='⏳ Заявка...';
+      if(amt<1){msg(document.getElementById('wmsg'),'Мин. вывод $1','err');return;}
+      var fee=Math.round(amt*0.03*100)/100;
+      var total=amt+fee;
+      if(total>bal){msg(document.getElementById('wmsg'),'Недостаточно средств (комиссия 3%)','err');return;}
+      var btn=document.getElementById('wbtn');btn.disabled=true;btn.textContent='⏳ Вывод...';
       clr(document.getElementById('wmsg'));
-      // Save request
-      var reqs=JSON.parse(localStorage.getItem('wd_requests')||'[]');
-      reqs.push({userId:uid,amount:amt,nick:nick,tgId:tid,fee:Math.round(amt*0.03*100)/100,net:Math.round(amt*0.97*100)/100,date:Date.now(),status:'pending',provider:pay});
-      localStorage.setItem('wd_requests',JSON.stringify(reqs));
-      addTx('withdraw',uid,amt,'pending',{provider:pay,nick:nick,tgId:tid});
-      msg(document.getElementById('wmsg'),'✅ Заявка создана! Ожидайте обработки.','info');
-      setTimeout(function(){btn.disabled=false;btn.textContent='📤 Вывести';},2000);
+      var ep=pay==='xr'?'/api/withdraw/xrocket':'/api/withdraw/cryptobot';
+      fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid,amount:amt})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        console.log('withdraw resp:',d);
+        if(d.ok){
+          upd(bal-total);
+          addTx('withdraw',uid,amt,'completed',{provider:pay,fee:fee});
+          msg(document.getElementById('wmsg'),'✅ Вывод на $'+fmt(amt)+' выполнен! Комиссия: $'+fmt(fee),'ok');
+        }else{
+          msg(document.getElementById('wmsg'),'Ошибка: '+(d.error||'unknown'),'err');
+        }
+      }).catch(function(e){msg(document.getElementById('wmsg'),'Ошибка сети: '+e.message,'err');})
+      .finally(function(){btn.disabled=false;btn.textContent='📤 Вывести';});
     };
 
     upd(bal);
