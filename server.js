@@ -288,6 +288,15 @@ app.post('/api/promos/:code/activate', (req, res) => {
   res.json({ ok: true, amount: promos[code], balance: getBalance(userId) });
 });
 
+// === GET ALL USERS (admin) ===
+app.get('/api/users', (req, res) => {
+  const userList = [];
+  for (const id in users) {
+    userList.push({ id, ...users[id] });
+  }
+  res.json(userList);
+});
+
 // === ADMIN: OBNUL (обнуление всех балансов и ставок) ===
 const ADMIN_SECRET = process.env.ADMIN_SECRET || 'obnul2026';
 
