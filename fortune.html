@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Колесо Удачи — KATYSHKA</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    .fortune-wrap{max-width:480px;margin:0 auto;padding:16px 12px 80px;text-align:center}
+    .fortune-title{font-size:24px;font-weight:900;margin-bottom:8px}
+    .fortune-sub{font-size:13px;color:var(--muted);margin-bottom:16px}
+    .wheel-container{position:relative;width:100%;max-width:320px;margin:0 auto 20px}
+    .wheel-canvas{width:100%;aspect-ratio:1;border-radius:50%;box-shadow:0 0 0 4px rgba(255,255,255,0.05),0 0 30px rgba(0,0,0,0.5)}
+    .wheel-pointer{position:absolute;top:8px;left:50%;transform:translateX(-50%) rotate(180deg);font-size:24px;color:#fff;z-index:10;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.6))}
+    .fortune-status{padding:14px;border-radius:12px;font-weight:600;font-size:14px;background:rgba(255,255,255,0.04);margin-bottom:12px}
+    .fortune-status.win{background:rgba(76,175,80,0.15);color:#4caf50}
+    .fortune-status.wait{background:rgba(255,193,7,0.15);color:#ffc107}
+    .fortune-btn{width:100%;padding:16px;border-radius:12px;border:none;font-size:16px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#ff6b9d,#ffd700);color:#000;text-transform:uppercase;letter-spacing:1px;transition:all 0.2s}
+    .fortune-btn:hover{transform:translateY(-2px)}
+    .fortune-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+    .fortune-info{font-size:11px;color:var(--muted);margin-top:12px;line-height:1.5}
+    .timer-big{font-size:48px;font-weight:900;color:#ffd700;margin:16px 0}
+    .timer-label{font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="left-controls"><a href="home.html" style="color:var(--muted);text-decoration:none;font-size:20px">←</a></div>
+    <div class="header-title">КОЛЕСО УДАЧИ</div>
+    <div class="right-controls">
+      <div class="balance-pill"><span class="balance-value" id="hbal">0.00</span><span class="currency">$</span></div>
+    </div>
+  </header>
+
+  <main class="fortune-wrap">
+    <div class="fortune-title">🎡 Колесо Удачи</div>
+    <div class="fortune-sub">Крути раз в час и выигрывай до $1!</div>
+
+    <div class="wheel-container">
+      <canvas id="fortuneWheel" class="wheel-canvas"></canvas>
+      <div class="wheel-pointer">▼</div>
+    </div>
+
+    <div class="fortune-status" id="fortuneStatus">Загрузка...</div>
+
+    <div id="timerBlock" style="display:none">
+      <div class="timer-big" id="timerVal">00:00:00</div>
+      <div class="timer-label">до следующего вращения</div>
+    </div>
+
+    <button class="fortune-btn" id="spinBtn" onclick="spinWheel()">🎰 КРУТИТЬ</button>
+
+    <div class="fortune-info">
+      • Одно вращение в час<br>
+      • Максимальный выигрыш: $1.00<br>
+      • Выигрыш зависит от сектора
+    </div>
+  </main>
+
+  <nav class="bottom-nav">
+    <a href="home.html#games" class="nav-item" data-name="games"><span class="icon">🎮</span><span class="label">Games</span></a>
+    <a href="wallet.html" class="nav-item" data-name="wallet"><span class="icon">💼</span><span class="label">Wallet</span></a>
+    <a href="home.html" class="nav-item center" data-name=""><span class="icon">💎</span></a>
+    <a href="bonus.html" class="nav-item" data-name="bonus"><span class="icon">🎁</span><span class="label">Bonus</span></a>
+    <a href="menu.html" class="nav-item" data-name="menu"><span class="icon">☰</span><span class="label">Menu</span></a>
+  </nav>
+
+  <script src="js/app.js"></script>
+  <script>
+  (function(){
+    var uid = 'u' + Math.random().toString(36).substr(2, 9);
+    try {
+      var tg = window.Telegram && window.Telegram.WebApp;
+      if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        uid = String(tg.initDataUnsafe.user.id);
+        localStorage.setItem('tg_uid', uid);
+      }
+    } catch(e) {}
+
+    // Load uid from localStorage
+    var savedUid = localStorage.getItem('tg_uid');
+    if (savedUid) uid = savedUid;
+
+    var canvas = document.getElementById('fortuneWheel');
+    var ctx = canvas.getContext('2d');
+    var spinBtn = document.getElementById('spinBtn');
+    var fortuneStatus = document.getElementById('fortuneStatus');
+    var timerBlock = document.getElementById('timerBlock');
+    var timerVal = document.getElementById('timerVal');
+
+    // Wheel sectors — payouts from $0.01 to $1.00
+    var SECTORS = [
+      { label: '$0.01', payout: 0.01, color: '#1a1a2e' },
+      { label: '$0.05', payout: 0.05, color: '#2d2d44' },
+      { label: '$0.10', payout: 0.10, color: '#1a1a2e' },
+      { label: '$0.25', payout: 0.25, color: '#2d2d44' },
+      { label: '$0.50', payout: 0.50, color: '#1a1a2e' },
+      { label: '$1.00', payout: 1.00, color: '#ffd700' },
+      { label: '$0.01', payout: 0.01, color: '#2d2d44' },
+      { label: '$0.05', payout: 0.05, color: '#1a1a2e' },
+      { label: '$0.10', payout: 0.10, color: '#2d2d44' },
+      { label: '$0.25', payout: 0.25, color: '#1a1a2e' },
+      { label: '$0.50', payout: 0.50, color: '#2d2d44' },
+      { label: '$0.01', payout: 0.01, color: '#1a1a2e' }
+    ];
+
+    var TOTAL = SECTORS.length;
+    var SEG_ANGLE = 360 / TOTAL;
+    var rotation = 0;
+    var isSpinning = false;
+
+    // Cooldown: 1 hour in ms
+    var COOLDOWN = 60 * 60 * 1000;
+    var LAST_SPIN_KEY = 'fortune_last_spin_' + uid;
+
+    function setupCanvas() {
+      var size = canvas.offsetWidth * 2;
+      if (size < 100) size = 640;
+      canvas.width = size;
+      canvas.height = size;
+      drawWheel();
+    }
+
+    function drawWheel() {
+      var cx = canvas.width / 2;
+      var cy = canvas.height / 2;
+      var r = canvas.width / 2 - 4;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (var i = 0; i < TOTAL; i++) {
+        var seg = SECTORS[i];
+        var startAngle = (i * SEG_ANGLE - 90 + rotation) * Math.PI / 180;
+        var endAngle = ((i + 1) * SEG_ANGLE - 90 + rotation) * Math.PI / 180;
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = seg.color;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + r * Math.cos(startAngle), cy + r * Math.sin(startAngle));
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate((startAngle + endAngle) / 2);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = seg.payout >= 1 ? '#000' : '#fff';
+        ctx.font = 'bold ' + Math.round(r * 0.1) + 'px Arial';
+        ctx.fillText(seg.label, r * 0.65, 0);
+        ctx.restore();
+      }
+
+      // Center circle
+      ctx.beginPath();
+      ctx.arc(cx, cy, r * 0.12, 0, Math.PI * 2);
+      ctx.fillStyle = '#1a1a2e';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    setupCanvas();
+    window.addEventListener('resize', setupCanvas);
+
+    function getLastSpin() {
+      var v = localStorage.getItem(LAST_SPIN_KEY);
+      return v ? parseInt(v) : 0;
+    }
+
+    function setLastSpin() {
+      localStorage.setItem(LAST_SPIN_KEY, String(Date.now()));
+    }
+
+    function getRemainingTime() {
+      var last = getLastSpin();
+      if (!last) return 0;
+      var elapsed = Date.now() - last;
+      return Math.max(0, COOLDOWN - elapsed);
+    }
+
+    function formatTime(ms) {
+      var s = Math.floor(ms / 1000);
+      var h = Math.floor(s / 3600);
+      var m = Math.floor((s % 3600) / 60);
+      var sec = s % 60;
+      return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+    }
+
+    function updateStatus() {
+      var remaining = getRemainingTime();
+      if (remaining > 0) {
+        isSpinning = true;
+        spinBtn.disabled = true;
+        spinBtn.textContent = '⏳ ПОДОЖДИТЕ';
+        timerBlock.style.display = 'block';
+        fortuneStatus.textContent = 'Вращение доступно раз в час!';
+        fortuneStatus.className = 'fortune-status wait';
+        timerVal.textContent = formatTime(remaining);
+      } else {
+        isSpinning = false;
+        spinBtn.disabled = false;
+        spinBtn.textContent = '🎰 КРУТИТЬ';
+        timerBlock.style.display = 'none';
+        fortuneStatus.textContent = 'Нажмите кнопку чтобы крутить!';
+        fortuneStatus.className = 'fortune-status';
+      }
+    }
+
+    // Check every second
+    setInterval(updateStatus, 1000);
+    updateStatus();
+
+    window.spinWheel = function() {
+      if (isSpinning) return;
+      var remaining = getRemainingTime();
+      if (remaining > 0) return;
+
+      isSpinning = true;
+      spinBtn.disabled = true;
+      spinBtn.textContent = '🎡 КРУТИТСЯ...';
+      fortuneStatus.textContent = 'Колесо крутится...';
+      fortuneStatus.className = 'fortune-status';
+
+      // Pick random sector (weighted — lower payouts more likely)
+      var weights = SECTORS.map(function(s) {
+        if (s.payout >= 1) return 1;
+        if (s.payout >= 0.5) return 3;
+        if (s.payout >= 0.25) return 5;
+        if (s.payout >= 0.10) return 8;
+        return 12;
+      });
+      var totalWeight = weights.reduce(function(a,b){return a+b;}, 0);
+      var rand = Math.random() * totalWeight;
+      var chosenIdx = 0;
+      for (var i = 0; i < weights.length; i++) {
+        rand -= weights[i];
+        if (rand <= 0) { chosenIdx = i; break; }
+      }
+
+      var targetAngle = 360 - (chosenIdx * SEG_ANGLE + SEG_ANGLE / 2);
+      var currentNorm = (((-rotation) % 360) + 360) % 360;
+      var diff = targetAngle - currentNorm;
+      while (diff < 0) diff += 360;
+      var totalRot = 360 * 5 + diff;
+
+      var startRot = rotation;
+      var t0 = performance.now();
+      var duration = 4000;
+
+      function tick(now) {
+        var p = Math.min((now - t0) / duration, 1);
+        var ease = 1 - Math.pow(1 - p, 3);
+        rotation = startRot - totalRot * ease;
+        drawWheel();
+        if (p < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          rotation = startRot - totalRot;
+          drawWheel();
+          onSpinComplete(chosenIdx);
+        }
+      }
+      requestAnimationFrame(tick);
+    };
+
+    function onSpinComplete(idx) {
+      var sector = SECTORS[idx];
+      var payout = sector.payout;
+
+      // Save cooldown
+      setLastSpin();
+
+      // Update balance on server
+      fetch('/api/users?id=' + encodeURIComponent(uid))
+        .then(function(r){ return r.json(); })
+        .then(function(d) {
+          var currentBal = (d && d.balance !== undefined) ? parseFloat(d.balance) : 0;
+          var newBal = currentBal + payout;
+          return fetch('/api/users', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({id: uid, balance: newBal});
+          });
+        }).catch(function(){});
+
+      // Update local balance
+      var localBal = parseFloat(localStorage.getItem('mc_balance')) || 0;
+      localBal += payout;
+      localStorage.setItem('mc_balance', localBal.toFixed(2));
+      document.querySelectorAll('.balance-value, #hbal').forEach(function(el){
+        el.textContent = localBal.toFixed(2);
+      });
+
+      // Show result
+      fortuneStatus.textContent = '🎉 Вы выиграли ' + sector.label + '!';
+      fortuneStatus.className = 'fortune-status win';
+
+      updateStatus();
+    }
+  })();
+  </script>
+</body>
+</html>
