@@ -383,7 +383,8 @@ io.on('connection', (socket) => {
     for (const uid in wheel.bets) {
       wheel.bets[uid].forEach(b => allBets.push({ userId: uid, type: b.type, amount: b.amount, playerName: b.playerName }));
     }
-    io.emit('wheel:betsUpdate', { allBets, myBets: wheel.bets[userId] || [] });
+    io.emit('wheel:betsUpdate', { allBets });
+    socket.emit('wheel:myBets', { myBets: wheel.bets[userId] || [] });
   });
 });
 

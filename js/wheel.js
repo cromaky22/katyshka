@@ -284,8 +284,11 @@ document.addEventListener('DOMContentLoaded', function(){
   socket.on('wheel:timer', (data) => startLocalTimer(data.timer, data.phase));
 
   socket.on('wheel:betsUpdate', (data) => {
-    if (data.myBets) { currentBets = data.myBets; updateMyBetsDisplay(); }
     if (data.allBets) updateAllPlayersBets(data.allBets);
+  });
+
+  socket.on('wheel:myBets', (data) => {
+    if (data.myBets) { currentBets = data.myBets; updateMyBetsDisplay(); }
   });
 
   socket.on('wheel:spin', (data) => {
