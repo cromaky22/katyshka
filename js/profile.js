@@ -11,9 +11,7 @@ document.addEventListener('DOMContentLoaded', function(){
   function getUserId(){
     const u = getUser();
     if(u && u.id) return String(u.id);
-    let sid = localStorage.getItem('mc_user_id');
-    if(!sid){ sid = String(Math.floor(Math.random() * 900000) + 1); localStorage.setItem('mc_user_id', sid); }
-    return sid;
+    return localStorage.getItem('tg_uid') || localStorage.getItem('mc_user_id') || '—';
   }
 
   function getUserName(){

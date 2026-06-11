@@ -502,9 +502,7 @@
       const tg = window.Telegram && window.Telegram.WebApp;
       if(tg && tg.initDataUnsafe && tg.initDataUnsafe.user) return String(tg.initDataUnsafe.user.id);
     }catch(e){}
-    let sid = localStorage.getItem('mc_user_id');
-    if(!sid){ sid = String(Math.floor(Math.random() * 900000) + 1); localStorage.setItem('mc_user_id', sid); }
-    return sid;
+    return localStorage.getItem('tg_uid') || localStorage.getItem('mc_user_id') || '—';
   }
 
   function close(){ dd.classList.remove('open'); if(overlay) overlay.classList.remove('open'); }
