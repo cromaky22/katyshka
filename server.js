@@ -401,20 +401,24 @@ function spinWheel() {
 
 io.on('connection', (socket) => {
   const userId = socket.handshake.query.userId || '0';
+  const clientBalance = parseFloat(socket.handshake.query.balance) || 0;
+  if (!users[userId]) {
+    users[userId] = { balance: clientBalance };
+  }
   socket.emit('wheel:state', { phase: wheel.phase, timer: wheel.timer, myBets: wheel.bets[userId] || [], balance: getBalance(userId), history: wheel.history });
 
   socket.on('wheel:bet', (data) => {
     if (wheel.phase !== 'betting') return;
-    const { type, amount, playerName } = data;
+    const { type, amount, playerName, playerAvatar } = data;
     if (!type || !amount || amount <= 0) return;
     const total = (wheel.bets[userId] || []).reduce((s, b) => s + b.amount, 0);
     if (total + amount > getBalance(userId)) return;
     if (!wheel.bets[userId]) wheel.bets[userId] = [];
-    wheel.bets[userId].push({ type, amount, playerName: playerName || 'Player' });
+    wheel.bets[userId].push({ type, amount, playerName: playerName || 'Player', playerAvatar: playerAvatar || '' });
     setBalance(userId, getBalance(userId) - amount);
     const allBets = [];
     for (const uid in wheel.bets) {
-      wheel.bets[uid].forEach(b => allBets.push({ userId: uid, type: b.type, amount: b.amount, playerName: b.playerName }));
+      wheel.bets[uid].forEach(b => allBets.push({ userId: uid, type: b.type, amount: b.amount, playerName: b.playerName, playerAvatar: b.playerAvatar || '' }));
     }
     io.emit('wheel:betsUpdate', { allBets });
     socket.emit('wheel:myBets', { myBets: wheel.bets[userId] || [], balance: getBalance(userId) });

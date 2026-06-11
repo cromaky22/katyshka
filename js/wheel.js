@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function(){
       const grouped = {};
       allBets.forEach(bet => {
         const key = (bet.playerName||'Player') + '|' + bet.type;
-        if (!grouped[key]) grouped[key] = { playerName: bet.playerName||'Player', type: bet.type, amount: 0 };
+        if (!grouped[key]) grouped[key] = { playerName: bet.playerName||'Player', type: bet.type, amount: 0, playerAvatar: bet.playerAvatar || '' };
         grouped[key].amount += bet.amount;
       });
       Object.values(grouped).forEach(g => {
@@ -211,7 +211,10 @@ document.addEventListener('DOMContentLoaded', function(){
         el.className = 'player-bet-chip';
         const color = getBetColor(g.type);
         el.style.borderColor = color;
-        el.innerHTML = `<span class="chip-name">${g.playerName}</span><span class="chip-type" style="background:${color}">${getBetLabel(g.type)}</span><span class="chip-amount">$${g.amount.toFixed(2)}</span>`;
+        const avatarHtml = g.playerAvatar
+          ? `<img class="chip-avatar" src="${g.playerAvatar}" alt="" onerror="this.style.display='none'">`
+          : `<div class="chip-avatar chip-avatar-empty">${(g.playerName||'?')[0].toUpperCase()}</div>`;
+        el.innerHTML = `<div class="chip-left">${avatarHtml}<span class="chip-name">${g.playerName}</span></div><span class="chip-type" style="background:${color}">${getBetLabel(g.type)}</span><span class="chip-amount">$${g.amount.toFixed(2)}</span>`;
         allPlayersBetsList.appendChild(el);
       });
     }
@@ -277,9 +280,15 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   // === SOCKET ===
-  const socket = io({ query: { userId } });
+  const socket = io({ query: { userId, balance: getBalance() } });
 
   socket.on('connect', () => { gameStatusEl.textContent = 'Подключено'; });
+
+  socket.on('balance_update', (data) => {
+    if (data.userId === userId && data.balance !== undefined) {
+      setBalance(data.balance);
+    }
+  });
 
   socket.on('admin:obnul', () => {
     setBalance(0);
@@ -289,6 +298,8 @@ document.addEventListener('DOMContentLoaded', function(){
     gameStatusEl.textContent = 'Балансы обнулены';
     gameStatusEl.className = 'game-status';
   });
+
+  socket.on('wheel:state', (state) => {
     currentBets = state.myBets || [];
     updateMyBetsDisplay();
     if (state.balance !== undefined) setBalance(state.balance);
