@@ -38,15 +38,8 @@ document.addEventListener('DOMContentLoaded', function(){
   let showAllBombs = false; // флаг для раскрытия всех бомб после проигрыша
 
   // Balance helpers
-  function getBalance(){ 
-    return parseFloat(localStorage.getItem('mc_balance') || '0') || 0; 
-  }
-  
-  function setBalance(v){ 
-    const n = Math.round(Number(v) * 100) / 100; 
-    localStorage.setItem('mc_balance', n.toFixed(2)); 
-    document.querySelectorAll('.balance-value').forEach(el=>el.textContent = n.toFixed(2)); 
-  }
+  function getBalance(){ return Balance.get(); }
+  function setBalance(v){ Balance.set(v); }
 
   // Generate tower - создаёт 10 уровней с случайными бомбами
   function generateTower() {

@@ -179,11 +179,14 @@
       });
     });
   })();
-  // populate balance fields
+  // populate balance fields — will be properly set by Balance.init()
   const balanceElems = document.querySelectorAll('.balance-value');
   const stored = localStorage.getItem('mc_balance');
-  const balance = (stored !== null) ? parseFloat(stored).toFixed(2) : '0.00';
+  const balance = (stored !== null && stored !== 'NaN') ? parseFloat(stored).toFixed(2) : '0.00';
   balanceElems.forEach(el=>el.textContent = balance);
+
+  // Initialize Balance module (fetches from server)
+  if(window.Balance) Balance.init();
 
   // Promo modal & activation logic
   (function(){
@@ -218,8 +221,11 @@
     const promoMessage = document.getElementById('promoMessage');
 
     function updateBalanceDisplay(newVal){
-      const vals = document.querySelectorAll('.balance-value');
-      vals.forEach(el=> el.textContent = Number(newVal).toFixed(2));
+      if(window.Balance) Balance.set(newVal);
+      else {
+        const vals = document.querySelectorAll('.balance-value');
+        vals.forEach(el=> el.textContent = Number(newVal).toFixed(2));
+      }
     }
 
     function getActivated(){
@@ -277,10 +283,10 @@
         }
         
         // Apply bonus
-        const curBalance = parseFloat(localStorage.getItem('mc_balance') || '0') || 0;
+        const curBalance = window.Balance ? Balance.get() : (parseFloat(localStorage.getItem('mc_balance') || '0') || 0);
         const newBalance = Math.round((curBalance + amount) * 100) / 100;
-        localStorage.setItem('mc_balance', newBalance.toFixed(2));
         updateBalanceDisplay(newBalance);
+        if(window.Balance) Balance.syncToServer(newBalance);
         
         // Mark as activated
         activated.push(code);
@@ -587,21 +593,8 @@
             avatar: user.photo_url || user.avatar || null
           })
         }).then(res => res.json()).then(data => {
-          // After registering user, load their balance from DB
-          if(user.id){
-            fetch('/api/users/' + user.id)
-              .then(res => res.json())
-              .then(userData => {
-                if(userData && userData.balance != null){
-                  const balance = Number(userData.balance).toFixed(2);
-                  localStorage.setItem('mc_balance', balance);
-                  const balanceElems = document.querySelectorAll('.balance-value');
-                  balanceElems.forEach(el => el.textContent = balance);
-                  console.log('✅ Loaded balance from DB:', balance);
-                }
-              })
-              .catch(() => {});
-          }
+          // Balance will be loaded by Balance.init()
+          console.log('✅ User registered:', user.id);
         }).catch(()=>{});
       }catch(e){}
       return true;
@@ -816,18 +809,4 @@
   });
 })();
 
-// === Admin: OBNUL listener ===
-(function(){
-  const script = document.createElement('script');
-  script.src = '/socket.io/socket.io.js';
-  script.onload = function() {
-    try {
-      const s = io();
-      s.on('admin:obnul', () => {
-        localStorage.setItem('mc_balance', '0.00');
-        document.querySelectorAll('.balance-value').forEach(el => el.textContent = '0.00');
-      });
-    } catch(e){}
-  };
-  document.head.appendChild(script);
-})();
+

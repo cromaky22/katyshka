@@ -15,10 +15,10 @@ document.addEventListener('DOMContentLoaded', function(){
   const numbersTable = document.getElementById('numbersTable');
   const numbersGrid = document.getElementById('numbersGrid');
   const activeBets = document.getElementById('activeBets');
-   const activeBetsList = document.getElementById('activeBetsList');
-   const timerValueEl = document.getElementById('timerValue');
-   const allPlayersBetsEl = document.getElementById('allPlayersBets');
-   const allPlayersBetsList = document.getElementById('allPlayersBetsList');
+  const activeBetsList = document.getElementById('activeBetsList');
+  const timerValueEl = document.getElementById('timerValue');
+  const allPlayersBetsEl = document.getElementById('allPlayersBets');
+  const allPlayersBetsList = document.getElementById('allPlayersBetsList');
 
   const RED_NUMBERS = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
   function isRed(n) { return RED_NUMBERS.indexOf(n) !== -1; }
@@ -38,7 +38,6 @@ document.addEventListener('DOMContentLoaded', function(){
   let currentBets = [];
   let playerName = 'Player';
   let playerAvatar = '';
-  let userId = 'user_' + Math.random().toString(36).substr(2, 9);
   let isSpinning = false;
   let localTimer = null;
 
@@ -98,40 +97,6 @@ document.addEventListener('DOMContentLoaded', function(){
   function tickSfx() { tone(600 + Math.random() * 300, 'sine', 0.04, 0.03); }
   function winSfx() { tone(800, 'square', 0.1, 0.05); setTimeout(() => tone(1200, 'sine', 0.15, 0.04), 100); }
   function loseSfx() { tone(100, 'sawtooth', 0.3, 0.04); }
-
-  function getBalance() {
-    let stored = localStorage.getItem('mc_balance');
-    if (stored === null || stored === 'NaN') { stored = '0.00'; localStorage.setItem('mc_balance', stored); }
-    const val = parseFloat(stored);
-    if (isNaN(val) || val < 0) { localStorage.setItem('mc_balance', '0.00'); return 0; }
-    return val;
-  }
-  function setBalance(v) {
-    const n = Math.round(Number(v) * 100) / 100;
-    if (isNaN(n)) return;
-    localStorage.setItem('mc_balance', n.toFixed(2));
-    document.querySelectorAll('.balance-value').forEach(el => el.textContent = n.toFixed(2));
-  }
-
-  // Sync balance from server on load
-  var uid = 'u' + Math.random().toString(36).substr(2, 9);
-  try {
-    var tg = window.Telegram && window.Telegram.WebApp;
-    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-      uid = String(tg.initDataUnsafe.user.id);
-      localStorage.setItem('tg_uid', uid);
-    }
-  } catch(e) {}
-  var savedUid = localStorage.getItem('tg_uid');
-  if (savedUid) uid = savedUid;
-
-  fetch('/api/users?id=' + encodeURIComponent(uid))
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if (d && d.balance !== undefined) {
-        setBalance(d.balance);
-      }
-    }).catch(function(){});
 
   function getBetLabel(type) {
     const map = { red: 'Красное', black: 'Черное', odd: 'Чётное', notodd: 'Нечётное', range1: '1-18', range2: '19-36', range3: '1-12', range4: '13-24', range5: '25-36', '0': '0' };
@@ -197,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if (stake < 0.5) { gameStatusEl.textContent = 'Мин. ставка $0.50'; gameStatusEl.className = 'game-status error'; return; }
     if (stake > 200) { gameStatusEl.textContent = 'Макс. ставка $200'; gameStatusEl.className = 'game-status error'; return; }
     const totalCurrent = currentBets.reduce((s, b) => s + b.amount, 0);
-    if (totalCurrent + stake > getBalance()) { gameStatusEl.textContent = 'Недостаточно средств'; gameStatusEl.className = 'game-status error'; return; }
+    if (totalCurrent + stake > Balance.get()) { gameStatusEl.textContent = 'Недостаточно средств'; gameStatusEl.className = 'game-status error'; return; }
     const group = getBetGroup(type);
     if (group) {
       const existing = currentBets.find(b => getBetGroup(b.type) === group);
@@ -209,37 +174,37 @@ document.addEventListener('DOMContentLoaded', function(){
       }
     }
     currentBets.push({ type, amount: stake });
+    Balance.deduct(stake);
     updateMyBetsDisplay();
     gameStatusEl.textContent = '';
     if(window.mcStats) mcStats.addBet(stake, 'Wheel', getBetLabel(type));
     socket.emit('wheel:bet', { type, amount: stake, playerName, playerAvatar });
   }
 
-    function updateAllPlayersBets(allBets) {
-      if (!allBets || allBets.length === 0) { allPlayersBetsEl.style.display = 'none'; return; }
-      allPlayersBetsEl.style.display = 'flex';
-      allPlayersBetsList.innerHTML = '';
-      // Group by player+type to avoid duplicates
-      const grouped = {};
-      allBets.forEach(bet => {
-        const key = (bet.playerName||'Player') + '|' + bet.type;
-        if (!grouped[key]) grouped[key] = { playerName: bet.playerName||'Player', type: bet.type, amount: 0, playerAvatar: bet.playerAvatar || '' };
-        grouped[key].amount += bet.amount;
-      });
-      Object.values(grouped).forEach(g => {
-        const el = document.createElement('div');
-        el.className = 'player-bet-chip';
-        const color = getBetColor(g.type);
-        el.style.borderColor = color;
-        const avatarHtml = g.playerAvatar
-          ? `<img class="chip-avatar" src="${g.playerAvatar}" alt="" onerror="this.style.display='none'">`
-          : `<div class="chip-avatar chip-avatar-empty">${(g.playerName||'?')[0].toUpperCase()}</div>`;
-        el.innerHTML = `<div class="chip-left">${avatarHtml}<span class="chip-name">${g.playerName}</span></div><span class="chip-type" style="background:${color}">${getBetLabel(g.type)}</span><span class="chip-amount">$${g.amount.toFixed(2)}</span>`;
-        allPlayersBetsList.appendChild(el);
-      });
-    }
+  function updateAllPlayersBets(allBets) {
+    if (!allBets || allBets.length === 0) { allPlayersBetsEl.style.display = 'none'; return; }
+    allPlayersBetsEl.style.display = 'flex';
+    allPlayersBetsList.innerHTML = '';
+    const grouped = {};
+    allBets.forEach(bet => {
+      const key = (bet.playerName||'Player') + '|' + bet.type;
+      if (!grouped[key]) grouped[key] = { playerName: bet.playerName||'Player', type: bet.type, amount: 0, playerAvatar: bet.playerAvatar || '' };
+      grouped[key].amount += bet.amount;
+    });
+    Object.values(grouped).forEach(g => {
+      const el = document.createElement('div');
+      el.className = 'player-bet-chip';
+      const color = getBetColor(g.type);
+      el.style.borderColor = color;
+      const avatarHtml = g.playerAvatar
+        ? `<img class="chip-avatar" src="${g.playerAvatar}" alt="" onerror="this.style.display='none'">`
+        : `<div class="chip-avatar chip-avatar-empty">${(g.playerName||'?')[0].toUpperCase()}</div>`;
+      el.innerHTML = `<div class="chip-left">${avatarHtml}<span class="chip-name">${g.playerName}</span></div><span class="chip-type" style="background:${color}">${getBetLabel(g.type)}</span><span class="chip-amount">$${g.amount.toFixed(2)}</span>`;
+      allPlayersBetsList.appendChild(el);
+    });
+  }
 
-   function addHistory(num) {
+  function addHistory(num) {
     const el = document.createElement('div');
     el.className = 'history-item';
     el.style.backgroundColor = num === 0 ? '#8bc34a' : (isRed(num) ? '#f44336' : '#101010');
@@ -300,29 +265,15 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   // === SOCKET ===
-  const socket = io({ query: { userId, balance: getBalance() } });
+  const socket = Balance.getSocket();
+  const userId = Balance.getUserId();
 
   socket.on('connect', () => { gameStatusEl.textContent = 'Подключено'; });
-
-  socket.on('balance_update', (data) => {
-    if (data.userId === userId && data.balance !== undefined) {
-      setBalance(data.balance);
-    }
-  });
-
-  socket.on('admin:obnul', () => {
-    setBalance(0);
-    currentBets = [];
-    updateMyBetsDisplay();
-    allPlayersBetsEl.style.display = 'none';
-    gameStatusEl.textContent = 'Балансы обнулены';
-    gameStatusEl.className = 'game-status';
-  });
 
   socket.on('wheel:state', (state) => {
     currentBets = state.myBets || [];
     updateMyBetsDisplay();
-    if (state.balance !== undefined) setBalance(state.balance);
+    if (state.balance !== undefined) Balance.sync(state.balance);
     if (state.history) {
       historyScroll.innerHTML = '';
       state.history.forEach(h => addHistory(h.num));
@@ -338,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   socket.on('wheel:myBets', (data) => {
     if (data.myBets) { currentBets = data.myBets; updateMyBetsDisplay(); }
-    if (data.balance !== undefined) setBalance(data.balance);
+    if (data.balance !== undefined) Balance.sync(data.balance);
   });
 
   socket.on('wheel:spin', (data) => {
@@ -351,9 +302,9 @@ document.addEventListener('DOMContentLoaded', function(){
       let myWin = 0;
       if (data.results && data.results[userId] !== undefined) myWin = data.results[userId];
       if (data.balances && data.balances[userId] !== undefined) {
-        setBalance(data.balances[userId]);
+        Balance.sync(data.balances[userId]);
       } else if (myWin > 0) {
-        setBalance(getBalance() + myWin);
+        Balance.add(myWin);
       }
       if (myWin > 0) {
         gameStatusEl.textContent = `Выиграли $${myWin.toFixed(2)}! Выпало ${res.num}`;
@@ -400,15 +351,15 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   socket.on('wheel:newRound', (data) => {
-     currentBets = [];
-     updateMyBetsDisplay();
-     allPlayersBetsEl.style.display = 'none';
-     resultLens.classList.remove('show');
-     if (data.history) {
-       historyScroll.innerHTML = '';
-       data.history.forEach(h => addHistory(h.num));
-     }
-     gameStatusEl.textContent = 'Новый раунд! Делайте ставки';
+    currentBets = [];
+    updateMyBetsDisplay();
+    allPlayersBetsEl.style.display = 'none';
+    resultLens.classList.remove('show');
+    if (data.history) {
+      historyScroll.innerHTML = '';
+      data.history.forEach(h => addHistory(h.num));
+    }
+    gameStatusEl.textContent = 'Новый раунд! Делайте ставки';
     gameStatusEl.className = 'game-status';
     isSpinning = false;
     betBtns.forEach(b => b.disabled = false);
@@ -446,7 +397,6 @@ document.addEventListener('DOMContentLoaded', function(){
   doubleBtn.addEventListener('click', () => { const v = parseFloat(stakeInput.value) || 0; stakeInput.value = Math.min(200, v * 2).toFixed(2); });
 
   document.addEventListener('click', () => initAudio(), { once: true });
-  document.querySelectorAll('.balance-value').forEach(el => el.textContent = getBalance().toFixed(2));
 
   try {
     const tg = window.Telegram && window.Telegram.WebApp;
@@ -454,7 +404,6 @@ document.addEventListener('DOMContentLoaded', function(){
       const u = tg.initDataUnsafe.user;
       playerName = u.first_name + (u.last_name ? ' ' + u.last_name : '');
       playerAvatar = u.photo_url || '';
-      userId = String(u.id);
     }
   } catch(e) {}
 });

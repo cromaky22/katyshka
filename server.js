@@ -9,11 +9,13 @@ const io = new Server(server, { cors: { origin: '*' } });
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// === GET/SET USER BALANCE ===
+// === GET USER BALANCE ===
 app.get('/api/users', (req, res) => {
   const id = req.query.id;
-  if (!id) return res.status(400).json({ error: 'Missing id' });
-  res.json({ ok: true, balance: getBalance(id) });
+  if (id) return res.json({ ok: true, balance: getBalance(id) });
+  const userList = [];
+  for (const uid in users) userList.push({ id: uid, ...users[uid] });
+  res.json(userList);
 });
 
 app.post('/api/users', (req, res) => {
@@ -48,11 +50,7 @@ try {
   console.error('Failed to load data:', e);
 }
 
-// Balance give
-setBalance('7239160695', 10);
-setBalance('859241', 10);
-setBalance('8702405632', 10);
-console.log('💰 Gave $10 to 7239160695, 859241, 8702405632');
+
 
 // Save data to file
 function saveData() {
@@ -377,14 +375,7 @@ app.post('/api/promos/:code/activate', (req, res) => {
   res.json({ ok: true, amount: promos[code], balance: getBalance(userId) });
 });
 
-// === GET ALL USERS (admin) ===
-app.get('/api/users', (req, res) => {
-  const userList = [];
-  for (const id in users) {
-    userList.push({ id, ...users[id] });
-  }
-  res.json(userList);
-});
+
 
 // === ADMIN: OBNUL (обнуление всех балансов и ставок) ===
 const ADMIN_SECRET = process.env.ADMIN_SECRET || 'obnul2026';
@@ -464,11 +455,12 @@ function spinWheel() {
 
   const results = {};
   for (const uid in wheel.bets) {
+    const totalBet = wheel.bets[uid].reduce((s, b) => s + b.amount, 0);
     let win = 0;
     wheel.bets[uid].forEach(b => { if (betWins(b.type, num)) win += b.amount * getCoef(b.type); });
     win = Math.round(win * 100) / 100;
     results[uid] = win;
-    if (win > 0) setBalance(uid, getBalance(uid) + win);
+    setBalance(uid, getBalance(uid) - totalBet + win);
   }
 
   wheel.result = { num, color, index: idx };
@@ -492,7 +484,8 @@ io.on('connection', (socket) => {
   const userId = socket.handshake.query.userId || '0';
   const clientBalance = parseFloat(socket.handshake.query.balance) || 0;
   if (!users[userId]) {
-    users[userId] = { balance: clientBalance };
+    users[userId] = { balance: 0 };
+    saveData();
   }
   socket.emit('wheel:state', { phase: wheel.phase, timer: wheel.timer, myBets: wheel.bets[userId] || [], balance: getBalance(userId), history: wheel.history });
 
@@ -500,17 +493,20 @@ io.on('connection', (socket) => {
     if (wheel.phase !== 'betting') return;
     const { type, amount, playerName, playerAvatar } = data;
     if (!type || !amount || amount <= 0) return;
-    const total = (wheel.bets[userId] || []).reduce((s, b) => s + b.amount, 0);
-    if (total + amount > getBalance(userId)) return;
+    const currentServerBets = (wheel.bets[userId] || []).reduce((s, b) => s + b.amount, 0);
+    const serverBalance = getBalance(userId);
+    if (currentServerBets + amount > serverBalance) {
+      socket.emit('wheel:myBets', { myBets: wheel.bets[userId] || [], balance: serverBalance });
+      return;
+    }
     if (!wheel.bets[userId]) wheel.bets[userId] = [];
     wheel.bets[userId].push({ type, amount, playerName: playerName || 'Player', playerAvatar: playerAvatar || '' });
-    setBalance(userId, getBalance(userId) - amount);
     const allBets = [];
     for (const uid in wheel.bets) {
       wheel.bets[uid].forEach(b => allBets.push({ userId: uid, type: b.type, amount: b.amount, playerName: b.playerName, playerAvatar: b.playerAvatar || '' }));
     }
     io.emit('wheel:betsUpdate', { allBets });
-    socket.emit('wheel:myBets', { myBets: wheel.bets[userId] || [], balance: getBalance(userId) });
+    socket.emit('wheel:myBets', { myBets: wheel.bets[userId] || [], balance: serverBalance });
   });
 });
 

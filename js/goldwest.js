@@ -35,18 +35,8 @@ document.addEventListener('DOMContentLoaded', function(){
     return coefs;
   }
 
-  function getBalance() {
-    let stored = localStorage.getItem('mc_balance');
-    if (stored === null || stored === 'NaN') { stored = '0.00'; localStorage.setItem('mc_balance', stored); }
-    const val = parseFloat(stored);
-    return isNaN(val) ? 0 : val;
-  }
-  function setBalance(v) {
-    const n = Math.round(Number(v) * 100) / 100;
-    if (isNaN(n)) return;
-    localStorage.setItem('mc_balance', n.toFixed(2));
-    document.querySelectorAll('.balance-value').forEach(el => el.textContent = n.toFixed(2));
-  }
+  function getBalance(){ return Balance.get(); }
+  function setBalance(v){ Balance.set(v); }
 
   function initAudio() { if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {} } }
   function tone(freq, type, dur, vol) {

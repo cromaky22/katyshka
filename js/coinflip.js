@@ -18,8 +18,8 @@ document.addEventListener('DOMContentLoaded', function(){
   let chainPayout = 0; // last payout = chainBaseStake * multiplier
 
   // Balance helpers
-  function getBalance(){ return parseFloat(localStorage.getItem('mc_balance') || '0') || 0; }
-  function setBalance(v){ const n = Math.round(Number(v) * 100) / 100; localStorage.setItem('mc_balance', n.toFixed(2)); document.querySelectorAll('.balance-value').forEach(el=>el.textContent = n.toFixed(2)); }
+  function getBalance(){ return Balance.get(); }
+  function setBalance(v){ Balance.set(v); }
 
   btnHead.addEventListener('click', ()=>{ choice = 'head'; btnHead.classList.add('active'); btnTail.classList.remove('active'); if(inChain){ startFlip(chainBaseStake, { skipDeduct: true }); } });
   btnTail.addEventListener('click', ()=>{ choice = 'tail'; btnTail.classList.add('active'); btnHead.classList.remove('active'); if(inChain){ startFlip(chainBaseStake, { skipDeduct: true }); } });

@@ -30,15 +30,8 @@
   const stakeValueTopDisplay = document.getElementById('stakeValueTop');
   const minesCountDisplay = document.getElementById('minesCountDisplay');
 
-  function getBalance(){
-    const b = localStorage.getItem('mc_balance');
-    return b ? parseFloat(b) : 0;
-  }
-  function setBalance(v){
-    localStorage.setItem('mc_balance', (Math.round(v*100)/100).toFixed(2));
-    const els = document.querySelectorAll('.balance-value');
-    els.forEach(e=>e.textContent = (Math.round(v*100)/100).toFixed(2));
-  }
+  function getBalance(){ return Balance.get(); }
+  function setBalance(v){ Balance.set(v); }
 
   // game state
   let gameActive = false;

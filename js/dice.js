@@ -202,19 +202,8 @@ document.addEventListener('DOMContentLoaded', function(){
   function winSfx() { tone(800,'square',0.1,0.05); setTimeout(() => tone(1200,'sine',0.15,0.04), 100); }
   function loseSfx() { tone(100,'sawtooth',0.3,0.04); }
 
-  function getBalance() {
-    let s = localStorage.getItem('mc_balance');
-    if (s === null || s === 'NaN') { s = '0.00'; localStorage.setItem('mc_balance', s); }
-    const v = parseFloat(s);
-    if (isNaN(v) || v < 0.5) { localStorage.setItem('mc_balance', '0.00'); return 0; }
-    return v;
-  }
-  function setBalance(v) {
-    const n = Math.round(Number(v) * 100) / 100;
-    if (isNaN(n)) return;
-    localStorage.setItem('mc_balance', n.toFixed(2));
-    document.querySelectorAll('.balance-value').forEach(el => el.textContent = n.toFixed(2));
-  }
+  function getBalance(){ return Balance.get(); }
+  function setBalance(v){ Balance.set(v); }
 
   function getBetLabel(t) { return { odd: 'Четное', notodd: 'Нечетное' }[t] || t; }
   function getBetColor(t) {

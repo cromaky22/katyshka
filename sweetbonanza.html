@@ -193,6 +193,7 @@ body{background:linear-gradient(135deg,#0f0520 0%,#1a0a2e 30%,#2d1b5e 60%,#0f052
   <a href="menu.html" class="nav-item" data-name="menu"><span class="icon">☰</span><span class="label">Menu</span></a>
 </nav>
 
+<script src="js/balance.js"></script>
 <script>
 (function(){
   const COLS=6,ROWS=5;
@@ -242,7 +243,7 @@ body{background:linear-gradient(135deg,#0f0520 0%,#1a0a2e 30%,#2d1b5e 60%,#0f052
     }
   }
 
-  function updBal(n){bal=n;balEl.textContent=bal.toFixed(2);localStorage.setItem('mc_balance',bal.toFixed(2))}
+  function updBal(n){bal=n;balEl.textContent=bal.toFixed(2);Balance.set(n)}
   function delay(ms){return new Promise(r=>setTimeout(r,ms))}
 
   // === ALL REELS SPIN SIMULTANEOUSLY with smooth deceleration ===
@@ -443,7 +444,7 @@ body{background:linear-gradient(135deg,#0f0520 0%,#1a0a2e 30%,#2d1b5e 60%,#0f052
   document.querySelectorAll('.qb').forEach(b=>b.onclick=()=>{betInp.value=b.dataset.v});
 
   // Init
-  bal=parseFloat(localStorage.getItem('mc_balance'))||100;
+  bal=Balance.get(); if(bal===0&&!localStorage.getItem('mc_balance'))bal=100;
   balEl.textContent=bal.toFixed(2);
   buildGrid();
   document.addEventListener('click',()=>initAudio(),{once:true});

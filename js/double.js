@@ -119,19 +119,8 @@ document.addEventListener('DOMContentLoaded', function(){
   function loseSfx() { tone(100, 'sawtooth', 0.3, 0.04); }
 
   // === BALANCE ===
-  function getBalance() {
-    let stored = localStorage.getItem('mc_balance');
-    if (stored === null || stored === 'NaN') { stored = '0.00'; localStorage.setItem('mc_balance', stored); }
-    const val = parseFloat(stored);
-    if (isNaN(val) || val < 0.1) { localStorage.setItem('mc_balance', '0.00'); return 0; }
-    return val;
-  }
-  function setBalance(v) {
-    const n = Math.round(Number(v) * 100) / 100;
-    if (isNaN(n)) return;
-    localStorage.setItem('mc_balance', n.toFixed(2));
-    document.querySelectorAll('.balance-value').forEach(el => el.textContent = n.toFixed(2));
-  }
+  function getBalance(){ return Balance.get(); }
+  function setBalance(v){ Balance.set(v); }
 
   // === BETS ===
   betBtns.forEach(btn => {

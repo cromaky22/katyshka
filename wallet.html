@@ -145,6 +145,7 @@
     <a href="menu.html" class="nav-item" data-name="menu"><span class="icon">☰</span><span class="label">Menu</span></a>
   </nav>
   <script src="js/app.js"></script>
+  <script src="js/balance.js"></script>
   <script>
   (function(){
     var uid='u'+Math.random().toString(36).substr(2,9);
@@ -180,9 +181,7 @@
     
     function upd(v){
       bal = v;
-      localStorage.setItem('mc_balance', fmt(v));
-      var els = document.querySelectorAll('.balance-value, #dbal, #wbal, #hbal');
-      els.forEach(function(el){ el.textContent = fmt(v); });
+      Balance.set(v);
     }
     
     function msg(el,t,y){el.textContent=t;el.className='w-msg show '+(y||'info');}

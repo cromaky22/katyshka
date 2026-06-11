@@ -81,13 +81,8 @@ document.addEventListener('DOMContentLoaded', function() {
   function sfxLose() { playTone(100, 'sawtooth', 0.3, 0.04); }
   function sfxMultiplier() { playTone(500, 'triangle', 0.15, 0.06); playTone(700, 'sine', 0.2, 0.05); }
 
-  function getBalance() { return parseFloat(localStorage.getItem('mc_balance') || '0') || 0; }
-
-  function setBalance(v) {
-    const n = Math.round(Number(v) * 100) / 100;
-    localStorage.setItem('mc_balance', n.toFixed(2));
-    document.querySelectorAll('.balance-value').forEach(el => el.textContent = n.toFixed(2));
-  }
+  function getBalance(){ return Balance.get(); }
+  function setBalance(v){ Balance.set(v); }
 
   canvas.width = baseSize * dpr;
   canvas.height = baseSize * dpr;

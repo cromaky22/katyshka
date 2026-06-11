@@ -62,6 +62,7 @@
   </nav>
 
   <script src="js/app.js"></script>
+  <script src="js/balance.js"></script>
   <script>
   (function(){
     // Get user ID
@@ -271,18 +272,9 @@
       var sector = SECTORS[idx];
       setLastSpin();
 
-      var curBal = parseFloat(localStorage.getItem('mc_balance')) || 0;
-      var newBal = Math.round((curBal + sector.payout) * 100) / 100;
-      localStorage.setItem('mc_balance', newBal.toFixed(2));
-      document.querySelectorAll('.balance-value, #hbal').forEach(function(el){
-        el.textContent = newBal.toFixed(2);
-      });
-
-      fetch('/api/users', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({id: uid, balance: newBal})
-      }).catch(function(){});
+      var newBal = Math.round((Balance.get() + sector.payout) * 100) / 100;
+      Balance.set(newBal);
+      Balance.syncToServer(newBal);
 
       bonusStatus.textContent = '🎉 Вы выиграли ' + sector.label + '!';
       bonusStatus.className = 'bonus-status win';
