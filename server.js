@@ -390,7 +390,48 @@ app.post('/api/promos/:code/activate', (req, res) => {
 
 
 
-// === ADMIN: OBNUL (обнуление всех балансов и ставок) ===
+// === ADMIN: SET USER BALANCE ===
+app.put('/api/users/:id/balance', (req, res) => {
+  const adminKey = req.headers['x-admin-key'] || req.body?.adminKey;
+  if (adminKey !== ADMIN_SECRET) return res.status(403).json({ error: 'Forbidden' });
+  const { id } = req.params;
+  const { balance } = req.body;
+  if (!users[id]) users[id] = { balance: 0 };
+  users[id].balance = Math.round(parseFloat(balance) * 100) / 100;
+  saveData();
+  res.json({ ok: true, balance: users[id].balance });
+});
+
+// === ADMIN: GET ALL PROMOS ===
+app.get('/api/promos', (req, res) => {
+  const adminKey = req.headers['x-admin-key'];
+  if (adminKey !== ADMIN_SECRET) return res.status(403).json({ error: 'Forbidden' });
+  const promoList = [];
+  for (const code in promos) {
+    promoList.push({ code, amount: promos[code], uses: 0 });
+  }
+  res.json(promoList);
+});
+
+// === ADMIN: ADD PROMO ===
+app.post('/api/promos', (req, res) => {
+  const adminKey = req.headers['x-admin-key'];
+  if (adminKey !== ADMIN_SECRET) return res.status(403).json({ error: 'Forbidden' });
+  const { code, amount, maxUses } = req.body;
+  if (!code || !amount) return res.status(400).json({ error: 'Missing code or amount' });
+  promos[code.toUpperCase()] = parseFloat(amount);
+  saveData();
+  res.json({ ok: true });
+});
+
+// === ADMIN: DELETE PROMO ===
+app.delete('/api/promos/:code', (req, res) => {
+  const adminKey = req.headers['x-admin-key'];
+  if (adminKey !== ADMIN_SECRET) return res.status(403).json({ error: 'Forbidden' });
+  delete promos[req.params.code.toUpperCase()];
+  saveData();
+  res.json({ ok: true });
+});
 const ADMIN_SECRET = process.env.ADMIN_SECRET || 'obnul2026';
 
 app.post('/api/admin/obnul', (req, res) => {

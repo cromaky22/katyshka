@@ -94,13 +94,116 @@ bot.command('give', async (ctx) => {
   }
 });
 
+// === TAKE BALANCE ===
+bot.command('take', async (ctx) => {
+  if (!adminSessions.has(ctx.from.id)) {
+    ctx.reply('🔐 Сначала авторизуйтесь: /admin <пароль>');
+    return;
+  }
+  const args = ctx.message.text.split(' ');
+  if (args.length < 3) {
+    ctx.reply('💸 Использование: /take <userId> <amount>\nПример: /take 7239160695 5');
+    return;
+  }
+  const targetId = args[1];
+  const amount = parseFloat(args[2]);
+  if (isNaN(amount) || amount <= 0) {
+    ctx.reply('❌ Неверная сумма');
+    return;
+  }
+  try {
+    // Get current balance first
+    const getRes = await fetch(`${SERVER_URL}/api/users?id=${targetId}`);
+    const userData = await getRes.json();
+    const currentBalance = userData.balance || 0;
+    const newBalance = Math.max(0, currentBalance - amount);
+    
+    const res = await fetch(`${SERVER_URL}/api/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: targetId, balance: newBalance })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      ctx.reply(`💸 Списано $${amount.toFixed(2)} у пользователя ${targetId}\nБыло: $${currentBalance.toFixed(2)}\nТекущий баланс: $${data.balance.toFixed(2)}`);
+    } else {
+      ctx.reply(`❌ Ошибка: ${data.error || 'unknown'}`);
+    }
+  } catch (e) {
+    ctx.reply('❌ Ошибка соединения с сервером.');
+  }
+});
+
+// === CHECK USER ===
+bot.command('user', async (ctx) => {
+  if (!adminSessions.has(ctx.from.id)) {
+    ctx.reply('🔐 Сначала авторизуйтесь: /admin <пароль>');
+    return;
+  }
+  const args = ctx.message.text.split(' ');
+  if (args.length < 2) {
+    ctx.reply('👤 Использование: /user <userId>\nПример: /user 7239160695');
+    return;
+  }
+  const targetId = args[1];
+  try {
+    const res = await fetch(`${SERVER_URL}/api/users?id=${targetId}`);
+    const data = await res.json();
+    if (data.ok) {
+      const name = data.first_name || data.username || targetId;
+      ctx.reply(`👤 Пользователь: ${name}\n🆔 ID: ${targetId}\n💰 Баланс: $${(data.balance || 0).toFixed(2)}`);
+    } else {
+      ctx.reply(`❌ Пользователь ${targetId} не найден.`);
+    }
+  } catch (e) {
+    ctx.reply('❌ Ошибка соединения с сервером.');
+  }
+});
+
+// === SET BALANCE (force) ===
+bot.command('set', async (ctx) => {
+  if (!adminSessions.has(ctx.from.id)) {
+    ctx.reply('🔐 Сначала авторизуйтесь: /admin <пароль>');
+    return;
+  }
+  const args = ctx.message.text.split(' ');
+  if (args.length < 3) {
+    ctx.reply('⚡ Использование: /set <userId> <amount>\nПример: /set 7239160695 100');
+    return;
+  }
+  const targetId = args[1];
+  const amount = parseFloat(args[2]);
+  if (isNaN(amount) || amount < 0) {
+    ctx.reply('❌ Неверная сумма');
+    return;
+  }
+  try {
+    const res = await fetch(`${SERVER_URL}/api/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: targetId, balance: amount })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      ctx.reply(`⚡ Баланс пользователя ${targetId} установлен: $${amount.toFixed(2)}`);
+    } else {
+      ctx.reply(`❌ Ошибка: ${data.error || 'unknown'}`);
+    }
+  } catch (e) {
+    ctx.reply('❌ Ошибка соединения с сервером.');
+  }
+});
+
 // === ADMIN MENU KEYBOARD ===
 function adminMenuKeyboard() {
   return {
     inline_keyboard: [
       [{ text: '👥 Список пользователей', callback_data: 'admin:users' }],
-      [{ text: '💰 Обнулить всё', callback_data: 'admin:obnul' }],
+      [{ text: '🔍 Найти пользователя', callback_data: 'admin:find' }],
+      [{ text: '💰 Выдать баланс', callback_data: 'admin:give' }],
+      [{ text: '💸 Списать баланс', callback_data: 'admin:take' }],
       [{ text: '📊 Статистика', callback_data: 'admin:stats' }],
+      [{ text: '🗑 Обнулить всё', callback_data: 'admin:obnul' }],
       [{ text: '🚪 Выйти', callback_data: 'admin:logout' }]
     ]
   };
@@ -169,7 +272,20 @@ bot.on('callback_query', async (ctx) => {
     ctx.answerCbQuery();
   }
 
-  if (data === 'admin:logout') {
+  if (data === 'admin:give') {
+    await ctx.editMessageText('💰 Введите команду: /give <userId> <amount>\nПример: /give 7239160695 10');
+    ctx.answerCbQuery();
+  }
+
+  if (data === 'admin:take') {
+    await ctx.editMessageText('💸 Введите команду: /take <userId> <amount>\nПример: /take 7239160695 5');
+    ctx.answerCbQuery();
+  }
+
+  if (data === 'admin:find') {
+    await ctx.editMessageText('🔍 Введите команду: /user <userId>\nПример: /user 7239160695');
+    ctx.answerCbQuery();
+  }
     adminSessions.delete(userId);
     await ctx.editMessageText('🚪 Вы вышли из админ-панели.');
     ctx.answerCbQuery();
