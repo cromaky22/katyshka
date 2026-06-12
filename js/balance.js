@@ -145,8 +145,7 @@
       updateDOM(n);
     },
     sync: function(newBal){
-      _balance = Math.round(parseFloat(newBal) * 100) / 100;
-      _localDelta = 0;
+      _balance = Math.round(parseFloat(newBal) * 100) / 100 + _localDelta;
       localStorage.setItem('mc_balance', fmt(_balance));
       updateDOM(_balance);
     },

@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function(){
     el.style.backgroundColor = num === 0 ? '#8bc34a' : (isRed(num) ? '#f44336' : '#101010');
     el.style.color = num === 0 ? '#000' : '#fff';
     el.textContent = num;
-    historyScroll.insertBefore(el, historyScroll.firstChild);
+    historyScroll.prepend(el);
     while (historyScroll.children.length > 20) historyScroll.removeChild(historyScroll.lastChild);
   }
 
