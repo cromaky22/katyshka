@@ -101,7 +101,6 @@
           if(data.userId === getUserId() && data.balance !== undefined){
             var serverBal = Math.round(parseFloat(data.balance) * 100) / 100;
             _balance = serverBal;
-            _pendingTotal = 0;
             localStorage.setItem('mc_balance', fmt(_balance));
             updateDOM(_balance);
           }
@@ -135,6 +134,7 @@
       _balance = n;
       localStorage.setItem('mc_balance', fmt(_balance));
       updateDOM(_balance - _pendingTotal);
+      syncToServer(_balance);
     },
     add: function(amount){
       var n = Math.round((_balance + Number(amount)) * 100) / 100;
@@ -142,6 +142,7 @@
       _balance = n;
       localStorage.setItem('mc_balance', fmt(_balance));
       updateDOM(_balance - _pendingTotal);
+      syncToServer(_balance);
     },
     deduct: function(amount){
       var n = Number(amount);
@@ -155,6 +156,7 @@
       if(_pendingTotal < 0) _pendingTotal = 0;
       localStorage.setItem('mc_balance', fmt(_balance));
       updateDOM(_balance - _pendingTotal);
+      syncToServer(_balance);
     },
     sync: function(newBal){
       _balance = Math.round(parseFloat(newBal) * 100) / 100;
