@@ -497,12 +497,13 @@ function spinWheel() {
 
 io.on('connection', (socket) => {
   const userId = socket.handshake.query.userId || '0';
-  const clientBalance = parseFloat(socket.handshake.query.balance) || 0;
-  if (!users[userId]) {
-    users[userId] = { balance: 0 };
-    saveData();
+  if(userId && userId !== '0') {
+    if (!users[userId]) {
+      users[userId] = { balance: 0 };
+      saveData();
+    }
   }
-  socket.emit('wheel:state', { phase: wheel.phase, timer: wheel.timer, myBets: wheel.bets[userId] || [], balance: getBalance(userId), history: wheel.history });
+  socket.emit('wheel:state', { phase: wheel.phase, timer: wheel.timer, myBets: wheel.bets[userId] || [], balance: getBalance(userId) || 0, history: wheel.history });
 
   socket.on('wheel:bet', (data) => {
     if (wheel.phase !== 'betting') return;

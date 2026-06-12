@@ -29,17 +29,10 @@
     try{
       var tg = window.Telegram && window.Telegram.WebApp;
       if(tg && tg.initDataUnsafe && tg.initDataUnsafe.user){
-        var tgId = String(tg.initDataUnsafe.user.id);
-        localStorage.setItem('tg_uid', tgId);
-        return tgId;
+        return String(tg.initDataUnsafe.user.id);
       }
     }catch(e){}
-    var saved = localStorage.getItem('tg_uid');
-    if(saved && !saved.startsWith('browser_')) return saved;
-    if(saved) return saved;
-    var rid = 'browser_' + Math.random().toString(36).substr(2,9);
-    localStorage.setItem('tg_uid', rid);
-    return rid;
+    return null;
   }
 
   function fmt(n){ return Number(n).toFixed(2); }
@@ -64,13 +57,9 @@
 
   function loadFromServer(){
     _userId = getUserId();
-    var cached = localStorage.getItem('mc_balance');
-    if(cached !== null && cached !== 'NaN'){
-      var cv = parseFloat(cached);
-      if(!isNaN(cv) && cv >= 0){
-        _balance = Math.round(cv * 100) / 100;
-        updateDOM(_balance);
-      }
+    if(!_userId){
+      console.warn('⚠️ No Telegram user ID');
+      return Promise.resolve();
     }
     return fetch('/api/users?id=' + encodeURIComponent(_userId))
       .then(function(r){ return r.json(); })
@@ -78,17 +67,12 @@
         if(d && d.balance !== undefined){
           _balance = Math.round(parseFloat(d.balance) * 100) / 100;
         }
-        localStorage.setItem('mc_balance', fmt(_balance));
         updateDOM(_balance);
         _ready = true;
         _listeners.forEach(function(fn){ fn(_balance); });
         _listeners = [];
       })
       .catch(function(){
-        var stored = localStorage.getItem('mc_balance');
-        _balance = stored ? (Math.round(parseFloat(stored) * 100) / 100) : 0;
-        if(isNaN(_balance) || _balance < 0) _balance = 0;
-        updateDOM(_balance);
         _ready = true;
         _listeners.forEach(function(fn){ fn(_balance); });
         _listeners = [];
@@ -103,13 +87,11 @@
         _socket.on('balance_update', function(data){
           if(data.userId === getUserId() && data.balance !== undefined){
             _balance = Math.round(parseFloat(data.balance) * 100) / 100;
-            localStorage.setItem('mc_balance', fmt(_balance));
             updateDOM(_balance);
           }
         });
         _socket.on('admin:obnul', function(){
           _balance = 0;
-          localStorage.setItem('mc_balance', '0.00');
           updateDOM(0);
         });
       }catch(e){}
@@ -121,15 +103,11 @@
       initSocket();
       return loadFromServer();
     },
-    initOffline: function(){
-      return loadFromServer();
-    },
     get: function(){ return _balance; },
     set: function(v){
       var n = Math.round(Number(v) * 100) / 100;
       if(isNaN(n)) return;
       _balance = n;
-      localStorage.setItem('mc_balance', fmt(n));
       updateDOM(n);
       syncToServer(n);
     },
@@ -137,7 +115,6 @@
       var n = Math.round((_balance + Number(amount)) * 100) / 100;
       if(isNaN(n)) return;
       _balance = n;
-      localStorage.setItem('mc_balance', fmt(n));
       updateDOM(n);
       syncToServer(n);
     },
@@ -145,17 +122,12 @@
       var n = Math.round((_balance - Number(amount)) * 100) / 100;
       if(isNaN(n)) return;
       _balance = n;
-      localStorage.setItem('mc_balance', fmt(n));
       updateDOM(n);
       syncToServer(n);
     },
     sync: function(newBal){
       _balance = Math.round(parseFloat(newBal) * 100) / 100;
-      localStorage.setItem('mc_balance', fmt(_balance));
       updateDOM(_balance);
-    },
-    syncToServer: function(){
-      syncToServer(_balance);
     },
     ready: function(fn){
       if(_ready) fn(_balance);
