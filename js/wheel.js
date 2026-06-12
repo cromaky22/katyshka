@@ -214,6 +214,18 @@ document.addEventListener('DOMContentLoaded', function(){
     while (historyScroll.children.length > 20) historyScroll.removeChild(historyScroll.lastChild);
   }
 
+  function loadHistory(arr) {
+    historyScroll.innerHTML = '';
+    arr.forEach(h => {
+      const el = document.createElement('div');
+      el.className = 'history-item';
+      el.style.backgroundColor = h.num === 0 ? '#8bc34a' : (isRed(h.num) ? '#f44336' : '#101010');
+      el.style.color = h.num === 0 ? '#000' : '#fff';
+      el.textContent = h.num;
+      historyScroll.appendChild(el);
+    });
+  }
+
   function spinToTarget(targetIdx, dur, done) {
     const desiredNorm = (targetIdx * SEG_ANGLE + SEG_ANGLE / 2) % 360;
     const currentNorm = (((-rotation) % 360) + 360) % 360;
@@ -274,10 +286,7 @@ document.addEventListener('DOMContentLoaded', function(){
     currentBets = state.myBets || [];
     updateMyBetsDisplay();
     if (state.balance !== undefined) Balance.sync(state.balance);
-    if (state.history) {
-      historyScroll.innerHTML = '';
-      state.history.forEach(h => addHistory(h.num));
-    }
+    if (state.history) loadHistory(state.history);
     if (state.phase === 'betting' && state.timer > 0) startLocalTimer(state.timer, 'betting');
   });
 
@@ -324,10 +333,7 @@ document.addEventListener('DOMContentLoaded', function(){
       resultLens.classList.remove('show');
       void resultLens.offsetWidth;
       resultLens.classList.add('show');
-      if (data.history) {
-        historyScroll.innerHTML = '';
-        data.history.forEach(h => addHistory(h.num));
-      }
+      if (data.history) loadHistory(data.history);
       const winList = document.getElementById('winList');
       if (winList && data.results) {
         winList.innerHTML = '';
@@ -355,10 +361,7 @@ document.addEventListener('DOMContentLoaded', function(){
     updateMyBetsDisplay();
     allPlayersBetsEl.style.display = 'none';
     resultLens.classList.remove('show');
-    if (data.history) {
-      historyScroll.innerHTML = '';
-      data.history.forEach(h => addHistory(h.num));
-    }
+    if (data.history) loadHistory(data.history);
     gameStatusEl.textContent = 'Новый раунд! Делайте ставки';
     gameStatusEl.className = 'game-status';
     isSpinning = false;

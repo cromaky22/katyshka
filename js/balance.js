@@ -1,6 +1,5 @@
 (function(){
   var _balance = 0;
-  var _localDelta = 0;
   var _userId = null;
   var _socket = null;
   var _ready = false;
@@ -61,9 +60,8 @@
       .then(function(r){ return r.json(); })
       .then(function(d){
         if(d && d.balance !== undefined){
-          _balance = Math.round(parseFloat(d.balance) * 100) / 100 + _localDelta;
-        } else {
-          _balance = Math.round((_balance) * 100) / 100;
+          var serverBal = Math.round(parseFloat(d.balance) * 100) / 100;
+          if(serverBal > _balance) _balance = serverBal;
         }
         localStorage.setItem('mc_balance', fmt(_balance));
         updateDOM(_balance);
@@ -98,7 +96,8 @@
         _socket = io({query: {userId: getUserId(), balance: _balance}});
         _socket.on('balance_update', function(data){
           if(data.userId === getUserId() && data.balance !== undefined){
-            _balance = Math.round(parseFloat(data.balance) * 100) / 100;
+            var serverBal = Math.round(parseFloat(data.balance) * 100) / 100;
+            if(serverBal > _balance) _balance = serverBal;
             localStorage.setItem('mc_balance', fmt(_balance));
             updateDOM(_balance);
           }
@@ -132,7 +131,6 @@
       var n = Math.round((_balance + Number(amount)) * 100) / 100;
       if(isNaN(n)) return;
       _balance = n;
-      _localDelta += Number(amount);
       localStorage.setItem('mc_balance', fmt(n));
       updateDOM(n);
     },
@@ -140,12 +138,12 @@
       var n = Math.round((_balance - Number(amount)) * 100) / 100;
       if(isNaN(n)) return;
       _balance = n;
-      _localDelta -= Number(amount);
       localStorage.setItem('mc_balance', fmt(n));
       updateDOM(n);
     },
     sync: function(newBal){
-      _balance = Math.round(parseFloat(newBal) * 100) / 100 + _localDelta;
+      var serverBal = Math.round(parseFloat(newBal) * 100) / 100;
+      if(serverBal > _balance) _balance = serverBal;
       localStorage.setItem('mc_balance', fmt(_balance));
       updateDOM(_balance);
     },
