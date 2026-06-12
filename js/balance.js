@@ -28,12 +28,15 @@
     try{
       var tg = window.Telegram && window.Telegram.WebApp;
       if(tg && tg.initDataUnsafe && tg.initDataUnsafe.user){
-        return String(tg.initDataUnsafe.user.id);
+        var tgId = String(tg.initDataUnsafe.user.id);
+        localStorage.setItem('tg_uid', tgId);
+        return tgId;
       }
     }catch(e){}
     var saved = localStorage.getItem('tg_uid');
+    if(saved && !saved.startsWith('browser_')) return saved;
     if(saved) return saved;
-    var rid = 'u' + Math.random().toString(36).substr(2,9);
+    var rid = 'browser_' + Math.random().toString(36).substr(2,9);
     localStorage.setItem('tg_uid', rid);
     return rid;
   }

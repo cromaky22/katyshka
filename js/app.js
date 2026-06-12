@@ -616,7 +616,6 @@
         console.log('🔍 Checking Telegram WebApp:', !!tg);
         if(tg){
           console.log('✅ Telegram WebApp found');
-          // try several common locations
           const u1 = tg.initDataUnsafe && tg.initDataUnsafe.user;
           console.log('📱 Try 1 - initDataUnsafe.user:', u1);
           if(fillFromUser(u1)) return;
@@ -630,9 +629,7 @@
         } else {
           console.log('⚠️ Telegram WebApp not available (normal in browser, works in Telegram)');
         }
-        // fallback: try global initData parse (if available)
         if(window.__tg_user){ console.log('💾 Found __tg_user:', window.__tg_user); fillFromUser(window.__tg_user); return }
-        // additional fallback: try reading saved user from localStorage
         try{
           const maybe = localStorage.getItem('tg_user') || localStorage.getItem('mc_user') || localStorage.getItem('user');
           if(maybe){
@@ -642,17 +639,6 @@
             if(parsed) { fillFromUser(parsed); return }
           }
         }catch(e){ console.error('❌ localStorage error:', e); }
-        
-        // Demo fallback for browser testing (will be replaced by real Telegram data when opened in Telegram)
-        console.log('💡 No Telegram data found - using demo data for browser testing');
-        const demoUser = {
-          id: 123456789,
-          first_name: '',
-          last_name: '',
-          username: 'demouser',
-          photo_url: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%231a1f35" width="100" height="100"/%3E%3Ctext x="50" y="50" font-size="50" fill="%238892b0" text-anchor="middle" dy=".3em"%3E👤%3C/text%3E%3C/svg%3E'
-        };
-        fillFromUser(demoUser);
       }catch(e){ console.error('❌ tryFill error:', e); }
     }
 
