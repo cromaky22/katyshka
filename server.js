@@ -612,3 +612,338 @@ app.get('/api/tg-photo/:id', async (req, res) => {
 // === START ===
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+// Start bot if BOT_TOKEN is set
+if(process.env.BOT_TOKEN){
+  try {
+    const { Telegraf } = require('telegraf');
+    const bot = new Telegraf(process.env.BOT_TOKEN);
+    
+    const ADMIN_SECRET = process.env.ADMIN_SECRET || 'obnul2026';
+    const SERVER_URL = process.env.SERVER_URL || `http://localhost:${PORT}`;
+    
+    // Admin sessions
+    const adminSessions = new Map();
+    
+    function isAdmin(ctx) {
+      const s = adminSessions.get(ctx.from.id);
+      return s && s.authenticated;
+    }
+    
+    function mainMenuText() {
+      return '🎛 **Админ-панель KATYSHKA**\n\nВыберите действие:';
+    }
+    
+    function mainMenuKeyboard() {
+      return {
+        inline_keyboard: [
+          [{ text: '📊 Статистика', callback_data: 'admin:stats' }, { text: '👥 Пользователи', callback_data: 'admin:users' }],
+          [{ text: '💰 Выдать баланс', callback_data: 'admin:give' }, { text: '💸 Списать баланс', callback_data: 'admin:take' }],
+          [{ text: '⚡ Установить баланс', callback_data: 'admin:set' }, { text: '🔍 Найти юзера', callback_data: 'admin:find' }],
+          [{ text: '💰➕ Пополнить себе', callback_data: 'admin:addme' }],
+          [{ text: '🗑 Обнулить ВСЁ', callback_data: 'admin:obnul' }],
+          [{ text: '🔓 Выйти', callback_data: 'admin:logout' }]
+        ]
+      };
+    }
+    
+    function backKeyboard() {
+      return { inline_keyboard: [[{ text: '🔙 Назад', callback_data: 'admin:back' }]] };
+    }
+    
+    async function sendToServer(path, body) {
+      try {
+        const res = await fetch(`${SERVER_URL}/api${path}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        return await res.json();
+      } catch (e) {
+        return { error: 'connection' };
+      }
+    }
+    
+    async function getFromServer(path) {
+      try {
+        const res = await fetch(`${SERVER_URL}/api${path}`);
+        return await res.json();
+      } catch (e) {
+        return null;
+      }
+    }
+    
+    // START
+    bot.start(async (ctx) => {
+      const userId = ctx.from.id;
+      // Check if user is admin (first user or has password)
+      adminSessions.set(userId, { authenticated: true, state: 'idle' });
+      await ctx.reply(mainMenuText(), {
+        parse_mode: 'Markdown',
+        reply_markup: mainMenuKeyboard()
+      });
+    });
+    
+    // TEXT HANDLER
+    bot.on('text', async (ctx) => {
+      const text = ctx.message.text;
+      const userId = ctx.from.id;
+      const session = adminSessions.get(userId);
+      
+      if (!session || !session.authenticated) {
+        if (text === ADMIN_SECRET) {
+          adminSessions.set(userId, { authenticated: true, state: 'idle' });
+          return ctx.reply('✅ Доступ разрешён!', { reply_markup: mainMenuKeyboard() });
+        }
+        return ctx.reply('🔐 Введите пароль для доступа к админ-панели.');
+      }
+      
+      // Handle states
+      if (session.state === 'give_id') {
+        session.targetId = text.trim();
+        session.state = 'give_amount';
+        return ctx.reply(`💰 Введите сумму для выдачи пользователю ${session.targetId}:`);
+      }
+      
+      if (session.state === 'give_amount') {
+        const amount = parseFloat(text);
+        if (isNaN(amount) || amount <= 0) return ctx.reply('❌ Неверная сумма.');
+        const data = await sendToServer('/users', { id: session.targetId, balance: amount });
+        session.state = 'idle';
+        if (data.ok) {
+          return ctx.reply(`✅ Выдано $${amount.toFixed(2)} пользователю ${session.targetId}\nТекущий баланс: $${data.balance.toFixed(2)}`, { reply_markup: backKeyboard() });
+        }
+        return ctx.reply(`❌ Ошибка: ${data.error || 'unknown'}`);
+      }
+      
+      if (session.state === 'take_id') {
+        session.targetId = text.trim();
+        session.state = 'take_amount';
+        return ctx.reply(`💸 Введите сумму для списания у пользователя ${session.targetId}:`);
+      }
+      
+      if (session.state === 'take_amount') {
+        const amount = parseFloat(text);
+        if (isNaN(amount) || amount <= 0) return ctx.reply('❌ Неверная сумма.');
+        const userData = await getFromServer(`/users?id=${session.targetId}`);
+        const currentBalance = userData?.balance || 0;
+        const newBalance = Math.max(0, currentBalance - amount);
+        const data = await sendToServer('/users', { id: session.targetId, balance: newBalance });
+        session.state = 'idle';
+        if (data.ok) {
+          return ctx.reply(`💸 Списано $${amount.toFixed(2)} у ${session.targetId}\nБыло: $${currentBalance.toFixed(2)}\nТекущий: $${data.balance.toFixed(2)}`, { reply_markup: backKeyboard() });
+        }
+        return ctx.reply(`❌ Ошибка: ${data.error || 'unknown'}`);
+      }
+      
+      if (session.state === 'set_id') {
+        session.targetId = text.trim();
+        session.state = 'set_amount';
+        return ctx.reply(`⚡ Введите новый баланс для пользователя ${session.targetId}:`);
+      }
+      
+      if (session.state === 'set_amount') {
+        const amount = parseFloat(text);
+        if (isNaN(amount) || amount < 0) return ctx.reply('❌ Неверная сумма.');
+        const data = await sendToServer('/users', { id: session.targetId, balance: amount });
+        session.state = 'idle';
+        if (data.ok) {
+          return ctx.reply(`⚡ Баланс ${session.targetId} установлен: $${amount.toFixed(2)}`, { reply_markup: backKeyboard() });
+        }
+        return ctx.reply(`❌ Ошибка: ${data.error || 'unknown'}`);
+      }
+      
+      if (session.state === 'find_id') {
+        const targetId = text.trim();
+        const data = await getFromServer(`/users?id=${targetId}`);
+        session.state = 'idle';
+        if (data && data.balance !== undefined) {
+          const name = data.first_name || data.username || targetId;
+          const bal = (data.balance || 0).toFixed(2);
+          return ctx.reply(`👤 **Пользователь**\n\n🆔 ID: \`${targetId}\`\n📛 Имя: ${name}\n💰 Баланс: $${bal}`, {
+            parse_mode: 'Markdown',
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '💰 Выдать', callback_data: `admin:quick_give:${targetId}` }, { text: '💸 Списать', callback_data: `admin:quick_take:${targetId}` }],
+                [{ text: '🔙 Назад', callback_data: 'admin:back' }]
+              ]
+            }
+          });
+        }
+        return ctx.reply(`❌ Пользователь ${targetId} не найден.`);
+      }
+      
+      if (session.state === 'addme_amount') {
+        const amount = parseFloat(text);
+        if (isNaN(amount) || amount <= 0) return ctx.reply('❌ Неверная сумма.');
+        const myId = String(userId);
+        const userData = await getFromServer(`/users?id=${myId}`);
+        const currentBalance = userData?.balance || 0;
+        const newBalance = currentBalance + amount;
+        const data = await sendToServer('/users', { id: myId, balance: newBalance });
+        session.state = 'idle';
+        if (data.ok) {
+          return ctx.reply(`💰✅ Баланс пополнен!\n\nБыло: $${currentBalance.toFixed(2)}\nДобавлено: $${amount.toFixed(2)}\nИтого: $${data.balance.toFixed(2)}`, { reply_markup: backKeyboard() });
+        }
+        return ctx.reply(`❌ Ошибка: ${data.error}`);
+      }
+    });
+    
+    // CALLBACK HANDLER
+    bot.on('callback_query', async (ctx) => {
+      const data = ctx.callbackQuery.data;
+      const userId = ctx.from.id;
+      
+      if (!data.startsWith('admin:')) return;
+      
+      const session = adminSessions.get(userId);
+      if (!session || !session.authenticated) {
+        return ctx.answerCbQuery('🔐 Введите пароль.');
+      }
+      
+      if (data.startsWith('admin:quick_give:')) {
+        const targetId = data.split(':')[2];
+        session.state = 'give_amount';
+        session.targetId = targetId;
+        await ctx.answerCbQuery();
+        return ctx.reply(`💰 Введите сумму для выдачи пользователю ${targetId}:`);
+      }
+      
+      if (data.startsWith('admin:quick_take:')) {
+        const targetId = data.split(':')[2];
+        session.state = 'take_amount';
+        session.targetId = targetId;
+        await ctx.answerCbQuery();
+        return ctx.reply(`💸 Введите сумму для списания у пользователя ${targetId}:`);
+      }
+      
+      if (data === 'admin:stats') {
+        const users = await getFromServer('/users');
+        const totalUsers = Array.isArray(users) ? users.length : 0;
+        const totalBalance = Array.isArray(users) ? users.reduce((s, u) => s + (u.balance || 0), 0).toFixed(2) : '0.00';
+        await ctx.editMessageText(`📊 **Статистика**\n\n👥 Пользователей: ${totalUsers}\n💰 Общий баланс: $${totalBalance}`, {
+          parse_mode: 'Markdown',
+          reply_markup: backKeyboard()
+        });
+        return ctx.answerCbQuery();
+      }
+      
+      if (data === 'admin:users') {
+        const users = await getFromServer('/users');
+        if (!Array.isArray(users) || users.length === 0) {
+          await ctx.editMessageText('Пользователей пока нет.', { reply_markup: backKeyboard() });
+        } else {
+          let msg = `👥 **Пользователи (${users.length}):**\n\n`;
+          const buttons = [];
+          users.forEach(u => {
+            const name = ((u.first_name || '') + (u.last_name ? ' ' + u.last_name : '')).trim() || u.username || u.id;
+            const bal = (u.balance != null) ? Number(u.balance).toFixed(2) : '0.00';
+            msg += `• \`${u.id}\` — ${name} — $${bal}\n`;
+            buttons.push([{ text: `👤 ${name} ($${bal})`, callback_data: `admin:user:${u.id}` }]);
+          });
+          buttons.push([{ text: '🔙 Назад', callback_data: 'admin:back' }]);
+          await ctx.editMessageText(msg, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: buttons } });
+        }
+        return ctx.answerCbQuery();
+      }
+      
+      if (data.startsWith('admin:user:')) {
+        const targetId = data.split(':')[2];
+        const u = await getFromServer(`/users?id=${targetId}`);
+        const name = u?.first_name || u?.username || targetId;
+        const bal = (u?.balance || 0).toFixed(2);
+        await ctx.editMessageText(`👤 **${name}**\n🆔 \`${targetId}\`\n💰 Баланс: $${bal}`, {
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '💰 Выдать', callback_data: `admin:quick_give:${targetId}` }, { text: '💸 Списать', callback_data: `admin:quick_take:${targetId}` }],
+              [{ text: '⚡ Установить', callback_data: `admin:quick_set:${targetId}` }],
+              [{ text: '🔙 Назад', callback_data: 'admin:users' }]
+            ]
+          }
+        });
+        return ctx.answerCbQuery();
+      }
+      
+      if (data.startsWith('admin:quick_set:')) {
+        const targetId = data.split(':')[2];
+        session.state = 'set_amount';
+        session.targetId = targetId;
+        await ctx.answerCbQuery();
+        return ctx.reply(`⚡ Введите новый баланс для ${targetId}:`);
+      }
+      
+      if (data === 'admin:give') {
+        session.state = 'give_id';
+        await ctx.answerCbQuery();
+        return ctx.reply('💰 Введите ID пользователя:');
+      }
+      
+      if (data === 'admin:take') {
+        session.state = 'take_id';
+        await ctx.answerCbQuery();
+        return ctx.reply('💸 Введите ID пользователя:');
+      }
+      
+      if (data === 'admin:set') {
+        session.state = 'set_id';
+        await ctx.answerCbQuery();
+        return ctx.reply('⚡ Введите ID пользователя:');
+      }
+      
+      if (data === 'admin:find') {
+        session.state = 'find_id';
+        await ctx.answerCbQuery();
+        return ctx.reply('🔍 Введите ID пользователя для поиска:');
+      }
+      
+      if (data === 'admin:addme') {
+        session.state = 'addme_amount';
+        await ctx.answerCbQuery();
+        return ctx.reply(`💰➕ Введите сумму для пополнения вашего баланса (ID: ${userId}):`);
+      }
+      
+      if (data === 'admin:obnul') {
+        await ctx.editMessageText('🗑 **Вы уверены?** Это обнулит ВСЕ балансы, ставки и промокоды!', {
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '✅ Да, обнулить всё', callback_data: 'admin:obnul_confirm' }],
+              [{ text: '❌ Отмена', callback_data: 'admin:back' }]
+            ]
+          }
+        });
+        return ctx.answerCbQuery();
+      }
+      
+      if (data === 'admin:obnul_confirm') {
+        const result = await sendToServer('/admin/obnul', { secret: ADMIN_SECRET });
+        if (result.ok) {
+          await ctx.editMessageText('✅ Всё обнулено!', { reply_markup: backKeyboard() });
+        } else {
+          await ctx.editMessageText(`❌ Ошибка: ${result.error}`, { reply_markup: backKeyboard() });
+        }
+        return ctx.answerCbQuery();
+      }
+      
+      if (data === 'admin:back') {
+        session.state = 'idle';
+        await ctx.answerCbQuery();
+        try { await ctx.deleteMessage(); } catch(e) {}
+        return ctx.reply(mainMenuText(), { parse_mode: 'Markdown', reply_markup: mainMenuKeyboard() });
+      }
+      
+      if (data === 'admin:logout') {
+        session.authenticated = false;
+        session.state = 'idle';
+        await ctx.editMessageText('🚪 Вы вышли. Введите пароль для повторного входа.');
+        return ctx.answerCbQuery();
+      }
+    });
+    
+    bot.launch().then(() => console.log('🤖 Admin bot started'));
+    console.log('🤖 Admin bot initialized');
+  } catch (e) {
+    console.error('Bot init error:', e.message);
+  }
+}
