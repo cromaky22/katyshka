@@ -6,7 +6,6 @@
   var _listeners = [];
   var _socketLoading = false;
   var _socketCallbacks = [];
-  var _syncTimeout = null;
 
   function ensureSocketIO(cb){
     if(window.io) return cb();
@@ -31,6 +30,9 @@
       if(tg && tg.initDataUnsafe && tg.initDataUnsafe.user){
         return String(tg.initDataUnsafe.user.id);
       }
+      if(tg && tg.initDataUnsafe && tg.initDataUnsafe.receiver){
+        return String(tg.initDataUnsafe.receiver.id);
+      }
     }catch(e){}
     return null;
   }
@@ -43,22 +45,20 @@
     });
   }
 
-  function syncToServer(newBal){
+  function sendToServer(data){
     if(!_userId) return;
-    if(_syncTimeout) clearTimeout(_syncTimeout);
-    _syncTimeout = setTimeout(function(){
-      fetch('/api/users', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({id: _userId, balance: newBal})
-      }).catch(function(){});
-    }, 100);
+    fetch('/api/users', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(Object.assign({id: _userId}, data))
+    }).catch(function(){});
   }
 
   function loadFromServer(){
     _userId = getUserId();
     if(!_userId){
-      console.warn('⚠️ No Telegram user ID');
+      console.warn('⚠️ No Telegram user ID — open in Telegram');
+      updateDOM(0);
       return Promise.resolve();
     }
     return fetch('/api/users?id=' + encodeURIComponent(_userId))
@@ -73,6 +73,7 @@
         _listeners = [];
       })
       .catch(function(){
+        updateDOM(_balance);
         _ready = true;
         _listeners.forEach(function(fn){ fn(_balance); });
         _listeners = [];
@@ -83,7 +84,8 @@
     if(_socket) return;
     ensureSocketIO(function(){
       try{
-        _socket = io({query: {userId: getUserId(), balance: _balance}});
+        var uid = getUserId();
+        _socket = io({query: {userId: uid, balance: _balance}});
         _socket.on('balance_update', function(data){
           if(data.userId === getUserId() && data.balance !== undefined){
             _balance = Math.round(parseFloat(data.balance) * 100) / 100;
@@ -109,21 +111,21 @@
       if(isNaN(n)) return;
       _balance = n;
       updateDOM(n);
-      syncToServer(n);
+      sendToServer({balance: n});
     },
     add: function(amount){
       var n = Math.round((_balance + Number(amount)) * 100) / 100;
       if(isNaN(n)) return;
       _balance = n;
       updateDOM(n);
-      syncToServer(n);
+      sendToServer({balance: n});
     },
     deduct: function(amount){
       var n = Math.round((_balance - Number(amount)) * 100) / 100;
       if(isNaN(n)) return;
       _balance = n;
       updateDOM(n);
-      syncToServer(n);
+      sendToServer({balance: n});
     },
     sync: function(newBal){
       _balance = Math.round(parseFloat(newBal) * 100) / 100;

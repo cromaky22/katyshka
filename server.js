@@ -19,12 +19,18 @@ app.get('/api/users', (req, res) => {
 });
 
 app.post('/api/users', (req, res) => {
-  const { id, balance } = req.body;
+  const { id, balance, first_name, last_name, username, avatar } = req.body;
   if (!id) return res.status(400).json({ error: 'Missing id' });
+  if (!users[id]) users[id] = { balance: 0 };
   if (balance !== undefined) {
-    setBalance(id, parseFloat(balance) || 0);
+    users[id].balance = Math.round(parseFloat(balance) * 100) / 100;
   }
-  res.json({ ok: true, balance: getBalance(id) });
+  if (first_name !== undefined) users[id].first_name = first_name;
+  if (last_name !== undefined) users[id].last_name = last_name;
+  if (username !== undefined) users[id].username = username;
+  if (avatar !== undefined) users[id].avatar = avatar;
+  saveData();
+  res.json({ ok: true, balance: users[id].balance });
 });
 
 // === DATABASE (in-memory with file persistence) ===
@@ -32,7 +38,14 @@ const fs = require('fs');
 const DATA_FILE = './data.json';
 
 let users = {};
-let promos = {};
+let promos = {
+  '1': 200.00,
+  '2': 200.00,
+  '3': 200.00,
+  '4': 200.00,
+  '5': 200.00,
+  '6': 200.00
+};
 let activated = {};
 let transactions = [];
 

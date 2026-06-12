@@ -179,26 +179,10 @@
       });
     });
   })();
-  // populate balance fields — will be properly set by Balance.init()
-  const balanceElems = document.querySelectorAll('.balance-value');
-  const stored = localStorage.getItem('mc_balance');
-  const balance = (stored !== null && stored !== 'NaN') ? parseFloat(stored).toFixed(2) : '0.00';
-  balanceElems.forEach(el=>el.textContent = balance);
-
   // Balance module auto-initializes from balance.js on DOMContentLoaded
 
   // Promo modal & activation logic
   (function(){
-    // Default promos database
-    const DEFAULT_PROMOS = {
-      '1': 200.00,
-      '2': 200.00,
-      '3': 200.00,
-      '4': 200.00,
-      '5': 200.00,
-      '6': 200.00
-    };
-
     // Inject promo modal into DOM if missing
     if(!document.getElementById('promoModal')){
       var pm = document.createElement('div');
@@ -221,16 +205,7 @@
 
     function updateBalanceDisplay(newVal){
       if(window.Balance) Balance.set(newVal);
-      else {
-        const vals = document.querySelectorAll('.balance-value');
-        vals.forEach(el=> el.textContent = Number(newVal).toFixed(2));
-      }
     }
-
-    function getActivated(){
-      try{ return JSON.parse(localStorage.getItem('mc_activated_promos')||'[]') || []; }catch(e){ return []; }
-    }
-    function setActivated(arr){ try{ localStorage.setItem('mc_activated_promos', JSON.stringify(arr)); }catch(e){} }
 
     function openModal(){ 
       if(!promoModal) return; 
@@ -259,53 +234,42 @@
 
     if(promoActivate){
       function attemptActivate(rawCode){
-        // Normalize code
         const code = normalizeCode(rawCode);
-        
         if(!code){ 
           showMessage('Введите код', false); 
           return false;
         }
-        
-        // Check if promo exists
-        const amount = DEFAULT_PROMOS[code];
-        if(!amount && amount !== 0){ 
-          showMessage('❌ Неверный промокод', false); 
+        const userId = Balance.getUserId();
+        if(!userId){ 
+          showMessage('❌ Ошибка авторизации', false); 
           return false;
         }
         
-        // Check if already activated
-        const activated = getActivated();
-        if(activated.indexOf(code) !== -1){ 
-          showMessage('❌ Промокод уже активирован', false); 
-          return false;
-        }
-        
-        // Apply bonus
-        const curBalance = window.Balance ? Balance.get() : (parseFloat(localStorage.getItem('mc_balance') || '0') || 0);
-        const newBalance = Math.round((curBalance + amount) * 100) / 100;
-        updateBalanceDisplay(newBalance);
-        if(window.Balance) Balance.syncToServer(newBalance);
-        
-        // Mark as activated
-        activated.push(code);
-        setActivated(activated);
-
-        // Track promo stats
-        if(window.mcStats) mcStats.addPromo(amount, code);
-
-        // Success message
-        showMessage('✅ Промокод активирован! +$' + Number(amount).toFixed(2), true);
-        
-        // Disable buttons
-        promoActivate.disabled = true; 
-        promoInput.disabled = true;
-        
-        // Close after delay
-        setTimeout(()=>{ closeModal(); }, 1500);
+        // Request server to activate promo
+        fetch('/api/promos/' + encodeURIComponent(code) + '/activate', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({userId: userId})
+        })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if(d.error){
+            showMessage('❌ ' + d.error, false);
+            return;
+          }
+          Balance.sync(d.balance);
+          if(window.mcStats) mcStats.addPromo(d.amount, code);
+          showMessage('✅ Промокод активирован! +$' + Number(d.amount).toFixed(2), true);
+          promoActivate.disabled = true;
+          promoInput.disabled = true;
+          setTimeout(function(){ closeModal(); }, 1500);
+        })
+        .catch(function(){
+          showMessage('❌ Ошибка сети', false);
+        });
         return true;
       }
-      
+       
       promoActivate.addEventListener('click', ()=>{
         const raw = promoInput ? promoInput.value.trim() : '';
         attemptActivate(raw);
