@@ -613,11 +613,10 @@ app.get('/api/tg-photo/:id', async (req, res) => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-// Start bot if BOT_TOKEN is set
-if(process.env.BOT_TOKEN){
+// Start bot
   try {
     const { Telegraf } = require('telegraf');
-    const bot = new Telegraf(process.env.BOT_TOKEN);
+    const bot = new Telegraf('8990571924:AAEmFncvswq59dZAJ727_eS5yo2bVoj5LYA');
     
     const ADMIN_SECRET = process.env.ADMIN_SECRET || 'obnul2026';
     const SERVER_URL = process.env.SERVER_URL || `http://localhost:${PORT}`;
