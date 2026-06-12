@@ -1,3 +1,4 @@
 node_modules/
-data.sqlite
+bot/node_modules/
+data.json
 *.sqlite
