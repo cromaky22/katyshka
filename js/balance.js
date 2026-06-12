@@ -61,7 +61,7 @@
       .then(function(d){
         if(d && d.balance !== undefined){
           var serverBal = Math.round(parseFloat(d.balance) * 100) / 100;
-          if(serverBal > _balance) _balance = serverBal;
+          _balance = serverBal;
         }
         localStorage.setItem('mc_balance', fmt(_balance));
         updateDOM(_balance);
@@ -97,19 +97,23 @@
         _socket.on('balance_update', function(data){
           if(data.userId === getUserId() && data.balance !== undefined){
             var serverBal = Math.round(parseFloat(data.balance) * 100) / 100;
-            if(serverBal > _balance) _balance = serverBal;
+            _balance = serverBal;
+            _pendingTotal = 0;
             localStorage.setItem('mc_balance', fmt(_balance));
             updateDOM(_balance);
           }
         });
         _socket.on('admin:obnul', function(){
           _balance = 0;
+          _pendingTotal = 0;
           localStorage.setItem('mc_balance', '0.00');
           updateDOM(0);
         });
       }catch(e){}
     });
   }
+
+  var _pendingTotal = 0;
 
   window.Balance = {
     init: function(){
@@ -119,31 +123,39 @@
     initOffline: function(){
       return loadFromServer();
     },
-    get: function(){ return _balance; },
+    get: function(){ return _balance - _pendingTotal; },
+    getRaw: function(){ return _balance; },
     set: function(v){
       var n = Math.round(Number(v) * 100) / 100;
       if(isNaN(n)) return;
+      if(n < _pendingTotal) n = _pendingTotal;
       _balance = n;
-      localStorage.setItem('mc_balance', fmt(n));
-      updateDOM(n);
+      localStorage.setItem('mc_balance', fmt(_balance));
+      updateDOM(_balance - _pendingTotal);
     },
     add: function(amount){
       var n = Math.round((_balance + Number(amount)) * 100) / 100;
       if(isNaN(n)) return;
       _balance = n;
-      localStorage.setItem('mc_balance', fmt(n));
-      updateDOM(n);
+      localStorage.setItem('mc_balance', fmt(_balance));
+      updateDOM(_balance - _pendingTotal);
     },
     deduct: function(amount){
-      var n = Math.round((_balance - Number(amount)) * 100) / 100;
-      if(isNaN(n)) return;
-      _balance = n;
-      localStorage.setItem('mc_balance', fmt(n));
-      updateDOM(n);
+      var n = Number(amount);
+      _pendingTotal += n;
+      updateDOM(_balance - _pendingTotal);
+    },
+    confirmDeduct: function(amount){
+      var n = Number(amount);
+      _balance = Math.round((_balance - n) * 100) / 100;
+      _pendingTotal -= n;
+      if(_pendingTotal < 0) _pendingTotal = 0;
+      localStorage.setItem('mc_balance', fmt(_balance));
+      updateDOM(_balance - _pendingTotal);
     },
     sync: function(newBal){
-      var serverBal = Math.round(parseFloat(newBal) * 100) / 100;
-      if(serverBal > _balance) _balance = serverBal;
+      _balance = Math.round(parseFloat(newBal) * 100) / 100;
+      _pendingTotal = 0;
       localStorage.setItem('mc_balance', fmt(_balance));
       updateDOM(_balance);
     },

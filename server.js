@@ -468,12 +468,11 @@ function spinWheel() {
 
   const results = {};
   for (const uid in wheel.bets) {
-    const totalBet = wheel.bets[uid].reduce((s, b) => s + b.amount, 0);
     let win = 0;
     wheel.bets[uid].forEach(b => { if (betWins(b.type, num)) win += b.amount * getCoef(b.type); });
     win = Math.round(win * 100) / 100;
     results[uid] = win;
-    setBalance(uid, getBalance(uid) - totalBet + win);
+    setBalance(uid, getBalance(uid) + win);
   }
 
   wheel.result = { num, color, index: idx };
@@ -483,6 +482,9 @@ function spinWheel() {
   const balances = {};
   for (const uid in wheel.bets) { balances[uid] = getBalance(uid); }
   io.emit('wheel:spin', { result: wheel.result, allBets, results, history: wheel.history, balances });
+  for (const uid in balances) {
+    io.emit('balance_update', { userId: uid, balance: balances[uid] });
+  }
 
   setTimeout(() => {
     wheel.bets = {};
@@ -514,12 +516,14 @@ io.on('connection', (socket) => {
     }
     if (!wheel.bets[userId]) wheel.bets[userId] = [];
     wheel.bets[userId].push({ type, amount, playerName: playerName || 'Player', playerAvatar: playerAvatar || '' });
+    setBalance(userId, serverBalance - amount);
+    io.emit('balance_update', { userId, balance: getBalance(userId) });
     const allBets = [];
     for (const uid in wheel.bets) {
       wheel.bets[uid].forEach(b => allBets.push({ userId: uid, type: b.type, amount: b.amount, playerName: b.playerName, playerAvatar: b.playerAvatar || '' }));
     }
     io.emit('wheel:betsUpdate', { allBets });
-    socket.emit('wheel:myBets', { myBets: wheel.bets[userId] || [], balance: serverBalance });
+    socket.emit('wheel:myBets', { myBets: wheel.bets[userId] || [], balance: getBalance(userId) });
   });
 });
 

@@ -297,8 +297,11 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   socket.on('wheel:myBets', (data) => {
-    if (data.myBets) { currentBets = data.myBets; updateMyBetsDisplay(); }
-    if (data.balance !== undefined) Balance.sync(data.balance);
+    if (data.myBets) {
+      currentBets = data.myBets;
+      updateMyBetsDisplay();
+      if (data.balance !== undefined) Balance.sync(data.balance);
+    }
   });
 
   socket.on('wheel:spin', (data) => {
