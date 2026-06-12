@@ -6,6 +6,7 @@
   var _listeners = [];
   var _socketLoading = false;
   var _socketCallbacks = [];
+  var _syncTimeout = null;
 
   function ensureSocketIO(cb){
     if(window.io) return cb();
@@ -49,6 +50,18 @@
     });
   }
 
+  function syncToServer(newBal){
+    if(!_userId) return;
+    if(_syncTimeout) clearTimeout(_syncTimeout);
+    _syncTimeout = setTimeout(function(){
+      fetch('/api/users', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({id: _userId, balance: newBal})
+      }).catch(function(){});
+    }, 100);
+  }
+
   function loadFromServer(){
     _userId = getUserId();
     var cached = localStorage.getItem('mc_balance');
@@ -63,8 +76,7 @@
       .then(function(r){ return r.json(); })
       .then(function(d){
         if(d && d.balance !== undefined){
-          var serverBal = Math.round(parseFloat(d.balance) * 100) / 100;
-          _balance = serverBal;
+          _balance = Math.round(parseFloat(d.balance) * 100) / 100;
         }
         localStorage.setItem('mc_balance', fmt(_balance));
         updateDOM(_balance);
@@ -83,15 +95,6 @@
       });
   }
 
-  function syncToServer(newBal){
-    if(!_userId) return;
-    fetch('/api/users', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({id: _userId, balance: newBal})
-    }).catch(function(){});
-  }
-
   function initSocket(){
     if(_socket) return;
     ensureSocketIO(function(){
@@ -99,23 +102,19 @@
         _socket = io({query: {userId: getUserId(), balance: _balance}});
         _socket.on('balance_update', function(data){
           if(data.userId === getUserId() && data.balance !== undefined){
-            var serverBal = Math.round(parseFloat(data.balance) * 100) / 100;
-            _balance = serverBal;
+            _balance = Math.round(parseFloat(data.balance) * 100) / 100;
             localStorage.setItem('mc_balance', fmt(_balance));
             updateDOM(_balance);
           }
         });
         _socket.on('admin:obnul', function(){
           _balance = 0;
-          _pendingTotal = 0;
           localStorage.setItem('mc_balance', '0.00');
           updateDOM(0);
         });
       }catch(e){}
     });
   }
-
-  var _pendingTotal = 0;
 
   window.Balance = {
     init: function(){
@@ -125,46 +124,39 @@
     initOffline: function(){
       return loadFromServer();
     },
-    get: function(){ return _balance - _pendingTotal; },
-    getRaw: function(){ return _balance; },
+    get: function(){ return _balance; },
     set: function(v){
       var n = Math.round(Number(v) * 100) / 100;
       if(isNaN(n)) return;
-      if(n < _pendingTotal) n = _pendingTotal;
       _balance = n;
-      localStorage.setItem('mc_balance', fmt(_balance));
-      updateDOM(_balance - _pendingTotal);
-      syncToServer(_balance);
+      localStorage.setItem('mc_balance', fmt(n));
+      updateDOM(n);
+      syncToServer(n);
     },
     add: function(amount){
       var n = Math.round((_balance + Number(amount)) * 100) / 100;
       if(isNaN(n)) return;
       _balance = n;
-      localStorage.setItem('mc_balance', fmt(_balance));
-      updateDOM(_balance - _pendingTotal);
-      syncToServer(_balance);
+      localStorage.setItem('mc_balance', fmt(n));
+      updateDOM(n);
+      syncToServer(n);
     },
     deduct: function(amount){
-      var n = Number(amount);
-      _pendingTotal += n;
-      updateDOM(_balance - _pendingTotal);
-    },
-    confirmDeduct: function(amount){
-      var n = Number(amount);
-      _balance = Math.round((_balance - n) * 100) / 100;
-      _pendingTotal -= n;
-      if(_pendingTotal < 0) _pendingTotal = 0;
-      localStorage.setItem('mc_balance', fmt(_balance));
-      updateDOM(_balance - _pendingTotal);
-      syncToServer(_balance);
+      var n = Math.round((_balance - Number(amount)) * 100) / 100;
+      if(isNaN(n)) return;
+      _balance = n;
+      localStorage.setItem('mc_balance', fmt(n));
+      updateDOM(n);
+      syncToServer(n);
     },
     sync: function(newBal){
       _balance = Math.round(parseFloat(newBal) * 100) / 100;
-      _pendingTotal = 0;
       localStorage.setItem('mc_balance', fmt(_balance));
       updateDOM(_balance);
     },
-    syncToServer: syncToServer,
+    syncToServer: function(){
+      syncToServer(_balance);
+    },
     ready: function(fn){
       if(_ready) fn(_balance);
       else _listeners.push(fn);

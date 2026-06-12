@@ -174,7 +174,6 @@ document.addEventListener('DOMContentLoaded', function(){
       }
     }
     currentBets.push({ type, amount: stake });
-    Balance.deduct(stake);
     updateMyBetsDisplay();
     gameStatusEl.textContent = '';
     if(window.mcStats) mcStats.addBet(stake, 'Wheel', getBetLabel(type));
