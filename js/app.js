@@ -466,7 +466,7 @@
       const tg = window.Telegram && window.Telegram.WebApp;
       if(tg && tg.initDataUnsafe && tg.initDataUnsafe.user) return String(tg.initDataUnsafe.user.id);
     }catch(e){}
-    return localStorage.getItem('tg_uid') || localStorage.getItem('mc_user_id') || '—';
+    return '—';
   }
 
   function close(){ dd.classList.remove('open'); if(overlay) overlay.classList.remove('open'); }
