@@ -209,15 +209,24 @@ document.addEventListener('DOMContentLoaded', function(){
       const winAmount = Math.round(stake * mult * 100) / 100;
       const profit = winAmount - stake;
 
-      if(mult >= 1){
+      if(mult > 1){
+        // Win — get back more than stake
         setBalance(getBalance() + winAmount);
-        if(mult > 1) recordStat('win', winAmount, 'Plinko '+mult.toFixed(1)+'x');
-        gameStatus.innerHTML = `<span style="font-size:24px;font-weight:900">${mult.toFixed(1)}x</span><br>+$${profit > 0 ? profit.toFixed(2) : '0.00'}`;
+        recordStat('win', winAmount, 'Plinko '+mult.toFixed(1)+'x');
+        gameStatus.innerHTML = `<span style="font-size:24px;font-weight:900">${mult.toFixed(1)}x</span><br>+$${profit.toFixed(2)}`;
+        gameStatus.className = 'game-status win';
+        addHistory(true, mult);
+      } else if(mult === 1){
+        // Exact return — get stake back
+        setBalance(getBalance() + winAmount);
+        gameStatus.innerHTML = `<span style="font-size:24px;font-weight:900">1.0x</span><br>Возврат $${winAmount.toFixed(2)}`;
         gameStatus.className = 'game-status win';
         addHistory(true, mult);
       } else {
-        recordStat('loss', stake, 'Plinko');
-        gameStatus.innerHTML = `<span style="font-size:24px;font-weight:900">${mult.toFixed(1)}x</span><br>-$${stake.toFixed(2)}`;
+        // Partial return — get back less than stake (e.g. 0.6x = $0.60 from $1)
+        setBalance(getBalance() + winAmount);
+        recordStat('loss', stake - winAmount, 'Plinko '+mult.toFixed(1)+'x');
+        gameStatus.innerHTML = `<span style="font-size:24px;font-weight:900">${mult.toFixed(1)}x</span><br>-$${Math.abs(profit).toFixed(2)} (вернуто $${winAmount.toFixed(2)})`;
         gameStatus.className = 'game-status lose';
         addHistory(false, mult);
       }
