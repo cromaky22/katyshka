@@ -320,7 +320,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function addHistory(won, mult){
     history.unshift({won, mult});
-    if(history.length > 30) history.pop();
+    if(history.length > 50) history.pop();
     renderHistory();
   }
 
