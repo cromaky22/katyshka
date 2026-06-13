@@ -20,7 +20,8 @@
     .bonus-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none}
     .timer-big{font-size:42px;font-weight:900;color:#ffd700;margin:12px 0 4px}
     .timer-label{font-size:12px;color:var(--muted)}
-    .profile-icon{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.15)}
+     .subscribe-section{margin-top:20px}
+     .subscribe-section .btn{display:inline-block;text-decoration:none;background:linear-gradient(135deg,#1559ff,#2ee36b);color:#fff;padding:12px 24px;border-radius:12px;font-weight:700;border:none;cursor:pointer;font-size:14px}
   </style>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -50,8 +51,16 @@
       <div class="timer-label">до следующего бонуса</div>
     </div>
 
-    <button class="bonus-btn" id="spinBtn">🎰 КРУТИТЬ</button>
-  </main>
+     <button class="bonus-btn" id="spinBtn">🎰 КРУТИТЬ</button>
+     
+     <!-- Subscribe reward -->
+     <div class="subscribe-section" id="subscribeSection" style="margin-top:20px">
+       <div class="bonus-sub" style="margin-bottom:10px">💎 Подпишись на канал и получи $0.3!</div>
+       <a href="https://t.me/milfacasino" target="_blank" class="btn" id="subscribeBtn" style="display:inline-block;text-decoration:none;background:linear-gradient(135deg,#1559ff,#2ee36b);color:#fff;padding:12px 24px;border-radius:12px;font-weight:700">📢 ПОДПИСАТЬСЯ</a>
+       <button class="btn" id="claimSubBtn" style="display:none;margin-top:10px;background:linear-gradient(135deg,#ffd700,#ff6b9d);color:#000;padding:12px 24px;border-radius:12px;font-weight:700;border:none;cursor:pointer">🎁 ЗАБРАТЬ $0.3</button>
+       <div class="bonus-status" id="subStatus" style="display:none;margin-top:10px"></div>
+     </div>
+   </main>
 
   <nav class="bottom-nav">
     <a href="home.html#games" class="nav-item" data-name="games"><span class="icon">🎮</span><span class="label">Games</span></a>
@@ -281,24 +290,76 @@
        updateStatus();
      }
 
-    // Load profile photo
-    try {
-      var tg = window.Telegram && window.Telegram.WebApp;
-      if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        var u = tg.initDataUnsafe.user;
-        var pImg = document.getElementById('profileImg');
-        if (pImg) {
-          if (u.photo_url) {
-            pImg.src = u.photo_url;
-            pImg.style.display = '';
-          } else if (u.id) {
-            pImg.src = '/api/tg-photo/' + u.id;
-            pImg.style.display = '';
-          }
-        }
-      }
-    } catch(e) {}
-  })();
-  </script>
+     // Load profile photo
+     try {
+       var tg = window.Telegram && window.Telegram.WebApp;
+       if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+         var u = tg.initDataUnsafe.user;
+         var pImg = document.getElementById('profileImg');
+         if (pImg) {
+           if (u.photo_url) {
+             pImg.src = u.photo_url;
+             pImg.style.display = '';
+           } else if (u.id) {
+             pImg.src = '/api/tg-photo/' + u.id;
+             pImg.style.display = '';
+           }
+         }
+       }
+     } catch(e) {}
+
+     // === SUBSCRIBE REWARD ===
+     var CHANNEL_ID = '-1001234567890'; // Will be set from server
+     var SUB_REWARD = 0.3;
+     var subBtn = document.getElementById('subscribeBtn');
+     var claimSubBtn = document.getElementById('claimSubBtn');
+     var subStatus = document.getElementById('subStatus');
+
+     function checkSubStatus() {
+       var claimed = localStorage.getItem('sub_claimed_' + uid);
+       if (claimed) {
+         claimSubBtn.style.display = 'none';
+         subBtn.style.display = 'none';
+         subStatus.style.display = 'block';
+         subStatus.textContent = '✅ Награда уже получена!';
+         subStatus.className = 'bonus-status win';
+       }
+     }
+
+     claimSubBtn.addEventListener('click', async function() {
+       try {
+         var resp = await fetch('/api/bonus/subscribe', {
+           method: 'POST',
+           headers: {'Content-Type': 'application/json'},
+           body: JSON.stringify({userId: uid})
+         });
+         var data = await resp.json();
+         if (data.ok) {
+           localStorage.setItem('sub_claimed_' + uid, '1');
+           var newBal = Math.round((Balance.get() + SUB_REWARD) * 100) / 100;
+           Balance.set(newBal);
+           claimSubBtn.style.display = 'none';
+           subBtn.style.display = 'none';
+           subStatus.style.display = 'block';
+           subStatus.textContent = '🎉 Вы получили $0.3!';
+           subStatus.className = 'bonus-status win';
+         } else if (data.error === 'already_claimed') {
+           localStorage.setItem('sub_claimed_' + uid, '1');
+           checkSubStatus();
+         } else {
+           subStatus.style.display = 'block';
+           subStatus.textContent = '❌ ' + (data.error || 'Ошибка');
+           subStatus.className = 'bonus-status';
+         }
+       } catch(e) {
+         subStatus.style.display = 'block';
+         subStatus.textContent = '❌ Ошибка соединения';
+         subStatus.className = 'bonus-status';
+       }
+     });
+
+     checkSubStatus();
+   })();
+   </script>
 </body>
 </html>

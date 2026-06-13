@@ -142,6 +142,27 @@ app.post('/api/admin/take', (req, res) => {
   saveData();
   res.json({ ok: true, balance: users[userId].balance });
 });
+// === SUBSCRIBE REWARD ===
+app.post('/api/bonus/subscribe', async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: 'Missing userId' });
+  
+  // Check if already claimed
+  if (!users[userId]) users[userId] = { balance: 0 };
+  if (users[userId].subClaimed) return res.status(400).json({ error: 'already_claimed' });
+  
+  // Give reward
+  const reward = 0.3;
+  users[userId].balance = Math.round((users[userId].balance + reward) * 100) / 100;
+  users[userId].subClaimed = true;
+  saveData();
+  
+  // Notify via socket
+  io.emit('balance_update', { userId, balance: users[userId].balance });
+  
+  res.json({ ok: true, balance: users[userId].balance });
+});
+
 // === DATABASE (PostgreSQL on Railway, fallback to file) ===
 const fs = require('fs');
 const DATA_FILE = './data.json';
