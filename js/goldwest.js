@@ -1,4 +1,16 @@
 document.addEventListener('DOMContentLoaded', function(){
+  // === STATS HELPER ===
+  function recordStat(type, amount, detail){
+    try{
+      const userId = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid') || 'unknown';
+      fetch('/api/transaction', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({userId, type, amount: Math.abs(amount), detail: detail || 'GoldWest'})
+      }).catch(function(){});
+    }catch(e){}
+  }
+  
   const bombSelect = document.getElementById('bombSelect');
   const levelsArea = document.getElementById('levelsArea');
   const resultArea = document.getElementById('resultArea');
@@ -140,6 +152,7 @@ document.addEventListener('DOMContentLoaded', function(){
       resultArea.style.display = 'flex';
        resultText.textContent = '💥 Бомба! Вы проиграли';
        resultText.style.color = '#f44336';
+       recordStat('loss', stake, `GoldWest bomb at level ${lvl + 1}`);
        if(window.mcStats) mcStats.addLoss(Math.abs(stake), 'GoldWest', `Уровень ${lvl + 1}, ${bombs} бомб`);
       resultCoef.textContent = '';
       gameStatusEl.textContent = `Проиграно. Потеря: $${stake.toFixed(2)}`;
@@ -168,6 +181,7 @@ document.addEventListener('DOMContentLoaded', function(){
         gameActive = false;
      const win = Math.round(stake * currentCoef * 100) / 100;
      setBalance(getBalance() + win);
+     recordStat('win', win, `GoldWest all levels x${currentCoef.toFixed(2)}`);
      if(window.mcStats) mcStats.addWin(win, 'GoldWest', `Уровень ${lvl + 1}, ${bombs} бомб`);
      sfxWin();
         resultArea.style.display = 'flex';
@@ -210,6 +224,7 @@ document.addEventListener('DOMContentLoaded', function(){
     sfxWin(); gameActive = false;
      const win = Math.round(stake * currentCoef * 100) / 100;
      setBalance(getBalance() + win);
+     recordStat('win', win, `GoldWest cashout x${currentCoef.toFixed(2)}`);
      if(window.mcStats) mcStats.addWin(win, 'GoldWest', `Кэш-аут уровень ${level + 1}, ${bombs} бомб`);
      resultArea.style.display = 'flex';
     resultText.textContent = `🎉 Выигрыш: $${win.toFixed(2)}`;
@@ -233,6 +248,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if (getBalance() < s) { gameStatusEl.textContent='Недостаточно средств'; gameStatusEl.className='gw-status error'; return; }
      stake = s;
      setBalance(getBalance() - stake);
+     recordStat('bet', stake, `GoldWest ${bombs} bombs`);
      if(window.mcStats) mcStats.addBet(Math.abs(stake), 'GoldWest', `${bombs} бомб`);
      gameActive = true; level = 0; openedCells = []; currentCoef = 1;
     generateField(); renderLevels(); saveGame();

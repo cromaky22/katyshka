@@ -1,4 +1,16 @@
 document.addEventListener('DOMContentLoaded', function(){
+  // === STATS HELPER ===
+  function recordStat(type, amount, detail){
+    try{
+      const userId = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid') || 'unknown';
+      fetch('/api/transaction', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({userId, type, amount: Math.abs(amount), detail: detail || 'Nvuti'})
+      }).catch(function(){});
+    }catch(e){}
+  }
+  
   const probabilitySlider = document.getElementById('probabilitySlider');
   const probabilityValue = document.getElementById('probabilityValue');
   const coefficientValue = document.getElementById('coefficientValue');
@@ -138,6 +150,7 @@ document.addEventListener('DOMContentLoaded', function(){
     
      // Deduct stake
      setBalance(getBalance() - bet);
+     recordStat('bet', bet, `Nvuti ${selectedType === 0 ? 'Less' : 'More'} ${v}%`);
      if(window.mcStats) mcStats.addBet(Math.abs(bet), 'Nvuti', `${selectedType === 0 ? 'Меньше' : 'Больше'} ${v}%`);
     
     // Hide stake panel, show result panel
@@ -174,11 +187,13 @@ document.addEventListener('DOMContentLoaded', function(){
       coef: coef
     };
     
-     // Add to balance if win
+      // Add to balance if win
      if(win) {
        setBalance(getBalance() + winAmount);
+       recordStat('win', winAmount, `Nvuti won x${coef.toFixed(2)}`);
        if(window.mcStats) mcStats.addWin(winAmount, 'Nvuti', `${selectedType === 0 ? 'Меньше' : 'Больше'} ${v}%, число ${number}`);
      } else {
+       recordStat('loss', bet, `Nvuti lost`);
        if(window.mcStats) mcStats.addLoss(Math.abs(bet), 'Nvuti', `${selectedType === 0 ? 'Меньше' : 'Больше'} ${v}%, число ${number}`);
      }
     

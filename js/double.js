@@ -1,4 +1,16 @@
 document.addEventListener('DOMContentLoaded', function(){
+  // === STATS HELPER ===
+  function recordStat(type, amount, detail){
+    try{
+      const userId = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid') || 'unknown';
+      fetch('/api/transaction', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({userId, type, amount: Math.abs(amount), detail: detail || 'Double'})
+      }).catch(function(){});
+    }catch(e){}
+  }
+  
   const canvas = document.getElementById('doubleWheel');
   const ctx = canvas.getContext('2d');
   const resultLens = document.getElementById('resultLens');
@@ -194,7 +206,8 @@ document.addEventListener('DOMContentLoaded', function(){
     spinning = true;
     playBtn.disabled = true;
     betBtns.forEach(b => b.disabled = true);
-     setBalance(getBalance() - stake);
+      setBalance(getBalance() - stake);
+     recordStat('bet', stake, `Double ${selectedColor}`);
      if(window.mcStats) mcStats.addBet(Math.abs(stake), 'Double', `Цвет: ${selectedColor}`);
      resultLens.classList.remove('show');
     gameStatusEl.textContent = '';
@@ -207,12 +220,14 @@ document.addEventListener('DOMContentLoaded', function(){
 
        if (won) {
          setBalance(getBalance() + winAmt);
+         recordStat('win', winAmt, `Double won x${res.num}`);
          if(window.mcStats) mcStats.addWin(winAmt, 'Double', `Выпало x${res.num} (${res.name})`);
          gameStatusEl.textContent = `Выиграли $${winAmt.toFixed(2)}!`;
         gameStatusEl.className = 'game-status success';
         winSfx();
        } else {
          gameStatusEl.textContent = `Проиграло. Выпало ${res.label}`;
+         recordStat('loss', stake, `Double lost ${res.label}`);
          if(window.mcStats) mcStats.addLoss(Math.abs(stake), 'Double', `Выпало ${res.label}`);
          gameStatusEl.className = 'game-status error';
         loseSfx();

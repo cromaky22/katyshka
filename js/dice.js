@@ -1,4 +1,16 @@
 document.addEventListener('DOMContentLoaded', function(){
+  // === STATS HELPER ===
+  function recordStat(type, amount, detail){
+    try{
+      const userId = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid') || 'unknown';
+      fetch('/api/transaction', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({userId, type, amount: Math.abs(amount), detail: detail || 'Dice'})
+      }).catch(function(){});
+    }catch(e){}
+  }
+  
   const $ = id => document.getElementById(id);
   const diceEls = [$('dice1'), $('dice2'), $('dice3')];
   const wrapEls = [$('diceWrap1'), $('diceWrap2'), $('diceWrap3')];
@@ -249,6 +261,7 @@ document.addEventListener('DOMContentLoaded', function(){
       }
     }
      state.bets.push({ type, amount: stake });
+     recordStat('bet', stake, `Dice ${getBetLabel(type)} ${currentMode}`);
      if(window.mcStats) mcStats.addBet(Math.abs(stake), 'Dice', `${getBetLabel(type)} (${currentMode})`);
      updateBetsUI();
     gameStatusEl.textContent = '';
@@ -414,8 +427,10 @@ document.addEventListener('DOMContentLoaded', function(){
             state.bets.forEach(b => totalBet += b.amount);
              if (myRes.win > 0) {
                setBalance(getBalance() + myRes.win);
+               recordStat('win', myRes.win, `Dice won ${currentMode}`);
                if(window.mcStats) mcStats.addWin(myRes.win, 'Dice', `Выигрыш: ${getBetLabel(state.bets[0]?.type)} (${currentMode})`);
              } else if (totalBet > 0) {
+               recordStat('loss', totalBet, `Dice lost ${currentMode}`);
                if(window.mcStats) mcStats.addLoss(totalBet, 'Dice', `Проигрыш (${currentMode})`);
              }
              showResult(nums, { win: myRes.win, bet: totalBet });

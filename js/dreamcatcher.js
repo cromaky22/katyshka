@@ -1,4 +1,16 @@
 document.addEventListener('DOMContentLoaded', function() {
+  // === STATS HELPER ===
+  function recordStat(type, amount, detail){
+    try{
+      const userId = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid') || 'unknown';
+      fetch('/api/transaction', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({userId, type, amount: Math.abs(amount), detail: detail || 'DreamCatcher'})
+      }).catch(function(){});
+    }catch(e){}
+  }
+  
   const canvas = document.getElementById('dreamWheel');
   const betsPanel = document.getElementById('betsPanel');
   const playBtn = document.getElementById('playBtn');
@@ -240,6 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
      currentStake = stake;
      setBalance(getBalance() - stake);
+     recordStat('bet', stake, `DreamCatcher x${selectedBet}`);
      if(window.mcStats) mcStats.addBet(Math.abs(stake), 'DreamCatcher', `Ставка на x${selectedBet}`);
      gameState = 'spinning';
 
@@ -297,8 +310,10 @@ document.addEventListener('DOMContentLoaded', function() {
       const payouts = { 1: 2.0, 2: 3.0, 5: 5.0, 10: 10.0, 20: 20.0, 40: 40.0 };
        winAmount = Math.round(currentStake * (payouts[betValue] || 0) * (1 - HOUSE_EDGE) * 100) / 100;
        setBalance(getBalance() + winAmount);
-        if(window.mcStats) mcStats.addWin(winAmount, 'DreamCatcher', `Выпало x${finalNum}`);
+       recordStat('win', winAmount, `DreamCatcher won x${finalNum}`);
+       if(window.mcStats) mcStats.addWin(winAmount, 'DreamCatcher', `Выпало x${finalNum}`);
      } else {
+       recordStat('loss', currentStake, `DreamCatcher lost x${finalNum}`);
        if(window.mcStats) mcStats.addLoss(currentStake, 'DreamCatcher', `Выпало x${finalNum}, ставка на x${betValue}`);
      }
 

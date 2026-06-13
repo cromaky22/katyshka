@@ -1,4 +1,16 @@
 document.addEventListener('DOMContentLoaded', function(){
+  // === STATS HELPER ===
+  function recordStat(type, amount, detail){
+    try{
+      const userId = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid') || 'unknown';
+      fetch('/api/transaction', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({userId, type, amount: Math.abs(amount), detail: detail || 'Tower'})
+      }).catch(function(){});
+    }catch(e){}
+  }
+  
   const stakeInput = document.getElementById('stakeInput');
   const quickBetBtns = document.querySelectorAll('.quick-bet-btn');
   const halfBtn = document.getElementById('halfBtn');
@@ -241,6 +253,7 @@ document.addEventListener('DOMContentLoaded', function(){
    collectBtn.addEventListener('click', () => {
      if(window.mcStats) mcStats.addWin(currentWinnings, 'Tower', `Уровень ${currentLevel}, ${bombCount} бомб`);
      setBalance(getBalance() + currentWinnings);
+     recordStat('win', currentWinnings, `Tower level ${currentLevel}`);
     gameStatus.textContent = `Вы забрали $${currentWinnings.toFixed(2)}`;
     gameStatus.className = 'game-status success';
     // Добавляем в историю ставку на уровне, где остановился
@@ -275,6 +288,7 @@ document.addEventListener('DOMContentLoaded', function(){
     gameState = 'playing';
 
      setBalance(getBalance() - stake);
+     recordStat('bet', stake, `Tower ${bombCount} bombs`);
      if(window.mcStats) mcStats.addBet(Math.abs(stake), 'Tower', `${bombCount} бомб`);
      generateTower();
 
@@ -312,9 +326,10 @@ document.addEventListener('DOMContentLoaded', function(){
     const cell = towerData[levelIndex][cellCol];
     cell.opened = true;
     
-     if(cell.isBomb) {
-       gameStatus.textContent = '✗ Вы попали на бомбу!';
-       if(window.mcStats) mcStats.addLoss(Math.abs(currentBet), 'Tower', `Уровень ${levelIndex + 1}, ${bombCount} бомб`);
+      if(cell.isBomb) {
+        gameStatus.textContent = '✗ Вы попали на бомбу!';
+        recordStat('loss', currentBet, `Tower bomb at level ${levelIndex + 1}`);
+        if(window.mcStats) mcStats.addLoss(Math.abs(currentBet), 'Tower', `Уровень ${levelIndex + 1}, ${bombCount} бомб`);
        gameStatus.className = 'game-status error';
       gameState = 'result';
       showAllBombs = true; // Сразу показываем остальные бомбы
