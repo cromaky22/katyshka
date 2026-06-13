@@ -77,8 +77,22 @@ html,body{
 .pd-overlay.open{display:block}
 .content{padding:20px;padding-bottom:90px;background:transparent}
 
-/* ===== ADAPTIVE BOTTOM NAV FOR MOBILE ===== */
+/* ===== ADAPTIVE FOR MOBILE ===== */
 @media(max-width:480px){
+  .app-header{padding:8px 10px;gap:8px}
+  .app-header .header-title{font-size:14px;margin-right:0;text-align:center}
+  .app-header .right-controls{gap:6px}
+  .balance-pill{padding:4px 8px;gap:4px}
+  .balance-pill .balance-value{font-size:13px}
+  .balance-pill .wallet-icon{font-size:12px}
+  .balance-pill .currency{font-size:11px}
+  .app-header .profile{width:34px;height:34px}
+  .app-header .profile img{width:34px;height:34px}
+  .profile-dropdown{width:200px;right:-8px;top:46px}
+  .pd-header{padding:10px 12px}
+  .pd-id-value{font-size:13px}
+  .pd-btn{padding:10px 12px;font-size:13px}
+  .content{padding:12px;padding-bottom:80px}
   .bottom-nav{bottom:10px;height:56px;padding:6px 10px;gap:4px;max-width:95%}
   .bottom-nav .nav-item{min-width:44px;padding:4px 6px}
   .bottom-nav .nav-item .icon{font-size:18px}
@@ -96,19 +110,6 @@ html,body{
   .app-header .profile img{width:30px;height:30px}
   .profile-dropdown{width:180px}
   .content{padding:8px;padding-bottom:60px}
-}
-
-/* ===== ADAPTIVE BOTTOM NAV FOR MOBILE ===== */
-@media(max-width:480px){
-  .bottom-nav{bottom:10px;height:56px;padding:6px 10px;gap:4px;max-width:95%}
-  .bottom-nav .nav-item{min-width:44px;padding:4px 6px}
-  .bottom-nav .nav-item .icon{font-size:18px}
-  .bottom-nav .nav-item .label{font-size:9px;margin-top:2px}
-  .bottom-nav .nav-item.center{width:56px;height:56px;transform:translateY(-12px)}
-  .bottom-nav .nav-item.center .icon{font-size:24px}
-}
-
-@media(max-width:360px){
   .bottom-nav{bottom:8px;height:50px;padding:4px 6px;gap:2px}
   .bottom-nav .nav-item{min-width:36px;padding:3px 4px}
   .bottom-nav .nav-item .icon{font-size:16px}
@@ -116,25 +117,6 @@ html,body{
   .bottom-nav .nav-item.center{width:48px;height:48px;transform:translateY(-10px)}
   .bottom-nav .nav-item.center .icon{font-size:20px}
 }
-@media(max-width:480px){
-  .app-header{padding:8px 10px;gap:8px}
-  .app-header .header-title{font-size:14px;margin-right:0;text-align:center}
-  .app-header .right-controls{gap:6px}
-  .balance-pill{padding:4px 8px;gap:4px}
-  .balance-pill .balance-value{font-size:13px}
-  .balance-pill .wallet-icon{font-size:12px}
-  .balance-pill .currency{font-size:11px}
-  .app-header .profile{width:34px;height:34px}
-  .app-header .profile img{width:34px;height:34px}
-  .profile-dropdown{width:200px;right:-8px;top:46px}
-  .pd-header{padding:10px 12px}
-  .pd-id-value{font-size:13px}
-  .pd-btn{padding:10px 12px;font-size:13px}
-   .content{padding:12px;padding-bottom:80px}
- }
-
- /* ===== ADAPTIVE BOTTOM NAV FOR MOBILE ===== */
-.btn{background:var(--accent);border:none;padding:10px 14px;border-radius:8px;color:#041017}
 
 /* Splash */
 .splash{display:flex;align-items:center;justify-content:center;height:100vh}

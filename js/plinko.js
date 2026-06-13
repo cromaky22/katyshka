@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', function(){
   var roundResults = [];
   var pinPositions = [];
 
+  // Multipliers — as requested by user
   var MULTS = {
     low: {
       8:  [2.8, 1.6, 1, 0.9, 0.8, 0.9, 1, 1.6, 2.8],
@@ -56,6 +57,26 @@ document.addEventListener('DOMContentLoaded', function(){
   };
 
   function getMults(){ return MULTS[risk][rows] || MULTS.medium[16]; }
+
+  // 97% to slots with mult <= 1.9, 3% to big wins (> 1.9x)
+  function getRandomSlot(mults){
+    var weights = [];
+    for(var i = 0; i < mults.length; i++){
+      if(mults[i] <= 1.9){
+        weights.push(25.0);
+      } else {
+        weights.push(0.5);
+      }
+    }
+    var total = 0;
+    for(var j = 0; j < weights.length; j++) total += weights[j];
+    var rand = Math.random() * total;
+    for(var k = 0; k < weights.length; k++){
+      rand -= weights[k];
+      if(rand <= 0) return k;
+    }
+    return Math.floor(mults.length / 2);
+  }
 
   function resizeCanvas(){
     var wrap = canvas.parentElement;
@@ -107,17 +128,14 @@ document.addEventListener('DOMContentLoaded', function(){
     var h = canvas.height / dpr;
     ctx.clearRect(0, 0, w, h);
 
-    // Draw pins
     for(var r = 0; r < pinPositions.length; r++){
       var row = pinPositions[r];
       for(var p = 0; p < row.length; p++){
         var pin = row[p];
-        // Glow
-        ctx.fillStyle = 'rgba(139,92,246,0.15)';
-        ctx.beginPath(); ctx.arc(pin.x, pin.y, 5, 0, Math.PI*2); ctx.fill();
-        // Pin
+        ctx.fillStyle = 'rgba(139,92,246,0.2)';
+        ctx.beginPath(); ctx.arc(pin.x, pin.y, 4, 0, Math.PI*2); ctx.fill();
         ctx.fillStyle = 'rgba(255,255,255,0.4)';
-        ctx.beginPath(); ctx.arc(pin.x, pin.y, 2, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(pin.x, pin.y, 1.5, 0, Math.PI*2); ctx.fill();
       }
     }
   }
@@ -145,30 +163,7 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }
 
-  // 75% to mult < 0.9 (loss), 24% to mult < 2 (small win), 1% to big wins (>= 2)
-  function getRandomSlot(mults){
-    var weights = [];
-    for(var i = 0; i < mults.length; i++){
-      if(mults[i] < 0.9){
-        weights.push(12.0);
-      } else if(mults[i] < 2){
-        weights.push(4.0);
-      } else {
-        weights.push(0.02);
-      }
-    }
-    var total = 0;
-    for(var j = 0; j < weights.length; j++) total += weights[j];
-    var rand = Math.random() * total;
-    for(var k = 0; k < weights.length; k++){
-      rand -= weights[k];
-      if(rand <= 0) return k;
-    }
-    return Math.floor(mults.length / 2);
-  }
-
   function dropSingleBall(stake, mults, onBallDone){
-    var slotCount = mults.length;
     var finalSlot = getRandomSlot(mults);
     var mult = mults[finalSlot];
 
@@ -180,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     var padding = 20;
     var usableW = w - padding * 2;
-    var slotWidth = usableW / slotCount;
+    var slotWidth = usableW / mults.length;
     var targetX = padding + slotWidth * finalSlot + slotWidth / 2;
     var targetY = h - 12;
 
@@ -365,7 +360,7 @@ document.addEventListener('DOMContentLoaded', function(){
   playBtn.addEventListener('click', play);
   window.addEventListener('resize', resizeCanvas);
 
-  // Init — wait for layout
+  // Init
   function doInit(){
     resizeCanvas();
     updateSlots();
