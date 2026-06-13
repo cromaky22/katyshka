@@ -194,21 +194,31 @@ document.addEventListener('DOMContentLoaded', function(){
   if(adminPanel && userId === ADMIN_ID){
     adminPanel.style.display = '';
     
-    // Give balance
+    // Give balance (add to current)
     document.getElementById('adminGiveBtn').addEventListener('click', async function(){
       const targetId = document.getElementById('adminGiveId').value.trim();
       const amount = parseFloat(document.getElementById('adminGiveAmount').value);
       if(!targetId) return alert('Введите ID');
       if(isNaN(amount) || amount <= 0) return alert('Неверная сумма');
       try{
+        // Get current balance first
+        const getRes = await fetch('/api/users?id=' + targetId);
+        const userData = await getRes.json();
+        const currentBalance = userData.balance || 0;
+        const newBalance = currentBalance + amount;
+        
         const res = await fetch('/api/users', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({id: targetId, balance: amount})
+          body: JSON.stringify({id: targetId, balance: newBalance})
         });
         const data = await res.json();
         if(data.ok){
-          alert(`✅ Выдано $${amount.toFixed(2)} пользователю ${targetId}\nТекущий баланс: $${data.balance.toFixed(2)}`);
+          // Update balance display if it's the current user
+          if(targetId === userId && window.Balance){
+            Balance.sync(data.balance);
+          }
+          alert(`✅ Выдано $${amount.toFixed(2)} пользователю ${targetId}\nБыло: $${currentBalance.toFixed(2)}\nТекущий баланс: $${data.balance.toFixed(2)}`);
           document.getElementById('adminGiveId').value = '';
           document.getElementById('adminGiveAmount').value = '';
         } else {
