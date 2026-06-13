@@ -81,19 +81,23 @@ document.addEventListener('DOMContentLoaded', function(){
     const dpr = window.devicePixelRatio || 1;
     const w = canvas.width / dpr;
     const h = canvas.height / dpr;
-    const padding = 20;
-    const usableW = w - padding * 2;
-    const topY = 20;
-    const bottomY = h - 30;
+    const topY = 25;
+    const bottomY = h - 25;
+    const centerX = w / 2;
+    const topWidth = w * 0.15;  // narrow at top
+    const botWidth = w * 0.85;  // wide at bottom
 
     pinPositions = [];
     for(let r = 0; r < rows; r++){
-      const y = topY + (bottomY - topY) * (r / (rows - 1));
+      const t = r / (rows - 1); // 0 at top, 1 at bottom
+      const y = topY + (bottomY - topY) * t;
+      const rowWidth = topWidth + (botWidth - topWidth) * t;
       const pinsInRow = r + 2;
       const rowPins = [];
-      const spacing = usableW / (pinsInRow + 1);
+      const spacing = rowWidth / (pinsInRow + 1);
+      const startX = centerX - rowWidth / 2;
       for(let p = 0; p < pinsInRow; p++){
-        const x = padding + spacing * (p + 1);
+        const x = startX + spacing * (p + 1);
         rowPins.push({x, y});
       }
       pinPositions.push(rowPins);
