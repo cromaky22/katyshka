@@ -1,12 +1,11 @@
 document.addEventListener('DOMContentLoaded', function(){
-  // === STATS ===
   function recordStat(type, amount, detail){
     try{
-      const userId = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid') || 'unknown';
+      const uid = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid') || 'unknown';
       fetch('/api/transaction', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({userId, type, amount: Math.abs(amount), detail: detail || 'Plinko'})
+        body: JSON.stringify({userId: uid, type, amount: Math.abs(amount), detail: detail || 'Plinko'})
       }).catch(function(){});
     }catch(e){}
   }
@@ -25,36 +24,41 @@ document.addEventListener('DOMContentLoaded', function(){
 
   let risk = 'low';
   let rows = 16;
+  let ballCount = 1;
   let playing = false;
   let history = [];
+  let activeBalls = 0;
+  let roundResults = [];
 
-  // Multipliers — small values in center (most probable), big on edges
-  // Center slots are < 1 (loss), edges are big wins
+  // Multipliers — balanced, ~40% win chance
   const MULTS = {
     low: {
-      8:   [4.2, 1.8, 0.8, 0.3, 0.3, 0.8, 1.8, 4.2],
-      10:  [6.1, 2.4, 1, 0.4, 0.2, 0.2, 0.4, 1, 2.4, 6.1],
-      12:  [8.9, 3.2, 1.3, 0.5, 0.2, 0.1, 0.1, 0.2, 0.5, 1.3, 3.2, 8.9],
-      14:  [12.4, 4.5, 1.8, 0.6, 0.2, 0.1, 0, 0.1, 0.2, 0.6, 1.8, 4.5, 12.4],
-      16:  [16.8, 6.1, 2.4, 0.8, 0.3, 0.1, 0, 0, 0, 0.1, 0.3, 0.8, 2.4, 6.1, 16.8]
+      8:   [3.5, 1.6, 0.8, 0.4, 0.4, 0.8, 1.6, 3.5],
+      10:  [5.2, 2.1, 1, 0.5, 0.3, 0.3, 0.5, 1, 2.1, 5.2],
+      12:  [7.8, 3.2, 1.3, 0.6, 0.3, 0.2, 0.2, 0.3, 0.6, 1.3, 3.2, 7.8],
+      14:  [11.2, 4.5, 1.8, 0.7, 0.3, 0.1, 0.1, 0.1, 0.3, 0.7, 1.8, 4.5, 11.2],
+      16:  [15.8, 6.2, 2.4, 0.9, 0.4, 0.1, 0, 0, 0.1, 0.4, 0.9, 2.4, 6.2, 15.8]
     },
     medium: {
-      8:   [7.5, 2.4, 0.6, 0.2, 0.2, 0.6, 2.4, 7.5],
-      10:  [12.4, 3.8, 0.9, 0.3, 0.1, 0.1, 0.3, 0.9, 3.8, 12.4],
-      12:  [20.7, 6.1, 1.4, 0.4, 0.1, 0, 0, 0.1, 0.4, 1.4, 6.1, 20.7],
-      14:  [34.2, 9.8, 2.1, 0.5, 0.1, 0, 0, 0, 0.1, 0.5, 2.1, 9.8, 34.2],
-      16:  [54.6, 15.3, 3.2, 0.7, 0.1, 0, 0, 0, 0, 0.1, 0.7, 3.2, 15.3, 54.6]
+      8:   [5.8, 2.2, 0.7, 0.3, 0.3, 0.7, 2.2, 5.8],
+      10:  [9.5, 3.4, 1, 0.4, 0.2, 0.2, 0.4, 1, 3.4, 9.5],
+      12:  [16.8, 5.6, 1.6, 0.5, 0.2, 0.1, 0.1, 0.2, 0.5, 1.6, 5.6, 16.8],
+      14:  [29.4, 9.2, 2.6, 0.7, 0.2, 0.1, 0, 0.1, 0.2, 0.7, 2.6, 9.2, 29.4],
+      16:  [50.2, 15.4, 4.2, 1, 0.3, 0.1, 0, 0, 0.1, 0.3, 1, 4.2, 15.4, 50.2]
     },
     high: {
-      8:   [14.2, 3.6, 0.4, 0.1, 0.1, 0.4, 3.6, 14.2],
-      10:  [28.5, 6.4, 0.7, 0.1, 0, 0, 0.1, 0.7, 6.4, 28.5],
-      12:  [56.8, 12.4, 1.2, 0.2, 0, 0, 0, 0.2, 1.2, 12.4, 56.8],
-      14:  [112, 23.6, 2.1, 0.3, 0, 0, 0, 0, 0.3, 2.1, 23.6, 112],
-      16:  [220, 46.8, 4.2, 0.5, 0, 0, 0, 0, 0, 0.5, 4.2, 46.8, 220]
+      8:   [11.2, 3.4, 0.5, 0.2, 0.2, 0.5, 3.4, 11.2],
+      10:  [22.5, 5.8, 0.8, 0.2, 0.1, 0.1, 0.2, 0.8, 5.8, 22.5],
+      12:  [48.6, 12.4, 1.6, 0.3, 0.1, 0, 0, 0.1, 0.3, 1.6, 12.4, 48.6],
+      14:  [102, 25.8, 3.2, 0.5, 0.1, 0, 0, 0, 0.1, 0.5, 3.2, 25.8, 102],
+      16:  [216, 52.4, 6.8, 0.8, 0.1, 0, 0, 0, 0, 0.1, 0.8, 6.8, 52.4, 216]
     }
   };
 
   function getMults(){ return MULTS[risk][rows] || MULTS.medium[16]; }
+
+  // Ball count buttons
+  const ballCounts = [1, 3, 5, 10];
 
   function resizeCanvas(){
     const wrap = canvas.parentElement;
@@ -74,11 +78,8 @@ document.addEventListener('DOMContentLoaded', function(){
     const w = canvas.width / dpr;
     const h = canvas.height / dpr;
     ctx.clearRect(0, 0, w, h);
-
     const pinStartY = 15;
     const pinEndY = h - 25;
-
-    // Pins
     for(let r = 0; r < rows; r++){
       const y = pinStartY + (pinEndY - pinStartY) * ((r + 0.5) / rows);
       const pinsInRow = r + 2;
@@ -94,10 +95,9 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function getSlotColor(m){
-    if(m >= 100) return 'linear-gradient(180deg,#e879f9,#d946ef)';
-    if(m >= 50) return 'linear-gradient(180deg,#c084fc,#a855f7)';
-    if(m >= 20) return 'linear-gradient(180deg,#f472b6,#ec4899)';
-    if(m >= 10) return 'linear-gradient(180deg,#f87171,#ef4444)';
+    if(m >= 50) return 'linear-gradient(180deg,#e879f9,#d946ef)';
+    if(m >= 20) return 'linear-gradient(180deg,#c084fc,#a855f7)';
+    if(m >= 10) return 'linear-gradient(180deg,#f472b6,#ec4899)';
     if(m >= 5) return 'linear-gradient(180deg,#fb923c,#f97316)';
     if(m >= 2) return 'linear-gradient(180deg,#facc15,#eab308)';
     if(m >= 1) return 'linear-gradient(180deg,#4ade80,#22c55e)';
@@ -116,33 +116,33 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 
-  function dropBall(stake, onComplete){
-    const mults = getMults();
+  // Weighted random — bell curve, center more likely
+  function getRandomSlot(slotCount){
+    // Generate bell curve distribution
+    let pos = 0;
+    for(let r = 0; r < rows; r++){
+      pos += (Math.random() - 0.5) * 0.6;
+      pos *= 0.88; // pull toward center
+      pos = Math.max(-1, Math.min(1, pos));
+    }
+    // 50% chance to add extra center bias
+    if(Math.random() < 0.5) pos *= 0.6;
+    const idx = Math.floor((pos + 1) / 2 * (slotCount - 1));
+    return Math.max(0, Math.min(slotCount - 1, idx));
+  }
+
+  function dropSingleBall(stake, mults, onBallDone){
     const slotCount = mults.length;
+    const finalSlot = getRandomSlot(slotCount);
+    const mult = mults[finalSlot];
+
     const dpr = window.devicePixelRatio || 1;
     const w = canvas.width / dpr;
     const h = canvas.height / dpr;
     const pinStartY = 15;
     const pinEndY = h - 25;
-
-    // Random slot — bell curve distribution (center is most probable)
-    // This makes small multipliers (center) drop most often
-    let pos = 0;
-    for(let r = 0; r < rows; r++){
-      // Bias toward center — smaller random range
-      pos += (Math.random() - 0.5) * 0.5;
-      // Pull back toward center each bounce (gravity effect)
-      pos *= 0.85;
-      pos = Math.max(-1, Math.min(1, pos));
-    }
-    // Add extra center bias
-    if(Math.random() < 0.6) pos *= 0.7;
-    const slotIndex = Math.floor((pos + 1) / 2 * (slotCount - 1));
-    const finalSlot = Math.max(0, Math.min(slotCount - 1, slotIndex));
-    const mult = mults[finalSlot];
     const finalX = (w / slotCount) * finalSlot + (w / slotCount) / 2;
 
-    // Ball
     const ball = document.createElement('div');
     ball.className = 'plinko-ball';
     ball.style.background = 'radial-gradient(circle at 35% 35%,#ffd700,#ff8c00)';
@@ -150,13 +150,13 @@ document.addEventListener('DOMContentLoaded', function(){
     ballsContainer.appendChild(ball);
 
     let frame = 0;
-    const totalFrames = rows * 8;
+    const totalFrames = rows * 6;
 
     function animate(){
       frame++;
       const progress = frame / totalFrames;
       const y = pinStartY + (pinEndY - pinStartY) * progress;
-      const x = (w/2) + (finalX - w/2) * progress + Math.sin(progress * rows * Math.PI) * 10 * (1 - progress);
+      const x = (w/2) + (finalX - w/2) * progress + Math.sin(progress * rows * Math.PI) * 8 * (1 - progress);
       ball.style.left = (x - 4) + 'px';
       ball.style.top = (y - 4) + 'px';
 
@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function(){
         requestAnimationFrame(animate);
       } else {
         ball.style.left = (finalX - 4) + 'px';
-        ball.style.top = (h - 20) + 'px';
+        ball.style.top = (h - 18) + 'px';
         if(mult >= 1){
           ball.style.background = 'radial-gradient(circle at 35% 35%,#4ade80,#22c55e)';
           ball.style.boxShadow = '0 0 8px rgba(46,227,107,0.9)';
@@ -173,12 +173,11 @@ document.addEventListener('DOMContentLoaded', function(){
           ball.style.boxShadow = '0 0 8px rgba(244,67,54,0.9)';
         }
         setTimeout(() => {
-          ball.style.transition = 'opacity 0.3s, transform 0.3s';
+          ball.style.transition = 'opacity 0.2s';
           ball.style.opacity = '0';
-          ball.style.transform = 'scale(0.5)';
-          setTimeout(() => ball.remove(), 300);
-          onComplete(mult);
-        }, 400);
+          setTimeout(() => ball.remove(), 200);
+          onBallDone(mult);
+        }, 300);
       }
     }
     animate();
@@ -192,7 +191,8 @@ document.addEventListener('DOMContentLoaded', function(){
       gameStatus.className = 'game-status lose';
       return;
     }
-    if(getBalance() < stake){
+    const totalCost = stake * ballCount;
+    if(getBalance() < totalCost){
       gameStatus.textContent = 'Недостаточно средств';
       gameStatus.className = 'game-status lose';
       return;
@@ -200,45 +200,64 @@ document.addEventListener('DOMContentLoaded', function(){
 
     playing = true;
     playBtn.disabled = true;
-    gameStatus.textContent = '';
+    gameStatus.textContent = `🎱 ${ballCount} шарик(ов)...`;
+    gameStatus.className = 'game-status';
 
-    setBalance(getBalance() - stake);
-    recordStat('bet', stake, 'Plinko');
+    setBalance(getBalance() - totalCost);
+    recordStat('bet', totalCost, 'Plinko x'+ballCount);
 
-    dropBall(stake, (mult) => {
+    const mults = getMults();
+    activeBalls = ballCount;
+    roundResults = [];
+
+    for(let i = 0; i < ballCount; i++){
+      setTimeout(() => {
+        dropSingleBall(stake, mults, (mult) => {
+          roundResults.push(mult);
+          activeBalls--;
+          if(activeBalls === 0){
+            finishRound(stake);
+          }
+        });
+      }, i * 200); // stagger balls
+    }
+  }
+
+  function finishRound(stake){
+    let totalWin = 0;
+    let wins = 0, losses = 0;
+
+    roundResults.forEach(mult => {
       const winAmount = Math.round(stake * mult * 100) / 100;
-      const profit = winAmount - stake;
-
-      if(mult > 1){
-        // Win — get back more than stake
-        setBalance(getBalance() + winAmount);
-        recordStat('win', winAmount, 'Plinko '+mult.toFixed(1)+'x');
-        gameStatus.innerHTML = `<span style="font-size:24px;font-weight:900">${mult.toFixed(1)}x</span><br>+$${profit.toFixed(2)}`;
-        gameStatus.className = 'game-status win';
-        addHistory(true, mult);
-      } else if(mult === 1){
-        // Exact return — get stake back
-        setBalance(getBalance() + winAmount);
-        gameStatus.innerHTML = `<span style="font-size:24px;font-weight:900">1.0x</span><br>Возврат $${winAmount.toFixed(2)}`;
-        gameStatus.className = 'game-status win';
-        addHistory(true, mult);
+      totalWin += winAmount;
+      if(mult >= 1){
+        wins++;
+        if(mult > 1) recordStat('win', winAmount, 'Plinko '+mult.toFixed(1)+'x');
       } else {
-        // Partial return — get back less than stake (e.g. 0.6x = $0.60 from $1)
-        setBalance(getBalance() + winAmount);
+        losses++;
         recordStat('loss', stake - winAmount, 'Plinko '+mult.toFixed(1)+'x');
-        gameStatus.innerHTML = `<span style="font-size:24px;font-weight:900">${mult.toFixed(1)}x</span><br>-$${Math.abs(profit).toFixed(2)} (вернуто $${winAmount.toFixed(2)})`;
-        gameStatus.className = 'game-status lose';
-        addHistory(false, mult);
       }
-
-      playing = false;
-      playBtn.disabled = false;
+      addHistory(mult >= 1, mult);
     });
+
+    const profit = totalWin - (stake * ballCount);
+    setBalance(getBalance() + totalWin);
+
+    if(profit > 0){
+      gameStatus.innerHTML = `<span style="font-size:20px;font-weight:900">🎉 +$${profit.toFixed(2)}</span><br><span style="font-size:12px">${wins} выигрыш / ${losses} проигрыш</span>`;
+      gameStatus.className = 'game-status win';
+    } else {
+      gameStatus.innerHTML = `<span style="font-size:20px;font-weight:900">💀 -$${Math.abs(profit).toFixed(2)}</span><br><span style="font-size:12px">${wins} выигрыш / ${losses} проигрыш</span>`;
+      gameStatus.className = 'game-status lose';
+    }
+
+    playing = false;
+    playBtn.disabled = false;
   }
 
   function addHistory(won, mult){
     history.unshift({won, mult});
-    if(history.length > 20) history.pop();
+    if(history.length > 30) history.pop();
     renderHistory();
   }
 
@@ -252,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 
-  // Events
+  // Risk buttons
   document.getElementById('riskBtns').addEventListener('click', function(e){
     const btn = e.target.closest('.plk-btn');
     if(!btn) return;
@@ -262,6 +281,7 @@ document.addEventListener('DOMContentLoaded', function(){
     updateSlots();
   });
 
+  // Rows buttons
   document.getElementById('rowsBtns').addEventListener('click', function(e){
     const btn = e.target.closest('.plk-btn');
     if(!btn) return;
@@ -272,6 +292,16 @@ document.addEventListener('DOMContentLoaded', function(){
     resizeCanvas();
   });
 
+  // Ball count buttons
+  document.getElementById('ballBtns').addEventListener('click', function(e){
+    const btn = e.target.closest('.plk-btn');
+    if(!btn) return;
+    document.querySelectorAll('#ballBtns .plk-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    ballCount = parseInt(btn.dataset.count);
+  });
+
+  // Stake buttons
   document.getElementById('halfBtn').addEventListener('click', function(){
     const v = parseFloat(stakeInput.value) || 1;
     stakeInput.value = Math.max(0.01, (v/2).toFixed(2));
@@ -284,7 +314,6 @@ document.addEventListener('DOMContentLoaded', function(){
   playBtn.addEventListener('click', play);
   window.addEventListener('resize', resizeCanvas);
 
-  // Init
   setTimeout(function(){
     resizeCanvas();
     updateSlots();

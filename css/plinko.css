@@ -1,5 +1,5 @@
 /* Plinko */
-.page-plinko .content{padding-bottom:80px}
+.page-plinko .main-content{padding-top:8px;padding-bottom:80px}
 
 .plinko-game{max-width:400px;margin:0 auto;padding:12px}
 .plinko-board{display:flex;flex-direction:column;gap:12px}
