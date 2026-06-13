@@ -210,20 +210,20 @@ document.addEventListener('DOMContentLoaded', function(){
       }catch(e){ resultEl.innerHTML = '❌ Ошибка'; resultEl.classList.add('show'); }
     });
     
-    // Stats
-    document.getElementById('adminStatsBtn').addEventListener('click', async function(){
-      const resultEl = document.getElementById('adminStatsResult');
-      try{
-        const res = await fetch('/api/users');
-        const users = await res.json();
-        if(Array.isArray(users)){
-          const total = users.length;
-          const totalBal = users.reduce((s, u) => s + (u.balance || 0), 0).toFixed(2);
-          resultEl.innerHTML = `<div class="admin-user-info"><div>👥 Пользователей: <strong>${total}</strong></div><div>💰 Общий баланс: <strong>$${totalBal}</strong></div></div>`;
-          resultEl.classList.add('show');
-        }
-      }catch(e){ resultEl.innerHTML = '❌ Ошибка'; resultEl.classList.add('show'); }
-    });
+     // Stats - show total for all players
+     document.getElementById('adminStatsBtn').addEventListener('click', async function(){
+       const resultEl = document.getElementById('adminStatsResult');
+       try{
+         const res = await fetch('/api/users');
+         const users = await res.json();
+         if(Array.isArray(users)){
+           const total = users.length;
+           const totalBal = users.reduce((s, u) => s + (u.balance || 0), 0).toFixed(2);
+           resultEl.innerHTML = `<div class="admin-user-info"><div>👥 Пользователей: <strong>${total}</strong></div><div>💰 Общий баланс: <strong>$${totalBal}</strong></div></div>`;
+           resultEl.classList.add('show');
+         }
+       }catch(e){ resultEl.innerHTML = '❌ Ошибка'; resultEl.classList.add('show'); }
+     });
     
     // Load all players
     document.getElementById('adminLoadPlayersBtn').addEventListener('click', async function(){
@@ -233,27 +233,44 @@ document.addEventListener('DOMContentLoaded', function(){
         const res = await fetch('/api/users');
         const users = await res.json();
         if(Array.isArray(users) && users.length > 0){
-          listEl.innerHTML = '';
-          users.forEach(u => {
-            const name = u.first_name || u.username || u.id;
-            const bal = (u.balance || 0).toFixed(2);
-            const item = document.createElement('div');
-            item.className = 'admin-player-item';
-            item.innerHTML = `
-              <div class="admin-player-info">
-                <div class="admin-player-name">${name}</div>
-                <div class="admin-player-id">ID: ${u.id}</div>
-              </div>
-              <div class="admin-player-balance">$${bal}</div>
-            `;
-            item.addEventListener('click', () => showUserModal(u.id));
-            listEl.appendChild(item);
-          });
+          // Save to localStorage
+          localStorage.setItem('mc_admin_players', JSON.stringify(users));
+          renderPlayersList(users);
         } else {
           listEl.innerHTML = '❌ Нет игроков';
         }
       }catch(e){ listEl.innerHTML = '❌ Ошибка'; }
     });
+    
+    // Render players list
+    function renderPlayersList(users){
+      const listEl = document.getElementById('adminPlayersList');
+      listEl.innerHTML = '';
+      users.forEach(u => {
+        const name = u.first_name || u.username || u.id;
+        const bal = (u.balance || 0).toFixed(2);
+        const item = document.createElement('div');
+        item.className = 'admin-player-item';
+        item.innerHTML = `
+          <div class="admin-player-info">
+            <div class="admin-player-name">${name}</div>
+            <div class="admin-player-id">ID: ${u.id}</div>
+          </div>
+          <div class="admin-player-balance">$${bal}</div>
+        `;
+        item.addEventListener('click', () => showUserModal(u.id));
+        listEl.appendChild(item);
+      });
+    }
+    
+    // Load saved players on page load
+    const savedPlayers = localStorage.getItem('mc_admin_players');
+    if(savedPlayers){
+      try{
+        const players = JSON.parse(savedPlayers);
+        renderPlayersList(players);
+      }catch(e){}
+    }
     
     // Show user detail modal
     async function showUserModal(targetId){
@@ -383,8 +400,9 @@ document.addEventListener('DOMContentLoaded', function(){
           localStorage.removeItem('mc_total_bets');
           localStorage.removeItem('mc_deposits_total');
           localStorage.removeItem('mc_withdraws_total');
-          localStorage.removeItem('mc_history');
-          if(window.Balance) Balance.sync(0);
+           localStorage.removeItem('mc_history');
+           localStorage.removeItem('mc_admin_players');
+           if(window.Balance) Balance.sync(0);
           alert('✅ Всё обнулено!');
           location.reload();
         } else {
