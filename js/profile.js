@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', function(){
     try{
       const res = await fetch('/api/stats?userId=' + encodeURIComponent(userId));
       const data = await res.json();
+      console.log('📊 Stats:', data);
       
       // Finance
       document.getElementById('statDeposit').textContent = '$' + (data.deposits || 0).toFixed(2);

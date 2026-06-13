@@ -32,22 +32,22 @@ app.get('/api/stats', async (req, res) => {
   const userId = req.query.userId;
   if (!userId) return res.status(400).json({ error: 'Missing userId' });
   
-  // Get user transactions from DB or memory
   const userTx = transactions.filter(t => t.userId === userId);
   
   let deposits = 0, withdraws = 0, totalWin = 0, maxWin = 0, totalBets = 0;
-  let games = 0, wins = 0, losses = 0;
+  let wins = 0, losses = 0;
   const history = [];
   
   userTx.forEach(t => {
     if (t.type === 'deposit') { deposits += t.amount; history.push({ type: 'deposit', amount: t.amount, time: t.time, title: t.title }); }
     if (t.type === 'withdraw') { withdraws += Math.abs(t.amount); history.push({ type: 'withdraw', amount: Math.abs(t.amount), time: t.time, title: t.title }); }
-    if (t.type === 'bet') { games++; totalBets += Math.abs(t.amount); history.push({ type: 'bet', amount: Math.abs(t.amount), time: t.time, game: t.game, detail: t.detail }); }
+    if (t.type === 'bet') { totalBets += Math.abs(t.amount); history.push({ type: 'bet', amount: Math.abs(t.amount), time: t.time, game: t.game, detail: t.detail }); }
     if (t.type === 'win') { wins++; totalWin += t.amount; if (t.amount > maxWin) maxWin = t.amount; history.push({ type: 'win', amount: t.amount, time: t.time, game: t.game, detail: t.detail }); }
     if (t.type === 'loss') { losses++; history.push({ type: 'loss', amount: Math.abs(t.amount), time: t.time, game: t.game, detail: t.detail }); }
     if (t.type === 'promo') { deposits += t.amount; history.push({ type: 'promo', amount: t.amount, time: t.time, title: t.title }); }
   });
   
+  const games = Math.max(wins + losses);
   const winRate = games > 0 ? Math.round((wins / games) * 100) : 0;
   
   res.json({ deposits, withdraws, totalWin, maxWin, totalBets, games, wins, losses, winRate, history });
@@ -272,7 +272,11 @@ function addTx(type, userId, amount, status, extra) {
     userId,
     amount: Math.round(amount * 100) / 100,
     status,
+    time: Date.now(),
     date: new Date().toISOString(),
+    title: extra?.title || (type === 'bet' ? 'Ставка' : type === 'win' ? 'Выигрыш' : type === 'loss' ? 'Проигрыш' : type === 'deposit' ? 'Пополнение' : type === 'withdraw' ? 'Вывод' : type === 'promo' ? 'Промокод' : type),
+    game: extra?.game || null,
+    detail: extra?.detail || null,
     ...extra
   });
   saveData();
@@ -628,14 +632,20 @@ function spinWheel() {
   const results = {};
   for (const uid in wheel.bets) {
     let win = 0;
-    wheel.bets[uid].forEach(b => { if (betWins(b.type, num)) win += b.amount * getCoef(b.type); });
+    let totalBet = 0;
+    wheel.bets[uid].forEach(b => { 
+      totalBet += b.amount;
+      if (betWins(b.type, num)) win += b.amount * getCoef(b.type); 
+    });
     win = Math.round(win * 100) / 100;
     results[uid] = win;
     setBalance(uid, getBalance(uid) + win);
+    // Record transaction
+    addTx('bet', uid, totalBet, 'completed', { game: 'Wheel', detail: `Bet ${totalBet.toFixed(2)}` });
     if (win > 0) {
-      addTx('win', uid, win, 'completed', { game: 'Wheel', detail: `Result: ${num}` });
+      addTx('win', uid, win, 'completed', { game: 'Wheel', detail: `Won ${win.toFixed(2)} on ${num}` });
     } else {
-      addTx('loss', uid, wheel.bets[uid].reduce((s, b) => s + b.amount, 0), 'completed', { game: 'Wheel', detail: `Result: ${num}` });
+      addTx('loss', uid, totalBet, 'completed', { game: 'Wheel', detail: `Lost on ${num}` });
     }
   }
 
