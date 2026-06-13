@@ -28,13 +28,18 @@
     try{
       var tg = window.Telegram && window.Telegram.WebApp;
       if(tg && tg.initDataUnsafe && tg.initDataUnsafe.user){
-        return String(tg.initDataUnsafe.user.id);
+        var id = String(tg.initDataUnsafe.user.id);
+        localStorage.setItem('tg_uid', id);
+        return id;
       }
       if(tg && tg.initDataUnsafe && tg.initDataUnsafe.receiver){
-        return String(tg.initDataUnsafe.receiver.id);
+        var id2 = String(tg.initDataUnsafe.receiver.id);
+        localStorage.setItem('tg_uid', id2);
+        return id2;
       }
     }catch(e){}
-    return null;
+    // Fallback to localStorage
+    return localStorage.getItem('tg_uid') || null;
   }
 
   function fmt(n){ return Number(n).toFixed(2); }
