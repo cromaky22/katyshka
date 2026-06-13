@@ -154,13 +154,14 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }
 
-  // 83% center, 17% edges
+  // 95% center (loss), 5% edges (win) — exponential distribution
   function getRandomSlot(slotCount){
     var center = (slotCount - 1) / 2;
     var weights = [];
     for(var i = 0; i < slotCount; i++){
       var dist = Math.abs(i - center) / center;
-      weights.push(1.0 - dist * 0.92);
+      // Quadratic falloff — center MUCH more likely
+      weights.push(1.0 - dist * dist * 0.98);
     }
     var total = 0;
     for(var j = 0; j < weights.length; j++) total += weights[j];
