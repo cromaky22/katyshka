@@ -13,7 +13,7 @@
 .ph-lose{background:rgba(244,67,54,0.1);color:#f44336}
 
 /* Canvas */
-.plinko-canvas-wrap{position:relative;width:100%;min-height:320px;height:320px;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#0c0a18,#12102a);border:1px solid rgba(255,255,255,0.04);box-sizing:border-box}
+.plinko-canvas-wrap{position:relative;width:100%;min-height:280px;height:320px;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#0c0a18,#12102a);border:1px solid rgba(255,255,255,0.04);box-sizing:border-box}
 #plinkoCanvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;display:block}
 #plinkoBalls{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2}
 .plinko-ball{position:absolute;width:8px;height:8px;border-radius:50%;z-index:5;pointer-events:none}
@@ -58,3 +58,34 @@
 .slot-orange{background:linear-gradient(180deg,#fb923c,#f97316)}
 .slot-red{background:linear-gradient(180deg,#f87171,#ef4444)}
 .slot-dark{background:linear-gradient(180deg,#374151,#1f2937)}
+
+/* ===== ADAPTIVE PLINKO FOR MOBILE ===== */
+@media(max-width:480px){
+  .plinko-game{padding:8px}
+  .plinko-board{gap:8px}
+  .plinko-canvas-wrap{height:260px;min-height:260px}
+  .plinko-slot{min-height:14px;font-size:7px}
+  .plk-row{padding:8px;gap:4px}
+  .plk-label{font-size:9px}
+  .plk-btns{gap:3px}
+  .plk-btn{padding:6px 3px;font-size:10px}
+  .stake-panel{padding:10px;gap:6px}
+  .stake-header label{font-size:11px}
+  .stake-range{font-size:9px}
+  .stake-row input{padding:8px 10px;font-size:14px}
+  .btn-stake{padding:8px 10px;font-size:12px}
+  .play-btn{padding:12px;font-size:14px}
+  .game-status{padding:8px;font-size:12px}
+  .ph-item{padding:4px 8px;font-size:10px;min-width:34px}
+}
+
+@media(max-width:360px){
+  .plinko-game{padding:6px}
+  .plinko-canvas-wrap{height:220px;min-height:220px}
+  .plinko-slot{min-height:12px;font-size:6px}
+  .plk-row{padding:6px}
+  .plk-btn{padding:5px 2px;font-size:9px}
+  .stake-row input{padding:6px 8px;font-size:13px}
+  .btn-stake{padding:6px 8px;font-size:11px}
+  .play-btn{padding:10px;font-size:13px}
+}
