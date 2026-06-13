@@ -33,7 +33,43 @@ app.post('/api/users', (req, res) => {
   res.json({ ok: true, balance: users[id].balance });
 });
 
-// === DATABASE (in-memory with file persistence) ===
+// === ADMIN: OBNUL ===
+app.post('/api/admin/obnul', (req, res) => {
+  const { secret } = req.body || {};
+  if (secret !== 'obnul2026') return res.status(403).json({ error: 'Forbidden' });
+  for (const uid in users) users[uid].balance = 0;
+  wheel.bets = {};
+  for (const uid in activated) activated[uid] = [];
+  io.emit('admin:obnul');
+  saveData();
+  res.json({ ok: true });
+});
+
+// === ADMIN: GIVE BALANCE ===
+app.post('/api/admin/give', (req, res) => {
+  const { secret, userId, amount } = req.body || {};
+  if (secret !== 'obnul2026') return res.status(403).json({ error: 'Forbidden' });
+  if (!userId || !amount) return res.status(400).json({ error: 'Missing params' });
+  const amt = Math.round(parseFloat(amount) * 100) / 100;
+  if (!users[userId]) users[userId] = { balance: 0 };
+  users[userId].balance += amt;
+  io.emit('balance_update', { userId, balance: users[userId].balance });
+  saveData();
+  res.json({ ok: true, balance: users[userId].balance });
+});
+
+// === ADMIN: TAKE BALANCE ===
+app.post('/api/admin/take', (req, res) => {
+  const { secret, userId, amount } = req.body || {};
+  if (secret !== 'obnul2026') return res.status(403).json({ error: 'Forbidden' });
+  if (!userId || !amount) return res.status(400).json({ error: 'Missing params' });
+  const amt = Math.round(parseFloat(amount) * 100) / 100;
+  if (!users[userId]) users[userId] = { balance: 0 };
+  users[userId].balance = Math.max(0, users[userId].balance - amt);
+  io.emit('balance_update', { userId, balance: users[userId].balance });
+  saveData();
+  res.json({ ok: true, balance: users[userId].balance });
+});
 const fs = require('fs');
 const DATA_FILE = './data.json';
 

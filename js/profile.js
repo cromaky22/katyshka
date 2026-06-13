@@ -325,6 +325,8 @@ document.addEventListener('DOMContentLoaded', function(){
         const data = await res.json();
         if(data.ok){
           alert('✅ Всё обнулено!');
+          // Reload page to update balance
+          location.reload();
         } else {
           alert('❌ Ошибка: ' + (data.error || 'unknown'));
         }

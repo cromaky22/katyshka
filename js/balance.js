@@ -45,6 +45,23 @@
     });
   }
 
+  function saveLocal(){
+    if(_userId){
+      localStorage.setItem('mc_bal_' + _userId, _balance);
+    }
+  }
+
+  function loadLocal(){
+    if(_userId){
+      var cached = localStorage.getItem('mc_bal_' + _userId);
+      if(cached !== null){
+        var n = parseFloat(cached);
+        if(!isNaN(n) && n >= 0) return n;
+      }
+    }
+    return 0;
+  }
+
   function sendToServer(data){
     if(!_userId) return;
     fetch('/api/users', {
@@ -57,23 +74,33 @@
   function loadFromServer(){
     _userId = getUserId();
     if(!_userId){
-      console.warn('⚠️ No Telegram user ID — open in Telegram');
+      console.warn('⚠️ No Telegram user ID');
       updateDOM(0);
       return Promise.resolve();
     }
+    
+    // Load from localStorage first for instant display
+    _balance = loadLocal();
+    updateDOM(_balance);
+    
     return fetch('/api/users?id=' + encodeURIComponent(_userId))
       .then(function(r){ return r.json(); })
       .then(function(d){
         if(d && d.balance !== undefined){
-          _balance = Math.round(parseFloat(d.balance) * 100) / 100;
+          var serverBal = Math.round(parseFloat(d.balance) * 100) / 100;
+          // Use the higher value (server or local)
+          if(serverBal > _balance){
+            _balance = serverBal;
+          }
         }
+        saveLocal();
         updateDOM(_balance);
         _ready = true;
         _listeners.forEach(function(fn){ fn(_balance); });
         _listeners = [];
       })
       .catch(function(){
-        updateDOM(_balance);
+        // Keep local balance on error
         _ready = true;
         _listeners.forEach(function(fn){ fn(_balance); });
         _listeners = [];
@@ -89,11 +116,13 @@
         _socket.on('balance_update', function(data){
           if(data.userId === getUserId() && data.balance !== undefined){
             _balance = Math.round(parseFloat(data.balance) * 100) / 100;
+            saveLocal();
             updateDOM(_balance);
           }
         });
         _socket.on('admin:obnul', function(){
           _balance = 0;
+          saveLocal();
           updateDOM(0);
         });
       }catch(e){}
@@ -110,6 +139,7 @@
       var n = Math.round(Number(v) * 100) / 100;
       if(isNaN(n)) return;
       _balance = n;
+      saveLocal();
       updateDOM(n);
       sendToServer({balance: n});
     },
@@ -117,6 +147,7 @@
       var n = Math.round((_balance + Number(amount)) * 100) / 100;
       if(isNaN(n)) return;
       _balance = n;
+      saveLocal();
       updateDOM(n);
       sendToServer({balance: n});
     },
@@ -124,13 +155,16 @@
       var n = Math.round((_balance - Number(amount)) * 100) / 100;
       if(isNaN(n)) return;
       _balance = n;
+      saveLocal();
       updateDOM(n);
       sendToServer({balance: n});
     },
     sync: function(newBal){
       _balance = Math.round(parseFloat(newBal) * 100) / 100;
+      saveLocal();
       updateDOM(_balance);
     },
+    saveLocal: saveLocal,
     ready: function(fn){
       if(_ready) fn(_balance);
       else _listeners.push(fn);
