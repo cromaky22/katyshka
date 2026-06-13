@@ -154,18 +154,26 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }
 
-  // 97% balls drop to slots with mult < 1 (loss), 3% to wins (mult >= 1)
+  // 97% balls drop to slots with mult <= 1.9, 3% to big wins (> 1.9x)
   function getRandomSlot(mults){
     var slotCount = mults.length;
     var weights = [];
     for(var i = 0; i < slotCount; i++){
-      if(mults[i] < 1){
-        // Loss slots — very high weight
+      if(mults[i] <= 1.9){
         weights.push(25.0);
       } else {
-        // Win slots — very low weight
         weights.push(0.5);
       }
+    }
+    var total = 0;
+    for(var j = 0; j < weights.length; j++) total += weights[j];
+    var rand = Math.random() * total;
+    for(var k = 0; k < weights.length; k++){
+      rand -= weights[k];
+      if(rand <= 0) return k;
+    }
+    return Math.floor(slotCount / 2);
+  }
     }
     var total = 0;
     for(var j = 0; j < weights.length; j++) total += weights[j];
