@@ -143,18 +143,16 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 
-  // Weighted random — 78% center (loss), 22% edges (win)
+  // Weighted random — 83% center (loss), 17% edges (win)
   function getRandomSlot(slotCount){
-    // Bell curve — center slots get most probability
     const center = (slotCount - 1) / 2;
     const weights = [];
     for(let i = 0; i < slotCount; i++){
       const dist = Math.abs(i - center) / center;
-      // Center = weight 1.0, edges = weight 0.15
-      weights.push(1.0 - dist * 0.85);
+      // Center = weight 1.0, edges = weight 0.2 → ~83% center total
+      weights.push(1.0 - dist * 0.8);
     }
     
-    // Weighted random selection
     const totalWeight = weights.reduce((a, b) => a + b, 0);
     let rand = Math.random() * totalWeight;
     for(let i = 0; i < weights.length; i++){
