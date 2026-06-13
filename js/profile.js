@@ -225,6 +225,140 @@ document.addEventListener('DOMContentLoaded', function(){
       }catch(e){ resultEl.innerHTML = '❌ Ошибка'; resultEl.classList.add('show'); }
     });
     
+    // Load all players
+    document.getElementById('adminLoadPlayersBtn').addEventListener('click', async function(){
+      const listEl = document.getElementById('adminPlayersList');
+      listEl.innerHTML = '⏳ Загрузка...';
+      try{
+        const res = await fetch('/api/users');
+        const users = await res.json();
+        if(Array.isArray(users) && users.length > 0){
+          listEl.innerHTML = '';
+          users.forEach(u => {
+            const name = u.first_name || u.username || u.id;
+            const bal = (u.balance || 0).toFixed(2);
+            const item = document.createElement('div');
+            item.className = 'admin-player-item';
+            item.innerHTML = `
+              <div class="admin-player-info">
+                <div class="admin-player-name">${name}</div>
+                <div class="admin-player-id">ID: ${u.id}</div>
+              </div>
+              <div class="admin-player-balance">$${bal}</div>
+            `;
+            item.addEventListener('click', () => showUserModal(u.id));
+            listEl.appendChild(item);
+          });
+        } else {
+          listEl.innerHTML = '❌ Нет игроков';
+        }
+      }catch(e){ listEl.innerHTML = '❌ Ошибка'; }
+    });
+    
+    // Show user detail modal
+    async function showUserModal(targetId){
+      const modal = document.getElementById('adminUserModal');
+      const body = document.getElementById('adminUserModalBody');
+      body.innerHTML = '⏳ Загрузка...';
+      modal.style.display = 'flex';
+      
+      try{
+        // Get user info
+        const userRes = await fetch('/api/users?id=' + targetId);
+        const userData = await userRes.json();
+        
+        // Get user stats
+        const statsRes = await fetch('/api/stats?userId=' + targetId);
+        const stats = await statsRes.json();
+        
+        const name = userData.first_name || userData.username || targetId;
+        const bal = (userData.balance || 0).toFixed(2);
+        
+        body.innerHTML = `
+          <h3 style="margin-bottom:8px">👤 ${name}</h3>
+          <p style="color:var(--muted);font-size:12px;margin-bottom:16px">ID: ${targetId}</p>
+          
+          <div class="admin-user-stats">
+            <div class="admin-user-stat">
+              <div class="admin-user-stat-label">Баланс</div>
+              <div class="admin-user-stat-value">$${bal}</div>
+            </div>
+            <div class="admin-user-stat">
+              <div class="admin-user-stat-label">Игр</div>
+              <div class="admin-user-stat-value">${stats.games || 0}</div>
+            </div>
+            <div class="admin-user-stat">
+              <div class="admin-user-stat-label">Побед</div>
+              <div class="admin-user-stat-value">${stats.wins || 0}</div>
+            </div>
+            <div class="admin-user-stat">
+              <div class="admin-user-stat-label">Поражений</div>
+              <div class="admin-user-stat-value">${stats.losses || 0}</div>
+            </div>
+            <div class="admin-user-stat">
+              <div class="admin-user-stat-label">Винрейт</div>
+              <div class="admin-user-stat-value">${stats.winRate || 0}%</div>
+            </div>
+            <div class="admin-user-stat">
+              <div class="admin-user-stat-label">Макс. выигрыш</div>
+              <div class="admin-user-stat-value">$${(stats.maxWin || 0).toFixed(2)}</div>
+            </div>
+          </div>
+          
+          <div class="admin-balance-input">
+            <input type="number" class="admin-input" id="modalAmount" placeholder="Сумма">
+            <button class="btn btn-sm" id="modalGiveBtn">Выдать</button>
+            <button class="btn btn-sm btn-danger" id="modalTakeBtn">Списать</button>
+          </div>
+        `;
+        
+        document.getElementById('modalGiveBtn').addEventListener('click', async function(){
+          const amount = parseFloat(document.getElementById('modalAmount').value);
+          if(isNaN(amount) || amount <= 0) return alert('Неверная сумма');
+          const res = await fetch('/api/admin/balance', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({secret: 'obnul2026', targetId, amount, action: 'give'})
+          });
+          const data = await res.json();
+          if(data.ok){
+            alert(`✅ Выдано $${amount.toFixed(2)}`);
+            showUserModal(targetId); // Refresh
+          } else {
+            alert('❌ Ошибка: ' + (data.error || 'unknown'));
+          }
+        });
+        
+        document.getElementById('modalTakeBtn').addEventListener('click', async function(){
+          const amount = parseFloat(document.getElementById('modalAmount').value);
+          if(isNaN(amount) || amount <= 0) return alert('Неверная сумма');
+          const res = await fetch('/api/admin/balance', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({secret: 'obnul2026', targetId, amount, action: 'take'})
+          });
+          const data = await res.json();
+          if(data.ok){
+            alert(`💸 Списано $${amount.toFixed(2)}`);
+            showUserModal(targetId); // Refresh
+          } else {
+            alert('❌ Ошибка: ' + (data.error || 'unknown'));
+          }
+        });
+        
+      }catch(e){
+        body.innerHTML = '❌ Ошибка загрузки';
+      }
+    }
+    
+    // Close modal
+    document.getElementById('adminUserModalClose').addEventListener('click', function(){
+      document.getElementById('adminUserModal').style.display = 'none';
+    });
+    document.getElementById('adminUserModal').addEventListener('click', function(e){
+      if(e.target === this) this.style.display = 'none';
+    });
+    
     // Obnul - clear everything
     document.getElementById('adminObnulBtn').addEventListener('click', async function(){
       if(!confirm('⚠️ ВНИМАНИЕ!\n\nЭто обнулит ВСЕ балансы, ставки и промокоды!\n\nПродолжить?')) return;

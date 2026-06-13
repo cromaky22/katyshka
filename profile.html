@@ -180,6 +180,20 @@
       </div>
       
       <div class="admin-section">
+        <div class="admin-section-title">👥 Все игроки</div>
+        <button class="btn btn-sm" id="adminLoadPlayersBtn">Загрузить список</button>
+        <div id="adminPlayersList" class="admin-players-list"></div>
+      </div>
+      
+      <!-- User detail modal -->
+      <div class="admin-user-modal" id="adminUserModal" style="display:none">
+        <div class="admin-user-modal-content">
+          <button class="admin-user-modal-close" id="adminUserModalClose">✕</button>
+          <div id="adminUserModalBody"></div>
+        </div>
+      </div>
+      
+      <div class="admin-section">
         <div class="admin-section-title">🗑 Опасная зона</div>
         <button class="btn btn-sm btn-danger" id="adminObnulBtn">Обнулить ВСЁ</button>
       </div>

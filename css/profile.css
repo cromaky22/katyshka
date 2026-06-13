@@ -57,6 +57,30 @@
 .admin-user-balance{font-size:18px;font-weight:800;color:var(--accent-green)}
 .btn-danger{background:rgba(244,67,54,0.15);color:#f44336;border:1px solid rgba(244,67,54,0.3)}
 .btn-danger:hover{background:rgba(244,67,54,0.25)}
+
+/* Players list */
+.admin-players-list{margin-top:12px;display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto}
+.admin-player-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(255,255,255,0.02);border-radius:8px;cursor:pointer;transition:background 0.15s}
+.admin-player-item:hover{background:rgba(255,255,255,0.05)}
+.admin-player-info{display:flex;flex-direction:column;gap:2px}
+.admin-player-name{font-size:13px;font-weight:600;color:var(--text)}
+.admin-player-id{font-size:11px;color:var(--muted);font-family:monospace}
+.admin-player-balance{font-size:14px;font-weight:700;color:var(--accent-green)}
+
+/* User modal */
+.admin-user-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.admin-user-modal-content{background:#1a1f35;border-radius:16px;padding:24px;max-width:400px;width:100%;position:relative;max-height:80vh;overflow-y:auto}
+.admin-user-modal-close{position:absolute;top:12px;right:12px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer}
+.admin-user-modal-close:hover{color:var(--text)}
+.admin-user-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:16px 0}
+.admin-user-stat{background:rgba(255,255,255,0.03);border-radius:8px;padding:12px;text-align:center}
+.admin-user-stat-label{font-size:10px;color:var(--muted);text-transform:uppercase}
+.admin-user-stat-value{font-size:16px;font-weight:700;color:var(--text);margin-top:4px}
+.admin-user-actions{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.admin-user-actions .btn{width:100%}
+.admin-balance-input{display:flex;gap:8px;margin-top:12px}
+.admin-balance-input input{flex:1}
+  
   .profile-stats{grid-template-columns:1fr}
   .stat-card-wide{grid-column:auto}
   .profile-card{padding:18px 14px}
