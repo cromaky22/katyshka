@@ -368,16 +368,6 @@ input[type=number]{
 
 @media(max-width:520px){.admin-row{grid-template-columns:1fr 72px 90px 64px;padding:10px}}
 
-/* Plinko modern header */
-.plk-header{display:flex;align-items:center;justify-content:space-between;padding:12px 4px 16px}
-.plk-back{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:rgba(255,255,255,0.04);color:var(--muted);text-decoration:none;font-size:16px;transition:all 0.15s}
-.plk-back:hover{background:rgba(255,255,255,0.08);color:var(--text)}
-.plk-title{display:flex;align-items:center;gap:8px;font-size:20px;font-weight:900;color:var(--text)}
-.plk-icon{font-size:22px}
-.plk-balance{display:flex;align-items:center;gap:4px;padding:8px 14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid rgba(255,255,255,0.06)}
-.plk-bal-val{font-size:16px;font-weight:800;color:var(--accent)}
-.plk-bal-cur{font-size:13px;color:var(--muted);font-weight:600}
-
 .plk-board-area{margin-bottom:16px}
 
 .plk-controls{margin-bottom:16px}
