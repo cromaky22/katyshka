@@ -1,0 +1,45 @@
+/* Plinko page */
+.page-plinko .main-content{padding-bottom:100px}
+
+.plinko-board-wrap{position:relative;width:100%;max-width:360px;margin:0 auto 12px;height:320px;background:linear-gradient(180deg,rgba(255,184,107,0.03),rgba(255,184,107,0.01));border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.04)}
+#plinkoCanvas{position:absolute;top:0;left:0;width:100%;height:100%}
+#plinkoBalls{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+.plinko-ball{position:absolute;width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffd700,#ff8c00);box-shadow:0 0 6px rgba(255,140,0,0.6);z-index:2}
+.plinko-slots{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:center;gap:2px;padding:4px 8px;background:rgba(0,0,0,0.3);z-index:3}
+.plinko-slot{flex:1;height:18px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#000;text-align:center}
+
+.plinko-controls{display:flex;flex-direction:column;gap:10px;margin-bottom:12px;padding:0 4px}
+.plinko-row{display:flex;flex-direction:column;gap:6px}
+.plinko-label{font-size:12px;font-weight:600;color:var(--muted)}
+.plinko-btns{display:flex;gap:4px;flex-wrap:wrap}
+.plinko-btn{flex:1;padding:8px 4px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s}
+.plinko-btn:hover{background:rgba(255,255,255,0.06)}
+.plinko-btn.active{background:rgba(255,184,107,0.15);border-color:var(--accent);color:var(--accent)}
+
+.plinko-mults{display:flex;gap:3px;justify-content:center;margin-bottom:12px;padding:0 4px;flex-wrap:wrap}
+.plinko-mult-item{padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;text-align:center;min-width:36px}
+
+.stake-row{display:flex;gap:8px;align-items:center;margin-bottom:12px;padding:0 4px}
+.stake-input-wrap{display:flex;align-items:center;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid rgba(255,255,255,0.08);overflow:hidden;flex:1}
+.stake-input{width:100%;padding:10px 12px;background:transparent;border:none;color:var(--text);font-size:16px;font-weight:700;text-align:center;outline:none}
+.stake-op{padding:10px 12px;background:rgba(255,255,255,0.04);border:none;color:var(--muted);font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0}
+.stake-op:hover{background:rgba(255,255,255,0.08);color:var(--text)}
+.btn-block{flex:none;width:auto;padding:10px 24px}
+
+.result-wrap{margin-bottom:12px;padding:16px;border-radius:12px;text-align:center;display:none}
+.result-text{font-size:18px;font-weight:800}
+.result-win{background:rgba(46,227,107,0.1);color:var(--accent-green)}
+.result-lose{background:rgba(244,67,54,0.1);color:#f44336}
+
+.ph-wrap{padding:0 4px}
+.ph-title{font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px}
+.ph-list{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.ph-item{flex-shrink:0;padding:6px 10px;border-radius:8px;font-size:11px;font-weight:700;min-width:48px;text-align:center}
+.ph-win{background:rgba(46,227,107,0.1);color:var(--accent-green)}
+.ph-lose{background:rgba(244,67,54,0.1);color:#f44336}
+
+/* Multiplier colors */
+.mult-low{background:rgba(46,227,107,0.15);color:var(--accent-green)}
+.mult-med{background:rgba(255,184,107,0.15);color:var(--accent)}
+.mult-high{background:rgba(244,67,54,0.15);color:#f44336}
+.mult-vhigh{background:rgba(156,39,176,0.15);color:#ce93d8}

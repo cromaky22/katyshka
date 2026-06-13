@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Plinko — KATYSHKA</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/plinko.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="page-plinko">
+<div class="app_wrap">
+  <header class="app-header">
+    <a href="home.html" class="back-btn" aria-label="Назад">←</a>
+    <div class="app-logo" style="text-align:center;flex:1"><span style="font-size:15px;font-weight:800;color:var(--accent)">🎯 PLINKO</span></div>
+    <div class="balance-pill">
+      <svg class="coin-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="#ffb86b" stroke-width="2.5"/><text x="12" y="16" text-anchor="middle" fill="#ffb86b" font-size="10" font-weight="900">$</text></svg>
+      <span class="balance-value">0.00</span>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <!-- Plinko Board -->
+    <div class="plinko-board-wrap">
+      <canvas id="plinkoCanvas"></canvas>
+      <div id="plinkoBalls"></div>
+      <div class="plinko-slots" id="plinkoSlots"></div>
+    </div>
+
+    <!-- Risk & Rows -->
+    <div class="plinko-controls">
+      <div class="plinko-row">
+        <div class="plinko-label">Риск</div>
+        <div class="plinko-btns" id="riskBtns">
+          <button class="plinko-btn active" data-risk="low">Низкий</button>
+          <button class="plinko-btn" data-risk="medium">Средний</button>
+          <button class="plinko-btn" data-risk="high">Высокий</button>
+        </div>
+      </div>
+      <div class="plinko-row">
+        <div class="plinko-label">Ряды</div>
+        <div class="plinko-btns" id="rowsBtns">
+          <button class="plinko-btn" data-rows="8">8</button>
+          <button class="plinko-btn" data-rows="9">9</button>
+          <button class="plinko-btn" data-rows="10">10</button>
+          <button class="plinko-btn" data-rows="11">11</button>
+          <button class="plinko-btn" data-rows="12">12</button>
+          <button class="plinko-btn" data-rows="13">13</button>
+          <button class="plinko-btn" data-rows="14">14</button>
+          <button class="plinko-btn active" data-rows="15">15</button>
+          <button class="plinko-btn" data-rows="16">16</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Multipliers display -->
+    <div class="plinko-mults" id="plinkoMults"></div>
+
+    <!-- Stake -->
+    <div class="stake-row">
+      <div class="stake-input-wrap">
+        <button class="stake-op" id="stakeHalf">½</button>
+        <input type="number" class="stake-input" id="stakeInput" value="1" min="0.1" max="200" step="0.1">
+        <button class="stake-op" id="stakeDouble">×2</button>
+      </div>
+      <button class="btn btn-primary btn-block" id="playBtn">Бросить</button>
+    </div>
+
+    <!-- Result -->
+    <div id="resultWrap" class="result-wrap" style="display:none">
+      <div id="resultText" class="result-text"></div>
+    </div>
+
+    <!-- History -->
+    <div class="ph-wrap">
+      <div class="ph-title">📋 История</div>
+      <div class="ph-list" id="phList"></div>
+    </div>
+  </main>
+
+  <nav class="bottom-nav">
+    <a href="home.html#games" class="nav-item"><span class="icon">🎮</span><span class="label">Игры</span></a>
+    <a href="wallet.html" class="nav-item"><span class="icon">💼</span><span class="label">Кошелёк</span></a>
+    <a href="home.html" class="nav-item center"><span class="icon">💎</span></a>
+    <a href="bonus.html" class="nav-item"><span class="icon">🎁</span><span class="label">Бонус</span></a>
+    <a href="profile.html" class="nav-item"><span class="profile"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23667eea' width='100' height='100'/%3E%3Ctext x='50' y='58' font-size='44' fill='white' text-anchor='middle' font-weight='700'%3E?%3C/text%3E%3C/svg%3E" alt="Профиль"></span><span class="label">Профиль</span></a>
+  </nav>
+</div>
+<script src="js/balance.js"></script>
+<script src="js/plinko.js"></script>
+</body>
+</html>
