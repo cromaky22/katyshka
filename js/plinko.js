@@ -30,28 +30,28 @@ document.addEventListener('DOMContentLoaded', function(){
   let activeBalls = 0;
   let roundResults = [];
 
-  // Multipliers — balanced, ~40% win chance
+  // Multipliers — balanced, fewer zeros, ~45% win chance
   const MULTS = {
     low: {
-      8:   [3.5, 1.6, 0.8, 0.4, 0.4, 0.8, 1.6, 3.5],
-      10:  [5.2, 2.1, 1, 0.5, 0.3, 0.3, 0.5, 1, 2.1, 5.2],
-      12:  [7.8, 3.2, 1.3, 0.6, 0.3, 0.2, 0.2, 0.3, 0.6, 1.3, 3.2, 7.8],
-      14:  [11.2, 4.5, 1.8, 0.7, 0.3, 0.1, 0.1, 0.1, 0.3, 0.7, 1.8, 4.5, 11.2],
-      16:  [15.8, 6.2, 2.4, 0.9, 0.4, 0.1, 0, 0, 0.1, 0.4, 0.9, 2.4, 6.2, 15.8]
+      8:   [3.5, 1.6, 0.8, 0.5, 0.5, 0.8, 1.6, 3.5],
+      10:  [5.2, 2.1, 1.1, 0.6, 0.4, 0.4, 0.6, 1.1, 2.1, 5.2],
+      12:  [7.8, 3.2, 1.4, 0.7, 0.4, 0.3, 0.3, 0.4, 0.7, 1.4, 3.2, 7.8],
+      14:  [11.2, 4.5, 1.9, 0.8, 0.4, 0.2, 0.2, 0.2, 0.4, 0.8, 1.9, 4.5, 11.2],
+      16:  [15.8, 6.2, 2.5, 1, 0.5, 0.2, 0.1, 0.1, 0.2, 0.5, 1, 2.5, 6.2, 15.8]
     },
     medium: {
-      8:   [5.8, 2.2, 0.7, 0.3, 0.3, 0.7, 2.2, 5.8],
-      10:  [9.5, 3.4, 1, 0.4, 0.2, 0.2, 0.4, 1, 3.4, 9.5],
-      12:  [16.8, 5.6, 1.6, 0.5, 0.2, 0.1, 0.1, 0.2, 0.5, 1.6, 5.6, 16.8],
-      14:  [29.4, 9.2, 2.6, 0.7, 0.2, 0.1, 0, 0.1, 0.2, 0.7, 2.6, 9.2, 29.4],
-      16:  [50.2, 15.4, 4.2, 1, 0.3, 0.1, 0, 0, 0.1, 0.3, 1, 4.2, 15.4, 50.2]
+      8:   [5.8, 2.2, 0.8, 0.4, 0.4, 0.8, 2.2, 5.8],
+      10:  [9.5, 3.4, 1.2, 0.5, 0.3, 0.3, 0.5, 1.2, 3.4, 9.5],
+      12:  [16.8, 5.6, 1.8, 0.6, 0.3, 0.1, 0.1, 0.3, 0.6, 1.8, 5.6, 16.8],
+      14:  [29.4, 9.2, 2.8, 0.8, 0.3, 0.1, 0.1, 0.1, 0.3, 0.8, 2.8, 9.2, 29.4],
+      16:  [50.2, 15.4, 4.5, 1.2, 0.4, 0.1, 0, 0, 0.1, 0.4, 1.2, 4.5, 15.4, 50.2]
     },
     high: {
-      8:   [11.2, 3.4, 0.5, 0.2, 0.2, 0.5, 3.4, 11.2],
-      10:  [22.5, 5.8, 0.8, 0.2, 0.1, 0.1, 0.2, 0.8, 5.8, 22.5],
-      12:  [48.6, 12.4, 1.6, 0.3, 0.1, 0, 0, 0.1, 0.3, 1.6, 12.4, 48.6],
-      14:  [102, 25.8, 3.2, 0.5, 0.1, 0, 0, 0, 0.1, 0.5, 3.2, 25.8, 102],
-      16:  [216, 52.4, 6.8, 0.8, 0.1, 0, 0, 0, 0, 0.1, 0.8, 6.8, 52.4, 216]
+      8:   [11.2, 3.4, 0.6, 0.3, 0.3, 0.6, 3.4, 11.2],
+      10:  [22.5, 5.8, 1, 0.3, 0.2, 0.2, 0.3, 1, 5.8, 22.5],
+      12:  [48.6, 12.4, 1.8, 0.4, 0.1, 0.1, 0.1, 0.1, 0.4, 1.8, 12.4, 48.6],
+      14:  [102, 25.8, 3.5, 0.6, 0.2, 0, 0, 0, 0.2, 0.6, 3.5, 25.8, 102],
+      16:  [216, 52.4, 7.2, 1, 0.2, 0, 0, 0, 0, 0.2, 1, 7.2, 52.4, 216]
     }
   };
 
@@ -59,6 +59,9 @@ document.addEventListener('DOMContentLoaded', function(){
 
   // Ball count buttons
   const ballCounts = [1, 3, 5, 10];
+
+  // Pyramid pins layout
+  let pinPositions = []; // [{x,y}] for each row
 
   function resizeCanvas(){
     const wrap = canvas.parentElement;
@@ -70,7 +73,31 @@ document.addEventListener('DOMContentLoaded', function(){
     canvas.style.width = rect.width + 'px';
     canvas.style.height = rect.height + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    calcPinPositions();
     drawBoard();
+  }
+
+  function calcPinPositions(){
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.width / dpr;
+    const h = canvas.height / dpr;
+    const padding = 20;
+    const usableW = w - padding * 2;
+    const topY = 20;
+    const bottomY = h - 30;
+
+    pinPositions = [];
+    for(let r = 0; r < rows; r++){
+      const y = topY + (bottomY - topY) * (r / (rows - 1));
+      const pinsInRow = r + 2;
+      const rowPins = [];
+      const spacing = usableW / (pinsInRow + 1);
+      for(let p = 0; p < pinsInRow; p++){
+        const x = padding + spacing * (p + 1);
+        rowPins.push({x, y});
+      }
+      pinPositions.push(rowPins);
+    }
   }
 
   function drawBoard(){
@@ -78,20 +105,16 @@ document.addEventListener('DOMContentLoaded', function(){
     const w = canvas.width / dpr;
     const h = canvas.height / dpr;
     ctx.clearRect(0, 0, w, h);
-    const pinStartY = 15;
-    const pinEndY = h - 25;
-    for(let r = 0; r < rows; r++){
-      const y = pinStartY + (pinEndY - pinStartY) * ((r + 0.5) / rows);
-      const pinsInRow = r + 2;
-      const spacing = w / (pinsInRow + 1);
-      for(let p = 0; p < pinsInRow; p++){
-        const x = spacing * (p + 1);
-        ctx.fillStyle = 'rgba(139,92,246,0.12)';
-        ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = 'rgba(255,255,255,0.2)';
-        ctx.beginPath(); ctx.arc(x, y, 1.5, 0, Math.PI*2); ctx.fill();
-      }
-    }
+
+    // Draw pins
+    pinPositions.forEach(row => {
+      row.forEach(pin => {
+        ctx.fillStyle = 'rgba(139,92,246,0.15)';
+        ctx.beginPath(); ctx.arc(pin.x, pin.y, 5, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        ctx.beginPath(); ctx.arc(pin.x, pin.y, 2, 0, Math.PI*2); ctx.fill();
+      });
+    });
   }
 
   function getSlotColor(m){
@@ -139,9 +162,14 @@ document.addEventListener('DOMContentLoaded', function(){
     const dpr = window.devicePixelRatio || 1;
     const w = canvas.width / dpr;
     const h = canvas.height / dpr;
-    const pinStartY = 15;
-    const pinEndY = h - 25;
-    const finalX = (w / slotCount) * finalSlot + (w / slotCount) / 2;
+
+    // Calculate target X based on slot
+    const padding = 20;
+    const usableW = w - padding * 2;
+    const lastRowPins = pinPositions[pinPositions.length - 1];
+    const slotWidth = usableW / slotCount;
+    const targetX = padding + slotWidth * finalSlot + slotWidth / 2;
+    const targetY = h - 15;
 
     const ball = document.createElement('div');
     ball.className = 'plinko-ball';
@@ -149,22 +177,47 @@ document.addEventListener('DOMContentLoaded', function(){
     ball.style.boxShadow = '0 0 6px rgba(255,200,0,0.8)';
     ballsContainer.appendChild(ball);
 
+    // Animate ball falling through pins
+    let pinIndex = 0;
+    const startX = w / 2;
+    const startY = 5;
+    const totalFrames = rows * 12;
     let frame = 0;
-    const totalFrames = rows * 6;
 
     function animate(){
       frame++;
       const progress = frame / totalFrames;
-      const y = pinStartY + (pinEndY - pinStartY) * progress;
-      const x = (w/2) + (finalX - w/2) * progress + Math.sin(progress * rows * Math.PI) * 8 * (1 - progress);
-      ball.style.left = (x - 4) + 'px';
-      ball.style.top = (y - 4) + 'px';
+
+      // Which pin row we're near
+      const currentRow = Math.min(Math.floor(progress * rows), rows - 1);
+      const nextRow = Math.min(currentRow + 1, rows - 1);
+      const rowProgress = (progress * rows) - currentRow;
+
+      // Get current and next pin positions
+      const currentPins = pinPositions[currentRow];
+      const nextPins = pinPositions[nextRow];
+
+      // Interpolate Y
+      const currentY = currentPins[0].y;
+      const nextY = nextPins[0].y;
+      const y = currentY + (nextY - currentY) * rowProgress;
+
+      // X — move toward target with some randomness
+      const baseX = startX + (targetX - startX) * progress;
+      // Add bounce effect
+      const bounce = Math.sin(progress * rows * Math.PI * 0.8) * 6 * (1 - progress);
+      const x = baseX + bounce * (Math.random() - 0.5);
+
+      ball.style.left = (x - 5) + 'px';
+      ball.style.top = (y - 5) + 'px';
 
       if(frame < totalFrames){
         requestAnimationFrame(animate);
       } else {
-        ball.style.left = (finalX - 4) + 'px';
-        ball.style.top = (h - 18) + 'px';
+        // Final position
+        ball.style.left = (targetX - 5) + 'px';
+        ball.style.top = (targetY - 5) + 'px';
+
         if(mult >= 1){
           ball.style.background = 'radial-gradient(circle at 35% 35%,#4ade80,#22c55e)';
           ball.style.boxShadow = '0 0 8px rgba(46,227,107,0.9)';
@@ -173,11 +226,11 @@ document.addEventListener('DOMContentLoaded', function(){
           ball.style.boxShadow = '0 0 8px rgba(244,67,54,0.9)';
         }
         setTimeout(() => {
-          ball.style.transition = 'opacity 0.2s';
+          ball.style.transition = 'opacity 0.3s';
           ball.style.opacity = '0';
-          setTimeout(() => ball.remove(), 200);
+          setTimeout(() => ball.remove(), 300);
           onBallDone(mult);
-        }, 300);
+        }, 400);
       }
     }
     animate();
