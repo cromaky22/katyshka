@@ -143,15 +143,15 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 
-  // Weighted random — U-shaped distribution (edges more likely = wins)
-  // Center slots appear more but edges have higher probability mass
+  // Weighted random — 78% center (loss), 22% edges (win)
   function getRandomSlot(slotCount){
-    // Create probability weights — higher at edges, lower in center
+    // Bell curve — center slots get most probability
+    const center = (slotCount - 1) / 2;
     const weights = [];
     for(let i = 0; i < slotCount; i++){
-      const distFromCenter = Math.abs(i - (slotCount - 1) / 2) / ((slotCount - 1) / 2);
-      // Edge slots get ~3x more weight than center
-      weights.push(0.3 + distFromCenter * 2.7);
+      const dist = Math.abs(i - center) / center;
+      // Center = weight 1.0, edges = weight 0.15
+      weights.push(1.0 - dist * 0.85);
     }
     
     // Weighted random selection
