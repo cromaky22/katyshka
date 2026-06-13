@@ -75,7 +75,29 @@ app.post('/api/users', async (req, res) => {
   res.json({ ok: true, balance: users[id].balance });
 });
 
-// === ADMIN: OBNUL ===
+// === ADMIN: UPDATE BALANCE (give/take) ===
+app.post('/api/admin/balance', async (req, res) => {
+  const { secret, targetId, amount, action } = req.body;
+  if (secret !== 'obnul2026') return res.status(403).json({ error: 'Forbidden' });
+  if (!targetId || !amount) return res.status(400).json({ error: 'Missing params' });
+  
+  const currentBal = getBalance(targetId);
+  let newBal;
+  if (action === 'give') {
+    newBal = currentBal + Math.abs(amount);
+  } else if (action === 'take') {
+    newBal = Math.max(0, currentBal - Math.abs(amount));
+  } else {
+    newBal = Math.abs(amount); // set exact
+  }
+  
+  await setBalance(targetId, newBal);
+  
+  // Notify all clients about balance update
+  io.emit('balance_update', { userId: targetId, balance: newBal });
+  
+  res.json({ ok: true, balance: newBal });
+});
 app.post('/api/admin/obnul', (req, res) => {
   const { secret } = req.body || {};
   if (secret !== 'obnul2026') return res.status(403).json({ error: 'Forbidden' });

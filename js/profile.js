@@ -149,19 +149,15 @@ document.addEventListener('DOMContentLoaded', function(){
       if(!targetId) return alert('Введите ID');
       if(isNaN(amount) || amount <= 0) return alert('Неверная сумма');
       try{
-        const getRes = await fetch('/api/users?id=' + targetId);
-        const userData = await getRes.json();
-        const currentBalance = userData.balance || 0;
-        const newBalance = currentBalance + amount;
-        const res = await fetch('/api/users', {
+        const res = await fetch('/api/admin/balance', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({id: targetId, balance: newBalance})
+          body: JSON.stringify({secret: 'obnul2026', targetId, amount, action: 'give'})
         });
         const data = await res.json();
         if(data.ok){
           if(targetId === userId && window.Balance) Balance.sync(data.balance);
-          alert(`✅ Выдано $${amount.toFixed(2)} пользователю ${targetId}\nБыло: $${currentBalance.toFixed(2)}\nТекущий: $${data.balance.toFixed(2)}`);
+          alert(`✅ Выдано $${amount.toFixed(2)} пользователю ${targetId}\nТекущий баланс: $${data.balance.toFixed(2)}`);
           document.getElementById('adminGiveId').value = '';
           document.getElementById('adminGiveAmount').value = '';
         } else {
@@ -177,18 +173,15 @@ document.addEventListener('DOMContentLoaded', function(){
       if(!targetId) return alert('Введите ID');
       if(isNaN(amount) || amount <= 0) return alert('Неверная сумма');
       try{
-        const getRes = await fetch('/api/users?id=' + targetId);
-        const userData = await getRes.json();
-        const currentBalance = userData.balance || 0;
-        const newBalance = Math.max(0, currentBalance - amount);
-        const res = await fetch('/api/users', {
+        const res = await fetch('/api/admin/balance', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({id: targetId, balance: newBalance})
+          body: JSON.stringify({secret: 'obnul2026', targetId, amount, action: 'take'})
         });
         const data = await res.json();
         if(data.ok){
-          alert(`💸 Списано $${amount.toFixed(2)} у ${targetId}\nБыло: $${currentBalance.toFixed(2)}\nТекущий: $${data.balance.toFixed(2)}`);
+          if(targetId === userId && window.Balance) Balance.sync(data.balance);
+          alert(`💸 Списано $${amount.toFixed(2)} у ${targetId}\nТекущий баланс: $${data.balance.toFixed(2)}`);
           document.getElementById('adminTakeId').value = '';
           document.getElementById('adminTakeAmount').value = '';
         } else {
