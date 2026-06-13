@@ -142,6 +142,49 @@
       </div>
     </section>
 
+    <!-- Admin Panel (hidden for non-admins) -->
+    <section class="profile-section admin-panel" id="adminPanel" style="display:none">
+      <div class="section-heading">🛡 Админ-панель</div>
+      
+      <div class="admin-section">
+        <div class="admin-section-title">💰 Выдать баланс</div>
+        <div class="admin-row">
+          <input type="text" class="admin-input" id="adminGiveId" placeholder="ID игрока">
+          <input type="number" class="admin-input admin-input-sm" id="adminGiveAmount" placeholder="Сумма">
+          <button class="btn btn-sm" id="adminGiveBtn">Выдать</button>
+        </div>
+      </div>
+      
+      <div class="admin-section">
+        <div class="admin-section-title">💸 Списать баланс</div>
+        <div class="admin-row">
+          <input type="text" class="admin-input" id="adminTakeId" placeholder="ID игрока">
+          <input type="number" class="admin-input admin-input-sm" id="adminTakeAmount" placeholder="Сумма">
+          <button class="btn btn-sm" id="adminTakeBtn">Списать</button>
+        </div>
+      </div>
+      
+      <div class="admin-section">
+        <div class="admin-section-title">🔍 Найти игрока</div>
+        <div class="admin-row">
+          <input type="text" class="admin-input" id="adminSearchId" placeholder="ID игрока">
+          <button class="btn btn-sm" id="adminSearchBtn">Найти</button>
+        </div>
+        <div id="adminSearchResult" class="admin-search-result"></div>
+      </div>
+      
+      <div class="admin-section">
+        <div class="admin-section-title">📊 Статистика</div>
+        <button class="btn btn-sm" id="adminStatsBtn">Показать статистику</button>
+        <div id="adminStatsResult" class="admin-search-result"></div>
+      </div>
+      
+      <div class="admin-section">
+        <div class="admin-section-title">🗑 Опасная зона</div>
+        <button class="btn btn-sm btn-danger" id="adminObnulBtn">Обнулить ВСЁ</button>
+      </div>
+    </section>
+
   </main>
 
   <!-- Promo modal -->

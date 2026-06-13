@@ -186,4 +186,141 @@ document.addEventListener('DOMContentLoaded', function(){
       if(input) input.focus();
     });
   }
+
+  // === ADMIN PANEL ===
+  const ADMIN_ID = '7239160695';
+  const adminPanel = document.getElementById('adminPanel');
+  
+  if(adminPanel && userId === ADMIN_ID){
+    adminPanel.style.display = '';
+    
+    // Give balance
+    document.getElementById('adminGiveBtn').addEventListener('click', async function(){
+      const targetId = document.getElementById('adminGiveId').value.trim();
+      const amount = parseFloat(document.getElementById('adminGiveAmount').value);
+      if(!targetId) return alert('Введите ID');
+      if(isNaN(amount) || amount <= 0) return alert('Неверная сумма');
+      try{
+        const res = await fetch('/api/users', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({id: targetId, balance: amount})
+        });
+        const data = await res.json();
+        if(data.ok){
+          alert(`✅ Выдано $${amount.toFixed(2)} пользователю ${targetId}\nТекущий баланс: $${data.balance.toFixed(2)}`);
+          document.getElementById('adminGiveId').value = '';
+          document.getElementById('adminGiveAmount').value = '';
+        } else {
+          alert('❌ Ошибка: ' + (data.error || 'unknown'));
+        }
+      }catch(e){
+        alert('❌ Ошибка соединения');
+      }
+    });
+    
+    // Take balance
+    document.getElementById('adminTakeBtn').addEventListener('click', async function(){
+      const targetId = document.getElementById('adminTakeId').value.trim();
+      const amount = parseFloat(document.getElementById('adminTakeAmount').value);
+      if(!targetId) return alert('Введите ID');
+      if(isNaN(amount) || amount <= 0) return alert('Неверная сумма');
+      try{
+        // Get current balance
+        const getRes = await fetch('/api/users?id=' + targetId);
+        const userData = await getRes.json();
+        const currentBalance = userData.balance || 0;
+        const newBalance = Math.max(0, currentBalance - amount);
+        
+        const res = await fetch('/api/users', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({id: targetId, balance: newBalance})
+        });
+        const data = await res.json();
+        if(data.ok){
+          alert(`💸 Списано $${amount.toFixed(2)} у ${targetId}\nБыло: $${currentBalance.toFixed(2)}\nТекущий: $${data.balance.toFixed(2)}`);
+          document.getElementById('adminTakeId').value = '';
+          document.getElementById('adminTakeAmount').value = '';
+        } else {
+          alert('❌ Ошибка: ' + (data.error || 'unknown'));
+        }
+      }catch(e){
+        alert('❌ Ошибка соединения');
+      }
+    });
+    
+    // Search user
+    document.getElementById('adminSearchBtn').addEventListener('click', async function(){
+      const targetId = document.getElementById('adminSearchId').value.trim();
+      if(!targetId) return alert('Введите ID');
+      const resultEl = document.getElementById('adminSearchResult');
+      try{
+        const res = await fetch('/api/users?id=' + targetId);
+        const data = await res.json();
+        if(data && data.balance !== undefined){
+          const name = data.first_name || data.username || targetId;
+          const bal = (data.balance || 0).toFixed(2);
+          resultEl.innerHTML = `
+            <div class="admin-user-info">
+              <div>👤 <strong>${name}</strong></div>
+              <div class="uid">ID: ${targetId}</div>
+              <div class="admin-user-balance">💰 $${bal}</div>
+            </div>
+          `;
+          resultEl.classList.add('show');
+        } else {
+          resultEl.innerHTML = '❌ Пользователь не найден';
+          resultEl.classList.add('show');
+        }
+      }catch(e){
+        resultEl.innerHTML = '❌ Ошибка соединения';
+        resultEl.classList.add('show');
+      }
+    });
+    
+    // Stats
+    document.getElementById('adminStatsBtn').addEventListener('click', async function(){
+      const resultEl = document.getElementById('adminStatsResult');
+      try{
+        const res = await fetch('/api/users');
+        const users = await res.json();
+        if(Array.isArray(users)){
+          const total = users.length;
+          const totalBal = users.reduce((s, u) => s + (u.balance || 0), 0).toFixed(2);
+          resultEl.innerHTML = `
+            <div class="admin-user-info">
+              <div>👥 Пользователей: <strong>${total}</strong></div>
+              <div>💰 Общий баланс: <strong>$${totalBal}</strong></div>
+            </div>
+          `;
+          resultEl.classList.add('show');
+        }
+      }catch(e){
+        resultEl.innerHTML = '❌ Ошибка';
+        resultEl.classList.add('show');
+      }
+    });
+    
+    // Obnul
+    document.getElementById('adminObnulBtn').addEventListener('click', async function(){
+      if(!confirm('⚠️ ВНИМАНИЕ!\n\nЭто обнулит ВСЕ балансы, ставки и промокоды!\n\nПродолжить?')) return;
+      if(!confirm('Точно уверены? Это действие нельзя отменить!')) return;
+      try{
+        const res = await fetch('/api/admin/obnul', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({secret: 'obnul2026'})
+        });
+        const data = await res.json();
+        if(data.ok){
+          alert('✅ Всё обнулено!');
+        } else {
+          alert('❌ Ошибка: ' + (data.error || 'unknown'));
+        }
+      }catch(e){
+        alert('❌ Ошибка соединения');
+      }
+    });
+  }
 });
