@@ -8,11 +8,12 @@
   function recordStat(type, amount, detail){
     try{
       const userId = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid') || 'unknown';
+      console.log('📤 recordStat:', { type, amount, detail, userId });
       fetch('/api/transaction', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({userId, type, amount: Math.abs(amount), detail: detail || 'Mines'})
-      }).catch(function(){});
+      }).then(r => console.log('📥 Response:', r.status)).catch(e => console.error('❌ Error:', e));
     }catch(e){}
   }
   

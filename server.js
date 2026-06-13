@@ -24,8 +24,10 @@ app.get('/api/users', async (req, res) => {
 // === ADD TRANSACTION (client-called) ===
 app.post('/api/transaction', async (req, res) => {
   const { userId, type, amount, detail } = req.body;
+  console.log('📥 Transaction:', { userId, type, amount, detail });
   if (!userId || !type || !amount) return res.status(400).json({ error: 'Missing params' });
   await addTx(type, userId, Math.abs(amount), 'completed', { game: detail });
+  console.log('✅ Saved to DB:', usePostgres);
   res.json({ ok: true });
 });
 
@@ -792,7 +794,12 @@ server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 // === INIT DB ===
 async function initDb() {
-  if (!usePostgres) return;
+  console.log('🔍 DATABASE_URL:', process.env.DATABASE_URL ? 'SET' : 'NOT SET');
+  console.log('🔍 usePostgres:', usePostgres);
+  if (!usePostgres) {
+    console.log('⚠️ PostgreSQL not configured — transactions will NOT be saved permanently!');
+    return;
+  }
   try {
     // Create tables
     await db.query(`
