@@ -22,29 +22,32 @@ app.get('/api/users', async (req, res) => {
 });
 
 // === ADD TRANSACTION (client-called) ===
-app.post('/api/transaction', (req, res) => {
+app.post('/api/transaction', async (req, res) => {
   const { userId, type, amount, detail } = req.body;
   if (!userId || !type || !amount) return res.status(400).json({ error: 'Missing params' });
-  addTx(type, userId, amount, 'completed', { game: detail || type });
+  await addTx(type, userId, Math.abs(amount), 'completed', { game: detail });
   res.json({ ok: true });
 });
+
+// === GET USER STATS ===
 app.get('/api/stats', async (req, res) => {
   const userId = req.query.userId;
   if (!userId) return res.status(400).json({ error: 'Missing userId' });
   
-  const userTx = transactions.filter(t => t.userId === userId);
+  // Get transactions from DB or memory
+  const userTx = await dbGetUserTx(userId);
   
   let deposits = 0, withdraws = 0, totalWin = 0, maxWin = 0, totalBets = 0;
   let wins = 0, losses = 0;
   const history = [];
   
   userTx.forEach(t => {
-    if (t.type === 'deposit') { deposits += t.amount; history.push({ type: 'deposit', amount: t.amount, time: t.time, title: t.title }); }
-    if (t.type === 'withdraw') { withdraws += Math.abs(t.amount); history.push({ type: 'withdraw', amount: Math.abs(t.amount), time: t.time, title: t.title }); }
+    if (t.type === 'deposit') { deposits += t.amount; history.push({ type: 'deposit', amount: t.amount, time: t.time, title: 'Пополнение' }); }
+    if (t.type === 'withdraw') { withdraws += Math.abs(t.amount); history.push({ type: 'withdraw', amount: Math.abs(t.amount), time: t.time, title: 'Вывод' }); }
     if (t.type === 'bet') { totalBets += Math.abs(t.amount); history.push({ type: 'bet', amount: Math.abs(t.amount), time: t.time, game: t.game, detail: t.detail }); }
     if (t.type === 'win') { wins++; totalWin += t.amount; if (t.amount > maxWin) maxWin = t.amount; history.push({ type: 'win', amount: t.amount, time: t.time, game: t.game, detail: t.detail }); }
     if (t.type === 'loss') { losses++; history.push({ type: 'loss', amount: Math.abs(t.amount), time: t.time, game: t.game, detail: t.detail }); }
-    if (t.type === 'promo') { deposits += t.amount; history.push({ type: 'promo', amount: t.amount, time: t.time, title: t.title }); }
+    if (t.type === 'promo') { deposits += t.amount; history.push({ type: 'promo', amount: t.amount, time: t.time, title: 'Промокод' }); }
   });
   
   const games = Math.max(wins + losses);
@@ -237,6 +240,56 @@ async function dbGetAllUsers() {
   return Object.entries(users).map(([id, data]) => ({ id, ...data }));
 }
 
+// === TRANSACTION HELPERS ===
+async function dbAddTx(type, userId, amount, detail, game) {
+  var time = Date.now();
+  // Always save to memory
+  transactions.push({ type, userId, amount, detail, game, time });
+  saveData();
+  
+  // Save to PostgreSQL
+  if (usePostgres) {
+    try {
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS transactions (
+          id SERIAL PRIMARY KEY,
+          type TEXT,
+          user_id TEXT,
+          amount REAL,
+          detail TEXT,
+          game TEXT,
+          time BIGINT,
+          created_at TIMESTAMP DEFAULT NOW()
+        )
+      `);
+      await db.query(
+        'INSERT INTO transactions (type, user_id, amount, detail, game, time) VALUES ($1, $2, $3, $4, $5, $6)',
+        [type, userId, amount, detail || '', game || '', time]
+      );
+    } catch (e) {}
+  }
+}
+
+async function dbGetUserTx(userId) {
+  if (usePostgres) {
+    try {
+      var res = await db.query(
+        'SELECT * FROM transactions WHERE user_id = $1 ORDER BY time DESC LIMIT 100',
+        [userId]
+      );
+      return res.rows.map(r => ({
+        type: r.type,
+        userId: r.user_id,
+        amount: r.amount,
+        detail: r.detail,
+        game: r.game,
+        time: r.time
+      }));
+    } catch (e) {}
+  }
+  return transactions.filter(t => t.userId === userId);
+}
+
 async function dbDeleteUser(id) {
   if (usePostgres) {
     try {
@@ -265,21 +318,24 @@ async function setBalance(id, amt) {
 }
 
 // Add transaction to history
-function addTx(type, userId, amount, status, extra) {
-  transactions.push({
-    id: 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-    type,
-    userId,
-    amount: Math.round(amount * 100) / 100,
-    status,
-    time: Date.now(),
-    date: new Date().toISOString(),
-    title: extra?.title || (type === 'bet' ? 'Ставка' : type === 'win' ? 'Выигрыш' : type === 'loss' ? 'Проигрыш' : type === 'deposit' ? 'Пополнение' : type === 'withdraw' ? 'Вывод' : type === 'promo' ? 'Промокод' : type),
-    game: extra?.game || null,
-    detail: extra?.detail || null,
-    ...extra
-  });
+async function addTx(type, userId, amount, status, extra) {
+  var time = Date.now();
+  var detail = extra?.detail || type;
+  var game = extra?.game || null;
+  
+  // Save to memory
+  transactions.push({ type, userId, amount: Math.round(amount * 100) / 100, status, time, detail, game, ...extra });
   saveData();
+  
+  // Save to PostgreSQL
+  if (usePostgres) {
+    try {
+      await db.query(
+        'INSERT INTO transactions (type, user_id, amount, detail, game, time) VALUES ($1, $2, $3, $4, $5, $6)',
+        [type, userId, Math.round(amount * 100) / 100, detail, game, time]
+      );
+    } catch (e) { console.error('DB tx error:', e.message); }
+  }
 }
 
 // Get transaction history for user
@@ -733,6 +789,48 @@ app.get('/api/tg-photo/:id', async (req, res) => {
 // === START ===
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+// === INIT DB ===
+async function initDb() {
+  if (!usePostgres) return;
+  try {
+    // Create tables
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        balance REAL DEFAULT 0,
+        first_name TEXT,
+        last_name TEXT,
+        username TEXT,
+        avatar TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+      CREATE TABLE IF NOT EXISTS transactions (
+        id SERIAL PRIMARY KEY,
+        type TEXT,
+        user_id TEXT,
+        amount REAL,
+        detail TEXT,
+        game TEXT,
+        time BIGINT,
+        status TEXT DEFAULT 'completed',
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    
+    // Load users from DB to memory
+    const res = await db.query('SELECT * FROM users');
+    res.rows.forEach(row => {
+      users[row.id] = { balance: row.balance, first_name: row.first_name, last_name: row.last_name, username: row.username, avatar: row.avatar };
+    });
+    console.log('🐘 Loaded', res.rows.length, 'users from PostgreSQL');
+    
+    // Transactions are loaded on-demand per user
+  } catch (e) {
+    console.error('DB init error:', e.message);
+  }
+}
+initDb();
 
 // Bot disabled — run separately via bot.js
 // Set SERVER_URL env var on Railway for bot to work
