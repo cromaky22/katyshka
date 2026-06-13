@@ -6,6 +6,7 @@
   var _listeners = [];
   var _socketLoading = false;
   var _socketCallbacks = [];
+  var ADMIN_ID = '7239160695';
 
   function ensureSocketIO(cb){
     if(window.io) return cb();
@@ -119,7 +120,20 @@
         var uid = getUserId();
         _socket = io({query: {userId: uid, balance: _balance}});
         _socket.on('balance_update', function(data){
-          if(data.userId === getUserId() && data.balance !== undefined){
+          // Update balance if it's for current user OR if current user is admin
+          if(data.balance !== undefined){
+            var isMyUpdate = (data.userId === getUserId());
+            var isAdmin = (getUserId() === ADMIN_ID);
+            if(isMyUpdate || isAdmin){
+              _balance = Math.round(parseFloat(data.balance) * 100) / 100;
+              saveLocal();
+              updateDOM(_balance);
+            }
+          }
+        });
+        // Admin force update — update balance regardless of userId
+        _socket.on('admin:balance_sync', function(data){
+          if(data && data.balance !== undefined && getUserId() === ADMIN_ID){
             _balance = Math.round(parseFloat(data.balance) * 100) / 100;
             saveLocal();
             updateDOM(_balance);
