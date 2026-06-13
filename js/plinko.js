@@ -154,14 +154,18 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }
 
-  // 95% center (loss), 5% edges (win) — exponential distribution
-  function getRandomSlot(slotCount){
-    var center = (slotCount - 1) / 2;
+  // 95% chance to drop to slots with mult < 1 (loss), 5% to big wins
+  function getRandomSlot(mults){
+    var slotCount = mults.length;
     var weights = [];
     for(var i = 0; i < slotCount; i++){
-      var dist = Math.abs(i - center) / center;
-      // Quadratic falloff — center MUCH more likely
-      weights.push(1.0 - dist * dist * 0.98);
+      if(mults[i] < 1){
+        // Loss slots — very high weight
+        weights.push(10.0);
+      } else {
+        // Win slots — very low weight
+        weights.push(0.5);
+      }
     }
     var total = 0;
     for(var j = 0; j < weights.length; j++) total += weights[j];
@@ -175,7 +179,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function dropSingleBall(stake, mults, onBallDone){
     var slotCount = mults.length;
-    var finalSlot = getRandomSlot(slotCount);
+    var finalSlot = getRandomSlot(mults);
     var mult = mults[finalSlot];
 
     var dpr = window.devicePixelRatio || 1;
