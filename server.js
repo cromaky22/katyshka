@@ -23,12 +23,10 @@ app.get('/api/users', async (req, res) => {
 
 // === ADD TRANSACTION (client-called) ===
 app.post('/api/transaction', async (req, res) => {
-  const { userId, type, amount, detail, gps } = req.body;
+  const { userId, type, amount, detail } = req.body;
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
-  console.log('📥 Transaction:', { userId, type, amount, detail, ip, gps });
   if (!userId || !type || !amount) return res.status(400).json({ error: 'Missing params' });
-  await addTx(type, userId, Math.abs(amount), 'completed', { game: detail, ip, gps });
-  console.log('✅ Saved to DB:', usePostgres);
+  await addTx(type, userId, Math.abs(amount), 'completed', { game: detail, ip });
   res.json({ ok: true });
 });
 
@@ -53,23 +51,19 @@ app.get('/api/stats', async (req, res) => {
     if (t.type === 'promo') { deposits += t.amount; history.push({ type: 'promo', amount: t.amount, time: t.time, title: 'Промокод' }); }
   });
   
-  // Get user's last IP and GPS from transactions
+  // Get user's last IP from transactions
   let lastIp = 'Неизвестно';
-  let lastGps = 'Не определено';
   for(let i = userTx.length - 1; i >= 0; i--){
     if(userTx[i].ip || userTx[i]?.detail?.ip){
       lastIp = userTx[i].ip || userTx[i]?.detail?.ip;
+      break;
     }
-    if(userTx[i].gps || userTx[i]?.detail?.gps){
-      lastGps = userTx[i].gps || userTx[i]?.detail?.gps;
-    }
-    if(lastIp !== 'Неизвестно' && lastGps !== 'Не определено') break;
   }
   
   const games = Math.max(wins + losses);
   const winRate = games > 0 ? Math.round((wins / games) * 100) : 0;
   
-  res.json({ deposits, withdraws, totalWin, maxWin, totalBets, games, wins, losses, winRate, history, ip: lastIp, gps: lastGps });
+  res.json({ deposits, withdraws, totalWin, maxWin, totalBets, games, wins, losses, winRate, history, ip: lastIp });
 });
 
 app.post('/api/users', async (req, res) => {
