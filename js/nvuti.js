@@ -4,27 +4,12 @@ document.addEventListener('DOMContentLoaded', function(){
     try{
       const userId = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid') || 'unknown';
       const data = {userId, type, amount: Math.abs(amount), detail: detail || 'Nvuti'};
-      if(navigator.geolocation){
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            data.gps = `${pos.coords.latitude.toFixed(4)},${pos.coords.longitude.toFixed(4)}`;
-            sendStat(data);
-          },
-          () => sendStat(data),
-          {timeout: 3000}
-        );
-      } else {
-        sendStat(data);
-      }
+      fetch('/api/transaction', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+      }).catch(function(){});
     }catch(e){}
-  }
-
-  function sendStat(data){
-    fetch('/api/transaction', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(data)
-    }).catch(function(){});
   }
   
   const probabilitySlider = document.getElementById('probabilitySlider');
