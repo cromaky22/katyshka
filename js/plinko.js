@@ -145,19 +145,16 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }
 
-  // 70% to mult < 0.9 (loss), 28% to mult < 2 (small win), 2% to big wins
+  // 65% to mult < 0.9 (loss), 34% to mult < 2 (small win), 1% to big wins (>= 2)
   function getRandomSlot(mults){
     var weights = [];
     for(var i = 0; i < mults.length; i++){
       if(mults[i] < 0.9){
-        // Loss slots — 70% total
         weights.push(10.0);
       } else if(mults[i] < 2){
-        // Small win slots — 28% total
-        weights.push(4.0);
+        weights.push(5.0);
       } else {
-        // Big win slots — 2% total
-        weights.push(0.1);
+        weights.push(0.02);
       }
     }
     var total = 0;
