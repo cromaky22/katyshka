@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Plinko — KATYSHKA</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/plinko.css">
@@ -11,104 +11,101 @@
 <body class="page-plinko">
   <header class="app-header">
     <div class="left-controls"></div>
-    <div class="header-title" style="margin-right:0;color:var(--accent)">🎯 PLINKO</div>
+    <div class="header-title" style="color:var(--accent)">🎯 PLINKO</div>
     <div class="right-controls" style="position:relative">
       <div class="balance-pill">
         <span class="wallet-icon">💠</span>
         <span class="balance-value">0.00</span>
         <span class="currency">$</span>
-        <span class="caret">▾</span>
       </div>
-      <button class="profile" id="profileBtn" title="Профиль" aria-label="Профиль"><img class="profile-icon" id="profileImg" src="" alt="Аватар" onerror="this.style.display='none'"></button>
+      <button class="profile" id="profileBtn" title="Профиль" aria-label="Профиль"><img class="profile-icon" src="" alt="Аватар" onerror="this.style.display='none'"></button>
       <div class="profile-dropdown" id="profileDropdown">
         <div class="pd-header">
           <div class="pd-id-label">ID игрока</div>
           <div class="pd-id-value"><span id="pdUserId">—</span></div>
         </div>
         <div class="pd-body">
-          <a href="profile.html" class="pd-btn"><span class="pd-btn-icon">👤</span>Профиль<span class="pd-btn-arrow">→</span></button>
+          <a href="profile.html" class="pd-btn"><span class="pd-btn-icon">👤</span>Профиль<span class="pd-btn-arrow">→</span></a>
+          <button class="pd-btn" id="pdPromoBtn"><span class="pd-btn-icon">🎟</span>Промокод<span class="pd-btn-arrow">→</span></button>
         </div>
       </div>
       <div class="pd-overlay" id="pdOverlay"></div>
     </div>
   </header>
 
-  <main class="main-content">
+  <main class="content">
+    <section class="plinko-game">
+      <div class="plinko-board">
 
-    <!-- Board -->
-    <div class="plinko-board-wrap">
-      <canvas id="plinkoCanvas"></canvas>
-      <div id="plinkoBalls"></div>
-      <div class="plinko-slots" id="plinkoSlots"></div>
-    </div>
-
-    <!-- Controls -->
-    <div class="plinko-controls">
-      <div class="plinko-row">
-        <div class="plinko-label">⚠️ Уровень риска</div>
-        <div class="plinko-btns" id="riskBtns">
-          <button class="plinko-btn active" data-risk="low">Низкий</button>
-          <button class="plinko-btn" data-risk="medium">Средний</button>
-          <button class="plinko-btn" data-risk="high">Высокий</button>
+        <!-- History -->
+        <div class="ph-wrap">
+          <div class="ph-title">История</div>
+          <div class="ph-list" id="phList"></div>
         </div>
-      </div>
-      <div class="plinko-row">
-        <div class="plinko-label">📊 Количество рядов</div>
-        <div class="plinko-btns" id="rowsBtns">
-          <button class="plinko-btn" data-rows="8">8</button>
-          <button class="plinko-btn" data-rows="10">10</button>
-          <button class="plinko-btn" data-rows="12">12</button>
-          <button class="plinko-btn" data-rows="14">14</button>
-          <button class="plinko-btn active" data-rows="16">16</button>
+
+        <!-- Canvas Board -->
+        <div class="plinko-canvas-wrap">
+          <canvas id="plinkoCanvas"></canvas>
+          <div id="plinkoBalls"></div>
         </div>
+
+        <!-- Slots -->
+        <div class="plinko-slots" id="plinkoSlots"></div>
+
+        <!-- Controls -->
+        <div class="plinko-controls">
+          <div class="plk-row">
+            <div class="plk-label">Риск</div>
+            <div class="plk-btns" id="riskBtns">
+              <button class="plk-btn active" data-risk="low">Низкий</button>
+              <button class="plk-btn" data-risk="medium">Средний</button>
+              <button class="plk-btn" data-risk="high">Высокий</button>
+            </div>
+          </div>
+          <div class="plk-row">
+            <div class="plk-label">Ряды</div>
+            <div class="plk-btns" id="rowsBtns">
+              <button class="plk-btn" data-rows="8">8</button>
+              <button class="plk-btn" data-rows="10">10</button>
+              <button class="plk-btn" data-rows="12">12</button>
+              <button class="plk-btn" data-rows="14">14</button>
+              <button class="plk-btn active" data-rows="16">16</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stake -->
+        <div class="stake-panel">
+          <div class="stake-header">
+            <label>Ставка</label>
+            <span class="stake-range">От $0.01 до $200</span>
+          </div>
+          <div class="stake-row">
+            <input id="stakeInput" type="number" min="0.01" max="200" step="0.01" value="1">
+            <div class="stake-buttons">
+              <button id="halfBtn" class="btn-stake">½</button>
+              <button id="doubleBtn" class="btn-stake">×2</button>
+            </div>
+          </div>
+          <button id="playBtn" class="btn play-btn">🎱 БРОСИТЬ</button>
+        </div>
+
+        <div id="gameStatus" class="game-status" aria-live="polite"></div>
+
       </div>
-    </div>
-
-    <!-- Stake & Play -->
-    <div class="stake-row">
-      <div class="stake-input-wrap">
-        <button class="stake-op" id="stakeHalf">½</button>
-        <input type="number" class="stake-input" id="stakeInput" value="1" min="0.01" max="10000" step="0.01" placeholder="0.00">
-        <button class="stake-op" id="stakeDouble">×2</button>
-      </div>
-    </div>
-    <button class="plk-play-btn" id="playBtn">
-      <span class="plk-play-text">БРОСИТЬ</span>
-      <span class="plk-play-icon">🎱</span>
-    </button>
-
-    <!-- Result -->
-    <div id="resultWrap" class="result-wrap" style="display:none">
-      <div id="resultText" class="result-text"></div>
-    </div>
-
-    <!-- History -->
-    <div class="ph-wrap">
-      <div class="ph-title">📋 История</div>
-      <div class="ph-list" id="phList"></div>
-    </div>
+    </section>
   </main>
 
   <nav class="bottom-nav">
-    <a href="home.html#games" class="nav-item"><span class="icon">🎮</span><span class="label">Игры</span></a>
-    <a href="wallet.html" class="nav-item"><span class="icon">💼</span><span class="label">Кошелёк</span></a>
-    <a href="home.html" class="nav-item center"><span class="icon">💎</span></a>
-    <a href="bonus.html" class="nav-item"><span class="icon">🎁</span><span class="label">Бонус</span></a>
-    <a href="profile.html" class="nav-item"><span class="profile"><img class="profile-icon" src="" alt="Аватар" onerror="this.style.display='none'"></span><span class="label">Профиль</span></a>
+    <a href="home.html#games" class="nav-item" data-name="games"><span class="icon">🎮</span><span class="label">Games</span></a>
+    <a href="wallet.html" class="nav-item" data-name="wallet"><span class="icon">💼</span><span class="label">Wallet</span></a>
+    <a href="home.html" class="nav-item center" data-name=""><span class="icon">💎</span></a>
+    <a href="bonus.html" class="nav-item" data-name="bonus"><span class="icon">🎁</span><span class="label">Bonus</span></a>
+    <a href="menu.html" class="nav-item" data-name="menu"><span class="icon">☰</span><span class="label">Menu</span></a>
   </nav>
 
-<script src="js/balance.js"></script>
-<script src="js/app.js"></script>
-<script src="js/plinko.js"></script>
-<script>
-  document.getElementById('profileBtn').addEventListener('click', function(){
-    document.getElementById('profileDropdown').classList.toggle('show');
-    document.getElementById('pdOverlay').classList.toggle('show');
-  });
-  document.getElementById('pdOverlay').addEventListener('click', function(){
-    document.getElementById('profileDropdown').classList.remove('show');
-    this.classList.remove('show');
-  });
-</script>
+  <script src="js/app.js"></script>
+  <script src="js/balance.js"></script>
+  <script src="js/plinko.js"></script>
 </body>
 </html>

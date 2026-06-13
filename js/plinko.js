@@ -1,13 +1,12 @@
 document.addEventListener('DOMContentLoaded', function(){
-  // === STATS HELPER ===
+  // === STATS ===
   function recordStat(type, amount, detail){
     try{
       const userId = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid') || 'unknown';
-      const data = {userId, type, amount: Math.abs(amount), detail: detail || 'Plinko'};
       fetch('/api/transaction', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(data)
+        body: JSON.stringify({userId, type, amount: Math.abs(amount), detail: detail || 'Plinko'})
       }).catch(function(){});
     }catch(e){}
   }
@@ -16,11 +15,9 @@ document.addEventListener('DOMContentLoaded', function(){
   const ctx = canvas.getContext('2d');
   const ballsContainer = document.getElementById('plinkoBalls');
   const slotsContainer = document.getElementById('plinkoSlots');
-  const multsContainer = document.getElementById('plinkoMults');
   const stakeInput = document.getElementById('stakeInput');
   const playBtn = document.getElementById('playBtn');
-  const resultWrap = document.getElementById('resultWrap');
-  const resultText = document.getElementById('resultText');
+  const gameStatus = document.getElementById('gameStatus');
   const phList = document.getElementById('phList');
 
   function getBalance(){ return Balance.get(); }
@@ -31,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function(){
   let playing = false;
   let history = [];
 
-  // Multiplier tables — house edge ~3-8%, center slots are losses (< 1)
+  // Multipliers — center slots are losses
   const MULTS = {
     low: {
       8:  [5.6, 2.1, 1.1, 0.6, 0.6, 1.1, 2.1, 5.6],
@@ -60,6 +57,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function resizeCanvas(){
     const wrap = canvas.parentElement;
+    if(!wrap) return;
     const dpr = window.devicePixelRatio || 1;
     const rect = wrap.getBoundingClientRect();
     canvas.width = rect.width * dpr;
@@ -71,36 +69,25 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function drawBoard(){
-    const w = canvas.width / (window.devicePixelRatio || 1);
-    const h = canvas.height / (window.devicePixelRatio || 1);
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.width / dpr;
+    const h = canvas.height / dpr;
     ctx.clearRect(0, 0, w, h);
 
-    const mults = getMults();
-    const slotCount = mults.length;
-    const pinStartY = 20;
-    const pinEndY = h - 30;
-    const pinRows = rows;
+    const pinStartY = 15;
+    const pinEndY = h - 25;
 
-    // Draw pins with glow
-    for(let r = 0; r < pinRows; r++){
-      const y = pinStartY + (pinEndY - pinStartY) * ((r + 0.5) / pinRows);
+    // Pins
+    for(let r = 0; r < rows; r++){
+      const y = pinStartY + (pinEndY - pinStartY) * ((r + 0.5) / rows);
       const pinsInRow = r + 2;
-      const pinSpacing = w / (pinsInRow + 1);
+      const spacing = w / (pinsInRow + 1);
       for(let p = 0; p < pinsInRow; p++){
-        const x = pinSpacing * (p + 1);
-        // Glow
-        const grad = ctx.createRadialGradient(x, y, 0, x, y, 6);
-        grad.addColorStop(0, 'rgba(139,92,246,0.15)');
-        grad.addColorStop(1, 'rgba(139,92,246,0)');
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(x, y, 6, 0, Math.PI * 2);
-        ctx.fill();
-        // Pin
-        ctx.fillStyle = 'rgba(255,255,255,0.25)';
-        ctx.beginPath();
-        ctx.arc(x, y, 2, 0, Math.PI * 2);
-        ctx.fill();
+        const x = spacing * (p + 1);
+        ctx.fillStyle = 'rgba(139,92,246,0.12)';
+        ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+        ctx.beginPath(); ctx.arc(x, y, 1.5, 0, Math.PI*2); ctx.fill();
       }
     }
   }
@@ -113,26 +100,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if(m >= 5) return 'linear-gradient(180deg,#fb923c,#f97316)';
     if(m >= 2) return 'linear-gradient(180deg,#facc15,#eab308)';
     if(m >= 1) return 'linear-gradient(180deg,#4ade80,#22c55e)';
-    return 'linear-gradient(180deg,#374151,#1f2937)'; // loss - dark gray
-  }
-
-  function getColor(m){
-    if(m >= 100) return {bg:'#d946ef',glow:'rgba(217,70,239,0.6)'};
-    if(m >= 50) return {bg:'#a855f7',glow:'rgba(168,85,247,0.6)'};
-    if(m >= 20) return {bg:'#ec4899',glow:'rgba(236,72,153,0.6)'};
-    if(m >= 10) return {bg:'#ef4444',glow:'rgba(239,68,68,0.6)'};
-    if(m >= 5) return {bg:'#f97316',glow:'rgba(249,115,22,0.6)'};
-    if(m >= 2) return {bg:'#eab308',glow:'rgba(234,179,8,0.6)'};
-    if(m >= 1) return {bg:'#22c55e',glow:'rgba(34,197,94,0.6)'};
-    return {bg:'#1f2937',glow:'rgba(31,41,55,0.4)'}; // loss
-  }
-
-  function getMultColor(m){
-    if(m >= 50) return 'mult-vhigh';
-    if(m >= 10) return 'mult-high';
-    if(m >= 5) return 'mult-high';
-    if(m >= 2) return 'mult-med';
-    return 'mult-low';
+    return 'linear-gradient(180deg,#374151,#1f2937)';
   }
 
   function updateSlots(){
@@ -141,25 +109,22 @@ document.addEventListener('DOMContentLoaded', function(){
     mults.forEach(m => {
       const div = document.createElement('div');
       div.className = 'plinko-slot';
-      div.textContent = m >= 100 ? Math.round(m) + 'x' : m.toFixed(1) + 'x';
+      div.textContent = m >= 100 ? Math.round(m)+'x' : m.toFixed(1)+'x';
       div.style.background = getSlotColor(m);
       slotsContainer.appendChild(div);
     });
   }
 
-  function updateMults(){
-    // No separate mults display — slots are shown in plinkoSlots
-  }
-
   function dropBall(stake, onComplete){
     const mults = getMults();
     const slotCount = mults.length;
-    const w = canvas.width / (window.devicePixelRatio || 1);
-    const h = canvas.height / (window.devicePixelRatio || 1);
-    const pinStartY = 20;
-    const pinEndY = h - 30;
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.width / dpr;
+    const h = canvas.height / dpr;
+    const pinStartY = 15;
+    const pinEndY = h - 25;
 
-    // Determine slot
+    // Random slot
     let pos = 0;
     for(let r = 0; r < rows; r++){
       pos += (Math.random() - 0.5) * 0.7;
@@ -168,47 +133,45 @@ document.addEventListener('DOMContentLoaded', function(){
     const slotIndex = Math.floor((pos + 1) / 2 * (slotCount - 1));
     const finalSlot = Math.max(0, Math.min(slotCount - 1, slotIndex));
     const mult = mults[finalSlot];
-
     const finalX = (w / slotCount) * finalSlot + (w / slotCount) / 2;
 
-    // Create ball with glow
+    // Ball
     const ball = document.createElement('div');
     ball.className = 'plinko-ball';
     ball.style.background = 'radial-gradient(circle at 35% 35%,#ffd700,#ff8c00)';
-    ball.style.boxShadow = '0 0 8px rgba(255,200,0,0.8), 0 0 20px rgba(255,140,0,0.4)';
+    ball.style.boxShadow = '0 0 6px rgba(255,200,0,0.8)';
     ballsContainer.appendChild(ball);
 
     let frame = 0;
-    const totalFrames = rows * 10;
+    const totalFrames = rows * 8;
 
     function animate(){
       frame++;
       const progress = frame / totalFrames;
-      const y = pinStartY + (pinEndY - pinStartY) * progress + Math.sin(progress * 6) * 2;
-      const x = (w / 2) + (finalX - w / 2) * progress + Math.sin(progress * rows * Math.PI) * 12 * (1 - progress);
-      ball.style.left = (x - 6) + 'px';
-      ball.style.top = (y - 6) + 'px';
+      const y = pinStartY + (pinEndY - pinStartY) * progress;
+      const x = (w/2) + (finalX - w/2) * progress + Math.sin(progress * rows * Math.PI) * 10 * (1 - progress);
+      ball.style.left = (x - 4) + 'px';
+      ball.style.top = (y - 4) + 'px';
 
       if(frame < totalFrames){
         requestAnimationFrame(animate);
       } else {
-        ball.style.left = (finalX - 6) + 'px';
-        ball.style.top = (h - 25) + 'px';
-        // Change color based on result
-        if(mult >= 2){
+        ball.style.left = (finalX - 4) + 'px';
+        ball.style.top = (h - 20) + 'px';
+        if(mult >= 1){
           ball.style.background = 'radial-gradient(circle at 35% 35%,#4ade80,#22c55e)';
-          ball.style.boxShadow = '0 0 12px rgba(46,227,107,0.9), 0 0 30px rgba(46,227,107,0.5)';
+          ball.style.boxShadow = '0 0 8px rgba(46,227,107,0.9)';
         } else {
           ball.style.background = 'radial-gradient(circle at 35% 35%,#f87171,#ef4444)';
-          ball.style.boxShadow = '0 0 12px rgba(244,67,54,0.9), 0 0 30px rgba(244,67,54,0.5)';
+          ball.style.boxShadow = '0 0 8px rgba(244,67,54,0.9)';
         }
         setTimeout(() => {
-          ball.style.transition = 'all 0.3s';
+          ball.style.transition = 'opacity 0.3s, transform 0.3s';
           ball.style.opacity = '0';
           ball.style.transform = 'scale(0.5)';
           setTimeout(() => ball.remove(), 300);
           onComplete(mult);
-        }, 500);
+        }, 400);
       }
     }
     animate();
@@ -218,25 +181,22 @@ document.addEventListener('DOMContentLoaded', function(){
     if(playing) return;
     const stake = parseFloat(stakeInput.value);
     if(isNaN(stake) || stake < 0.01){
-      resultWrap.style.display = 'block';
-      resultWrap.className = 'result-wrap result-lose';
-      resultText.textContent = 'Мин. ставка $0.01';
+      gameStatus.textContent = 'Мин. ставка $0.01';
+      gameStatus.className = 'game-status lose';
       return;
     }
     if(getBalance() < stake){
-      resultWrap.style.display = 'block';
-      resultWrap.className = 'result-wrap result-lose';
-      resultText.textContent = 'Недостаточно средств';
+      gameStatus.textContent = 'Недостаточно средств';
+      gameStatus.className = 'game-status lose';
       return;
     }
 
     playing = true;
     playBtn.disabled = true;
-    playBtn.style.opacity = '0.6';
-    resultWrap.style.display = 'none';
+    gameStatus.textContent = '';
 
     setBalance(getBalance() - stake);
-    recordStat('bet', stake, `Plinko ${risk} ${rows}`);
+    recordStat('bet', stake, 'Plinko');
 
     dropBall(stake, (mult) => {
       const winAmount = Math.round(stake * mult * 100) / 100;
@@ -244,27 +204,25 @@ document.addEventListener('DOMContentLoaded', function(){
 
       if(mult >= 1){
         setBalance(getBalance() + winAmount);
-        if(mult > 1) recordStat('win', winAmount, `Plinko ${mult.toFixed(1)}x`);
-        resultWrap.className = 'result-wrap result-win';
-        resultText.innerHTML = `<div style="font-size:28px;font-weight:900">${mult.toFixed(1)}x</div><div style="font-size:14px;margin-top:4px">+$${profit > 0 ? profit.toFixed(2) : '0.00'}</div>`;
-        addToHistory(true, mult);
+        if(mult > 1) recordStat('win', winAmount, 'Plinko '+mult.toFixed(1)+'x');
+        gameStatus.innerHTML = `<span style="font-size:24px;font-weight:900">${mult.toFixed(1)}x</span><br>+$${profit > 0 ? profit.toFixed(2) : '0.00'}`;
+        gameStatus.className = 'game-status win';
+        addHistory(true, mult);
       } else {
-        recordStat('loss', stake, `Plinko ${mult.toFixed(1)}x`);
-        resultWrap.className = 'result-wrap result-lose';
-        resultText.innerHTML = `<div style="font-size:28px;font-weight:900">${mult.toFixed(1)}x</div><div style="font-size:14px;margin-top:4px">-$${stake.toFixed(2)}</div>`;
-        addToHistory(false, mult);
+        recordStat('loss', stake, 'Plinko');
+        gameStatus.innerHTML = `<span style="font-size:24px;font-weight:900">${mult.toFixed(1)}x</span><br>-$${stake.toFixed(2)}`;
+        gameStatus.className = 'game-status lose';
+        addHistory(false, mult);
       }
 
-      resultWrap.style.display = 'block';
       playing = false;
       playBtn.disabled = false;
-      playBtn.style.opacity = '1';
     });
   }
 
-  function addToHistory(won, mult){
-    history.unshift({ won, mult, time: Date.now() });
-    if(history.length > 30) history.pop();
+  function addHistory(won, mult){
+    history.unshift({won, mult});
+    if(history.length > 20) history.pop();
     renderHistory();
   }
 
@@ -273,56 +231,46 @@ document.addEventListener('DOMContentLoaded', function(){
     history.forEach(h => {
       const item = document.createElement('div');
       item.className = 'ph-item ' + (h.won ? 'ph-win' : 'ph-lose');
-      item.textContent = h.mult.toFixed(1) + 'x';
+      item.textContent = h.mult.toFixed(1)+'x';
       phList.appendChild(item);
     });
   }
 
-  // Risk buttons
+  // Events
   document.getElementById('riskBtns').addEventListener('click', function(e){
-    const btn = e.target.closest('.plinko-btn');
+    const btn = e.target.closest('.plk-btn');
     if(!btn) return;
-    document.querySelectorAll('#riskBtns .plinko-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#riskBtns .plk-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     risk = btn.dataset.risk;
     updateSlots();
-    updateMults();
   });
 
-  // Rows buttons
   document.getElementById('rowsBtns').addEventListener('click', function(e){
-    const btn = e.target.closest('.plinko-btn');
+    const btn = e.target.closest('.plk-btn');
     if(!btn) return;
-    document.querySelectorAll('#rowsBtns .plinko-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#rowsBtns .plk-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     rows = parseInt(btn.dataset.rows);
     updateSlots();
-    updateMults();
     resizeCanvas();
   });
 
-  // Stake buttons
-  document.getElementById('stakeHalf').addEventListener('click', function(){
+  document.getElementById('halfBtn').addEventListener('click', function(){
     const v = parseFloat(stakeInput.value) || 1;
-    stakeInput.value = Math.max(0.01, (v / 2).toFixed(2));
+    stakeInput.value = Math.max(0.01, (v/2).toFixed(2));
   });
-  document.getElementById('stakeDouble').addEventListener('click', function(){
+  document.getElementById('doubleBtn').addEventListener('click', function(){
     const v = parseFloat(stakeInput.value) || 1;
-    stakeInput.value = (v * 2).toFixed(2);
+    stakeInput.value = (v*2).toFixed(2);
   });
 
-  // Play
   playBtn.addEventListener('click', play);
+  window.addEventListener('resize', resizeCanvas);
 
   // Init
-  window.addEventListener('resize', resizeCanvas);
-  if(document.readyState === 'complete'){
-    setTimeout(initPlinko, 50);
-  } else {
-    window.addEventListener('load', function(){ setTimeout(initPlinko, 50); });
-  }
-  function initPlinko(){
+  setTimeout(function(){
     resizeCanvas();
     updateSlots();
-  }
+  }, 100);
 });
