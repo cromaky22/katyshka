@@ -13,14 +13,44 @@ app.use(express.static(__dirname));
 app.get('/api/users', async (req, res) => {
   const id = req.query.id;
   if (id) {
-    // Try DB first
     const dbUser = await dbGetUser(id);
     if (dbUser) return res.json({ ok: true, balance: dbUser.balance, ...dbUser });
     return res.json({ ok: true, balance: getBalance(id) });
   }
-  // Return all users
   const userList = await dbGetAllUsers();
   res.json(userList);
+});
+
+// === ADD TRANSACTION (client-called) ===
+app.post('/api/transaction', (req, res) => {
+  const { userId, type, amount, detail } = req.body;
+  if (!userId || !type || !amount) return res.status(400).json({ error: 'Missing params' });
+  addTx(type, userId, amount, 'completed', { game: detail || type });
+  res.json({ ok: true });
+});
+app.get('/api/stats', async (req, res) => {
+  const userId = req.query.userId;
+  if (!userId) return res.status(400).json({ error: 'Missing userId' });
+  
+  // Get user transactions from DB or memory
+  const userTx = transactions.filter(t => t.userId === userId);
+  
+  let deposits = 0, withdraws = 0, totalWin = 0, maxWin = 0, totalBets = 0;
+  let games = 0, wins = 0, losses = 0;
+  const history = [];
+  
+  userTx.forEach(t => {
+    if (t.type === 'deposit') { deposits += t.amount; history.push({ type: 'deposit', amount: t.amount, time: t.time, title: t.title }); }
+    if (t.type === 'withdraw') { withdraws += Math.abs(t.amount); history.push({ type: 'withdraw', amount: Math.abs(t.amount), time: t.time, title: t.title }); }
+    if (t.type === 'bet') { games++; totalBets += Math.abs(t.amount); history.push({ type: 'bet', amount: Math.abs(t.amount), time: t.time, game: t.game, detail: t.detail }); }
+    if (t.type === 'win') { wins++; totalWin += t.amount; if (t.amount > maxWin) maxWin = t.amount; history.push({ type: 'win', amount: t.amount, time: t.time, game: t.game, detail: t.detail }); }
+    if (t.type === 'loss') { losses++; history.push({ type: 'loss', amount: Math.abs(t.amount), time: t.time, game: t.game, detail: t.detail }); }
+    if (t.type === 'promo') { deposits += t.amount; history.push({ type: 'promo', amount: t.amount, time: t.time, title: t.title }); }
+  });
+  
+  const winRate = games > 0 ? Math.round((wins / games) * 100) : 0;
+  
+  res.json({ deposits, withdraws, totalWin, maxWin, totalBets, games, wins, losses, winRate, history });
 });
 
 app.post('/api/users', async (req, res) => {
@@ -602,6 +632,11 @@ function spinWheel() {
     win = Math.round(win * 100) / 100;
     results[uid] = win;
     setBalance(uid, getBalance(uid) + win);
+    if (win > 0) {
+      addTx('win', uid, win, 'completed', { game: 'Wheel', detail: `Result: ${num}` });
+    } else {
+      addTx('loss', uid, wheel.bets[uid].reduce((s, b) => s + b.amount, 0), 'completed', { game: 'Wheel', detail: `Result: ${num}` });
+    }
   }
 
   wheel.result = { num, color, index: idx };
@@ -647,6 +682,7 @@ io.on('connection', (socket) => {
     if (!wheel.bets[userId]) wheel.bets[userId] = [];
     wheel.bets[userId].push({ type, amount, playerName: playerName || 'Player', playerAvatar: playerAvatar || '' });
     setBalance(userId, serverBalance - amount);
+    addTx('bet', userId, amount, 'completed', { game: 'Wheel', detail: type });
     io.emit('balance_update', { userId, balance: getBalance(userId) });
     const allBets = [];
     for (const uid in wheel.bets) {
