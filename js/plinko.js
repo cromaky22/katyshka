@@ -143,19 +143,25 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 
-  // Weighted random — bell curve, center more likely
+  // Weighted random — U-shaped distribution (edges more likely = wins)
+  // Center slots appear more but edges have higher probability mass
   function getRandomSlot(slotCount){
-    // Generate bell curve distribution
-    let pos = 0;
-    for(let r = 0; r < rows; r++){
-      pos += (Math.random() - 0.5) * 0.6;
-      pos *= 0.88; // pull toward center
-      pos = Math.max(-1, Math.min(1, pos));
+    // Create probability weights — higher at edges, lower in center
+    const weights = [];
+    for(let i = 0; i < slotCount; i++){
+      const distFromCenter = Math.abs(i - (slotCount - 1) / 2) / ((slotCount - 1) / 2);
+      // Edge slots get ~3x more weight than center
+      weights.push(0.3 + distFromCenter * 2.7);
     }
-    // 50% chance to add extra center bias
-    if(Math.random() < 0.5) pos *= 0.6;
-    const idx = Math.floor((pos + 1) / 2 * (slotCount - 1));
-    return Math.max(0, Math.min(slotCount - 1, idx));
+    
+    // Weighted random selection
+    const totalWeight = weights.reduce((a, b) => a + b, 0);
+    let rand = Math.random() * totalWeight;
+    for(let i = 0; i < weights.length; i++){
+      rand -= weights[i];
+      if(rand <= 0) return i;
+    }
+    return Math.floor(slotCount / 2);
   }
 
   function dropSingleBall(stake, mults, onBallDone){
