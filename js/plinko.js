@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function(){
   function recordStat(type, amount, detail){
     try{
-      const uid = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid') || 'unknown';
+      var uid = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid') || 'unknown';
       fetch('/api/transaction', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -31,7 +31,6 @@ document.addEventListener('DOMContentLoaded', function(){
   var roundResults = [];
   var pinPositions = [];
 
-  // Multipliers — as requested by user
   var MULTS = {
     low: {
       8:  [2.8, 1.6, 1, 0.9, 0.8, 0.9, 1, 1.6, 2.8],
@@ -63,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if(!wrap) return;
     var dpr = window.devicePixelRatio || 1;
     var rect = wrap.getBoundingClientRect();
-    if(rect.width === 0 || rect.height === 0) return;
+    if(rect.width < 10 || rect.height < 10) return;
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
     canvas.style.width = rect.width + 'px';
@@ -102,39 +101,31 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function drawBoard(){
-    if(canvas.width === 0) return;
+    if(canvas.width === 0 || pinPositions.length === 0) return;
     var dpr = window.devicePixelRatio || 1;
     var w = canvas.width / dpr;
     var h = canvas.height / dpr;
     ctx.clearRect(0, 0, w, h);
-
-    // Draw pyramid outline
-    ctx.strokeStyle = 'rgba(139,92,246,0.1)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(w/2, 15);
-    ctx.lineTo(10, h-15);
-    ctx.moveTo(w/2, 15);
-    ctx.lineTo(w-10, h-15);
-    ctx.stroke();
 
     // Draw pins
     for(var r = 0; r < pinPositions.length; r++){
       var row = pinPositions[r];
       for(var p = 0; p < row.length; p++){
         var pin = row[p];
-        ctx.fillStyle = 'rgba(139,92,246,0.2)';
-        ctx.beginPath(); ctx.arc(pin.x, pin.y, 4, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = 'rgba(255,255,255,0.35)';
-        ctx.beginPath(); ctx.arc(pin.x, pin.y, 1.5, 0, Math.PI*2); ctx.fill();
+        // Glow
+        ctx.fillStyle = 'rgba(139,92,246,0.15)';
+        ctx.beginPath(); ctx.arc(pin.x, pin.y, 5, 0, Math.PI*2); ctx.fill();
+        // Pin
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.beginPath(); ctx.arc(pin.x, pin.y, 2, 0, Math.PI*2); ctx.fill();
       }
     }
   }
 
   function getSlotColor(m){
-    if(m >= 50) return 'linear-gradient(180deg,#e879f9,#d946ef)';
-    if(m >= 20) return 'linear-gradient(180deg,#c084fc,#a855f7)';
-    if(m >= 10) return 'linear-gradient(180deg,#f472b6,#ec4899)';
+    if(m >= 100) return 'linear-gradient(180deg,#e879f9,#d946ef)';
+    if(m >= 50) return 'linear-gradient(180deg,#c084fc,#a855f7)';
+    if(m >= 20) return 'linear-gradient(180deg,#f472b6,#ec4899)';
     if(m >= 5) return 'linear-gradient(180deg,#fb923c,#f97316)';
     if(m >= 2) return 'linear-gradient(180deg,#facc15,#eab308)';
     if(m >= 1) return 'linear-gradient(180deg,#4ade80,#22c55e)';
@@ -154,11 +145,10 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }
 
-  // 97% balls drop to slots with mult <= 1.9, 3% to big wins (> 1.9x)
+  // 97% to mult <= 1.9, 3% to big wins > 1.9x
   function getRandomSlot(mults){
-    var slotCount = mults.length;
     var weights = [];
-    for(var i = 0; i < slotCount; i++){
+    for(var i = 0; i < mults.length; i++){
       if(mults[i] <= 1.9){
         weights.push(25.0);
       } else {
@@ -172,17 +162,7 @@ document.addEventListener('DOMContentLoaded', function(){
       rand -= weights[k];
       if(rand <= 0) return k;
     }
-    return Math.floor(slotCount / 2);
-  }
-    }
-    var total = 0;
-    for(var j = 0; j < weights.length; j++) total += weights[j];
-    var rand = Math.random() * total;
-    for(var k = 0; k < weights.length; k++){
-      rand -= weights[k];
-      if(rand <= 0) return k;
-    }
-    return Math.floor(slotCount / 2);
+    return Math.floor(mults.length / 2);
   }
 
   function dropSingleBall(stake, mults, onBallDone){
@@ -193,6 +173,8 @@ document.addEventListener('DOMContentLoaded', function(){
     var dpr = window.devicePixelRatio || 1;
     var w = canvas.width / dpr;
     var h = canvas.height / dpr;
+    if(w === 0) w = 300;
+    if(h === 0) h = 300;
 
     var padding = 20;
     var usableW = w - padding * 2;
@@ -307,10 +289,10 @@ document.addEventListener('DOMContentLoaded', function(){
     setBalance(getBalance() + totalWin);
 
     if(profit > 0){
-      gameStatus.innerHTML = '<span style="font-size:20px;font-weight:900">🎉 +$' + profit.toFixed(2) + '</span><br><span style="font-size:12px">' + wins + ' выигрыш / ' + losses + ' проигрыш</span>';
+      gameStatus.innerHTML = '<span style="font-size:20px;font-weight:900">🎉 +$' + profit.toFixed(2) + '</span><br><span style="font-size:12px">' + wins + ' win / ' + losses + ' loss</span>';
       gameStatus.className = 'game-status win';
     } else {
-      gameStatus.innerHTML = '<span style="font-size:20px;font-weight:900">💀 -$' + Math.abs(profit).toFixed(2) + '</span><br><span style="font-size:12px">' + wins + ' выигрыш / ' + losses + ' проигрыш</span>';
+      gameStatus.innerHTML = '<span style="font-size:20px;font-weight:900">💀 -$' + Math.abs(profit).toFixed(2) + '</span><br><span style="font-size:12px">' + wins + ' win / ' + losses + ' loss</span>';
       gameStatus.className = 'game-status lose';
     }
 
@@ -381,14 +363,17 @@ document.addEventListener('DOMContentLoaded', function(){
   playBtn.addEventListener('click', play);
   window.addEventListener('resize', resizeCanvas);
 
-  // Init
-  function init(){
-    if(canvas && canvas.parentElement && canvas.parentElement.offsetHeight > 0){
-      resizeCanvas();
-      updateSlots();
-    } else {
-      setTimeout(init, 100);
-    }
+  // Init — wait for layout
+  function doInit(){
+    resizeCanvas();
+    updateSlots();
   }
-  setTimeout(init, 50);
+
+  if(document.readyState === 'complete'){
+    setTimeout(doInit, 100);
+  } else {
+    window.addEventListener('load', function(){
+      setTimeout(doInit, 100);
+    });
+  }
 });
