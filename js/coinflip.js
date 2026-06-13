@@ -1,4 +1,16 @@
 document.addEventListener('DOMContentLoaded', function(){
+  // === STATS HELPER ===
+  function recordStat(type, amount, detail){
+    try{
+      const userId = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid') || 'unknown';
+      fetch('/api/transaction', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({userId, type, amount: Math.abs(amount), detail: detail || 'Coinflip'})
+      }).catch(function(){});
+    }catch(e){}
+  }
+  
   const coin = document.getElementById('coin');
   const btnHead = document.getElementById('btnHead');
   const btnTail = document.getElementById('btnTail');
@@ -71,6 +83,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if(!skipDeduct){
       if(balBefore < baseStake){ resultEl.textContent = 'Недостаточно средств'; return }
        setBalance(Math.round((balBefore - baseStake) * 100) / 100);
+       recordStat('bet', baseStake, `Coinflip ${choice === 'head' ? 'Орел' : 'Решка'}`);
        if(window.mcStats) mcStats.addBet(Math.abs(baseStake), 'Coinflip', `Выбор: ${choice === 'head' ? 'Орел' : 'Решка'}`);
     }
     const pendingResult = randomResult();
@@ -115,6 +128,7 @@ document.addEventListener('DOMContentLoaded', function(){
         }
        } else {
          resultEl.textContent += ' — Проигрыш';
+         recordStat('loss', baseStake, `Coinflip lost`);
          if(window.mcStats) mcStats.addLoss(Math.abs(baseStake), 'Coinflip', `Выбор: ${choice === 'head' ? 'Орел' : 'Решка'}, выпал ${pendingResult === 'head' ? 'Орел' : 'Решка'}`);
         resetProgress();
         inChain = false;
@@ -140,6 +154,7 @@ document.addEventListener('DOMContentLoaded', function(){
       if(toAdd <= 0) return;
        const balNow = getBalance();
        setBalance(Math.round((balNow + toAdd) * 100) / 100);
+       recordStat('win', toAdd, `Coinflip chain win`);
        if(window.mcStats) mcStats.addWin(toAdd, 'Coinflip', `Выигрыш цепочки`);
       // after collecting, clear accumulated and hide collect button
       accumulated = 0; chainPayout = 0;

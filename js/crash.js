@@ -1,4 +1,16 @@
 document.addEventListener('DOMContentLoaded', function() {
+  // === STATS HELPER ===
+  function recordStat(type, amount, detail){
+    try{
+      const userId = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid') || 'unknown';
+      fetch('/api/transaction', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({userId, type, amount: Math.abs(amount), detail: detail || 'Crash'})
+      }).catch(function(){});
+    }catch(e){}
+  }
+  
   // ============ DOM ELEMENTS ============
   const stakeInput = document.getElementById('stakeInput');
   const quickBetBtns = document.querySelectorAll('.quick-bet-btn');
@@ -145,6 +157,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const multiplier = currentGameData.cashedOutAt;
      const winAmount = currentGameData.stake * multiplier;
      setBalance(getBalance() + winAmount);
+     recordStat('win', winAmount, `Crash cashout ${multiplier.toFixed(2)}x`);
      if(window.mcStats) mcStats.addWin(winAmount, 'Crash', `Кэш-аут x${multiplier.toFixed(2)}`);
 
     sfxCashout();
@@ -235,6 +248,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
      // Deduct stake
      setBalance(getBalance() - stake);
+     recordStat('bet', stake, `Crash`);
      if(window.mcStats) mcStats.addBet(Math.abs(stake), 'Crash', 'Ставка размещена');
 
     // UI transition
@@ -377,6 +391,7 @@ document.addEventListener('DOMContentLoaded', function() {
       resultMultiplier.className = 'result-multiplier crashed';
        gameStatus.textContent = '✗ КРАШ НА ' + crashPt.toFixed(2) + '×';
        gameStatus.className = 'game-status error';
+       recordStat('loss', currentGameData.stake, `Crash at ${crashPt.toFixed(2)}x`);
        if(window.mcStats) mcStats.addLoss(currentGameData.stake, 'Crash', `Краш на x${crashPt.toFixed(2)}`);
       addToHistory({ mult: crashPt, won: false });
 

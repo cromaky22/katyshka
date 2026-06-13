@@ -4,6 +4,18 @@
   // 🎰 HOUSE EDGE: 5% — casino takes 5% from every win
   const HOUSE_EDGE = 0.05;
   
+  // === STATS HELPER ===
+  function recordStat(type, amount, detail){
+    try{
+      const userId = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid') || 'unknown';
+      fetch('/api/transaction', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({userId, type, amount: Math.abs(amount), detail: detail || 'Mines'})
+      }).catch(function(){});
+    }catch(e){}
+  }
+  
   const gridEl = document.getElementById('minesGrid');
   const playBtn = document.getElementById('minesPlay');
   const cashoutBtn = document.getElementById('minesCashout');
@@ -261,6 +273,7 @@
       
        gameActive = false;
        updateStatus('Проигрыш — мина найдена');
+       recordStat('loss', currentStake, `Mines hit mine at step ${revealedCount + 1}`);
        if(window.mcStats) mcStats.addLoss(Math.abs(currentStake), 'Mines', `Мина на шаге ${revealedCount + 1}`);
         // reset controls and clear field after showing result
           if(cashoutBtn) cashoutBtn.style.display = 'none';
@@ -295,6 +308,7 @@
       const mult = multipliers[revealedCount - 1] || 1;
        const payout = Math.round(currentStake * mult * (1 - HOUSE_EDGE) * 100) / 100;
        setBalance(getBalance() + payout);
+       recordStat('win', payout, `Mines cashout ${mult}x`);
        if(window.mcStats) mcStats.addWin(payout, 'Mines', `Все ${safeCount} ячеек открыты`);
        gameActive = false;
       revealAll(mineSet);
@@ -379,8 +393,9 @@
     if(stake > balance){ alert('Недостаточно средств'); return; }
 
      // Deduct stake and start round
-     setBalance(balance - stake);
-     if(window.mcStats) mcStats.addBet(Math.abs(stake), 'Mines', `${mines} мин`);
+      setBalance(balance - stake);
+      recordStat('bet', stake, `Mines ${mines} mines`);
+      if(window.mcStats) mcStats.addBet(Math.abs(stake), 'Mines', `${mines} мин`);
      currentStake = stake;
     currentMines = mines;
     mineSet = randomMines(mines);

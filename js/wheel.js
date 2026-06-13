@@ -1,4 +1,16 @@
 document.addEventListener('DOMContentLoaded', function(){
+  // === STATS HELPER ===
+  function recordStat(type, amount, detail){
+    try{
+      const userId = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid') || 'unknown';
+      fetch('/api/transaction', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({userId, type, amount: Math.abs(amount), detail: detail || 'Wheel'})
+      }).catch(function(){});
+    }catch(e){}
+  }
+  
   const canvas = document.getElementById('wheelCanvas');
   const ctx = canvas.getContext('2d');
   const resultLens = document.getElementById('resultLens');
@@ -176,6 +188,7 @@ document.addEventListener('DOMContentLoaded', function(){
     currentBets.push({ type, amount: stake });
     updateMyBetsDisplay();
     gameStatusEl.textContent = '';
+    recordStat('bet', stake, `Wheel ${getBetLabel(type)}`);
     if(window.mcStats) mcStats.addBet(stake, 'Wheel', getBetLabel(type));
     socket.emit('wheel:bet', { type, amount: stake, playerName, playerAvatar });
   }
@@ -321,12 +334,14 @@ document.addEventListener('DOMContentLoaded', function(){
         gameStatusEl.textContent = `Выиграли $${myWin.toFixed(2)}! Выпало ${res.num}`;
         gameStatusEl.className = 'game-status success';
         winSfx();
+        recordStat('win', myWin, `Wheel won ${res.num}`);
         if(window.mcStats) mcStats.addWin(myWin, 'Wheel', 'Выпало ' + res.num);
       } else {
         gameStatusEl.textContent = `Выпало ${res.num}`;
         gameStatusEl.className = 'game-status error';
         loseSfx();
         const totalBet = currentBets.reduce((s,b)=>s+b.amount,0);
+        recordStat('loss', totalBet, `Wheel lost ${res.num}`);
         if(window.mcStats && totalBet > 0) mcStats.addLoss(totalBet, 'Wheel', 'Выпало ' + res.num);
       }
       resultLens.textContent = res.num;
