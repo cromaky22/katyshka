@@ -382,32 +382,12 @@
     // create loader element (ring of hearts + text)
     const loader = document.createElement('div');
     loader.className = 'page-loader';
-    loader.innerHTML = '<div class="loader-box"><div class="loader-ring" id="loaderRing" aria-hidden="true"></div><div class="loader-text" id="loaderText">ЗАГРУЗКА...</div></div>';
-    document.body.appendChild(loader);
+     loader.innerHTML = '<div class="loader-box"><div class="loader-ring" id="loaderRing" aria-hidden="true"></div><div class="loader-text" id="loaderText">ЗАГРУЗКА...</div></div>';
+     document.body.appendChild(loader);
 
-    // populate ring with hearts
-    (function createHearts(){
-      const ring = document.getElementById('loaderRing');
-      if(!ring) return;
-      const count = 24;
-      const radius = 56; // px
-      for(let i=0;i<count;i++){
-        const angle = (360 / count) * i;
-        const span = document.createElement('span');
-        span.className = 'heart';
-        // inner element will receive pulse animation so the outer span keeps positional transform stable
-        const inner = document.createElement('span');
-        inner.className = 'heart-inner';
-        inner.innerText = '❤';
-        span.appendChild(inner);
-        // store angle and radius in CSS variables so animations can preserve placement
-        span.style.setProperty('--angle', angle + 'deg');
-        span.style.setProperty('--r', '-' + radius + 'px');
-        ring.appendChild(span);
-      }
-    })();
+     // Simple spinner — pure CSS, no hearts needed
 
-    function showLoader(text, mode){
+     function showLoader(text, mode){
       const t = document.getElementById('loaderText');
       if(t && text) t.textContent = text;
       loader.classList.remove('startup','nav');

@@ -47,9 +47,7 @@
 .play-btn:hover{opacity:0.9}
 .play-btn:disabled{opacity:0.5;cursor:not-allowed}
 
-.game-status{text-align:center;padding:10px;font-size:14px;font-weight:600;color:var(--muted);min-height:20px}
-.game-status.win{color:var(--accent-green)}
-.game-status.lose{color:#f44336}
+.game-status{display:none!important}
 
 .plinko-result-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:10;pointer-events:none}
 .plinko-result-content{background:rgba(0,0,0,0.85);border-radius:16px;padding:20px 30px;text-align:center;animation:resultPop 0.4s cubic-bezier(0.175,0.885,0.32,1.275)}

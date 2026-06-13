@@ -268,18 +268,18 @@
       requestAnimationFrame(tick);
     });
 
-    function finish(idx) {
-      var sector = SECTORS[idx];
-      setLastSpin();
+     function finish(idx) {
+       var sector = SECTORS[idx];
+       setLastSpin();
 
-      var newBal = Math.round((Balance.get() + sector.payout) * 100) / 100;
-      Balance.set(newBal);
-      Balance.syncToServer(newBal);
+       var currentBal = Balance.get();
+       var newBal = Math.round((currentBal + sector.payout) * 100) / 100;
+       Balance.set(newBal);
 
-      bonusStatus.textContent = '🎉 Вы выиграли ' + sector.label + '!';
-      bonusStatus.className = 'bonus-status win';
-      updateStatus();
-    }
+       bonusStatus.textContent = '🎉 Вы выиграли ' + sector.label + '!';
+       bonusStatus.className = 'bonus-status win';
+       updateStatus();
+     }
 
     // Load profile photo
     try {

@@ -266,34 +266,16 @@ html,body{
 .page-loader .loader-text{color:var(--muted);font-weight:700;letter-spacing:1px}
 
 /* ring of hearts loader */
-.page-loader .loader-ring{position:relative;width:140px;height:140px;display:block;transform-origin:center center;will-change:transform}
-.page-loader .loader-ring .heart{position:absolute;left:50%;top:50%;display:block;color:#ff6b9a;opacity:0.95;font-size:18px;transition: none;transform-origin:center center}
-.page-loader .loader-ring .heart:nth-child(odd){color:#ff9ab0}
-.page-loader .loader-ring{animation:ringSpin var(--ring-duration,6s) linear infinite;backface-visibility:hidden;-webkit-backface-visibility:hidden}
-/* pulse animation is applied to inner element so positioning of the heart stays stable */
-.page-loader .loader-ring .heart .heart-inner{display:inline-block;animation:heartPulse var(--pulse-duration,1.0s) ease-in-out infinite;transform-origin:center center;line-height:1}
+.page-loader .loader-ring{position:relative;width:60px;height:60px;display:block;transform-origin:center center;will-change:animation}
+.page-loader .loader-ring::before{content:'';position:absolute;inset:0;border-radius:50%;border:4px solid rgba(255,255,255,0.08);border-top-color:var(--accent);animation:loaderSpin 0.8s linear infinite}
+.page-loader .loader-ring::after{content:'';position:absolute;inset:8px;border-radius:50%;border:3px solid transparent;border-top-color:var(--accent-green);animation:loaderSpin 1.2s linear infinite reverse}
+@keyframes loaderSpin{to{transform:rotate(360deg)}}
 
-/* mode overrides: slower on app startup, faster on navigation */
-.page-loader.startup{ --ring-duration: 8s; --pulse-duration: 1.4s }
-.page-loader.nav{ --ring-duration: 4s; --pulse-duration: 0.9s }
-
-/* each heart keeps its angular position via --angle and radius via --r */
-.page-loader .loader-ring .heart{
-  transform: rotate(var(--angle, 0deg)) translateY(var(--r, -52px)) translate(-50%,-50%);
-}
-
-@keyframes ringSpin{ to{ transform: rotate(360deg) } }
-@keyframes heartPulse{
-  0%{ transform: scale(0.96) }
-  50%{ transform: scale(1.06) }
-  100%{ transform: scale(0.96) }
-}
-
-.page-loader .loader-ring .heart .heart-inner{will-change:transform;backface-visibility:hidden}
-
-/* make startup loader a bit larger and more prominent */
-.page-loader.startup .loader-ring{width:180px;height:180px}
-.page-loader.startup .loader-ring .heart{font-size:22px}
+/* mode overrides */
+.page-loader.startup .loader-ring{width:70px;height:70px}
+.page-loader.startup .loader-ring::before{border-width:5px}
+.page-loader.nav .loader-ring{width:50px;height:50px}
+.page-loader.nav .loader-ring::before{border-width:3px}
 
 /* coinflip styles moved to css/coinflip.css */
 
