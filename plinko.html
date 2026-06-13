@@ -9,8 +9,6 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body class="page-plinko">
-<div class="app_wrap">
-  <!-- Standard header like all games -->
   <header class="app-header">
     <div class="left-controls"></div>
     <div class="header-title" style="margin-right:0;color:var(--accent)">🎯 PLINKO</div>
@@ -38,17 +36,14 @@
   <main class="main-content">
 
     <!-- Board -->
-    <div class="plk-board-area">
-      <div class="plinko-board-wrap">
-        <canvas id="plinkoCanvas"></canvas>
-        <div id="plinkoBalls"></div>
-        <div class="plinko-slots" id="plinkoSlots"></div>
-      </div>
-      <div class="plinko-mults" id="plinkoMults"></div>
+    <div class="plinko-board-wrap">
+      <canvas id="plinkoCanvas"></canvas>
+      <div id="plinkoBalls"></div>
+      <div class="plinko-slots" id="plinkoSlots"></div>
     </div>
 
     <!-- Controls -->
-    <div class="plk-controls">
+    <div class="plinko-controls">
       <div class="plinko-row">
         <div class="plinko-label">⚠️ Уровень риска</div>
         <div class="plinko-btns" id="riskBtns">
@@ -70,19 +65,17 @@
     </div>
 
     <!-- Stake & Play -->
-    <div class="plk-play-area">
-      <div class="stake-row">
-        <div class="stake-input-wrap">
-          <button class="stake-op" id="stakeHalf">½</button>
-          <input type="number" class="stake-input" id="stakeInput" value="1" min="0.01" max="10000" step="0.01" placeholder="0.00">
-          <button class="stake-op" id="stakeDouble">×2</button>
-        </div>
+    <div class="stake-row">
+      <div class="stake-input-wrap">
+        <button class="stake-op" id="stakeHalf">½</button>
+        <input type="number" class="stake-input" id="stakeInput" value="1" min="0.01" max="10000" step="0.01" placeholder="0.00">
+        <button class="stake-op" id="stakeDouble">×2</button>
       </div>
-      <button class="plk-play-btn" id="playBtn">
-        <span class="plk-play-text">БРОСИТЬ</span>
-        <span class="plk-play-icon">🎱</span>
-      </button>
     </div>
+    <button class="plk-play-btn" id="playBtn">
+      <span class="plk-play-text">БРОСИТЬ</span>
+      <span class="plk-play-icon">🎱</span>
+    </button>
 
     <!-- Result -->
     <div id="resultWrap" class="result-wrap" style="display:none">
@@ -91,7 +84,7 @@
 
     <!-- History -->
     <div class="ph-wrap">
-      <div class="plk-section-title">История игр</div>
+      <div class="ph-title">📋 История</div>
       <div class="ph-list" id="phList"></div>
     </div>
   </main>
@@ -103,14 +96,11 @@
     <a href="bonus.html" class="nav-item"><span class="icon">🎁</span><span class="label">Бонус</span></a>
     <a href="profile.html" class="nav-item"><span class="profile"><img class="profile-icon" src="" alt="Аватар" onerror="this.style.display='none'"></span><span class="label">Профиль</span></a>
   </nav>
-</div>
 
-<script src="/socket.io/socket.io.js"></script>
 <script src="js/balance.js"></script>
 <script src="js/app.js"></script>
 <script src="js/plinko.js"></script>
 <script>
-  // Profile dropdown
   document.getElementById('profileBtn').addEventListener('click', function(){
     document.getElementById('profileDropdown').classList.toggle('show');
     document.getElementById('pdOverlay').classList.toggle('show');

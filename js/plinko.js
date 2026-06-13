@@ -148,14 +148,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function updateMults(){
-    const mults = getMults();
-    multsContainer.innerHTML = '';
-    mults.forEach(m => {
-      const div = document.createElement('div');
-      div.className = 'plinko-mult-item ' + getMultColor(m);
-      div.textContent = m >= 100 ? Math.round(m) + 'x' : m.toFixed(1) + 'x';
-      multsContainer.appendChild(div);
-    });
+    // No separate mults display — slots are shown in plinkoSlots
   }
 
   function dropBall(stake, onComplete){
@@ -323,9 +316,13 @@ document.addEventListener('DOMContentLoaded', function(){
 
   // Init
   window.addEventListener('resize', resizeCanvas);
-  setTimeout(() => {
+  if(document.readyState === 'complete'){
+    setTimeout(initPlinko, 50);
+  } else {
+    window.addEventListener('load', function(){ setTimeout(initPlinko, 50); });
+  }
+  function initPlinko(){
     resizeCanvas();
     updateSlots();
-    updateMults();
-  }, 100);
+  }
 });
