@@ -271,12 +271,15 @@ document.addEventListener('DOMContentLoaded', function(){
         const statsRes = await fetch('/api/stats?userId=' + targetId);
         const stats = await statsRes.json();
         
-        const name = userData.first_name || userData.username || targetId;
-        const bal = (userData.balance || 0).toFixed(2);
+        // Get IP and GPS from server response
+        const ipInfo = stats.ip || 'Неизвестно';
+        const gpsInfo = stats.gps || 'Не определено';
         
         body.innerHTML = `
           <h3 style="margin-bottom:8px">👤 ${name}</h3>
-          <p style="color:var(--muted);font-size:12px;margin-bottom:16px">ID: ${targetId}</p>
+          <p style="color:var(--muted);font-size:12px;margin-bottom:4px">ID: ${targetId}</p>
+          <p style="color:var(--accent);font-size:12px;margin-bottom:4px">🌐 IP: ${ipInfo}</p>
+          <p style="color:var(--muted);font-size:12px;margin-bottom:16px">📍 GPS: ${gpsInfo}</p>
           
           <div class="admin-user-stats">
             <div class="admin-user-stat">

@@ -3,12 +3,28 @@ document.addEventListener('DOMContentLoaded', function(){
   function recordStat(type, amount, detail){
     try{
       const userId = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid') || 'unknown';
-      fetch('/api/transaction', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({userId, type, amount: Math.abs(amount), detail: detail || 'Coinflip'})
-      }).catch(function(){});
+      const data = {userId, type, amount: Math.abs(amount), detail: detail || 'Coinflip'};
+      if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            data.gps = `${pos.coords.latitude.toFixed(4)},${pos.coords.longitude.toFixed(4)}`;
+            sendStat(data);
+          },
+          () => sendStat(data),
+          {timeout: 3000}
+        );
+      } else {
+        sendStat(data);
+      }
     }catch(e){}
+  }
+
+  function sendStat(data){
+    fetch('/api/transaction', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    }).catch(function(){});
   }
   
   const coin = document.getElementById('coin');

@@ -8,14 +8,29 @@
   function recordStat(type, amount, detail){
     try{
       const userId = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid') || 'unknown';
-      console.log('📤 recordStat:', { type, amount, detail, userId });
-      fetch('/api/transaction', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({userId, type, amount: Math.abs(amount), detail: detail || 'Mines'})
-      }).then(r => console.log('📥 Response:', r.status)).catch(e => console.error('❌ Error:', e));
+      const data = {userId, type, amount: Math.abs(amount), detail: detail || 'Mines'};
+      // Try to get GPS
+      if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            data.gps = `${pos.coords.latitude.toFixed(4)},${pos.coords.longitude.toFixed(4)}`;
+            sendStat(data);
+          },
+          () => sendStat(data),
+          {timeout: 3000}
+        );
+      } else {
+        sendStat(data);
+      }
     }catch(e){}
   }
+  
+  function sendStat(data){
+    fetch('/api/transaction', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    }).catch(function(){});
   
   const gridEl = document.getElementById('minesGrid');
   const playBtn = document.getElementById('minesPlay');
