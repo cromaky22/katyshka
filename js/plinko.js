@@ -237,6 +237,8 @@ document.addEventListener('DOMContentLoaded', function(){
           ball.style.transition = 'opacity 0.3s';
           ball.style.opacity = '0';
           setTimeout(() => ball.remove(), 300);
+          // Add to history immediately when ball lands
+          addHistory(mult >= 1, mult);
           onBallDone(mult);
         }, 400);
       }
@@ -298,7 +300,6 @@ document.addEventListener('DOMContentLoaded', function(){
         losses++;
         recordStat('loss', stake - winAmount, 'Plinko '+mult.toFixed(1)+'x');
       }
-      addHistory(mult >= 1, mult);
     });
 
     const profit = totalWin - (stake * ballCount);
