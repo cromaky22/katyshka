@@ -10,15 +10,20 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 // === GET USER BALANCE ===
-app.get('/api/users', (req, res) => {
+app.get('/api/users', async (req, res) => {
   const id = req.query.id;
-  if (id) return res.json({ ok: true, balance: getBalance(id) });
-  const userList = [];
-  for (const uid in users) userList.push({ id: uid, ...users[uid] });
+  if (id) {
+    // Try DB first
+    const dbUser = await dbGetUser(id);
+    if (dbUser) return res.json({ ok: true, balance: dbUser.balance, ...dbUser });
+    return res.json({ ok: true, balance: getBalance(id) });
+  }
+  // Return all users
+  const userList = await dbGetAllUsers();
   res.json(userList);
 });
 
-app.post('/api/users', (req, res) => {
+app.post('/api/users', async (req, res) => {
   const { id, balance, first_name, last_name, username, avatar } = req.body;
   if (!id) return res.status(400).json({ error: 'Missing id' });
   if (!users[id]) users[id] = { balance: 0 };
@@ -29,7 +34,9 @@ app.post('/api/users', (req, res) => {
   if (last_name !== undefined) users[id].last_name = last_name;
   if (username !== undefined) users[id].username = username;
   if (avatar !== undefined) users[id].avatar = avatar;
-  saveData();
+  
+  // Save to DB
+  await dbSetUser(id, users[id]);
   res.json({ ok: true, balance: users[id].balance });
 });
 
@@ -70,8 +77,60 @@ app.post('/api/admin/take', (req, res) => {
   saveData();
   res.json({ ok: true, balance: users[userId].balance });
 });
+// === DATABASE (PostgreSQL on Railway, fallback to file) ===
 const fs = require('fs');
 const DATA_FILE = './data.json';
+
+let db = null;
+let usePostgres = false;
+
+// Try to connect to PostgreSQL
+try {
+  if (process.env.DATABASE_URL) {
+    const { Pool } = require('pg');
+    db = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }
+    });
+    usePostgres = true;
+    console.log('🐘 PostgreSQL connected');
+    
+    // Create tables if not exist
+    db.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        balance REAL DEFAULT 0,
+        first_name TEXT,
+        last_name TEXT,
+        username TEXT,
+        avatar TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+      CREATE TABLE IF NOT EXISTS promos (
+        code TEXT PRIMARY KEY,
+        amount REAL DEFAULT 0,
+        uses INTEGER DEFAULT 0
+      );
+      CREATE TABLE IF NOT EXISTS activated (
+        user_id TEXT,
+        code TEXT,
+        activated_at TIMESTAMP DEFAULT NOW(),
+        PRIMARY KEY (user_id, code)
+      );
+      CREATE TABLE IF NOT EXISTS wheel_history (
+        id SERIAL PRIMARY KEY,
+        num INTEGER,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `).then(() => {
+      console.log('✅ DB tables ready');
+    }).catch(e => {
+      console.error('DB init error:', e.message);
+    });
+  }
+} catch (e) {
+  console.log('PostgreSQL not available, using file storage');
+}
 
 let users = {};
 let promos = {
@@ -85,7 +144,7 @@ let promos = {
 let activated = {};
 let transactions = [];
 
-// Load data from file on start
+// Load data from file on start (fallback)
 try {
   if (fs.existsSync(DATA_FILE)) {
     const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
@@ -99,9 +158,7 @@ try {
   console.error('Failed to load data:', e);
 }
 
-
-
-// Save data to file
+// Save data to file (fallback)
 function saveData() {
   try {
     fs.writeFileSync(DATA_FILE, JSON.stringify({ users, promos, activated, transactions }));
@@ -110,10 +167,70 @@ function saveData() {
   }
 }
 
-function getBalance(id) { return users[id]?.balance || 0; }
-function setBalance(id, amt) {
+// === DB HELPERS ===
+async function dbGetUser(id) {
+  if (usePostgres) {
+    try {
+      const res = await db.query('SELECT * FROM users WHERE id = $1', [id]);
+      if (res.rows[0]) return res.rows[0];
+    } catch (e) {}
+  }
+  return users[id] || null;
+}
+
+async function dbSetUser(id, data) {
+  if (usePostgres) {
+    try {
+      await db.query(`
+        INSERT INTO users (id, balance, first_name, last_name, username, avatar)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        ON CONFLICT (id) DO UPDATE SET
+          balance = EXCLUDED.balance,
+          first_name = EXCLUDED.first_name,
+          last_name = EXCLUDED.last_name,
+          username = EXCLUDED.username,
+          avatar = EXCLUDED.avatar
+      `, [id, data.balance || 0, data.first_name || null, data.last_name || null, data.username || null, data.avatar || null]);
+    } catch (e) {}
+  }
+  users[id] = { ...users[id], ...data };
+  saveData();
+}
+
+async function dbGetAllUsers() {
+  if (usePostgres) {
+    try {
+      const res = await db.query('SELECT * FROM users');
+      return res.rows;
+    } catch (e) {}
+  }
+  return Object.entries(users).map(([id, data]) => ({ id, ...data }));
+}
+
+async function dbDeleteUser(id) {
+  if (usePostgres) {
+    try {
+      await db.query('DELETE FROM users WHERE id = $1', [id]);
+    } catch (e) {}
+  }
+  delete users[id];
+  saveData();
+}
+
+function getBalance(id) {
+  // Always read from in-memory (synced with DB)
+  return users[id]?.balance || 0;
+}
+
+async function setBalance(id, amt) {
   if (!users[id]) users[id] = { balance: 0 };
   users[id].balance = Math.round(amt * 100) / 100;
+  
+  if (usePostgres) {
+    try {
+      await db.query('UPDATE users SET balance = $1 WHERE id = $2', [users[id].balance, id]);
+    } catch (e) {}
+  }
   saveData();
 }
 
