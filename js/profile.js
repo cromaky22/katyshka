@@ -273,6 +273,8 @@ document.addEventListener('DOMContentLoaded', function(){
         
         // Get IP from server response
         const ipInfo = stats.ip || 'Неизвестно';
+        const name = userData.first_name || userData.username || targetId;
+        const bal = (userData.balance || 0).toFixed(2);
         
         body.innerHTML = `
           <h3 style="margin-bottom:8px">👤 ${name}</h3>
