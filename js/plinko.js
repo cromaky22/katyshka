@@ -265,6 +265,40 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }
 
+  // Show result overlay on the board
+  function showResultOnBoard(profit, wins, losses){
+    var wrap = canvas.parentElement;
+    if(!wrap) return;
+
+    // Remove existing result
+    var existing = wrap.querySelector('.plinko-result-overlay');
+    if(existing) existing.remove();
+
+    var overlay = document.createElement('div');
+    overlay.className = 'plinko-result-overlay';
+
+    var color = profit > 0 ? '#2ee36b' : '#f44336';
+    var sign = profit > 0 ? '+' : '';
+    var emoji = profit > 0 ? '🎉' : '💀';
+
+    overlay.innerHTML = `
+      <div class="plinko-result-content">
+        <div class="plinko-result-emoji">${emoji}</div>
+        <div class="plinko-result-amount" style="color:${color}">${sign}$${profit.toFixed(2)}</div>
+        <div class="plinko-result-detail">${wins} win / ${losses} loss</div>
+      </div>
+    `;
+
+    wrap.appendChild(overlay);
+
+    // Auto remove after 2.5 seconds
+    setTimeout(function(){
+      overlay.style.opacity = '0';
+      overlay.style.transition = 'opacity 0.5s';
+      setTimeout(function(){ overlay.remove(); }, 500);
+    }, 2500);
+  }
+
   function finishRound(stake){
     var totalWin = 0;
     var wins = 0, losses = 0;
@@ -285,6 +319,10 @@ document.addEventListener('DOMContentLoaded', function(){
     var profit = totalWin - (stake * ballCount);
     setBalance(getBalance() + totalWin);
 
+    // Show result on board
+    showResultOnBoard(profit, wins, losses);
+
+    // Also update text below
     if(profit > 0){
       gameStatus.innerHTML = '<span style="font-size:20px;font-weight:900">🎉 +$' + profit.toFixed(2) + '</span><br><span style="font-size:12px">' + wins + ' win / ' + losses + ' loss</span>';
       gameStatus.className = 'game-status win';

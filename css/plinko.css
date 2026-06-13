@@ -51,8 +51,12 @@
 .game-status.win{color:var(--accent-green)}
 .game-status.lose{color:#f44336}
 
-/* Slot colors */
-.slot-green{background:linear-gradient(180deg,#4ade80,#22c55e)}
+.plinko-result-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:10;pointer-events:none}
+.plinko-result-content{background:rgba(0,0,0,0.85);border-radius:16px;padding:20px 30px;text-align:center;animation:resultPop 0.4s cubic-bezier(0.175,0.885,0.32,1.275)}
+@keyframes resultPop{0%{opacity:0;transform:scale(0.7)}100%{opacity:1;transform:scale(1)}}
+.plinko-result-emoji{font-size:32px;margin-bottom:6px}
+.plinko-result-amount{font-size:28px;font-weight:900}
+.plinko-result-detail{font-size:12px;color:var(--muted);margin-top:6px}
 .slot-lime{background:linear-gradient(180deg,#a3e635,#84cc16)}
 .slot-yellow{background:linear-gradient(180deg,#facc15,#eab308)}
 .slot-orange{background:linear-gradient(180deg,#fb923c,#f97316)}
