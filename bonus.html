@@ -6,48 +6,59 @@
   <title>Бонус — KATYSHKA</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
-    .bonus-section{padding:20px;max-width:480px;margin:0 auto;text-align:center}
+    .bonus-section{padding:20px;padding-bottom:100px;max-width:480px;margin:0 auto;text-align:center}
     .bonus-title{font-size:24px;font-weight:900;margin-bottom:8px}
     .bonus-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
     
     /* Subscribe section */
-    .subscribe-box{background:linear-gradient(135deg,rgba(21,97,255,0.1),rgba(46,227,107,0.05));border-radius:16px;padding:16px;margin-bottom:24px;border:1px solid rgba(255,255,255,0.06)}
-    .subscribe-title{font-size:15px;font-weight:700;margin-bottom:12px;color:var(--text)}
-    .subscribe-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;border-radius:12px;border:none;font-size:16px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#1559ff,#2ee36b);color:#fff;text-decoration:none;transition:all 0.2s}
+    .subscribe-box{background:linear-gradient(135deg,rgba(21,97,255,0.1),rgba(46,227,107,0.05));border-radius:14px;padding:12px;margin-bottom:16px;border:1px solid rgba(255,255,255,0.06)}
+    .subscribe-title{font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text)}
+    .subscribe-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#1559ff,#2ee36b);color:#fff;text-decoration:none;transition:all 0.2s}
     .subscribe-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(21,97,255,0.3)}
-    .subscribe-btn img{width:24px;height:24px;border-radius:50%}
-    .subscribe-claim{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;border-radius:12px;border:none;font-size:16px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#ffd700,#ff6b9d);color:#000;margin-top:10px;transition:all 0.2s}
+    .subscribe-btn img{width:20px;height:20px;border-radius:50%}
+    .subscribe-claim{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#ffd700,#ff6b9d);color:#000;margin-top:8px;transition:all 0.2s}
     .subscribe-claim:hover{transform:translateY(-2px)}
-    .subscribe-status{margin-top:10px;padding:10px;border-radius:10px;font-size:13px;font-weight:600;display:none}
+    .subscribe-status{margin-top:8px;padding:8px;border-radius:8px;font-size:12px;font-weight:600;display:none}
     .subscribe-status.show{display:block}
     
     /* Wheel */
-    .wheel-container{position:relative;width:100%;max-width:340px;margin:0 auto 20px}
+    .wheel-container{position:relative;width:100%;max-width:280px;margin:0 auto 16px}
     .wheel-canvas{width:100%;aspect-ratio:1;border-radius:50%;box-shadow:0 0 0 6px rgba(255,255,255,0.08),0 0 40px rgba(107,47,160,0.4);background:#0a0118}
-    .wheel-pointer{position:absolute;top:6px;left:50%;transform:translateX(-50%) rotate(180deg);font-size:28px;color:#ffd700;z-index:10;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.6))}
+    .wheel-pointer{position:absolute;top:6px;left:50%;transform:translateX(-50%) rotate(180deg);font-size:24px;color:#ffd700;z-index:10;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.6))}
     
-    .bonus-status{padding:14px;border-radius:12px;font-weight:600;font-size:14px;background:rgba(10,10,30,0.8);margin-bottom:16px;border:1px solid rgba(255,255,255,0.1)}
+    .bonus-title{font-size:20px;font-weight:900;margin-bottom:6px}
+    .bonus-sub{font-size:12px;color:var(--muted);margin-bottom:12px}
+    .bonus-status{padding:10px;border-radius:10px;font-weight:600;font-size:13px;background:rgba(10,10,30,0.8);margin-bottom:12px;border:1px solid rgba(255,255,255,0.1)}
     .bonus-status.win{background:rgba(76,175,80,0.2);color:#4caf50;border-color:rgba(76,175,80,0.4)}
     .bonus-status.wait{background:rgba(255,193,7,0.2);color:#ffc107;border-color:rgba(255,193,7,0.4)}
     
-    .bonus-btn{width:100%;padding:18px;border-radius:14px;border:none;font-size:18px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#ff6b9d,#ffd700);color:#000;text-transform:uppercase;letter-spacing:1px;transition:all 0.2s;box-shadow:0 8px 24px rgba(255,107,157,0.3)}
+    .bonus-btn{width:100%;padding:14px;border-radius:12px;border:none;font-size:16px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#ff6b9d,#ffd700);color:#000;text-transform:uppercase;letter-spacing:1px;transition:all 0.2s;box-shadow:0 8px 24px rgba(255,107,157,0.3)}
     .bonus-btn:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(255,107,157,0.4)}
     .bonus-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none}
     
-    .timer-big{font-size:42px;font-weight:900;color:#ffd700;margin:12px 0 4px}
-    .timer-label{font-size:12px;color:var(--muted)}
+    .timer-big{font-size:32px;font-weight:900;color:#ffd700;margin:8px 0 2px}
+    .timer-label{font-size:11px;color:var(--muted)}
     
     /* Adaptive */
     @media(max-width:480px){
-      .bonus-section{padding:12px}
-      .bonus-title{font-size:20px}
-      .bonus-sub{font-size:12px}
-      .subscribe-box{padding:12px}
-      .subscribe-title{font-size:13px}
-      .subscribe-btn,.subscribe-claim{padding:12px;font-size:14px}
-      .wheel-container{max-width:280px}
-      .bonus-btn{padding:14px;font-size:16px}
-      .timer-big{font-size:32px}
+      .bonus-section{padding:12px;padding-bottom:90px}
+      .bonus-title{font-size:18px}
+      .subscribe-box{padding:10px}
+      .subscribe-title{font-size:12px}
+      .subscribe-btn,.subscribe-claim{padding:10px;font-size:13px}
+      .wheel-container{max-width:240px}
+      .bonus-btn{padding:12px;font-size:14px}
+      .timer-big{font-size:28px}
+    }
+    
+    @media(max-width:360px){
+      .bonus-section{padding:10px;padding-bottom:80px}
+      .bonus-title{font-size:16px}
+      .subscribe-box{padding:8px}
+      .subscribe-btn,.subscribe-claim{padding:8px;font-size:12px}
+      .wheel-container{max-width:200px}
+      .bonus-btn{padding:10px;font-size:13px}
+      .timer-big{font-size:24px}
     }
     
     @media(max-width:360px){
