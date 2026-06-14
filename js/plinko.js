@@ -58,14 +58,14 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function getMults(){ return MULTS[risk][rows] || MULTS.medium[16]; }
 
-  // 97% to slots with mult <= 1.9, 3% to big wins (> 1.9x)
+  // ~99.3% to slots with mult <= 1.9, ~0.7% to big wins (> 1.9x)
   function getRandomSlot(mults){
     var weights = [];
     for(var i = 0; i < mults.length; i++){
       if(mults[i] <= 1.9){
-        weights.push(25.0);
+        weights.push(100.0);
       } else {
-        weights.push(0.5);
+        weights.push(0.2);
       }
     }
     var total = 0;
