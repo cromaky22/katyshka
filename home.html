@@ -16,11 +16,10 @@
     </div>
     <div class="header-title">KATYSHKA</div>
     <div class="right-controls" style="position:relative">
-      <div class="balance-pill">
+      <div class="balance-pill" id="balTrigger" style="cursor:pointer">
         <span class="wallet-icon">💠</span>
-        <span class="balance-value">0.00</span>
+        <span class="balance-value" id="hbal">0.00</span>
         <span class="currency">$</span>
-        <span class="caret">▾</span>
       </div>
       <button class="profile" id="profileBtn" title="Профиль" aria-label="Профиль"><img class="profile-icon" src="" alt="Аватар" onerror="this.style.display='none'"></button>
       <div class="profile-dropdown" id="profileDropdown">
@@ -140,6 +139,7 @@
   </nav>
   <script src="js/balance.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/wallet-modal.js"></script>
   <footer class="site-footer" role="contentinfo">
     <div class="footer-inner">
       <div class="footer-top">18+ · Все права защищены</div>

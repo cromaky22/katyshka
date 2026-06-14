@@ -61,7 +61,11 @@
     <div class="left-controls" style="width:32px"></div>
     <div class="header-title" style="color:var(--accent)">🎁 BONUS</div>
     <div class="right-controls" style="position:relative">
-      <div class="balance-pill"><span class="wallet-icon">💠</span><span class="balance-value">0.00</span><span class="currency">$</span></div>
+      <div class="balance-pill" id="balTrigger" style="cursor:pointer">
+        <span class="wallet-icon">💠</span>
+        <span class="balance-value" id="hbal">0.00</span>
+        <span class="currency">$</span>
+      </div>
       <button class="profile" id="profileBtn" title="Профиль" aria-label="Профиль"><img class="profile-icon" id="profileImg" src="" alt="Аватар" onerror="this.style.display='none'"></button>
       <div class="profile-dropdown" id="profileDropdown">
         <div class="pd-header">
@@ -124,6 +128,7 @@
 
   <script src="js/app.js"></script>
   <script src="js/balance.js"></script>
+  <script src="js/wallet-modal.js"></script>
   <script>
   (function(){
     // === USER ID ===
@@ -347,11 +352,37 @@
       var chosenIdx = 0;
       for(var i=0;i<weights.length;i++){ rand-=weights[i]; if(rand<=0){chosenIdx=i;break;} }
 
-      var targetAngle = 360-(chosenIdx*SEG_ANGLE+SEG_ANGLE/2);
-      var curNorm = (((-rotation)%360)+360)%360;
-      var diff = targetAngle-curNorm; while(diff<0) diff+=360;
-      var totalRot = 360*6+diff;
+      // Simple animation: random extra spins + align to chosen sector visually
+      // Each sector is SEG_ANGLE degrees wide
+      // We want chosenIdx to end up at top (pointer)
+      // Extra random offset within sector so it doesn't look too predictable
+      var seg = SEG_ANGLE;
+      var randomOffset = Math.random() * (seg - 2); // -1 to +1 deg inside sector
+      var targetRot = rotation - 360 * 6 - chosenIdx * seg + randomOffset;
       var startRot = rotation, t0 = performance.now(), dur = 5000;
+      function tick(now) {
+        var p = Math.min((now-t0)/dur,1);
+        var ease = 1-Math.pow(1-p,3);
+        rotation = startRot + (targetRot - startRot) * ease;
+        drawWheel();
+        if(p<1){requestAnimationFrame(tick);}
+        else{rotation=targetRot;drawWheel();finish(chosenIdx);}
+      }
+      requestAnimationFrame(tick);
+    });
+        var p = Math.min((now-t0)/dur,1);
+        var ease = 1-Math.pow(1-p,4);
+        rotation = startRot - totalRot * ease;
+        drawWheel();
+        if(p<1){requestAnimationFrame(tick);}
+        else{
+          rotation = startRot - totalRot;
+          drawWheel();
+          finish(chosenIdx);
+        }
+      }
+      requestAnimationFrame(tick);
+    });
       function tick(now) {
         var p = Math.min((now-t0)/dur,1);
         var ease = 1-Math.pow(1-p,4);
