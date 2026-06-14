@@ -262,8 +262,10 @@ document.addEventListener('DOMContentLoaded', function(){
       }
     }
      state.bets.push({ type, amount: stake });
-     recordStat('bet', stake, `Dice ${getBetLabel(type)} ${currentMode}`);
-     if(window.mcStats) mcStats.addBet(Math.abs(stake), 'Dice', `${getBetLabel(type)} (${currentMode})`);
+      recordStat('bet', stake, `Dice ${getBetLabel(type)} ${currentMode}`);
+      if(window.mcStats) mcStats.addBet(Math.abs(stake), 'Dice', `${getBetLabel(type)} (${currentMode})`);
+      var _u = (window.Balance && window.Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
+      if(_u) fetch('/api/wager/bet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:_u,amount:Math.abs(stake)})});
      updateBetsUI();
     gameStatusEl.textContent = '';
     socket.emit('dice:bet', { type, amount: stake, diceType: currentMode, playerName, playerAvatar });

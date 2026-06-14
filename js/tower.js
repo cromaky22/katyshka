@@ -291,6 +291,8 @@ document.addEventListener('DOMContentLoaded', function(){
      setBalance(getBalance() - stake);
      recordStat('bet', stake, `Tower ${bombCount} bombs`);
      if(window.mcStats) mcStats.addBet(Math.abs(stake), 'Tower', `${bombCount} бомб`);
+     var _u = (window.Balance && window.Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
+     if(_u) fetch('/api/wager/bet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:_u,amount:Math.abs(stake)})});
      generateTower();
 
     stakePanel.style.display = 'none';

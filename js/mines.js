@@ -397,6 +397,8 @@
       setBalance(balance - stake);
       recordStat('bet', stake, `Mines ${mines} mines`);
       if(window.mcStats) mcStats.addBet(Math.abs(stake), 'Mines', `${mines} мин`);
+      var _u = (window.Balance && window.Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
+      if(_u) fetch('/api/wager/bet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:_u,amount:Math.abs(stake)})});
      currentStake = stake;
     currentMines = mines;
     mineSet = randomMines(mines);

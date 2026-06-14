@@ -153,6 +153,8 @@ document.addEventListener('DOMContentLoaded', function(){
      setBalance(getBalance() - bet);
      recordStat('bet', bet, `Nvuti ${selectedType === 0 ? 'Less' : 'More'} ${v}%`);
      if(window.mcStats) mcStats.addBet(Math.abs(bet), 'Nvuti', `${selectedType === 0 ? 'Меньше' : 'Больше'} ${v}%`);
+     var _u = (window.Balance && window.Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
+     if(_u) fetch('/api/wager/bet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:_u,amount:Math.abs(bet)})});
     
     // Hide stake panel, show result panel
     stakePanel.style.display = 'none';

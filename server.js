@@ -167,6 +167,9 @@ try {
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
         balance REAL DEFAULT 0,
+        bonus_balance REAL DEFAULT 0,
+        wager_required REAL DEFAULT 0,
+        wager_multiplier REAL DEFAULT 3,
         first_name TEXT,
         last_name TEXT,
         username TEXT,
@@ -177,7 +180,8 @@ try {
       CREATE TABLE IF NOT EXISTS promos (
         code TEXT PRIMARY KEY,
         amount REAL DEFAULT 0,
-        uses INTEGER DEFAULT 0
+        uses INTEGER DEFAULT 0,
+        wager_mult REAL DEFAULT 5
       );
       CREATE TABLE IF NOT EXISTS activated (
         user_id TEXT,
@@ -192,7 +196,14 @@ try {
       );
     `).then(() => {
       console.log('✅ DB tables ready');
-      // Add sub_claimed column if not exists (migration)
+      // Add columns if not exist (migrations)
+      db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS bonus_balance REAL DEFAULT 0').catch(()=>{});
+      db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS wager_required REAL DEFAULT 0').catch(()=>{});
+      db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS wager_multiplier REAL DEFAULT 3').catch(()=>{});
+      db.query('ALTER TABLE promos ADD COLUMN IF NOT EXISTS wager_mult REAL DEFAULT 5').catch(()=>{});
+    }).catch(e => {
+      console.error('DB init error:', e.message);
+    });
       db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS sub_claimed BOOLEAN DEFAULT FALSE')
         .then(() => console.log('✅ sub_claimed column ready'))
         .catch(() => {});
@@ -346,7 +357,7 @@ function getBalance(id) {
 }
 
 async function setBalance(id, amt) {
-  if (!users[id]) users[id] = { balance: 0 };
+  if (!users[id]) users[id] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0 };
   users[id].balance = Math.round(amt * 100) / 100;
   
   if (usePostgres) {
@@ -356,6 +367,59 @@ async function setBalance(id, amt) {
   }
   saveData();
 }
+
+// === WAGER SYSTEM ===
+// When user deposits, add to wager requirement
+// When user bets, reduce wager requirement
+// Withdraw only allowed when wager_required <= 0
+
+const WAGER_MULT_DEFAULT = 3; // deposit × 3
+const WAGER_MULT_PROMO = 5;   // promo × 5
+
+function getWagerStatus(userId) {
+  var u = users[userId];
+  if (!u) return { wager_required: 0, wager_total: 0, deposit_total: 0, can_withdraw: true };
+  return {
+    wager_required: Math.max(0, u.wager_required || 0),
+    wager_total: u.wager_total || 0,
+    deposit_total: u.deposit_total || 0,
+    can_withdraw: (u.wager_required || 0) <= 0
+  };
+}
+
+function applyDeposit(userId, amount) {
+  if (!users[userId]) users[userId] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0 };
+  var u = users[userId];
+  u.wager_required = Math.round((u.wager_required + amount * WAGER_MULT_DEFAULT) * 100) / 100;
+  u.wager_total = Math.round((u.wager_total + amount * WAGER_MULT_DEFAULT) * 100) / 100;
+  u.deposit_total = Math.round((u.deposit_total + amount) * 100) / 100;
+  saveData();
+}
+
+function applyPromo(userId, amount) {
+  if (!users[userId]) users[userId] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0 };
+  var u = users[userId];
+  u.wager_required = Math.round((u.wager_required + amount * WAGER_MULT_PROMO) * 100) / 100;
+  u.wager_total = Math.round((u.wager_total + amount * WAGER_MULT_PROMO) * 100) / 100;
+  saveData();
+}
+
+function applyBet(userId, amount) {
+  if (!users[userId]) return;
+  var u = users[userId];
+  u.wager_required = Math.round(Math.max(0, u.wager_required - amount) * 100) / 100;
+  saveData();
+}
+
+// API: Apply bet to wager (called by client games)
+app.post('/api/wager/bet', (req, res) => {
+  const { userId, amount } = req.body;
+  if (!userId || !amount) return res.status(400).json({ error: 'Missing params' });
+  applyBet(userId, Math.abs(amount));
+  res.json({ ok: true, ...getWagerStatus(userId) });
+});
+
+// API: Apply bet to wager (called by client games)
 
 // Add transaction to history
 async function addTx(type, userId, amount, status, extra) {
@@ -454,13 +518,15 @@ app.post('/api/invoice/check', async (req, res) => {
     if (result.ok && result.result?.items?.length > 0) {
       const inv = result.result.items[0];
 
-      // If paid, credit balance
+      // If paid, credit balance + apply wager
       if (inv.status === 'paid') {
         try {
           const payload = JSON.parse(inv.payload || '{}');
           if (payload.userId) {
-            setBalance(payload.userId, getBalance(payload.userId) + parseFloat(inv.amount));
-            console.log(`Credited $${inv.amount} to ${payload.userId}`);
+            var depAmount = parseFloat(inv.amount);
+            setBalance(payload.userId, getBalance(payload.userId) + depAmount);
+            applyDeposit(payload.userId, depAmount);
+            console.log(`Credited $${depAmount} to ${payload.userId}, wager +$${depAmount * WAGER_MULT_DEFAULT}`);
           }
         } catch (e) {}
       }
@@ -667,8 +733,10 @@ app.post('/api/promos/:code/activate', (req, res) => {
   if (!activated[userId]) activated[userId] = [];
   if (activated[userId].includes(code)) return res.status(400).json({ error: 'Already activated' });
   activated[userId].push(code);
-  setBalance(userId, getBalance(userId) + promos[code]);
-  res.json({ ok: true, amount: promos[code], balance: getBalance(userId) });
+  var promoAmount = promos[code].amount || promos[code];
+  setBalance(userId, getBalance(userId) + promoAmount);
+  applyPromo(userId, promoAmount);
+  res.json({ ok: true, amount: promoAmount, balance: getBalance(userId) });
 });
 
 // === WHEEL GAME ===
@@ -737,7 +805,8 @@ function spinWheel() {
     results[uid] = win;
     setBalance(uid, getBalance(uid) + win);
     // Record transaction
-    addTx('bet', uid, totalBet, 'completed', { game: 'Wheel', detail: `Bet ${totalBet.toFixed(2)}` });
+     addTx('bet', uid, totalBet, 'completed', { game: 'Wheel', detail: `Bet ${totalBet.toFixed(2)}` });
+     applyBet(uid, totalBet);
     if (win > 0) {
       addTx('win', uid, win, 'completed', { game: 'Wheel', detail: `Won ${win.toFixed(2)} on ${num}` });
     } else {
@@ -788,7 +857,8 @@ io.on('connection', (socket) => {
     if (!wheel.bets[userId]) wheel.bets[userId] = [];
     wheel.bets[userId].push({ type, amount, playerName: playerName || 'Player', playerAvatar: playerAvatar || '' });
     setBalance(userId, serverBalance - amount);
-    addTx('bet', userId, amount, 'completed', { game: 'Wheel', detail: type });
+     addTx('bet', userId, amount, 'completed', { game: 'Wheel', detail: type });
+     applyBet(userId, amount);
     io.emit('balance_update', { userId, balance: getBalance(userId) });
     const allBets = [];
     for (const uid in wheel.bets) {

@@ -86,6 +86,8 @@ document.addEventListener('DOMContentLoaded', function(){
        setBalance(Math.round((balBefore - baseStake) * 100) / 100);
        recordStat('bet', baseStake, `Coinflip ${choice === 'head' ? 'Орел' : 'Решка'}`);
        if(window.mcStats) mcStats.addBet(Math.abs(baseStake), 'Coinflip', `Выбор: ${choice === 'head' ? 'Орел' : 'Решка'}`);
+       var _u = (window.Balance && window.Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
+       if(_u) fetch('/api/wager/bet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:_u,amount:Math.abs(baseStake)})});
     }
     const pendingResult = randomResult();
         coin.classList.remove('show-head','show-tail');

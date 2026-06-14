@@ -189,8 +189,10 @@ document.addEventListener('DOMContentLoaded', function(){
     currentBets.push({ type, amount: stake });
     updateMyBetsDisplay();
     gameStatusEl.textContent = '';
-    recordStat('bet', stake, `Wheel ${getBetLabel(type)}`);
-    if(window.mcStats) mcStats.addBet(stake, 'Wheel', getBetLabel(type));
+     recordStat('bet', stake, `Wheel ${getBetLabel(type)}`);
+     if(window.mcStats) mcStats.addBet(stake, 'Wheel', getBetLabel(type));
+     var _u = (window.Balance && window.Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
+     if(_u) fetch('/api/wager/bet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:_u,amount:stake})});
     socket.emit('wheel:bet', { type, amount: stake, playerName, playerAvatar });
   }
 

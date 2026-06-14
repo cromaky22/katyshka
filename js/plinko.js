@@ -296,7 +296,9 @@ document.addEventListener('DOMContentLoaded', function(){
     gameStatus.className = 'game-status';
 
     setBalance(getBalance() - totalCost);
-    recordStat('bet', totalCost, 'Plinko x'+ballCount);
+     recordStat('bet', totalCost, 'Plinko x'+ballCount);
+     var _u = (window.Balance && window.Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
+     if(_u) fetch('/api/wager/bet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:_u,amount:totalCost})});
 
     var mults = getMults();
     activeBalls = ballCount;

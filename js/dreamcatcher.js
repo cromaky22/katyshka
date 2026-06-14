@@ -255,6 +255,8 @@ document.addEventListener('DOMContentLoaded', function() {
      setBalance(getBalance() - stake);
      recordStat('bet', stake, `DreamCatcher x${selectedBet}`);
      if(window.mcStats) mcStats.addBet(Math.abs(stake), 'DreamCatcher', `Ставка на x${selectedBet}`);
+     var _u = (window.Balance && window.Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
+     if(_u) fetch('/api/wager/bet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:_u,amount:Math.abs(stake)})});
      gameState = 'spinning';
 
     playBtn.disabled = true;

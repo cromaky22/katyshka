@@ -210,6 +210,8 @@ document.addEventListener('DOMContentLoaded', function(){
       setBalance(getBalance() - stake);
      recordStat('bet', stake, `Double ${selectedColor}`);
      if(window.mcStats) mcStats.addBet(Math.abs(stake), 'Double', `Цвет: ${selectedColor}`);
+     var _u = (window.Balance && window.Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
+     if(_u) fetch('/api/wager/bet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:_u,amount:Math.abs(stake)})});
      resultLens.classList.remove('show');
     gameStatusEl.textContent = '';
 

@@ -14,7 +14,7 @@
     dd.style.cssText = 'position:fixed;z-index:999999;opacity:0;pointer-events:none;transform:translateY(-8px);transition:opacity .2s,transform .2s;overflow:hidden;width:280px;background:linear-gradient(180deg,rgba(12,16,30,0.98),rgba(8,12,24,0.98));border-radius:14px;border:1px solid rgba(255,255,255,0.06);box-shadow:0 20px 60px rgba(0,0,0,0.6)';
     dd.innerHTML = '<div style="padding:14px">' +
       '<div style="text-align:center;padding:12px;background:rgba(0,0,0,0.2);border-radius:10px;margin-bottom:10px"><div style="font-size:11px;color:var(--muted)">Основной баланс</div><div style="font-size:28px;font-weight:900;color:#ffd700;margin-top:4px">$<span id="wdBal">0.00</span></div></div>' +
-      '<div style="text-align:center;padding:12px;background:rgba(0,0,0,0.2);border-radius:10px;margin-bottom:12px"><div style="font-size:11px;color:var(--muted)">Отыгрыш (Wager)</div><div style="font-size:22px;font-weight:900;color:#ff6b9d;margin-top:4px">$<span id="wwBal">0.00</span></div></div>' +
+      '<div style="text-align:center;padding:10px;background:rgba(0,0,0,0.2);border-radius:10px;margin-bottom:8px"><div style="font-size:11px;color:var(--muted)">Отыгрыш (Wager)</div><div style="font-size:14px;font-weight:700;color:#ff6b9d;margin-top:2px">Осталось: $<span id="wdWager">0.00</span></div><div style="font-size:10px;color:var(--muted);margin-top:4px">Ввод: <span id="wdWithdraw">доступен</span></div></div>' +
       '<button id="wdOpen" style="width:100%;padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#2196f3,#1565c0);color:#fff">💼 Кошелёк</button>' +
     '</div>';
     document.body.appendChild(dd);
@@ -69,7 +69,19 @@
   function syncBal(){
     if (!window.Balance) return;
     var v = fmt(Balance.get());
-    ['wdBal','wwBal','wfDepBal','wfWdBal','hbal'].forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent=v; });
+    ['wdBal','wfDepBal','wfWdBal','hbal'].forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent=v; });
+    var uid = (window.Balance && window.Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
+    if(uid) {
+      fetch('/api/wager/'+uid).then(function(r){return r.json();}).then(function(d){
+        if(d.ok) {
+          var wEl=document.getElementById('wdWager'); var wdEl=document.getElementById('wdWithdraw');
+          if(wEl) wEl.textContent=d.wager_required.toFixed(2);
+          if(wdEl){ wdEl.textContent=d.can_withdraw?'доступен':'отыграйте вагер'; wdEl.style.color=d.can_withdraw?'#4caf50':'#ff6b9d'; }
+          var wfBtn=document.getElementById('wfWdBtn');
+          if(wfBtn && d.can_withdraw){ wfBtn.disabled=false; wfBtn.style.opacity='1'; }
+        }
+      }).catch(function(){});
+    }
   }
 
   function openDrop(){

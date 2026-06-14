@@ -249,8 +249,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
      // Deduct stake
      setBalance(getBalance() - stake);
-     recordStat('bet', stake, `Crash`);
-     if(window.mcStats) mcStats.addBet(Math.abs(stake), 'Crash', 'Ставка размещена');
+      recordStat('bet', stake, `Crash`);
+      if(window.mcStats) mcStats.addBet(Math.abs(stake), 'Crash', 'Ставка размещена');
+      // Apply wager
+      var _uid = (window.Balance && window.Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
+      if(_uid) fetch('/api/wager/bet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:_uid,amount:Math.abs(stake)})});
 
     // UI transition
     sfxStart();

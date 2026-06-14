@@ -251,6 +251,8 @@ document.addEventListener('DOMContentLoaded', function(){
      setBalance(getBalance() - stake);
      recordStat('bet', stake, `GoldWest ${bombs} bombs`);
      if(window.mcStats) mcStats.addBet(Math.abs(stake), 'GoldWest', `${bombs} бомб`);
+     var _u = (window.Balance && window.Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
+     if(_u) fetch('/api/wager/bet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:_u,amount:Math.abs(stake)})});
      gameActive = true; level = 0; openedCells = []; currentCoef = 1;
     generateField(); renderLevels(); saveGame();
     stakePanel.style.display = 'none';
