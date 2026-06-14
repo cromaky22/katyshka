@@ -273,8 +273,13 @@ document.addEventListener('DOMContentLoaded', function(){
   function play(){
     if(playing) return;
     var stake = parseFloat(stakeInput.value);
-    if(isNaN(stake) || stake < 0.01){
-      gameStatus.textContent = 'Мин. ставка $0.01';
+    if(isNaN(stake) || stake < 0.1){
+      gameStatus.textContent = 'Мин. ставка $0.1';
+      gameStatus.className = 'game-status lose';
+      return;
+    }
+    if(stake > 100){
+      gameStatus.textContent = 'Макс. ставка $100';
       gameStatus.className = 'game-status lose';
       return;
     }
@@ -435,11 +440,11 @@ document.addEventListener('DOMContentLoaded', function(){
 
   document.getElementById('halfBtn').addEventListener('click', function(){
     var v = parseFloat(stakeInput.value) || 1;
-    stakeInput.value = Math.max(0.01, (v/2).toFixed(2));
+    stakeInput.value = Math.max(0.1, (v/2).toFixed(2));
   });
   document.getElementById('doubleBtn').addEventListener('click', function(){
     var v = parseFloat(stakeInput.value) || 1;
-    stakeInput.value = (v*2).toFixed(2);
+    stakeInput.value = Math.min(100, (v*2).toFixed(2));
   });
 
   playBtn.addEventListener('click', play);
