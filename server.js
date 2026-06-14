@@ -142,26 +142,7 @@ app.post('/api/admin/take', (req, res) => {
   saveData();
   res.json({ ok: true, balance: users[userId].balance });
 });
-// === SUBSCRIBE REWARD ===
-app.post('/api/bonus/subscribe', async (req, res) => {
-  const { userId } = req.body;
-  if (!userId) return res.status(400).json({ error: 'Missing userId' });
-  
-  // Check if already claimed
-  if (!users[userId]) users[userId] = { balance: 0 };
-  if (users[userId].subClaimed) return res.status(400).json({ error: 'already_claimed' });
-  
-  // Give reward
-  const reward = 0.3;
-  users[userId].balance = Math.round((users[userId].balance + reward) * 100) / 100;
-  users[userId].subClaimed = true;
-  saveData();
-  
-  // Notify via socket
-  io.emit('balance_update', { userId, balance: users[userId].balance });
-  
-  res.json({ ok: true, balance: users[userId].balance });
-});
+// (old subscribe endpoint removed — replaced below with TG API check)
 
 // === DATABASE (PostgreSQL on Railway, fallback to file) ===
 const fs = require('fs');
@@ -814,8 +795,73 @@ io.on('connection', (socket) => {
 
 startWheel();
 
-// === TELEGRAM PHOTO API ===
+// === TELEGRAM BOT ===
 const BOT_TOKEN = process.env.BOT_TOKEN || '8962248830:AAEoWT12lZEzttXXHxt3c48wLGh5HcZ6FoQ';
+const CHANNEL_ID = '@milfacasino';
+const SUB_REWARD = 0.3;
+
+// Check Telegram subscription
+app.get('/api/check-subscribe/:userId', async (req, res) => {
+  if (!BOT_TOKEN) return res.json({ subscribed: false, error: 'no_bot' });
+  try {
+    const userId = req.params.userId;
+    const chatMemberRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${CHANNEL_ID}&user_id=${userId}`);
+    const data = await chatMemberRes.json();
+    if (!data.ok) return res.json({ subscribed: false });
+    const status = data.result?.status;
+    const subscribed = ['member', 'administrator', 'creator'].includes(status);
+    res.json({ subscribed, status });
+  } catch (e) {
+    console.error('Subscribe check error:', e);
+    res.json({ subscribed: false });
+  }
+});
+
+// Claim subscribe reward (server-side check + DB)
+app.post('/api/bonus/subscribe', async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: 'Missing userId' });
+
+  // Verify subscription via Telegram API
+  try {
+    const chatMemberRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${CHANNEL_ID}&user_id=${userId}`);
+    const data = await chatMemberRes.json();
+    if (!data.ok || !['member', 'administrator', 'creator'].includes(data.result?.status)) {
+      return res.status(403).json({ error: 'not_subscribed' });
+    }
+  } catch (e) {
+    return res.status(500).json({ error: 'check_failed' });
+  }
+
+  // Check DB first
+  if (usePostgres) {
+    try {
+      const result = await db.query('SELECT sub_claimed FROM users WHERE id = $1', [userId]);
+      if (result.rows[0]?.sub_claimed) return res.status(400).json({ error: 'already_claimed' });
+    } catch(e) {}
+  }
+
+  // Check memory
+  if (!users[userId]) users[userId] = { balance: 0 };
+  if (users[userId].subClaimed) return res.status(400).json({ error: 'already_claimed' });
+
+  // Give reward
+  users[userId].balance = Math.round((users[userId].balance + SUB_REWARD) * 100) / 100;
+  users[userId].subClaimed = true;
+  io.emit('balance_update', { userId, balance: users[userId].balance });
+
+  // Save to DB
+  if (usePostgres) {
+    try {
+      await db.query('UPDATE users SET balance = $1, sub_claimed = true WHERE id = $2', [users[userId].balance, userId]);
+    } catch(e) {
+      await db.query('INSERT INTO users (id, balance, sub_claimed) VALUES ($1, $2, true) ON CONFLICT (id) DO UPDATE SET balance = $2, sub_claimed = true', [userId, users[userId].balance]);
+    }
+  }
+  saveData();
+
+  res.json({ ok: true, balance: users[userId].balance });
+});
 
 app.get('/api/tg-photo/:id', async (req, res) => {
   if (!BOT_TOKEN) return res.status(404).send('No bot token');

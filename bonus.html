@@ -6,68 +6,51 @@
   <title>Бонус — KATYSHKA</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
-    .bonus-section{padding:20px;padding-bottom:100px;max-width:480px;margin:0 auto;text-align:center}
-    .bonus-title{font-size:24px;font-weight:900;margin-bottom:8px}
-    .bonus-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
-    
-    /* Subscribe section */
-    .subscribe-box{background:linear-gradient(135deg,rgba(21,97,255,0.1),rgba(46,227,107,0.05));border-radius:14px;padding:12px;margin-bottom:16px;border:1px solid rgba(255,255,255,0.06)}
-    .subscribe-title{font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text)}
-    .subscribe-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#1559ff,#2ee36b);color:#fff;text-decoration:none;transition:all 0.2s}
-    .subscribe-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(21,97,255,0.3)}
-    .subscribe-btn img{width:20px;height:20px;border-radius:50%}
+    .bonus-section{padding:16px 16px 100px;max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+
+    /* Subscribe card */
+    .subscribe-box{background:linear-gradient(135deg,rgba(21,97,255,0.12),rgba(46,227,107,0.06));border-radius:14px;padding:14px;border:1px solid rgba(255,255,255,0.07)}
+    .subscribe-title{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+    .subscribe-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#1559ff,#2b84ea);color:#fff;text-decoration:none;transition:all 0.2s}
+    .subscribe-btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(21,89,255,0.3)}
+    .subscribe-btn.subscribed{background:#2a2a3a;color:#888;cursor:default;pointer-events:none}
+    .subscribe-btn.subscribed:hover{transform:none;box-shadow:none}
+    .subscribe-btn img{width:20px;height:20px;border-radius:50%;flex-shrink:0}
     .subscribe-claim{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#ffd700,#ff6b9d);color:#000;margin-top:8px;transition:all 0.2s}
-    .subscribe-claim:hover{transform:translateY(-2px)}
-    .subscribe-status{margin-top:8px;padding:8px;border-radius:8px;font-size:12px;font-weight:600;display:none}
+    .subscribe-claim:hover{transform:translateY(-1px)}
+    .subscribe-claim:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+    .subscribe-status{margin-top:8px;padding:8px 10px;border-radius:8px;font-size:12px;font-weight:600;display:none;text-align:center}
     .subscribe-status.show{display:block}
-    
-    /* Wheel */
-    .wheel-container{position:relative;width:100%;max-width:280px;margin:0 auto 16px}
-    .wheel-canvas{width:100%;aspect-ratio:1;border-radius:50%;box-shadow:0 0 0 6px rgba(255,255,255,0.08),0 0 40px rgba(107,47,160,0.4);background:#0a0118}
-    .wheel-pointer{position:absolute;top:6px;left:50%;transform:translateX(-50%) rotate(180deg);font-size:24px;color:#ffd700;z-index:10;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.6))}
-    
-    .bonus-title{font-size:20px;font-weight:900;margin-bottom:6px}
-    .bonus-sub{font-size:12px;color:var(--muted);margin-bottom:12px}
-    .bonus-status{padding:10px;border-radius:10px;font-weight:600;font-size:13px;background:rgba(10,10,30,0.8);margin-bottom:12px;border:1px solid rgba(255,255,255,0.1)}
-    .bonus-status.win{background:rgba(76,175,80,0.2);color:#4caf50;border-color:rgba(76,175,80,0.4)}
-    .bonus-status.wait{background:rgba(255,193,7,0.2);color:#ffc107;border-color:rgba(255,193,7,0.4)}
-    
-    .bonus-btn{width:100%;padding:14px;border-radius:12px;border:none;font-size:16px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#ff6b9d,#ffd700);color:#000;text-transform:uppercase;letter-spacing:1px;transition:all 0.2s;box-shadow:0 8px 24px rgba(255,107,157,0.3)}
-    .bonus-btn:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(255,107,157,0.4)}
-    .bonus-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none}
-    
-    .timer-big{font-size:32px;font-weight:900;color:#ffd700;margin:8px 0 2px}
-    .timer-label{font-size:11px;color:var(--muted)}
-    
-    /* Adaptive */
-    @media(max-width:480px){
-      .bonus-section{padding:12px;padding-bottom:90px}
-      .bonus-title{font-size:18px}
-      .subscribe-box{padding:10px}
-      .subscribe-title{font-size:12px}
-      .subscribe-btn,.subscribe-claim{padding:10px;font-size:13px}
+    .subscribe-status.success{background:rgba(46,227,107,0.12);color:#2ee36b;border:1px solid rgba(46,227,107,0.25)}
+    .subscribe-status.error{background:rgba(244,67,54,0.12);color:#f44336;border:1px solid rgba(244,67,54,0.25)}
+
+    /* Wheel area */
+    .wheel-card{background:var(--card);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+    .wheel-header{text-align:center}
+    .wheel-title{font-size:20px;font-weight:900}
+    .wheel-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+    .wheel-container{position:relative;width:100%;max-width:280px;margin:0 auto}
+    .wheel-canvas{width:100%;aspect-ratio:1;border-radius:50%;box-shadow:0 0 0 6px rgba(255,255,255,0.08),0 0 40px rgba(107,47,160,0.4);background:#0a0118;display:block}
+    .wheel-pointer{position:absolute;top:6px;left:50%;transform:translateX(-50%) rotate(180deg);font-size:24px;color:#ffd700;z-index:10;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.6));pointer-events:none}
+
+    .bonus-status{padding:10px;border-radius:10px;font-weight:600;font-size:13px;text-align:center;background:rgba(10,10,30,0.6);border:1px solid rgba(255,255,255,0.08)}
+    .bonus-status.win{background:rgba(76,175,80,0.15);color:#4caf50;border-color:rgba(76,175,80,0.4)}
+    .bonus-status.wait{background:rgba(255,193,7,0.15);color:#ffc107;border-color:rgba(255,193,7,0.4)}
+
+    .timer-block{text-align:center;padding:4px 0}
+    .timer-big{font-size:32px;font-weight:900;color:#ffd700}
+    .timer-label{font-size:11px;color:var(--muted);margin-top:2px}
+
+    .bonus-btn{width:100%;padding:14px;border-radius:12px;border:none;font-size:16px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#ff6b9d,#ffd700);color:#000;text-transform:uppercase;letter-spacing:1px;transition:all 0.2s;box-shadow:0 8px 24px rgba(255,107,157,0.3);margin-top:4px}
+    .bonus-btn:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(255,107,157,0.4)}
+    .bonus-btn:disabled{opacity:0.35;cursor:not-allowed;transform:none;box-shadow:none}
+
+    @media(max-width:380px){
+      .bonus-section{padding:12px 10px 90px}
+      .wheel-title{font-size:18px}
+      .subscribe-box,.wheel-card{padding:10px}
       .wheel-container{max-width:240px}
-      .bonus-btn{padding:12px;font-size:14px}
-      .timer-big{font-size:28px}
-    }
-    
-    @media(max-width:360px){
-      .bonus-section{padding:10px;padding-bottom:80px}
-      .bonus-title{font-size:16px}
-      .subscribe-box{padding:8px}
-      .subscribe-btn,.subscribe-claim{padding:8px;font-size:12px}
-      .wheel-container{max-width:200px}
-      .bonus-btn{padding:10px;font-size:13px}
-      .timer-big{font-size:24px}
-    }
-    
-    @media(max-width:360px){
-      .bonus-section{padding:10px}
-      .bonus-title{font-size:18px}
-      .subscribe-box{padding:10px}
-      .subscribe-btn,.subscribe-claim{padding:10px;font-size:13px}
-      .wheel-container{max-width:240px}
-      .bonus-btn{padding:12px;font-size:14px}
       .timer-big{font-size:28px}
     }
   </style>
@@ -76,41 +59,59 @@
 <body>
   <header class="app-header">
     <div class="left-controls" style="width:32px"></div>
-    <div class="header-title">BONUS</div>
-    <div class="right-controls">
-      <div class="balance-pill"><span class="balance-value" id="hbal">0.00</span><span class="currency">$</span></div>
+    <div class="header-title" style="color:var(--accent)">🎁 BONUS</div>
+    <div class="right-controls" style="position:relative">
+      <div class="balance-pill"><span class="wallet-icon">💠</span><span class="balance-value">0.00</span><span class="currency">$</span></div>
       <button class="profile" id="profileBtn" title="Профиль" aria-label="Профиль"><img class="profile-icon" id="profileImg" src="" alt="Аватар" onerror="this.style.display='none'"></button>
+      <div class="profile-dropdown" id="profileDropdown">
+        <div class="pd-header">
+          <div class="pd-id-label">ID игрока</div>
+          <div class="pd-id-value"><span id="pdUserId">—</span></div>
+        </div>
+        <div class="pd-body">
+          <a href="profile.html" class="pd-btn"><span class="pd-btn-icon">👤</span>Профиль<span class="pd-btn-arrow">→</span></a>
+          <button class="pd-btn" id="pdPromoBtn"><span class="pd-btn-icon">🎟</span>Промокод<span class="pd-btn-arrow">→</span></button>
+        </div>
+      </div>
+      <div class="pd-overlay" id="pdOverlay"></div>
     </div>
   </header>
 
   <main class="bonus-section">
-    <!-- Subscribe reward - TOP -->
+
+    <!-- Subscribe reward -->
     <div class="subscribe-box">
-      <div class="subscribe-title">💎 Подпишись на канал и получи $0.3!</div>
+      <div class="subscribe-title">💎 Подпишитесь на канал и получите $0.3</div>
       <a href="https://t.me/milfacasino" target="_blank" class="subscribe-btn" id="subscribeBtn">
-        <img src="assets/telega.jpg" alt="Telegram"> ПОДПИСАТЬСЯ
+        <img src="assets/telega.jpg" alt="Telegram" onerror="this.style.display='none'">
+        <span>ПОДПИСАТЬСЯ</span>
       </a>
-      <button class="subscribe-claim" id="claimSubBtn" style="display:none">🎁 ЗАБРАТЬ $0.3</button>
+      <button class="subscribe-claim" id="claimSubBtn" style="display:none">🎁 ПОЛУЧИТЬ $0.3</button>
       <div class="subscribe-status" id="subStatus"></div>
     </div>
 
-    <!-- Wheel - BOTTOM -->
-    <div class="bonus-title">🎡 Колесо Удачи</div>
-    <div class="bonus-sub">Крути раз в день и выигрывай до $10!</div>
+    <!-- Wheel -->
+    <div class="wheel-card">
+      <div class="wheel-header">
+        <div class="wheel-title">🎡 Колесо Удачи</div>
+        <div class="wheel-sub">Крути раз в день — выигрывай до $10!</div>
+      </div>
 
-    <div class="wheel-container">
-      <canvas id="bonusWheel" class="wheel-canvas"></canvas>
-      <div class="wheel-pointer">▼</div>
+      <div class="wheel-container">
+        <canvas id="bonusWheel" class="wheel-canvas"></canvas>
+        <div class="wheel-pointer">▼</div>
+      </div>
+
+      <div class="bonus-status" id="bonusStatus">Загрузка...</div>
+
+      <div class="timer-block" id="timerBlock" style="display:none">
+        <div class="timer-big" id="timerVal">00:00:00</div>
+        <div class="timer-label">до следующего бонуса</div>
+      </div>
+
+      <button class="bonus-btn" id="spinBtn">🎰 КРУТИТЬ</button>
     </div>
 
-    <div class="bonus-status" id="bonusStatus">Загрузка...</div>
-
-    <div id="timerBlock" style="display:none">
-      <div class="timer-big" id="timerVal">00:00:00</div>
-      <div class="timer-label">до следующего бонуса</div>
-    </div>
-
-    <button class="bonus-btn" id="spinBtn">🎰 КРУТИТЬ</button>
   </main>
 
   <nav class="bottom-nav">
@@ -125,6 +126,7 @@
   <script src="js/balance.js"></script>
   <script>
   (function(){
+    // === USER ID ===
     var uid = 'u' + Math.random().toString(36).substr(2, 9);
     try {
       var tg = window.Telegram && window.Telegram.WebApp;
@@ -136,6 +138,85 @@
     var savedUid = localStorage.getItem('tg_uid');
     if (savedUid) uid = savedUid;
 
+    // === SUBSCRIBE ===
+    var subBtn = document.getElementById('subscribeBtn');
+    var claimSubBtn = document.getElementById('claimSubBtn');
+    var subStatus = document.getElementById('subStatus');
+
+    function showSubStatus(msg, type){
+      subStatus.style.display='block';
+      subStatus.textContent = msg;
+      subStatus.className = 'subscribe-status show ' + (type||'');
+    }
+
+    function setSubscribedUI(){
+      subBtn.classList.add('subscribed');
+      subBtn.innerHTML = '<span>✅ ВЫ ПОДПИСАНЫ</span>';
+      subBtn.style.pointerEvents = 'none';
+    }
+
+    // States: 'loading', 'not_subscribed', 'subscribed_not_claimed', 'claimed'
+    function checkSub(){
+      var claimed = localStorage.getItem('sub_claimed_'+uid);
+      if(claimed){
+        setSubscribedUI();
+        claimSubBtn.style.display = 'none';
+        showSubStatus('✅ Награда уже получена', 'success');
+        return;
+      }
+
+      // Check API
+      fetch('/api/check-subscribe/'+uid)
+      .then(function(r){return r.json();})
+      .then(function(data){
+        if(data.subscribed){
+          setSubscribedUI();
+          claimSubBtn.style.display = 'flex';
+          showSubStatus('🎉 Вы подписаны! Заберите награду', 'success');
+        } else {
+          // Not subscribed — show link button normally
+          showSubStatus('❌ Подпишитесь на канал чтобы получить награду', 'error');
+        }
+      }).catch(function(){
+        showSubStatus('⚠️ Не удалось проверить подписку', 'error');
+      });
+    }
+
+    checkSub();
+
+    claimSubBtn.addEventListener('click', function(){
+      if(claimSubBtn.disabled) return;
+      claimSubBtn.disabled = true;
+      showSubStatus('⏳ Проверяем...', '');
+
+      fetch('/api/bonus/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid})})
+      .then(function(r){return r.json();})
+      .then(function(data){
+        if(data.ok){
+          localStorage.setItem('sub_claimed_'+uid,'1');
+          setSubscribedUI();
+          claimSubBtn.style.display = 'none';
+          Balance.set(Math.round((Balance.get()+0.3)*100)/100);
+          showSubStatus('🎉 Вам начислено $0.3!', 'success');
+        } else if(data.error === 'not_subscribed'){
+          showSubStatus('❌ Вы не подписаны на канал!', 'error');
+          claimSubBtn.disabled = false;
+        } else if(data.error === 'already_claimed'){
+          localStorage.setItem('sub_claimed_'+uid,'1');
+          setSubscribedUI();
+          claimSubBtn.style.display = 'none';
+          showSubStatus('✅ Награда уже была получена ранее', 'success');
+        } else {
+          showSubStatus('❌ '+(data.error||'Ошибка'), 'error');
+          claimSubBtn.disabled = false;
+        }
+      }).catch(function(){
+        showSubStatus('❌ Ошибка соединения', 'error');
+        claimSubBtn.disabled = false;
+      });
+    });
+
+    // === WHEEL ===
     var canvas = document.getElementById('bonusWheel');
     var ctx = canvas.getContext('2d');
     var spinBtn = document.getElementById('spinBtn');
@@ -167,7 +248,7 @@
 
     function setupCanvas() {
       var size = canvas.offsetWidth * 2;
-      if (size < 100) size = 680;
+      if (size < 100) size = 600;
       canvas.width = size;
       canvas.height = size;
       drawWheel();
@@ -185,7 +266,7 @@
         ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, r, sa, ea); ctx.closePath();
         ctx.fillStyle = seg.color; ctx.fill();
         ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + r * Math.cos(sa), cy + r * Math.sin(sa));
-        ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1; ctx.stroke();
         ctx.save(); ctx.translate(cx, cy); ctx.rotate((sa + ea) / 2);
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillStyle = (seg.payout >= 5) ? '#000' : '#fff';
@@ -228,11 +309,22 @@
       if (getRemaining() > 0) return;
       isSpinning = true; spinBtn.disabled = true; spinBtn.textContent = '🎡 КРУТИТСЯ...';
       bonusStatus.textContent = 'Колесо крутится...'; bonusStatus.className = 'bonus-status';
-      var weights = SECTORS.map(function(s){ if(s.payout>=10)return 1; if(s.payout>=5)return 2; if(s.payout>=1)return 3; if(s.payout>=0.5)return 5; if(s.payout>=0.25)return 8; if(s.payout>=0.10)return 15; return 25; });
-      var totalW = weights.reduce(function(a,b){return a+b;},0);
+
+      var weights = SECTORS.map(function(s){
+        if(s.payout >= 10) return 1;
+        if(s.payout >= 5)  return 2;
+        if(s.payout >= 1)  return 5;
+        if(s.payout >= 0.5) return 10;
+        if(s.payout >= 0.25) return 18;
+        if(s.payout >= 0.10) return 25;
+        return 35;
+      });
+      var totalW = 0;
+      for(var w=0;w<weights.length;w++) totalW+=weights[w];
       var rand = Math.random() * totalW;
       var chosenIdx = 0;
       for(var i=0;i<weights.length;i++){ rand-=weights[i]; if(rand<=0){chosenIdx=i;break;} }
+
       var targetAngle = 360-(chosenIdx*SEG_ANGLE+SEG_ANGLE/2);
       var curNorm = (((-rotation)%360)+360)%360;
       var diff = targetAngle-curNorm; while(diff<0) diff+=360;
@@ -251,8 +343,7 @@
 
     function finish(idx) {
       var sector = SECTORS[idx]; setLastSpin();
-      var newBal = Math.round((Balance.get()+sector.payout)*100)/100;
-      Balance.set(newBal);
+      Balance.set(Math.round((Balance.get()+sector.payout)*100)/100);
       bonusStatus.textContent = '🎉 Вы выиграли '+sector.label+'!';
       bonusStatus.className = 'bonus-status win';
       updateStatus();
@@ -260,9 +351,9 @@
 
     // Photo
     try{
-      var tg=window.Telegram&&window.Telegram.WebApp;
-      if(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user){
-        var u=tg.initDataUnsafe.user;
+      var tg2=window.Telegram&&window.Telegram.WebApp;
+      if(tg2&&tg2.initDataUnsafe&&tg2.initDataUnsafe.user){
+        var u=tg2.initDataUnsafe.user;
         var pImg=document.getElementById('profileImg');
         if(pImg){
           if(u.photo_url){pImg.src=u.photo_url;pImg.style.display='';}
@@ -270,44 +361,6 @@
         }
       }
     }catch(e){}
-
-    // Subscribe
-    var SUB_REWARD = 0.3;
-    var subBtn = document.getElementById('subscribeBtn');
-    var claimSubBtn = document.getElementById('claimSubBtn');
-    var subStatus = document.getElementById('subStatus');
-
-    function checkSubStatus(){
-      if(localStorage.getItem('sub_claimed_'+uid)){
-        claimSubBtn.style.display='none'; subBtn.style.display='none';
-        subStatus.style.display='block'; subStatus.textContent='✅ Награда уже получена!';
-        subStatus.className='subscribe-status win';
-      }
-    }
-
-    claimSubBtn.addEventListener('click',function(){
-      fetch('/api/bonus/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid})})
-      .then(function(r){return r.json();})
-      .then(function(data){
-        if(data.ok){
-          localStorage.setItem('sub_claimed_'+uid,'1');
-          Balance.set(Math.round((Balance.get()+SUB_REWARD)*100)/100);
-          claimSubBtn.style.display='none';subBtn.style.display='none';
-          subStatus.style.display='block';subStatus.textContent='🎉 Вы получили $0.3!';
-          subStatus.className='subscribe-status win';
-        }else if(data.error==='already_claimed'){
-          localStorage.setItem('sub_claimed_'+uid,'1');checkSubStatus();
-        }else{
-          subStatus.style.display='block';subStatus.textContent='❌ '+(data.error||'Ошибка');
-          subStatus.className='subscribe-status';
-        }
-      }).catch(function(){
-        subStatus.style.display='block';subStatus.textContent='❌ Ошибка соединения';
-        subStatus.className='subscribe-status';
-      });
-    });
-
-    checkSubStatus();
   })();
   </script>
 </body>
