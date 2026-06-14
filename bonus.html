@@ -102,7 +102,7 @@
         <div class="wheel-pointer">▼</div>
       </div>
 
-      <div class="bonus-status" id="bonusStatus">Загрузка...</div>
+      <div class="bonus-status" id="bonusStatus">Нажмите кнопку чтобы крутить!</div>
 
       <div class="timer-block" id="timerBlock" style="display:none">
         <div class="timer-big" id="timerVal">00:00:00</div>
@@ -157,6 +157,7 @@
 
     // States: 'loading', 'not_subscribed', 'subscribed_not_claimed', 'claimed'
     function checkSub(){
+      // Already claimed — show permanent state
       var claimed = localStorage.getItem('sub_claimed_'+uid);
       if(claimed){
         setSubscribedUI();
@@ -165,26 +166,21 @@
         return;
       }
 
-      // Show loading state on status only, keep button visible
-      showSubStatus('⏳ Проверяем подписку...', '');
-
+      // Check if subscribed via API (silent, button stays visible while loading)
       var ctrl = new AbortController();
-      setTimeout(function(){ ctrl.abort(); }, 5000);
+      var timeout = setTimeout(function(){ ctrl.abort(); }, 8000);
 
       fetch('/api/check-subscribe/'+uid, { signal: ctrl.signal })
-      .then(function(r){return r.json();})
+      .then(function(r){ clearTimeout(timeout); return r.json(); })
       .then(function(data){
         if(data.subscribed){
           setSubscribedUI();
           claimSubBtn.style.display = 'flex';
           showSubStatus('🎉 Вы подписаны! Заберите награду', 'success');
-        } else {
-          // Not subscribed — show link button normally
-          subStatus.style.display = 'none';
         }
+        // If not subscribed — nothing to show, button is already visible
       }).catch(function(){
-        // On error/timeout — just show the subscribe button, no error spam
-        subStatus.style.display = 'none';
+        // On error/timeout — button stays as-is, no error message
       });
     }
 
