@@ -29,13 +29,19 @@ html,body{
 .app-header .btn-icon{background:transparent;border:none;color:var(--muted);font-size:20px;padding:6px;border-radius:8px}
 .app-header .logo-small{width:34px;height:34px;object-fit:cover;border-radius:8px}
 .app-header .header-title{text-align:right;font-weight:700;font-size:17px;color:var(--text);margin-right:60px}
-.app-header .right-controls{display:flex;align-items:center;gap:10px;position:relative}
+.app-header .right-controls{display:flex;align-items:center;gap:10px;position:relative;z-index:99999}
+.page-loader{position:fixed;inset:0;z-index:999999;display:none;align-items:center;center-content:center;background:rgba(4,8,16,0.95)}
+.page-loader.active{display:flex}
+.page-loader .loader-box{text-align:center}
+.page-loader .loader-ring{width:48px;height:48px;border:4px solid rgba(255,255,255,0.1);border-top-color:#ffd700;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px}
+.page-loader .loader-text{color:#fff;font-size:14px;font-weight:700}
+@keyframes spin{to{transform:rotate(360deg)}}
 .balance-pill{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:6px 10px;border-radius:22px;color:var(--muted);display:flex;align-items:center;gap:8px}
 .balance-pill .wallet-icon{font-size:14px}
 .balance-pill .balance-value{color:var(--text);font-weight:700}
 .balance-pill .currency{color:var(--accent-green);font-weight:700}
 .balance-pill .caret{font-size:12px;color:var(--muted);transition:transform 0.2s}
-.balance-pill.open .caret{transform:rotate(180deg)}
+#balTrigger.open .caret{transform:rotate(180deg)}
 .app-header .profile img{width:38px;height:38px;border-radius:50%;object-fit:cover}
 
 /* profile square icon */
@@ -149,15 +155,15 @@ html,body{
 }
 
 /* Carousel cards */
-.carousel-section{margin-top:18px}
+.carousel-section,.games-section,.quick-menu{}
 .carousel{display:flex;gap:12px;overflow:hidden;padding:8px 4px}
-.carousel .card{min-width:220px;height:132px;border-radius:14px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));box-shadow:0 8px 24px rgba(2,6,23,0.45);flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:700;position:relative;overflow:hidden}
+.carousel .card{min-width:220px;height:132px;border-radius:14px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));box-shadow:0 8px 24px rgba(2,6,23,0.45);flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:700;overflow:hidden}
 .carousel .card::after{content:'';width:72%;height:56%;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));opacity:0.02;z-index:0}
 
-.carousel .card .card-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:14px;display:block;z-index:1}
+.carousel .card .card-img{inset:0;width:100%;height:100%;object-fit:cover;border-radius:14px;display:block}
 
 /* make card image links fill the card */
-.carousel .card .card-link{display:block;width:100%;height:100%;position:relative;border-radius:14px;overflow:hidden}
+.carousel .card .card-link{display:block;width:100%;height:100%;border-radius:14px;overflow:hidden}
 .carousel .card .card-link:focus{outline:2px solid rgba(46,227,107,0.14);outline-offset:2px}
 .carousel .card .card-link:active .card-img{transform:scale(0.99)}
 .carousel .card .card-img{transition:transform .18s}
@@ -192,7 +198,7 @@ html,body{
   -webkit-transition: none !important;
   will-change: auto !important;
 }
-.menu-actions .chip{position:relative;z-index:2}
+.menu-actions .chip{position:relative}
 .promo-btn img{width:90%;max-width:420px;max-height:96px;object-fit:cover;margin:0 auto;display:block;border-radius:12px}
 
 .chip .chip-icon{width:14px;height:14px;display:block}
@@ -256,35 +262,7 @@ html,body{
   100%{transform:translateY(-120vh) translateX(var(--tx,0)) rotate(360deg) scale(0.8);opacity:0}
 }
 
-/* Wallet modal (dropdown under balance pill) */
-/* Wallet dropdown (under balance pill) */
-/* Wallet dropdown under balance pill */
-#walletModal{position:absolute;top:44px;right:0;width:300px;max-width:calc(100vw - 16px);max-height:70vh;background:linear-gradient(180deg, rgba(12,16,30,0.98), rgba(8,12,24,0.98));border-radius:14px;border:1px solid rgba(255,255,255,0.06);box-shadow:0 20px 60px rgba(0,0,0,0.6);z-index:9998;opacity:0;pointer-events:none;transform:translateY(-8px);transition:opacity .2s,transform .2s;overflow-y:auto}
-#walletModal.open{opacity:1;pointer-events:auto;transform:translateY(0)}
-#walletModal .wmodal-sheet{background:transparent;border-radius:14px;width:100%;display:flex;flex-direction:column}
-#walletModal .wmodal-handle{display:none}
-#walletModal .wmodal-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 6px}
-#walletModal .wmodal-title{font-size:16px;font-weight:900;color:#fff}
-#walletModal .wmodal-close{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-#walletModal .wmodal-tabs{display:flex;gap:4px;padding:4px 10px 8px}
-#walletModal .wmodal-tab{flex:1;padding:7px;border:none;border-radius:8px;background:rgba(255,255,255,0.06);color:var(--muted);cursor:pointer;font-size:10px;font-weight:700;text-align:center}
-#walletModal .wmodal-tab.active{background:linear-gradient(135deg,#ff6b9d,#ffd700);color:#000}
-#walletModal .wmodal-panel,#walletModal .wmodal-sub-panel{display:none;padding:0 12px 12px}
-#walletModal .wmodal-panel.active,#walletModal .wmodal-sub-panel.active{display:block}
-
-/* Wallet centre modal (deposit/withdraw/history) */
-#walletCentre{position:fixed;top:50%;left:50%;width:380px;max-width:calc(100vw - 24px);max-height:85vh;background:linear-gradient(180deg, rgba(12,16,30,0.98), rgba(8,12,24,0.98));border-radius:16px;border:1px solid rgba(255,255,255,0.06);box-shadow:0 20px 60px rgba(0,0,0,0.6);z-index:9999;opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(0.95);transition:opacity .25s,transform .25s;overflow-y:auto}
-#walletCentre.open{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
-#walletCentre .wmodal-sheet{background:transparent;border-radius:16px;width:100%;display:flex;flex-direction:column}
-#walletCentre .wmodal-handle{display:none}
-#walletCentre .wmodal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 6px}
-#walletCentre .wmodal-title{font-size:16px;font-weight:900;color:#fff}
-#walletCentre .wmodal-close{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-#walletCentre .wmodal-tabs{display:flex;gap:4px;padding:4px 12px 8px}
-#walletCentre .wmodal-tab{flex:1;padding:7px;border:none;border-radius:8px;background:rgba(255,255,255,0.06);color:var(--muted);cursor:pointer;font-size:10px;font-weight:700;text-align:center}
-#walletCentre .wmodal-tab.active{background:linear-gradient(135deg,#ff6b9d,#ffd700);color:#000}
-#walletCentre .wmodal-panel,#walletCentre .wmodal-sub-panel{display:none;padding:0 14px 14px}
-#walletCentre .wmodal-panel.active,#walletCentre .wmodal-sub-panel.active{display:block}
+/* Wallet modal styles — inline in wallet-modal.js */
 
 /* Promo modal styles */
 .promo-modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,0.6);z-index:1000}
