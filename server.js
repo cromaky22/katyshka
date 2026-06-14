@@ -817,16 +817,20 @@ function fetchWithTimeout(url, opts, ms) {
 // Check Telegram subscription
 app.get('/api/check-subscribe/:userId', async (req, res) => {
   if (!BOT_TOKEN) return res.json({ subscribed: false, error: 'no_bot' });
+  const userId = String(req.params.userId);
+  console.log('[SUB CHECK] userId:', userId, 'token present:', !!BOT_TOKEN);
   try {
-    const userId = req.params.userId;
-    const chatMemberRes = await fetchWithTimeout(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${CHANNEL_ID}&user_id=${userId}`, {}, 5000);
+    const url = `https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${CHANNEL_ID}&user_id=${userId}`;
+    const chatMemberRes = await fetchWithTimeout(url, {}, 5000);
     const data = await chatMemberRes.json();
-    if (!data.ok) return res.json({ subscribed: false });
+    console.log('[SUB CHECK] TG API response:', JSON.stringify(data));
+    if (!data.ok) { console.log('[SUB CHECK] not ok'); return res.json({ subscribed: false }); }
     const status = data.result?.status;
     const subscribed = ['member', 'administrator', 'creator'].includes(status);
+    console.log('[SUB CHECK] status:', status, 'subscribed:', subscribed);
     res.json({ subscribed, status });
   } catch (e) {
-    console.error('Subscribe check error:', e.message);
+    console.error('[SUB CHECK] error:', e.message);
     res.json({ subscribed: false });
   }
 });

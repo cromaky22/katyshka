@@ -1,345 +1,264 @@
-// WALLET MODAL — two-step: dropdown under balance, then centred wallet
+// WALLET MODAL — dropdown under balance, then fullscreen wallet overlay
 (function(){
   'use strict';
-
   var isGame = /(double|dreamcatcher|nvuti|crash|mines|coinflip|tower|wheel|goldwest|dice|plinko)\.html$/i.test(location.pathname);
   var trigger = document.getElementById('balTrigger');
   if (isGame || !trigger) return;
 
   function fmt(n){ var v=Number(n); return isNaN(v)?'0.00':v.toFixed(2); }
-  function msg(el,t,y){ el.textContent=t; el.className='m-msg show '+(y||'info'); }
-  function clr(el){ el.className='m-msg'; }
 
-  if (!document.getElementById('walletModal')) {
-    // DROPDOWN under balance
+  // === DROPDOWN (under balance) ===
+  if (!document.getElementById('walletDrop')) {
     var dd = document.createElement('div');
-    dd.id = 'walletModal';
-    dd.className = 'wallet-modal';
-    dd.setAttribute('aria-hidden','true');
-    dd.style.display='none';
-
-    var centre = document.createElement('div');
-    centre.id = 'walletCentre';
-    centre.className = 'wallet-centre';
-    centre.setAttribute('aria-hidden','true');
-    centre.style.display='none';
-
-    var sheet = '\
-<div class="wmodal-sheet">\
-  <div class="wmodal-handle"></div>\
-  <div class="wmodal-head">\
-    <div class="wmodal-title" data-title>💼 Баланс</div>\
-    <button class="wmodal-close" data-close>✕</button>\
-  </div>\
-  <div class="wmodal-panel active" data-panel="overview">\
-    <div class="modal-bal" style="margin-bottom:10px">\
-      <div class="modal-bal-label">Основной баланс</div>\
-      <div class="modal-bal-val">$<span data-main-bal>0.00</span></div>\
-    </div>\
-    <div class="modal-bal" style="margin-bottom:14px">\
-      <div class="modal-bal-label">Отыгрыш (Wager)</div>\
-      <div class="modal-bal-val" style="color:#ff6b9d">$<span data-wager-bal>0.00</span></div>\
-    </div>\
-    <button class="modal-btn m-wd" data-open-wallet>💼 Кошелёк</button>\
-  </div>\
-  <div class="wmodal-panel" data-panel="wallet">\
-    <div class="wmodal-tabs">\
-      <button class="wmodal-tab active" data-tab="dep">📥 ПОПОЛНЕНИЕ</button>\
-      <button class="wmodal-tab" data-tab="wd">📤 ВЫВОД</button>\
-      <button class="wmodal-tab" data-tab="hist">📋 ИСТОРИЯ</button>\
-    </div>\
-    <div class="wmodal-sub-panel active" data-sub="dep">\
-      <div class="modal-sub">Основной баланс</div>\
-      <div class="modal-bal">\
-        <div class="modal-bal-label">Баланс</div>\
-        <div class="modal-bal-val">$<span data-dep-bal>0.00</span></div>\
-      </div>\
-      <div class="modal-lbl">Способ оплаты</div>\
-      <div class="modal-methods">\
-        <div class="modal-method sel" data-pay="cb"><span class="ico"><img src="assets/cryptobot.jpg" alt="CryptoBot" style="width:26px;height:26px;border-radius:50%;object-fit:cover"></span><span class="nm">CryptoBot</span></div>\
-        <div class="modal-method" data-pay="xr"><span class="ico"><img src="assets/xrocket.jpg" alt="xRocket" style="width:26px;height:26px;border-radius:50%;object-fit:cover"></span><span class="nm">xRocket</span></div>\
-      </div>\
-      <div class="modal-lbl">Сумма (USDT)</div>\
-      <input class="modal-input" data-amt type="number" min="0.1" step="0.1" value="10">\
-      <div class="modal-quick">\
-        <button class="modal-q" data-v="1">$1</button>\
-        <button class="modal-q" data-v="5">$5</button>\
-        <button class="modal-q" data-v="10">$10</button>\
-        <button class="modal-q" data-v="25">$25</button>\
-        <button class="modal-q" data-v="50">$50</button>\
-        <button class="modal-q" data-v="100">$100</button>\
-      </div>\
-      <button class="modal-btn m-dep" data-dep-btn>💳 Пополнить</button>\
-      <div class="m-msg" data-dep-msg></div>\
-    </div>\
-    <div class="wmodal-sub-panel" data-sub="wd">\
-      <div class="modal-sub">Доступно к выводу</div>\
-      <div class="modal-bal">\
-        <div class="modal-bal-label">Вывод</div>\
-        <div class="modal-bal-val">$<span data-wd-bal>0.00</span></div>\
-      </div>\
-      <div class="modal-lbl">Способ вывода</div>\
-      <div class="modal-methods">\
-        <div class="modal-method sel" data-mpay="cb"><span class="ico"><img src="assets/cryptobot.jpg" alt="CryptoBot" style="width:26px;height:26px;border-radius:50%;object-fit:cover"></span><span class="nm">CryptoBot</span></div>\
-        <div class="modal-method" data-mpay="xr"><span class="ico"><img src="assets/xrocket.jpg" alt="xRocket" style="width:26px;height:26px;border-radius:50%;object-fit:cover"></span><span class="nm">xRocket</span></div>\
-      </div>\
-      <div class="modal-lbl">Сумма вывода (USDT)</div>\
-      <input class="modal-input" data-wd-amt type="number" min="1" step="0.1" value="" placeholder="Мин. $1">\
-      <div class="m-recv">К получению: $<span data-rec>0.00</span> <span style="font-size:10px;color:var(--muted)">(комиссия 3%)</span></div>\
-      <button class="modal-btn m-wd" data-wd-btn disabled>📤 Вывести</button>\
-      <div class="m-info">Мин. вывод $1 / Комиссия 3% / Автоматический вывод</div>\
-      <div class="m-msg" data-wd-msg></div>\
-    </div>\
-    <div class="wmodal-sub-panel" data-sub="hist">\
-      <div data-tx-list><div class="m-empty">Загрузка...</div></div>\
-    </div>\
-  </div>\
-</div>';
-
-    dd.innerHTML = sheet;
-    centre.innerHTML = sheet;
-
-    var triggerEl = document.getElementById('balTrigger');
-    if (triggerEl) {
-      triggerEl.style.position = 'relative';
-      triggerEl.appendChild(dd);
-    } else {
-      document.body.appendChild(dd);
-    }
-    document.body.appendChild(centre);
+    dd.id = 'walletDrop';
+    dd.style.cssText = 'position:absolute;top:44px;right:0;width:280px;background:linear-gradient(180deg,rgba(12,16,30,0.98),rgba(8,12,24,0.98));border-radius:14px;border:1px solid rgba(255,255,255,0.06);box-shadow:0 20px 60px rgba(0,0,0,0.6);z-index:9998;opacity:0;pointer-events:none;transform:translateY(-8px);transition:opacity .2s,transform .2s;overflow:hidden';
+    dd.innerHTML = '<div style="padding:14px">' +
+      '<div style="text-align:center;padding:12px;background:rgba(0,0,0,0.2);border-radius:10px;margin-bottom:10px">' +
+        '<div style="font-size:11px;color:var(--muted)">Основной баланс</div>' +
+        '<div style="font-size:28px;font-weight:900;color:#ffd700;margin-top:4px">$<span id="wdBal">0.00</span></div>' +
+      '</div>' +
+      '<div style="text-align:center;padding:12px;background:rgba(0,0,0,0.2);border-radius:10px;margin-bottom:12px">' +
+        '<div style="font-size:11px;color:var(--muted)">Отыгрыш (Wager)</div>' +
+        '<div style="font-size:22px;font-weight:900;color:#ff6b9d;margin-top:4px">$<span id="wwBal">0.00</span></div>' +
+      '</div>' +
+      '<button id="wdOpen" style="width:100%;padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#2196f3,#1565c0);color:#fff">💼 Кошелёк</button>' +
+    '</div>';
+    trigger.style.position = 'relative';
+    trigger.appendChild(dd);
   }
 
-  var dropdown = document.getElementById('walletModal');
-  var centre = document.getElementById('walletCentre');
-  if (!dropdown || !centre) return;
+  // === FULLSCREEN WALLET OVERLAY ===
+  if (!document.getElementById('walletFull')) {
+    var wf = document.createElement('div');
+    wf.id = 'walletFull';
+    wf.style.cssText = 'position:fixed;inset:0;z-index:9999;display:none;flex-direction:column;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px)';
+    wf.innerHTML = '<div style="flex:1;display:flex;flex-direction:column;max-width:480px;width:100%;margin:auto;background:linear-gradient(180deg,rgba(12,16,30,0.98),rgba(8,12,24,0.98));border-radius:16px;max-height:90vh;overflow:hidden">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 6px">' +
+        '<div style="font-size:18px;font-weight:900;color:#fff">💼 Кошелёк</div>' +
+        '<button id="wfClose" style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;color:#fff;font-size:16px;cursor:pointer">✕</button>' +
+      '</div>' +
+      '<div style="display:flex;gap:4px;padding:4px 12px 8px">' +
+        '<button class="wf-tab active" data-t="dep" style="flex:1;padding:8px;border:none;border-radius:8px;background:linear-gradient(135deg,#ff6b9d,#ffd700);color:#000;font-size:10px;font-weight:700;cursor:pointer">📥 ПОПОЛНЕНИЕ</button>' +
+        '<button class="wf-tab" data-t="wd" style="flex:1;padding:8px;border:none;border-radius:8px;background:rgba(255,255,255,0.06);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer">📤 ВЫВОД</button>' +
+        '<button class="wf-tab" data-t="hist" style="flex:1;padding:8px;border:none;border-radius:8px;background:rgba(255,255,255,0.06);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer">📋 ИСТОРИЯ</button>' +
+      '</div>' +
+      '<div style="flex:1;overflow-y:auto;padding:0 14px 14px">' +
+        // DEPOSIT
+        '<div class="wf-p" data-p="dep">' +
+          '<div style="text-align:center;padding:14px;background:rgba(0,0,0,0.2);border-radius:12px;margin-bottom:14px"><div style="font-size:11px;color:var(--muted)">Баланс</div><div style="font-size:28px;font-weight:900;color:#ffd700;margin-top:4px">$<span id="wfDepBal">0.00</span></div></div>' +
+          '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Способ оплаты</div>' +
+          '<div style="display:flex;gap:8px;margin-bottom:12px">' +
+            '<div class="wf-pay sel" data-pay="cb" style="flex:1;padding:12px;border-radius:12px;border:2px solid #4caf50;background:rgba(76,175,80,0.12);text-align:center;cursor:pointer"><span style="font-size:24px;display:block;margin-bottom:4px"><img src="assets/cryptobot.jpg" style="width:28px;height:28px;border-radius:50%;object-fit:cover"></span><span style="font-size:10px;font-weight:700;color:#fff">CryptoBot</span></div>' +
+            '<div class="wf-pay" data-pay="xr" style="flex:1;padding:12px;border-radius:12px;border:2px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);text-align:center;cursor:pointer"><span style="font-size:24px;display:block;margin-bottom:4px"><img src="assets/xrocket.jpg" style="width:28px;height:28px;border-radius:50%;object-fit:cover"></span><span style="font-size:10px;font-weight:700;color:#fff">xRocket</span></div>' +
+          '</div>' +
+          '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Сумма (USDT)</div>' +
+          '<input id="wfAmt" type="number" min="0.1" step="0.1" value="10" style="width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.2);color:#fff;font-size:17px;font-weight:700;outline:none;box-sizing:border-box">' +
+          '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0 12px">' +
+            '<button class="wf-q" data-v="1" style="padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.8);cursor:pointer;font-size:11px;font-weight:700">$1</button>' +
+            '<button class="wf-q" data-v="5" style="padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.8);cursor:pointer;font-size:11px;font-weight:700">$5</button>' +
+            '<button class="wf-q" data-v="10" style="padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.8);cursor:pointer;font-size:11px;font-weight:700">$10</button>' +
+            '<button class="wf-q" data-v="25" style="padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.8);cursor:pointer;font-size:11px;font-weight:700">$25</button>' +
+            '<button class="wf-q" data-v="50" style="padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.8);cursor:pointer;font-size:11px;font-weight:700">$50</button>' +
+            '<button class="wf-q" data-v="100" style="padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.8);cursor:pointer;font-size:11px;font-weight:700">$100</button>' +
+          '</div>' +
+          '<button id="wfDepBtn" style="width:100%;padding:14px;border-radius:12px;border:none;font-size:14px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#4caf50,#2e7d32);color:#fff">💳 Пополнить</button>' +
+          '<div id="wfDepMsg" style="padding:10px;border-radius:10px;text-align:center;font-weight:600;font-size:12px;margin-top:8px;display:none"></div>' +
+        '</div>' +
+        // WITHDRAW
+        '<div class="wf-p" data-p="wd" style="display:none">' +
+          '<div style="text-align:center;padding:14px;background:rgba(0,0,0,0.2);border-radius:12px;margin-bottom:14px"><div style="font-size:11px;color:var(--muted)">Доступно к выводу</div><div style="font-size:28px;font-weight:900;color:#ffd700;margin-top:4px">$<span id="wfWdBal">0.00</span></div></div>' +
+          '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Способ вывода</div>' +
+          '<div style="display:flex;gap:8px;margin-bottom:12px">' +
+            '<div class="wf-mpay sel" data-mpay="cb" style="flex:1;padding:12px;border-radius:12px;border:2px solid #4caf50;background:rgba(76,175,80,0.12);text-align:center;cursor:pointer"><span style="font-size:24px;display:block;margin-bottom:4px"><img src="assets/cryptobot.jpg" style="width:28px;height:28px;border-radius:50%;object-fit:cover"></span><span style="font-size:10px;font-weight:700;color:#fff">CryptoBot</span></div>' +
+            '<div class="wf-mpay" data-mpay="xr" style="flex:1;padding:12px;border-radius:12px;border:2px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);text-align:center;cursor:pointer"><span style="font-size:24px;display:block;margin-bottom:4px"><img src="assets/xrocket.jpg" style="width:28px;height:28px;border-radius:50%;object-fit:cover"></span><span style="font-size:10px;font-weight:700;color:#fff">xRocket</span></div>' +
+          '</div>' +
+          '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Сумма вывода (USDT)</div>' +
+          '<input id="wfWdAmt" type="number" min="1" step="0.1" placeholder="Мин. $1" style="width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.2);color:#fff;font-size:17px;font-weight:700;outline:none;box-sizing:border-box">' +
+          '<div style="font-size:18px;font-weight:900;color:#4caf50;padding:8px;background:rgba(0,0,0,0.2);border-radius:8px;margin:6px 0 10px;text-align:center">К получению: $<span id="wfRec">0.00</span> <span style="font-size:10px;color:var(--muted)">(комиссия 3%)</span></div>' +
+          '<button id="wfWdBtn" disabled style="width:100%;padding:14px;border-radius:12px;border:none;font-size:14px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#2196f3,#1565c0);color:#fff;opacity:0.4">📤 Вывести</button>' +
+          '<div style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.4">Мин. вывод $1 / Комиссия 3% / Автоматический вывод</div>' +
+          '<div id="wfWdMsg" style="padding:10px;border-radius:10px;text-align:center;font-weight:600;font-size:12px;margin-top:8px;display:none"></div>' +
+        '</div>' +
+        // HISTORY
+        '<div class="wf-p" data-p="hist" style="display:none">' +
+          '<div id="wfTxList"><div style="text-align:center;padding:30px;color:var(--muted);font-size:12px">История пуста</div></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+    document.body.appendChild(wf);
+  }
+
+  var dd = document.getElementById('walletDrop');
+  var wf = document.getElementById('walletFull');
+  if (!dd || !wf) return;
 
   var payMethod = 'cb', wdPay = 'cb';
 
-  function openDropdown(){
-    dropdown.style.display='';
-    dropdown.setAttribute('aria-hidden','false');
-    dropdown.classList.add('open');
-    syncBalances(dropdown);
-  }
-  function closeDropdown(){
-    dropdown.classList.remove('open');
-    dropdown.setAttribute('aria-hidden','true');
-    setTimeout(function(){ if(!dropdown.classList.contains('open')) dropdown.style.display='none'; },220);
-  }
-  function openCentre(){
-    centre.style.display='';
-    centre.setAttribute('aria-hidden','false');
-    centre.classList.add('open');
-    syncBalances(centre);
-  }
-  function closeCentre(){
-    centre.classList.remove('open');
-    centre.setAttribute('aria-hidden','true');
-    setTimeout(function(){ if(!centre.classList.contains('open')) centre.style.display='none'; },220);
+  function syncBal(){
+    if (!window.Balance) return;
+    var v = fmt(Balance.get());
+    var els = ['wdBal','wwBal','wfDepBal','wfWdBal','hbal'];
+    for (var i=0;i<els.length;i++){
+      var el = document.getElementById(els[i]);
+      if (el) el.textContent = v;
+    }
   }
 
+  // Open dropdown
   trigger.addEventListener('click', function(e){
     e.preventDefault(); e.stopPropagation();
-    if (!dropdown.classList.contains('open')) { closeCentre(); openDropdown(); }
+    dd.style.opacity = '1';
+    dd.style.pointerEvents = 'auto';
+    dd.style.transform = 'translateY(0)';
+    syncBal();
   });
 
+  // Close dropdown on outside click
   document.addEventListener('click', function(e){
-    if (dropdown.classList.contains('open') && !dropdown.contains(e.target) && e.target !== trigger) closeDropdown();
-    if (centre.classList.contains('open') && !centre.contains(e.target)) closeCentre();
+    if (!dd.contains(e.target) && e.target !== trigger) {
+      dd.style.opacity = '0';
+      dd.style.pointerEvents = 'none';
+      dd.style.transform = 'translateY(-8px)';
+    }
   });
 
-  function syncBalances(root){
-    if (!window.Balance) return;
-    var v = Balance.get();
-    var r = root || document;
-    var main = r.querySelector('[data-main-bal]');
-    var depBal = r.querySelector('[data-dep-bal]');
-    var wdBal = r.querySelector('[data-wd-bal]');
-    var hbal = document.getElementById('hbal');
-    if (main) main.textContent = fmt(v);
-    if (depBal) depBal.textContent = fmt(v);
-    if (wdBal) wdBal.textContent = fmt(v);
-    if (hbal) hbal.textContent = fmt(v);
-  }
+  // Open wallet fullscreen
+  document.getElementById('wdOpen').addEventListener('click', function(e){
+    e.stopPropagation();
+    dd.style.opacity = '0';
+    dd.style.pointerEvents = 'none';
+    dd.style.transform = 'translateY(-8px)';
+    wf.style.display = 'flex';
+    syncBal();
+  });
 
-  function showPanel(root, name){
-    var overview = root.querySelector('[data-panel="overview"]');
-    var wallet = root.querySelector('[data-panel="wallet"]');
-    var title = root.querySelector('[data-title]');
-    if (name==='wallet'){
-      if(overview) overview.classList.remove('active');
-      if(wallet) wallet.classList.add('active');
-      if(title) title.textContent='💼 Кошелёк';
-    } else {
-      if(wallet) wallet.classList.remove('active');
-      if(overview) overview.classList.add('active');
-      if(title) title.textContent='💼 Баланс';
-      syncBalances(root);
-    }
-  }
+  // Close wallet
+  document.getElementById('wfClose').addEventListener('click', function(){
+    wf.style.display = 'none';
+  });
+  wf.addEventListener('click', function(e){ if (e.target === wf) wf.style.display = 'none'; });
 
-  // Delegate events inside dropdown
-  dropdown.addEventListener('click', function(e){
-    var openWallet = e.target.closest('[data-open-wallet]');
-    if (openWallet) { e.preventDefault(); closeDropdown(); setTimeout(openCentre, 220); return; }
-    var close = e.target.closest('[data-close]');
-    if (close) { closeDropdown(); return; }
-    var tab = e.target.closest('.wmodal-tab');
-    if (tab) {
-      var root = dropdown;
-      root.querySelectorAll('.wmodal-tab').forEach(function(t){ t.classList.remove('active'); });
+  // Tabs
+  wf.querySelectorAll('.wf-tab').forEach(function(tab){
+    tab.addEventListener('click', function(){
+      wf.querySelectorAll('.wf-tab').forEach(function(t){
+        t.classList.remove('active');
+        t.style.background = 'rgba(255,255,255,0.06)';
+        t.style.color = 'var(--muted)';
+      });
       tab.classList.add('active');
-      var target = tab.dataset.tab;
-      root.querySelectorAll('.wmodal-sub-panel').forEach(function(p){ p.classList.toggle('active', p.dataset.sub===target); });
-      if (target==='hist') loadHistory(dropdown);
-      return;
-    }
-    var method = e.target.closest('.modal-method');
-    if (method) {
-      var cat = method.parentElement && method.parentElement.dataset.pay ? 'dep' : 'wd';
-      var list = dropdown.querySelectorAll((cat==='dep'?'#m-dep ':'#m-wd ')+'.modal-method');
-      list.forEach(function(x){ x.classList.remove('sel'); });
-      method.classList.add('sel');
-      payMethod = method.dataset.pay || wdPay;
-      if (cat==='wd') wdPay = method.dataset.mpay || 'cb';
-      return;
-    }
-    var q = e.target.closest('.modal-q');
-    if (q) {
-      var inp = dropdown.querySelector('[data-amt]');
-      var cur = parseFloat(inp.value)||0;
-      inp.value = Math.max(0.1, cur + parseFloat(q.dataset.v||0)).toFixed(2);
-      return;
-    }
-    var depBtn = e.target.closest('[data-dep-btn]');
-    if (depBtn) { doDeposit(dropdown); return; }
-    var wdBtn = e.target.closest('[data-wd-btn]');
-    if (wdBtn) { doWithdraw(dropdown); return; }
+      tab.style.background = 'linear-gradient(135deg,#ff6b9d,#ffd700)';
+      tab.style.color = '#000';
+      var t = tab.dataset.t;
+      wf.querySelectorAll('.wf-p').forEach(function(p){ p.style.display = (p.dataset.p === t) ? 'block' : 'none'; });
+      if (t === 'hist') loadTx();
+    });
   });
 
-  dropdown.addEventListener('input', function(e){
-    var wdAmt = e.target.closest('[data-wd-amt]');
-    if (wdAmt) {
-      var v = parseFloat(wdAmt.value)||0;
-      var rec = dropdown.querySelector('[data-rec]');
-      var wdBtn = dropdown.querySelector('[data-wd-btn]');
-      if (rec) rec.textContent = fmt(Math.max(0, v*0.97));
-      if (wdBtn) wdBtn.disabled = v < 1;
-    }
+  // Pay methods
+  wf.querySelectorAll('.wf-pay').forEach(function(el){
+    el.addEventListener('click', function(){
+      wf.querySelectorAll('.wf-pay').forEach(function(x){ x.classList.remove('sel'); x.style.borderColor = 'rgba(255,255,255,0.08)'; x.style.background = 'rgba(255,255,255,0.03)'; });
+      el.classList.add('sel');
+      el.style.borderColor = '#4caf50';
+      el.style.background = 'rgba(76,175,80,0.12)';
+      payMethod = el.dataset.pay;
+    });
+  });
+  wf.querySelectorAll('.wf-mpay').forEach(function(el){
+    el.addEventListener('click', function(){
+      wf.querySelectorAll('.wf-mpay').forEach(function(x){ x.classList.remove('sel'); x.style.borderColor = 'rgba(255,255,255,0.08)'; x.style.background = 'rgba(255,255,255,0.03)'; });
+      el.classList.add('sel');
+      el.style.borderColor = '#4caf50';
+      el.style.background = 'rgba(76,175,80,0.12)';
+      wdPay = el.dataset.mpay;
+    });
   });
 
-  // Delegate events inside centre modal
-  centre.addEventListener('click', function(e){
-    var close = e.target.closest('[data-close]');
-    if (close) { closeCentre(); return; }
-    var tab = e.target.closest('.wmodal-tab');
-    if (tab) {
-      var root = centre;
-      root.querySelectorAll('.wmodal-tab').forEach(function(t){ t.classList.remove('active'); });
-      tab.classList.add('active');
-      var target = tab.dataset.tab;
-      root.querySelectorAll('.wmodal-sub-panel').forEach(function(p){ p.classList.toggle('active', p.dataset.sub===target); });
-      if (target==='hist') loadHistory(centre);
-      return;
-    }
-    var method = e.target.closest('.modal-method');
-    if (method) {
-      var cat = method.parentElement && method.parentElement.dataset.pay ? 'dep' : 'wd';
-      var list = centre.querySelectorAll((cat==='dep'?'#m-dep ':'#m-wd ')+'.modal-method');
-      list.forEach(function(x){ x.classList.remove('sel'); });
-      method.classList.add('sel');
-      payMethod = method.dataset.pay || 'cb';
-      if (cat==='wd') wdPay = method.dataset.mpay || 'cb';
-      return;
-    }
-    var q = e.target.closest('.modal-q');
-    if (q) {
-      var inp = centre.querySelector('[data-amt]');
-      var cur = parseFloat(inp.value)||0;
-      inp.value = Math.max(0.1, cur + parseFloat(q.dataset.v||0)).toFixed(2);
-      return;
-    }
-    var depBtn = e.target.closest('[data-dep-btn]');
-    if (depBtn) { doDeposit(centre); return; }
-    var wdBtn = e.target.closest('[data-wd-btn]');
-    if (wdBtn) { doWithdraw(centre); return; }
+  // Quick amounts
+  wf.querySelectorAll('.wf-q').forEach(function(b){
+    b.addEventListener('click', function(){
+      var inp = document.getElementById('wfAmt');
+      var cur = parseFloat(inp.value) || 0;
+      inp.value = Math.max(0.1, cur + parseFloat(b.dataset.v)).toFixed(2);
+    });
   });
 
-  centre.addEventListener('input', function(e){
-    var wdAmt = e.target.closest('[data-wd-amt]');
-    if (wdAmt) {
-      var v = parseFloat(wdAmt.value)||0;
-      var rec = centre.querySelector('[data-rec]');
-      var wdBtn = centre.querySelector('[data-wd-btn]');
-      if (rec) rec.textContent = fmt(Math.max(0, v*0.97));
-      if (wdBtn) wdBtn.disabled = v < 1;
-    }
+  // Withdraw input
+  document.getElementById('wfWdAmt').addEventListener('input', function(){
+    var v = parseFloat(this.value) || 0;
+    document.getElementById('wfRec').textContent = fmt(Math.max(0, v * 0.97));
+    document.getElementById('wfWdBtn').disabled = v < 1;
+    document.getElementById('wfWdBtn').style.opacity = v < 1 ? '0.4' : '1';
   });
 
-  function doDeposit(root){
-    var amt = parseFloat(root.querySelector('[data-amt]').value)||0;
-    if (amt<0.1){ msg(root.querySelector('[data-dep-msg]'),'Мин. сумма $0.1','err'); return; }
-    var btn = root.querySelector('[data-dep-btn]'); btn.disabled=true; btn.textContent='⏳ Создание...';
-    clr(root.querySelector('[data-dep-msg]'));
-    var ep = payMethod==='xr' ? '/api/invoice/xrocket' : '/api/invoice';
-    var uid = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid')||'';
+  // Deposit
+  document.getElementById('wfDepBtn').addEventListener('click', function(){
+    var amt = parseFloat(document.getElementById('wfAmt').value) || 0;
+    if (amt < 0.1){ showMsg('wfDepMsg','Мин. сумма $0.1','err'); return; }
+    var btn = this; btn.disabled = true; btn.textContent = '⏳ Создание...';
+    var ep = payMethod === 'xr' ? '/api/invoice/xrocket' : '/api/invoice';
+    var uid = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
     fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid,amount:amt})})
     .then(function(r){return r.json();})
     .then(function(d){
-      if(d.ok && d.payUrl){
-        msg(root.querySelector('[data-dep-msg]'),'✅ Счёт создан! Переход на оплату...','ok');
+      if (d.ok && d.payUrl){
+        showMsg('wfDepMsg','✅ Счёт создан! Переход на оплату...','ok');
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink) {
           window.Telegram.WebApp.openLink(d.payUrl, {try_instant_view:false});
-        } else {
-          window.location.href = d.payUrl;
-        }
-      } else {
-        msg(root.querySelector('[data-dep-msg]'),'Ошибка: '+(d.error||'unknown'),'err');
-      }
-    }).catch(function(e){ msg(root.querySelector('[data-dep-msg]'),'Ошибка сети: '+e.message,'err'); })
-    .finally(function(){ btn.disabled=false; btn.textContent='💳 Пополнить'; });
-  }
+        } else { window.location.href = d.payUrl; }
+      } else { showMsg('wfDepMsg','Ошибка: '+(d.error||'unknown'),'err'); }
+    }).catch(function(){ showMsg('wfDepMsg','Ошибка сети','err'); })
+    .finally(function(){ btn.disabled = false; btn.textContent = '💳 Пополнить'; });
+  });
 
-  function doWithdraw(root){
-    var amt = parseFloat(root.querySelector('[data-wd-amt]').value)||0;
-    if (amt<1){ msg(root.querySelector('[data-wd-msg]'),'Мин. вывод $1','err'); return; }
-    var fee = Math.round(amt*0.03*100)/100;
+  // Withdraw
+  document.getElementById('wfWdBtn').addEventListener('click', function(){
+    var amt = parseFloat(document.getElementById('wfWdAmt').value) || 0;
+    if (amt < 1){ showMsg('wfWdMsg','Мин. вывод $1','err'); return; }
+    var fee = Math.round(amt * 0.03 * 100) / 100;
     var total = amt + fee;
     var curBal = window.Balance ? Balance.get() : 0;
-    if(total>curBal){ msg(root.querySelector('[data-wd-msg]'),'❌ Недостаточно средств (комиссия 3%)','err'); return; }
-    var btn = root.querySelector('[data-wd-btn]'); btn.disabled=true; btn.textContent='⏳ Вывод...';
-    clr(root.querySelector('[data-wd-msg]'));
-    var ep = wdPay==='xr' ? '/api/withdraw/xrocket' : '/api/withdraw/cryptobot';
-    var uid = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid')||'';
+    if (total > curBal){ showMsg('wfWdMsg','❌ Недостаточно средств','err'); return; }
+    var btn = this; btn.disabled = true; btn.textContent = '⏳ Вывод...';
+    var ep = wdPay === 'xr' ? '/api/withdraw/xrocket' : '/api/withdraw/cryptobot';
+    var uid = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
     fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid,amount:amt})})
     .then(function(r){return r.json();})
     .then(function(d){
-      if(d.ok){
-        if(window.Balance) Balance.set(curBal - total);
+      if (d.ok){
+        if (window.Balance) Balance.set(curBal - total);
         var txs = JSON.parse(localStorage.getItem('tx_history')||'[]');
         txs.unshift({type:'withdraw',userId:uid,amount:Number(amt).toFixed(2),status:'completed',date:new Date().toISOString(),provider:wdPay,fee:fee});
-        if(txs.length>50) txs=txs.slice(0,50);
-        localStorage.setItem('tx_history',JSON.stringify(txs));
-        msg(root.querySelector('[data-wd-msg]'),'✅ Вывод на $'+fmt(amt)+' выполнен! Комиссия: $'+fmt(fee),'ok');
-        syncBalances(root);
-      } else {
-        msg(root.querySelector('[data-wd-msg]'),'❌ Ошибка: '+(typeof d.error==='string'?d.error:JSON.stringify(d.error)),'err');
-      }
-    }).catch(function(e){ msg(root.querySelector('[data-wd-msg]'),'Ошибка сети: '+e.message,'err'); })
-    .finally(function(){ btn.disabled=false; btn.textContent='📤 Вывести'; });
+        if (txs.length > 50) txs = txs.slice(0,50);
+        localStorage.setItem('tx_history', JSON.stringify(txs));
+        showMsg('wfWdMsg','✅ Вывод на $'+fmt(amt)+' выполнен! Комиссия: $'+fmt(fee),'ok');
+        syncBal();
+      } else { showMsg('wfWdMsg','❌ Ошибка: '+(typeof d.error==='string'?d.error:JSON.stringify(d.error)),'err'); }
+    }).catch(function(){ showMsg('wfWdMsg','Ошибка сети','err'); })
+    .finally(function(){ btn.disabled = false; btn.textContent = '📤 Вывести'; });
+  });
+
+  function showMsg(id, t, y){
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = t;
+    el.style.display = 'block';
+    el.style.background = y==='ok' ? 'rgba(76,175,80,0.15)' : 'rgba(244,67,54,0.15)';
+    el.style.color = y==='ok' ? '#4caf50' : '#f44336';
   }
 
-  function loadHistory(root){
-    var el = root.querySelector('[data-tx-list]');
+  function loadTx(){
+    var el = document.getElementById('wfTxList');
     if (!el) return;
     var txs = JSON.parse(localStorage.getItem('tx_history')||'[]');
-    if (!txs.length){ el.innerHTML='<div class="m-empty">История пуста</div>'; return; }
-    el.innerHTML='';
+    if (!txs.length){ el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);font-size:12px">История пуста</div>'; return; }
+    el.innerHTML = '';
     txs.forEach(function(tx){
       var row = document.createElement('div');
-      row.className='tx-row';
-      var isDep = tx.type==='deposit';
-      row.innerHTML='<div><div class="t">'+(isDep?'📥 Пополнение':'📤 Вывод')+(tx.provider?' ('+tx.provider+')':'')+'</div><div class="d">'+new Date(tx.date).toLocaleDateString('ru')+' '+new Date(tx.date).toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})+'</div></div><div class="a '+(isDep?'plus':'minus')+'">'+(isDep?'+$':'-$')+tx.amount+'<span class="s '+(tx.status==='completed'?'ok':'wait')+'">'+(tx.status==='completed'?'Выполнено':'Ожидание')+'</span></div>';
+      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:9px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:6px';
+      var isDep = tx.type === 'deposit';
+      row.innerHTML = '<div><div style="font-size:12px;font-weight:700;color:#fff">'+(isDep?'📥 Пополнение':'📤 Вывод')+(tx.provider?' ('+tx.provider+')':'')+'</div><div style="font-size:10px;color:var(--muted)">'+new Date(tx.date).toLocaleDateString('ru')+'</div></div><div style="font-size:13px;font-weight:800;color:'+(isDep?'#4caf50':'#f44336')+'">'+(isDep?'+$':'-$')+tx.amount+'</div>';
       el.appendChild(row);
     });
   }
