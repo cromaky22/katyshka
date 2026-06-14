@@ -171,6 +171,7 @@ try {
         last_name TEXT,
         username TEXT,
         avatar TEXT,
+        sub_claimed BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT NOW()
       );
       CREATE TABLE IF NOT EXISTS promos (
@@ -191,6 +192,10 @@ try {
       );
     `).then(() => {
       console.log('✅ DB tables ready');
+      // Add sub_claimed column if not exists (migration)
+      db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS sub_claimed BOOLEAN DEFAULT FALSE')
+        .then(() => console.log('✅ sub_claimed column ready'))
+        .catch(() => {});
     }).catch(e => {
       console.error('DB init error:', e.message);
     });
@@ -249,17 +254,21 @@ async function dbSetUser(id, data) {
   if (usePostgres) {
     try {
       await db.query(`
-        INSERT INTO users (id, balance, first_name, last_name, username, avatar)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO users (id, balance, first_name, last_name, username, avatar, sub_claimed)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         ON CONFLICT (id) DO UPDATE SET
           balance = EXCLUDED.balance,
           first_name = EXCLUDED.first_name,
           last_name = EXCLUDED.last_name,
           username = EXCLUDED.username,
-          avatar = EXCLUDED.avatar
-      `, [id, data.balance || 0, data.first_name || null, data.last_name || null, data.username || null, data.avatar || null]);
-    } catch (e) {}
+          avatar = EXCLUDED.avatar,
+          sub_claimed = EXCLUDED.sub_claimed
+      `, [id, data.balance || 0, data.first_name || null, data.last_name || null, data.username || null, data.avatar || null, data.sub_claimed || false]);
+    } catch(e) { console.error('dbSetUser error:', e.message); }
   }
+  users[id] = data;
+  saveData();
+}
   users[id] = { ...users[id], ...data };
   saveData();
 }
@@ -825,12 +834,12 @@ app.get('/api/check-subscribe/:userId', async (req, res) => {
   }
 });
 
-// Claim subscribe reward (server-side check + DB)
+// Claim subscribe reward (server-side check + DB + memory)
 app.post('/api/bonus/subscribe', async (req, res) => {
   const { userId } = req.body;
   if (!userId) return res.status(400).json({ error: 'Missing userId' });
 
-  // Verify subscription via Telegram API
+  // 1. Verify subscription via Telegram API
   try {
     const chatMemberRes = await fetchWithTimeout(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${CHANNEL_ID}&user_id=${userId}`, {}, 5000);
     const data = await chatMemberRes.json();
@@ -838,36 +847,41 @@ app.post('/api/bonus/subscribe', async (req, res) => {
       return res.status(403).json({ error: 'not_subscribed' });
     }
   } catch (e) {
+    console.error('Subscribe verify error:', e.message);
     return res.status(500).json({ error: 'check_failed' });
   }
 
-  // Check DB first
+  // 2. Check if already claimed — DB first, then memory
+  if (!users[userId]) users[userId] = { balance: 0, subClaimed: false };
+
   if (usePostgres) {
     try {
+      // Insert user if not exists
+      await db.query(`INSERT INTO users (id, balance, sub_claimed) VALUES ($1, $2, false) ON CONFLICT (id) DO NOTHING`, [userId, users[userId].balance]);
+      // Check sub_claimed
       const result = await db.query('SELECT sub_claimed FROM users WHERE id = $1', [userId]);
-      if (result.rows[0]?.sub_claimed) return res.status(400).json({ error: 'already_claimed' });
-    } catch(e) {}
+      if (result.rows[0]?.sub_claimed === true) {
+        return res.status(400).json({ error: 'already_claimed' });
+      }
+    } catch(e) { console.error('DB check error:', e.message); }
   }
 
-  // Check memory
-  if (!users[userId]) users[userId] = { balance: 0 };
   if (users[userId].subClaimed) return res.status(400).json({ error: 'already_claimed' });
 
-  // Give reward
+  // 3. Give reward
   users[userId].balance = Math.round((users[userId].balance + SUB_REWARD) * 100) / 100;
   users[userId].subClaimed = true;
   io.emit('balance_update', { userId, balance: users[userId].balance });
 
-  // Save to DB
+  // 4. Persist everywhere
   if (usePostgres) {
     try {
       await db.query('UPDATE users SET balance = $1, sub_claimed = true WHERE id = $2', [users[userId].balance, userId]);
-    } catch(e) {
-      await db.query('INSERT INTO users (id, balance, sub_claimed) VALUES ($1, $2, true) ON CONFLICT (id) DO UPDATE SET balance = $2, sub_claimed = true', [userId, users[userId].balance]);
-    }
+    } catch(e) { console.error('DB save error:', e.message); }
   }
   saveData();
 
+  console.log(`💰 Sub reward: user ${userId} +$${SUB_REWARD}, balance: ${users[userId].balance}`);
   res.json({ ok: true, balance: users[userId].balance });
 });
 
