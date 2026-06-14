@@ -34,7 +34,8 @@ html,body{
 .balance-pill .wallet-icon{font-size:14px}
 .balance-pill .balance-value{color:var(--text);font-weight:700}
 .balance-pill .currency{color:var(--accent-green);font-weight:700}
-.balance-pill .caret{font-size:12px;color:var(--muted)}
+.balance-pill .caret{font-size:12px;color:var(--muted);transition:transform 0.2s}
+.balance-pill.open .caret{transform:rotate(180deg)}
 .app-header .profile img{width:38px;height:38px;border-radius:50%;object-fit:cover}
 
 /* profile square icon */

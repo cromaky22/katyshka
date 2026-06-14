@@ -107,10 +107,18 @@
   // Open dropdown
   trigger.addEventListener('click', function(e){
     e.preventDefault(); e.stopPropagation();
-    dd.style.opacity = '1';
-    dd.style.pointerEvents = 'auto';
-    dd.style.transform = 'translateY(0)';
-    syncBal();
+    if (dd.style.opacity === '1') {
+      dd.style.opacity = '0';
+      dd.style.pointerEvents = 'none';
+      dd.style.transform = 'translateY(-8px)';
+      trigger.classList.remove('open');
+    } else {
+      dd.style.opacity = '1';
+      dd.style.pointerEvents = 'auto';
+      dd.style.transform = 'translateY(0)';
+      trigger.classList.add('open');
+      syncBal();
+    }
   });
 
   // Close dropdown on outside click
@@ -119,6 +127,7 @@
       dd.style.opacity = '0';
       dd.style.pointerEvents = 'none';
       dd.style.transform = 'translateY(-8px)';
+      trigger.classList.remove('open');
     }
   });
 
@@ -128,6 +137,7 @@
     dd.style.opacity = '0';
     dd.style.pointerEvents = 'none';
     dd.style.transform = 'translateY(-8px)';
+    trigger.classList.remove('open');
     wf.style.display = 'flex';
     syncBal();
   });
