@@ -800,19 +800,27 @@ const BOT_TOKEN = process.env.BOT_TOKEN || '8962248830:AAEoWT12lZEzttXXHxt3c48wL
 const CHANNEL_ID = '@milfacasino';
 const SUB_REWARD = 0.3;
 
+// Helper: fetch with timeout
+function fetchWithTimeout(url, opts, ms) {
+  return new Promise(function(resolve, reject) {
+    var timer = setTimeout(function(){ reject(new Error('timeout')); }, ms);
+    fetch(url, opts).then(function(res){ clearTimeout(timer); resolve(res); }, function(err){ clearTimeout(timer); reject(err); });
+  });
+}
+
 // Check Telegram subscription
 app.get('/api/check-subscribe/:userId', async (req, res) => {
   if (!BOT_TOKEN) return res.json({ subscribed: false, error: 'no_bot' });
   try {
     const userId = req.params.userId;
-    const chatMemberRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${CHANNEL_ID}&user_id=${userId}`);
+    const chatMemberRes = await fetchWithTimeout(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${CHANNEL_ID}&user_id=${userId}`, {}, 5000);
     const data = await chatMemberRes.json();
     if (!data.ok) return res.json({ subscribed: false });
     const status = data.result?.status;
     const subscribed = ['member', 'administrator', 'creator'].includes(status);
     res.json({ subscribed, status });
   } catch (e) {
-    console.error('Subscribe check error:', e);
+    console.error('Subscribe check error:', e.message);
     res.json({ subscribed: false });
   }
 });
@@ -824,7 +832,7 @@ app.post('/api/bonus/subscribe', async (req, res) => {
 
   // Verify subscription via Telegram API
   try {
-    const chatMemberRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${CHANNEL_ID}&user_id=${userId}`);
+    const chatMemberRes = await fetchWithTimeout(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${CHANNEL_ID}&user_id=${userId}`, {}, 5000);
     const data = await chatMemberRes.json();
     if (!data.ok || !['member', 'administrator', 'creator'].includes(data.result?.status)) {
       return res.status(403).json({ error: 'not_subscribed' });

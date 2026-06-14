@@ -82,7 +82,7 @@
     <!-- Subscribe reward -->
     <div class="subscribe-box">
       <div class="subscribe-title">💎 Подпишитесь на канал и получите $0.3</div>
-      <a href="https://t.me/milfacasino" target="_blank" class="subscribe-btn" id="subscribeBtn">
+      <a href="#" class="subscribe-btn" id="subscribeBtn">
         <img src="assets/telega.jpg" alt="Telegram" onerror="this.style.display='none'">
         <span>ПОДПИСАТЬСЯ</span>
       </a>
@@ -157,7 +157,6 @@
 
     // States: 'loading', 'not_subscribed', 'subscribed_not_claimed', 'claimed'
     function checkSub(){
-      // Already claimed — show permanent state
       var claimed = localStorage.getItem('sub_claimed_'+uid);
       if(claimed){
         setSubscribedUI();
@@ -166,25 +165,45 @@
         return;
       }
 
-      // Check if subscribed via API (silent, button stays visible while loading)
-      var ctrl = new AbortController();
-      var timeout = setTimeout(function(){ ctrl.abort(); }, 8000);
+      // Check if we already know user is subscribed (cached)
+      var cachedSub = localStorage.getItem('sub_status_'+uid);
+      if(cachedSub === 'subscribed'){
+        setSubscribedUI();
+        claimSubBtn.style.display = 'flex';
+        return;
+      }
 
-      fetch('/api/check-subscribe/'+uid, { signal: ctrl.signal })
-      .then(function(r){ clearTimeout(timeout); return r.json(); })
+      // Check if subscribed via API (silent, button stays visible while loading)
+      var timeout = setTimeout(function(){}, 5000);
+
+      fetch('/api/check-subscribe/'+uid)
+      .then(function(r){ return r.json(); })
       .then(function(data){
+        clearTimeout(timeout);
         if(data.subscribed){
+          localStorage.setItem('sub_status_'+uid, 'subscribed');
           setSubscribedUI();
           claimSubBtn.style.display = 'flex';
-          showSubStatus('🎉 Вы подписаны! Заберите награду', 'success');
         }
-        // If not subscribed — nothing to show, button is already visible
       }).catch(function(){
-        // On error/timeout — button stays as-is, no error message
+        // On error — button stays as-is, user can still click subscribe
       });
     }
 
-    checkSub();
+    // Open Telegram channel properly inside WebApp
+    subBtn.addEventListener('click', function(e){
+      e.preventDefault();
+      try {
+        var tgApp = window.Telegram && window.Telegram.WebApp;
+        if (tgApp && tgApp.openTelegramLink) {
+          tgApp.openTelegramLink('https://t.me/milfacasino');
+        } else {
+          window.open('https://t.me/milfacasino', '_blank');
+        }
+      } catch(err) {
+        window.open('https://t.me/milfacasino', '_blank');
+      }
+    });
 
     claimSubBtn.addEventListener('click', function(){
       if(claimSubBtn.disabled) return;
@@ -196,6 +215,7 @@
       .then(function(data){
         if(data.ok){
           localStorage.setItem('sub_claimed_'+uid,'1');
+          localStorage.removeItem('sub_status_'+uid);
           setSubscribedUI();
           claimSubBtn.style.display = 'none';
           Balance.set(Math.round((Balance.get()+0.3)*100)/100);
