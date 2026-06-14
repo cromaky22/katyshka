@@ -58,14 +58,29 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function getMults(){ return MULTS[risk][rows] || MULTS.medium[16]; }
 
-  // ~99.3% to slots with mult <= 1.9, ~0.7% to big wins (> 1.9x)
+  // Weighted by multiplier: lower mults get much higher chances
+  // Big wins (>1.9x) are exponentially rare
+  // Target RTP ~0.88-0.95 for all configs
   function getRandomSlot(mults){
     var weights = [];
     for(var i = 0; i < mults.length; i++){
-      if(mults[i] <= 1.9){
-        weights.push(100.0);
+      var m = mults[i];
+      if(m < 0.6){
+        weights.push(300.0);
+      } else if(m < 0.8){
+        weights.push(220.0);
+      } else if(m < 1.0){
+        weights.push(160.0);
+      } else if(m <= 1.9){
+        weights.push(20.0);
+      } else if(m < 5){
+        weights.push(0.04);
+      } else if(m < 20){
+        weights.push(0.015);
+      } else if(m < 100){
+        weights.push(0.006);
       } else {
-        weights.push(0.2);
+        weights.push(0.001);
       }
     }
     var total = 0;
