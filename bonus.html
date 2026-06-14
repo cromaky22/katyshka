@@ -165,8 +165,13 @@
         return;
       }
 
-      // Check API
-      fetch('/api/check-subscribe/'+uid)
+      // Show loading state on status only, keep button visible
+      showSubStatus('⏳ Проверяем подписку...', '');
+
+      var ctrl = new AbortController();
+      setTimeout(function(){ ctrl.abort(); }, 5000);
+
+      fetch('/api/check-subscribe/'+uid, { signal: ctrl.signal })
       .then(function(r){return r.json();})
       .then(function(data){
         if(data.subscribed){
@@ -175,10 +180,11 @@
           showSubStatus('🎉 Вы подписаны! Заберите награду', 'success');
         } else {
           // Not subscribed — show link button normally
-          showSubStatus('❌ Подпишитесь на канал чтобы получить награду', 'error');
+          subStatus.style.display = 'none';
         }
       }).catch(function(){
-        showSubStatus('⚠️ Не удалось проверить подписку', 'error');
+        // On error/timeout — just show the subscribe button, no error spam
+        subStatus.style.display = 'none';
       });
     }
 
