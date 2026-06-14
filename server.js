@@ -269,9 +269,6 @@ async function dbSetUser(id, data) {
   users[id] = data;
   saveData();
 }
-  users[id] = { ...users[id], ...data };
-  saveData();
-}
 
 async function dbGetAllUsers() {
   if (usePostgres) {
