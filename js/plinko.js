@@ -59,45 +59,45 @@ document.addEventListener('DOMContentLoaded', function(){
   function getMults(){ return MULTS[risk][rows] || MULTS.medium[16]; }
 
   // Per-risk weight tables
-  // Low:    RTP ~95-97% — player wins small often, rarely hits big
-  // Medium: RTP ~93-96% — balanced
-  // High:   RTP ~90-94% — tighter, but big wins feel more frequent
+  // Low:    RTP ~96-98% — player wins small often, medium wins occasionally
+  // Medium: RTP ~94-97% — balanced, medium wins feel rewarding
+  // High:   RTP ~92-96% — tighter but big wins more frequent for "risk" feel
   var WEIGHT_TABLES = {
     low: [
-      [0.5,  300.0],
-      [0.7,  200.0],
-      [0.9,  120.0],
-      [1.1,  22.0],
-      [1.5,  15.0],
-      [2.0,  5.0],
-      [5.0,  0.15],
-      [20.0, 0.04],
-      [100,  0.015],
-      [Infinity, 0.003]
+      [0.5,  200.0],
+      [0.7,  140.0],
+      [0.9,  90.0],
+      [1.1,  30.0],
+      [1.5,  20.0],
+      [2.0,  8.0],
+      [5.0,  0.8],
+      [20.0, 0.25],
+      [100,  0.08],
+      [Infinity, 0.02]
     ],
     medium: [
-      [0.5,  280.0],
-      [0.7,  180.0],
-      [0.9,  100.0],
-      [1.1,  18.0],
-      [1.5,  10.0],
-      [2.0,  3.5],
-      [5.0,  0.1],
-      [20.0, 0.03],
-      [100,  0.01],
-      [Infinity, 0.002]
+      [0.5,  180.0],
+      [0.7,  120.0],
+      [0.9,  75.0],
+      [1.1,  22.0],
+      [1.5,  14.0],
+      [2.0,  5.0],
+      [5.0,  0.5],
+      [20.0, 0.15],
+      [100,  0.05],
+      [Infinity, 0.012]
     ],
     high: [
-      [0.4,  250.0],
-      [0.6,  160.0],
-      [0.8,  90.0],
-      [1.0,  15.0],
-      [1.5,  8.0],
-      [2.0,  2.5],
-      [5.0,  0.08],
-      [20.0, 0.025],
-      [100,  0.008],
-      [Infinity, 0.0015]
+      [0.4,  150.0],
+      [0.6,  100.0],
+      [0.8,  60.0],
+      [1.0,  18.0],
+      [1.5,  10.0],
+      [2.0,  4.0],
+      [5.0,  0.35],
+      [20.0, 0.1],
+      [100,  0.03],
+      [Infinity, 0.008]
     ]
   };
 
