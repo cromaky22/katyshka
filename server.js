@@ -870,25 +870,25 @@ function spinWheel() {
   }
 
 const results = {};
-   for (const uid in wheel.bets) {
-     let win = 0;
-     let totalBet = 0;
-     wheel.bets[uid].forEach(b => { 
-       totalBet += b.amount;
-       if (betWins(b.type, num)) win += b.amount * getCoef(b.type); 
-     });
-     win = Math.round(win * 100) / 100;
-     results[uid] = win;
-     setBalance(uid, getBalance(uid) + win);
-     // Record transaction
-      addTx('bet', uid, totalBet, 'completed', { game: 'Wheel', detail: `Bet ${totalBet.toFixed(2)}` });
-      await applyBet(uid, totalBet);
-     if (win > 0) {
-       addTx('win', uid, win, 'completed', { game: 'Wheel', detail: `Won ${win.toFixed(2)} on ${num}` });
-     } else {
-       addTx('loss', uid, totalBet, 'completed', { game: 'Wheel', detail: `Lost on ${num}` });
-     }
-   }
+    for (const uid in wheel.bets) {
+      let win = 0;
+      let totalBet = 0;
+      wheel.bets[uid].forEach(b => { 
+        totalBet += b.amount;
+        if (betWins(b.type, num)) win += b.amount * getCoef(b.type); 
+      });
+      win = Math.round(win * 100) / 100;
+      results[uid] = win;
+      setBalance(uid, getBalance(uid) + win);
+      // Record transaction
+       addTx('bet', uid, totalBet, 'completed', { game: 'Wheel', detail: `Bet ${totalBet.toFixed(2)}` });
+       applyBet(uid, totalBet);
+      if (win > 0) {
+        addTx('win', uid, win, 'completed', { game: 'Wheel', detail: `Won ${win.toFixed(2)} on ${num}` });
+      } else {
+        addTx('loss', uid, totalBet, 'completed', { game: 'Wheel', detail: `Lost on ${num}` });
+      }
+    }
 
   wheel.result = { num, color, index: idx };
   wheel.history.unshift({ num, color });
