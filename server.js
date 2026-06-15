@@ -367,16 +367,6 @@ async function dbSetUser(id, data) {
    saveData();
  }
 
-async function dbGetUser(id) {
-  if (usePostgres) {
-    try {
-      const res = await db.query('SELECT * FROM users WHERE id = $1', [id]);
-      if (res.rows[0]) return res.rows[0];
-    } catch (e) { console.error('[DB] dbGetUser error for', id, ':', e.message); }
-  }
-  return users[id] || null;
-}
-
 async function dbGetAllUsers() {
   if (usePostgres) {
     try {
