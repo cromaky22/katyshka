@@ -274,24 +274,28 @@ async function dbGetUser(id) {
 }
 
 async function dbSetUser(id, data) {
-  if (usePostgres) {
-    try {
-      await db.query(`
-        INSERT INTO users (id, balance, first_name, last_name, username, avatar, sub_claimed)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-        ON CONFLICT (id) DO UPDATE SET
-          balance = EXCLUDED.balance,
-          first_name = EXCLUDED.first_name,
-          last_name = EXCLUDED.last_name,
-          username = EXCLUDED.username,
-          avatar = EXCLUDED.avatar,
-          sub_claimed = EXCLUDED.sub_claimed
-      `, [id, data.balance || 0, data.first_name || null, data.last_name || null, data.username || null, data.avatar || null, data.sub_claimed || false]);
-    } catch(e) { console.error('dbSetUser error:', e.message); }
-  }
-  users[id] = data;
-  saveData();
-}
+   if (usePostgres) {
+     try {
+       await db.query(`
+         INSERT INTO users (id, balance, first_name, last_name, username, avatar, sub_claimed, wager_required, wager_total, deposit_total, wager_multiplier)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         ON CONFLICT (id) DO UPDATE SET
+           balance = EXCLUDED.balance,
+           first_name = EXCLUDED.first_name,
+           last_name = EXCLUDED.last_name,
+           username = EXCLUDED.username,
+           avatar = EXCLUDED.avatar,
+           sub_claimed = EXCLUDED.sub_claimed,
+           wager_required = EXCLUDED.wager_required,
+           wager_total = EXCLUDED.wager_total,
+           deposit_total = EXCLUDED.deposit_total,
+           wager_multiplier = EXCLUDED.wager_multiplier
+       `, [id, data.balance || 0, data.first_name || null, data.last_name || null, data.username || null, data.avatar || null, data.sub_claimed || false, data.wager_required || 0, data.wager_total || 0, data.deposit_total || 0, data.wager_multiplier || 3]);
+     } catch(e) { console.error('dbSetUser error:', e.message); }
+   }
+   users[id] = data;
+   saveData();
+ }
 
 async function dbGetAllUsers() {
   if (usePostgres) {
@@ -564,25 +568,26 @@ app.post('/api/invoice/check', async (req, res) => {
     if (result.ok && result.result?.items?.length > 0) {
       const inv = result.result.items[0];
 
-      // If paid, credit balance + apply wager
-      if (inv.status === 'paid') {
-        try {
-          console.log('[WAGER] Invoice paid, payload:', inv.payload);
-          const payload = JSON.parse(inv.payload || '{}');
-          console.log('[WAGER] Parsed payload:', payload);
-          if (payload.userId) {
-            var depAmount = parseFloat(inv.amount);
-            var oldBal = getBalance(payload.userId);
-            setBalance(payload.userId, oldBal + depAmount);
-            applyDeposit(payload.userId, depAmount);
-            console.log(`[WAGER] Credited $${depAmount} to ${payload.userId}, oldBal=$${oldBal}, wager=$${users[payload.userId]?.wager_required}`);
-          } else {
-            console.log('[WAGER] No userId in payload!');
-          }
-        } catch (e) {
-          console.error('[WAGER] Error:', e);
-        }
-      }
+// If paid, credit balance + apply wager
+       if (inv.status === 'paid') {
+         try {
+           console.log('[WAGER] Invoice paid, payload:', inv.payload);
+           const payload = JSON.parse(inv.payload || '{}');
+           console.log('[WAGER] Parsed payload:', payload);
+           if (payload.userId) {
+             var depAmount = parseFloat(inv.amount);
+             var oldBal = getBalance(payload.userId);
+             setBalance(payload.userId, oldBal + depAmount);
+             applyDeposit(payload.userId, depAmount);
+             io.emit('balance_update', { userId: payload.userId, balance: getBalance(payload.userId) });
+             console.log(`[WAGER] Credited $${depAmount} to ${payload.userId}, oldBal=$${oldBal}, wager=$${users[payload.userId]?.wager_required}`);
+           } else {
+             console.log('[WAGER] No userId in payload!');
+           }
+         } catch (e) {
+           console.error('[WAGER] Error:', e);
+         }
+       }
 
       res.json({ ok: true, status: inv.status, amount: inv.amount });
     } else {
@@ -596,22 +601,23 @@ app.post('/api/invoice/check', async (req, res) => {
 
 // Cryptobot webhook
 app.post('/api/cryptobot-hook', express.raw({ type: 'application/json' }), (req, res) => {
-  try {
-    const body = JSON.parse(req.body.toString());
-    if (body.update_type === 'invoice_paid') {
-      const payload = JSON.parse(body.payload.payload || '{}');
-      if (payload.userId) {
-        const amount = parseFloat(body.payload.amount);
-        setBalance(payload.userId, getBalance(payload.userId) + amount);
-        io.emit('balance_update', { userId: payload.userId, amount });
-        console.log(`Webhook: Credited $${amount} to ${payload.userId}`);
-      }
-    }
-  } catch (e) {
-    console.error('Webhook error:', e);
-  }
-  res.json({ ok: true });
-});
+   try {
+     const body = JSON.parse(req.body.toString());
+     if (body.update_type === 'invoice_paid') {
+       const payload = JSON.parse(body.payload.payload || '{}');
+       if (payload.userId) {
+         const amount = parseFloat(body.payload.amount);
+         setBalance(payload.userId, getBalance(payload.userId) + amount);
+         applyDeposit(payload.userId, amount);
+         io.emit('balance_update', { userId: payload.userId, balance: getBalance(payload.userId) });
+         console.log(`Webhook: Credited $${amount} to ${payload.userId}`);
+       }
+     }
+   } catch (e) {
+     console.error('Webhook error:', e);
+   }
+   res.json({ ok: true });
+ });
 
 // === XROCKET API ===
 const XROCKET_KEY = 'f391f7a440adb0cfb0f7a1afe';
@@ -688,17 +694,19 @@ app.post('/api/invoice/check/xrocket', async (req, res) => {
       const inv = result.data || result;
       const status = inv.status || inv.state;
       
-      if (status === 'paid' || status === 'completed' || status === 'success') {
-        try {
-          const payload = JSON.parse(inv.payload || '{}');
-          if (payload.userId) {
-            setBalance(payload.userId, getBalance(payload.userId) + parseFloat(inv.amount));
-            const tx = transactions.find(t => t.invoiceId === String(invoiceId));
-            if (tx) tx.status = 'completed';
-            console.log(`xRocket: Credited $${inv.amount} to ${payload.userId}`);
-          }
-        } catch (e) {}
-      }
+if (status === 'paid' || status === 'completed' || status === 'success') {
+         try {
+           const payload = JSON.parse(inv.payload || '{}');
+           if (payload.userId) {
+             setBalance(payload.userId, getBalance(payload.userId) + parseFloat(inv.amount));
+             applyDeposit(payload.userId, parseFloat(inv.amount));
+             io.emit('balance_update', { userId: payload.userId, balance: getBalance(payload.userId) });
+             const tx = transactions.find(t => t.invoiceId === String(invoiceId));
+             if (tx) tx.status = 'completed';
+             console.log(`xRocket: Credited $${inv.amount} to ${payload.userId}`);
+           }
+         } catch (e) {}
+       }
       res.json({ ok: true, status, amount: inv.amount });
     } else {
       res.json({ ok: true, status: 'not_found' });
