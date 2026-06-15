@@ -187,79 +187,23 @@ app.post('/api/admin/take', (req, res) => {
 const fs = require('fs');
 const DATA_FILE = './data.json';
 
+// PostgreSQL setup — deferred to startServer()
 let db = null;
-let usePostgres = false;
-
-// Try to connect to PostgreSQL
-try {
-  if (process.env.DATABASE_URL) {
+let usePostgres = !!process.env.DATABASE_URL;
+if (usePostgres) {
+  try {
     const { Pool } = require('pg');
     db = new Pool({
       connectionString: process.env.DATABASE_URL,
       ssl: { rejectUnauthorized: false }
     });
-    usePostgres = true;
-    console.log('🐘 PostgreSQL connected');
-    
-    // Create tables if not exist
-    db.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id TEXT PRIMARY KEY,
-        balance REAL DEFAULT 0,
-        bonus_balance REAL DEFAULT 0,
-        wager_required REAL DEFAULT 0,
-        wager_total REAL DEFAULT 0,
-        deposit_total REAL DEFAULT 0,
-        wager_multiplier REAL DEFAULT 3,
-        first_name TEXT,
-        last_name TEXT,
-        username TEXT,
-        avatar TEXT,
-        sub_claimed BOOLEAN DEFAULT FALSE,
-        created_at TIMESTAMP DEFAULT NOW()
-      );
-      CREATE TABLE IF NOT EXISTS promos (
-        code TEXT PRIMARY KEY,
-        amount REAL DEFAULT 0,
-        uses INTEGER DEFAULT 0,
-        wager_mult REAL DEFAULT 5
-      );
-      CREATE TABLE IF NOT EXISTS activated (
-        user_id TEXT,
-        code TEXT,
-        activated_at TIMESTAMP DEFAULT NOW(),
-        PRIMARY KEY (user_id, code)
-      );
-      CREATE TABLE IF NOT EXISTS wheel_history (
-        id SERIAL PRIMARY KEY,
-        num INTEGER,
-        created_at TIMESTAMP DEFAULT NOW()
-      );
-      CREATE TABLE IF NOT EXISTS paid_invoices (
-        provider TEXT,
-        invoice_id TEXT,
-        user_id TEXT,
-        amount REAL,
-        time BIGINT,
-        PRIMARY KEY (provider, invoice_id)
-      );
-    `).then(() => {
-      console.log('✅ DB tables ready');
-      db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS bonus_balance REAL DEFAULT 0').catch(()=>{});
-      db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS wager_required REAL DEFAULT 0').catch(()=>{});
-      db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS wager_total REAL DEFAULT 0').catch(()=>{});
-      db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS deposit_total REAL DEFAULT 0').catch(()=>{});
-      db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS wager_multiplier REAL DEFAULT 3').catch(()=>{});
-      db.query('ALTER TABLE promos ADD COLUMN IF NOT EXISTS wager_mult REAL DEFAULT 5').catch(()=>{});
-    }).catch(e => {
-      console.error('DB init error:', e.message);
-    });
-  } else {
-    console.log('⚠️  No DATABASE_URL set — data will be lost on restart!');
-    console.log('⚠️  Add PostgreSQL add-on on Railway to persist data');
+    console.log('🐘 PostgreSQL pool created');
+  } catch (e) {
+    console.log('⚠️  Failed to create PG pool:', e.message);
+    usePostgres = false;
   }
-} catch (e) {
-  console.log('PostgreSQL not available, using file storage');
+} else {
+  console.log('⚠️  No DATABASE_URL — data will be lost on restart!');
 }
 
 let users = {};
@@ -1242,10 +1186,10 @@ app.get('/api/tg-photo/:id', async (req, res) => {
 // === START ===
  const PORT = process.env.PORT || 3000;
 
-  // Load users from PG before starting
  async function startServer() {
    if (usePostgres) {
      try {
+       // Create all tables with await — MUST complete before loading users
        await db.query(`
          CREATE TABLE IF NOT EXISTS users (
            id TEXT PRIMARY KEY,
@@ -1263,29 +1207,49 @@ app.get('/api/tg-photo/:id', async (req, res) => {
            created_at TIMESTAMP DEFAULT NOW()
          )
        `);
-     } catch(e) { console.error('CREATE users error:', e.message); }
-     try {
+       console.log('✅ users table ready');
+
        await db.query(`
-          CREATE TABLE IF NOT EXISTS paid_invoices (
-            provider TEXT,
-            invoice_id TEXT,
-            user_id TEXT,
-            amount REAL,
-            time BIGINT,
-            PRIMARY KEY (provider, invoice_id)
-          )
-        `);
-     } catch(e) { console.error('CREATE paid_invoices error:', e.message); }
-     try {
+         CREATE TABLE IF NOT EXISTS promos (
+           code TEXT PRIMARY KEY,
+           amount REAL DEFAULT 0,
+           uses INTEGER DEFAULT 0,
+           wager_mult REAL DEFAULT 5
+         )
+       `);
+
+       await db.query(`
+         CREATE TABLE IF NOT EXISTS activated (
+           user_id TEXT,
+           code TEXT,
+           activated_at TIMESTAMP DEFAULT NOW(),
+           PRIMARY KEY (user_id, code)
+         )
+       `);
+
+       await db.query(`
+         CREATE TABLE IF NOT EXISTS paid_invoices (
+           provider TEXT,
+           invoice_id TEXT,
+           user_id TEXT,
+           amount REAL,
+           time BIGINT,
+           PRIMARY KEY (provider, invoice_id)
+         )
+       `);
+       console.log('✅ All tables ready');
+
+       // Load users from PG
        await loadUsersFromPG();
-       console.log('🐘 Database ready, users loaded');
+       console.log('🐘 Startup complete — users in memory:', Object.keys(users).length);
      } catch(e) {
-       console.error('PG load users error:', e.message);
+       console.error('❌ Startup DB error:', e.message);
+       console.error('❌ Data may be lost!');
      }
-    } else {
-     console.log('📂 PostgreSQL not configured, using file storage');
+   } else {
+     console.log('📂 PostgreSQL not configured — using file storage (data lost on restart)');
    }
-   server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+   server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
  }
  startServer();
 
