@@ -263,7 +263,7 @@
     if(cell.classList.contains('revealed')) return;
     const idx = parseInt(cell.dataset.index,10);
     
-    // hit mine
+      // hit mine
     if(mineSet && mineSet.has(idx)){
         // mark as revealed bomb and keep selected highlight
         cell.classList.add('revealed','bomb','selected');
@@ -276,6 +276,8 @@
        updateStatus('Проигрыш — мина найдена');
        recordStat('loss', currentStake, `Mines hit mine at step ${revealedCount + 1}`);
        if(window.mcStats) mcStats.addLoss(Math.abs(currentStake), 'Mines', `Мина на шаге ${revealedCount + 1}`);
+       var _uLoss = (window.Balance && window.Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
+       if(_uLoss) fetch('/api/wager/loss',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:_uLoss,amount:Math.abs(currentStake)})});
         // reset controls and clear field after showing result
           if(cashoutBtn) cashoutBtn.style.display = 'none';
           if(playBtn) playBtn.style.display = '';

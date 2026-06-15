@@ -129,10 +129,12 @@ document.addEventListener('DOMContentLoaded', function(){
           // short delay so user sees result, then end chain
           setTimeout(()=>{ endChain(); }, 800);
         }
-       } else {
+      } else {
          resultEl.textContent += ' — Проигрыш';
          recordStat('loss', baseStake, `Coinflip lost`);
          if(window.mcStats) mcStats.addLoss(Math.abs(baseStake), 'Coinflip', `Выбор: ${choice === 'head' ? 'Орел' : 'Решка'}, выпал ${pendingResult === 'head' ? 'Орел' : 'Решка'}`);
+         var _uCfLoss = (window.Balance && window.Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
+         if(_uCfLoss) fetch('/api/wager/loss',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:_uCfLoss,amount:Math.abs(baseStake)})});
         resetProgress();
         inChain = false;
         // clear stake input so user must enter new amount

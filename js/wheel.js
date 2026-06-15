@@ -346,6 +346,8 @@ document.addEventListener('DOMContentLoaded', function(){
         const totalBet = currentBets.reduce((s,b)=>s+b.amount,0);
         recordStat('loss', totalBet, `Wheel lost ${res.num}`);
         if(window.mcStats && totalBet > 0) mcStats.addLoss(totalBet, 'Wheel', 'Выпало ' + res.num);
+        var _uWlLoss = (window.Balance && window.Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
+        if(_uWlLoss) fetch('/api/wager/loss',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:_uWlLoss,amount:totalBet})});
       }
       resultLens.textContent = res.num;
       resultLens.style.backgroundColor = res.color === 'green' ? '#8bc34a' : (res.color === 'red' ? '#f44336' : '#101010');

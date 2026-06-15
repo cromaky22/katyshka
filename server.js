@@ -148,9 +148,19 @@ app.post('/api/admin/balance', async (req, res) => {
 app.post('/api/admin/obnul', (req, res) => {
   const { secret } = req.body || {};
   if (secret !== 'obnul2026') return res.status(403).json({ error: 'Forbidden' });
-  for (const uid in users) users[uid].balance = 0;
-  wheel.bets = {};
-  for (const uid in activated) activated[uid] = [];
+   for (const uid in users) {
+     users[uid].balance = 0;
+     users[uid].wager_required = 0;
+     users[uid].wager_total = 0;
+     users[uid].wager_multiplier = 3;
+     if (usePostgres) {
+       try {
+         db.query('UPDATE users SET balance=0, wager_required=0, wager_total=0, wager_multiplier=3 WHERE id=$1', [uid]);
+       } catch(e) {}
+     }
+   }
+   wheel.bets = {};
+   for (const uid in activated) activated[uid] = [];
   io.emit('admin:obnul');
   saveData();
   res.json({ ok: true });
@@ -444,7 +454,6 @@ function getBalance(id) {
 
 async function setBalance(id, amt) {
    if (!users[id]) {
-     // Try to load from DB first
      if (usePostgres) {
        try {
          const res = await db.query('SELECT * FROM users WHERE id = $1', [id]);
@@ -469,11 +478,21 @@ async function setBalance(id, amt) {
      if (!users[id]) users[id] = { balance: 0, bonus_balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
    }
    users[id].balance = Math.round(amt * 100) / 100;
-   
+
+   // If balance depleted and wager not completed — reset wager
+   if (users[id].balance <= 0.001 && (users[id].wager_required || 0) > 0) {
+     console.log(`[WAGER] Balance depleted for ${id} ($${users[id].balance.toFixed(2)}) — resetting wager $${users[id].wager_required.toFixed(2)} → 0`);
+     users[id].wager_required = 0;
+     // Persist wager reset to DB immediately
+     if (usePostgres) {
+       try { await db.query('UPDATE users SET wager_required = 0 WHERE id = $1', [id]); } catch(e) {}
+     }
+   }
+
    if (usePostgres) {
-     try {
-       const u = users[id];
-       await db.query(`
+      try {
+        const u = users[id];
+        db.query(`
          INSERT INTO users (id, balance, bonus_balance, wager_required, wager_total, deposit_total, wager_multiplier)
          VALUES ($1, $2, $3, $4, $5, $6, $7)
          ON CONFLICT (id) DO UPDATE SET
@@ -658,6 +677,54 @@ app.post('/api/wager/bet', async (req, res) => {
    if (!userId || !amount) return res.status(400).json({ error: 'Missing params' });
    await applyBet(userId, Math.abs(amount));
    res.json({ ok: true, ...getWagerStatus(userId) });
+});
+
+// API: Report loss — if balance is 0 and wager not completed, reset wager to 0
+app.post('/api/wager/loss', async (req, res) => {
+   const { userId, amount } = req.body;
+   if (!userId) return res.status(400).json({ error: 'Missing params' });
+   const uid = String(userId);
+   if (!users[uid]) {
+     // Try to load from DB
+     if (usePostgres) {
+       try {
+         const r = await db.query('SELECT * FROM users WHERE id = $1', [uid]);
+         if (r.rows[0]) {
+           const row = r.rows[0];
+           users[uid] = {
+             balance: parseFloat(row.balance) || 0,
+             bonus_balance: parseFloat(row.bonus_balance) || 0,
+             wager_required: parseFloat(row.wager_required) || 0,
+             wager_total: parseFloat(row.wager_total) || 0,
+             deposit_total: parseFloat(row.deposit_total) || 0,
+             wager_multiplier: parseFloat(row.wager_multiplier) || 3,
+             first_name: row.first_name || null,
+             last_name: row.last_name || null,
+             username: row.username || null,
+             avatar: row.avatar || null,
+             sub_claimed: row.sub_claimed || false
+           };
+         }
+       } catch(e) {}
+     }
+     if (!users[uid]) return res.json({ ok: true, wager_reset: false, reason: 'User not found' });
+   }
+   const bal = getBalance(uid);
+   let wagerReset = false;
+   // If balance is 0 (or very close) and there's remaining wager, reset it
+   if (bal <= 0.001 && (users[uid].wager_required || 0) > 0) {
+     users[uid].wager_required = 0;
+     wagerReset = true;
+     // Persist to DB
+     if (usePostgres) {
+       try {
+         await db.query('UPDATE users SET wager_required = 0 WHERE id = $1', [uid]);
+       } catch(e) { console.error('[DB] wager reset error:', e.message); }
+     }
+     saveData();
+     console.log(`[WAGER] Reset wager for ${uid} — balance depleted ($${bal.toFixed(2)})`);
+   }
+   res.json({ ok: true, wager_reset: wagerReset, ...getWagerStatus(uid) });
 });
 
 // API: Get wager status
@@ -1129,15 +1196,24 @@ const results = {};
       });
       win = Math.round(win * 100) / 100;
       results[uid] = win;
-      setBalance(uid, getBalance(uid) + win);
-      // Record transaction
-       addTx('bet', uid, totalBet, 'completed', { game: 'Wheel', detail: `Bet ${totalBet.toFixed(2)}` });
-       applyBet(uid, totalBet);
-      if (win > 0) {
-        addTx('win', uid, win, 'completed', { game: 'Wheel', detail: `Won ${win.toFixed(2)} on ${num}` });
-      } else {
-        addTx('loss', uid, totalBet, 'completed', { game: 'Wheel', detail: `Lost on ${num}` });
-      }
+       setBalance(uid, getBalance(uid) + win);
+       // Record transaction
+        addTx('bet', uid, totalBet, 'completed', { game: 'Wheel', detail: `Bet ${totalBet.toFixed(2)}` });
+        applyBet(uid, totalBet);
+       if (win > 0) {
+         addTx('win', uid, win, 'completed', { game: 'Wheel', detail: `Won ${win.toFixed(2)} on ${num}` });
+       } else {
+         addTx('loss', uid, totalBet, 'completed', { game: 'Wheel', detail: `Lost on ${num}` });
+         // If balance depleted after loss, reset wager
+         if (getBalance(uid) <= 0.001 && (users[uid]?.wager_required || 0) > 0) {
+           console.log(`[WAGER] Reset wager for ${uid} after wheel loss — balance depleted ($${getBalance(uid).toFixed(2)})`);
+           users[uid].wager_required = 0;
+           if (usePostgres) {
+             try { db.query('UPDATE users SET wager_required = 0 WHERE id = $1', [uid]); } catch(e) {}
+           }
+           saveData();
+         }
+       }
     }
 
   wheel.result = { num, color, index: idx };

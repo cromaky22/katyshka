@@ -397,6 +397,8 @@ document.addEventListener('DOMContentLoaded', function() {
        gameStatus.className = 'game-status error';
        recordStat('loss', currentGameData.stake, `Crash at ${crashPt.toFixed(2)}x`);
        if(window.mcStats) mcStats.addLoss(currentGameData.stake, 'Crash', `Краш на x${crashPt.toFixed(2)}`);
+       var _uCrashLoss = (window.Balance && window.Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
+       if(_uCrashLoss) fetch('/api/wager/loss',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:_uCrashLoss,amount:Math.abs(currentGameData.stake)})});
       addToHistory({ mult: crashPt, won: false });
 
       // Flash + shake
