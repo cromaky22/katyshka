@@ -373,9 +373,6 @@ async function dbGetUser(id) {
   }
   return users[id] || null;
 }
-   users[id] = data;
-   saveData();
- }
 
 async function dbGetAllUsers() {
   if (usePostgres) {
