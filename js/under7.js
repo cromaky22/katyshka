@@ -35,25 +35,23 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   });
 
-  // Dot patterns for dice faces 1-6
-  // 9 grid positions: 0 1 2 / 3 4 5 / 6 7 8
-  // true = dot visible, false = hidden
-  const patterns = {
-    1: [0,0,0, 0,1,0, 0,0,0],  // center only
-    2: [1,0,0, 0,0,0, 0,0,1],  // top-left + bottom-right
-    3: [1,0,0, 0,1,0, 0,0,1],  // diagonal
-    4: [1,0,1, 0,0,0, 1,0,1],  // 4 corners
-    5: [1,0,1, 0,1,0, 1,0,1],  // 4 corners + center
-    6: [1,0,1, 1,0,1, 1,0,1]   // 6 dots (3 per column)
+  // Rotation to show each face (1-6) looking at camera
+  // f1=front, f6=back, f2=right, f5=left, f3=top, f4=bottom
+  const rotations = {
+    1: { rx: 0, ry: 0 },
+    2: { rx: 0, ry: -90 },
+    3: { rx: -90, ry: 0 },
+    4: { rx: 90, ry: 0 },
+    5: { rx: 0, ry: 90 },
+    6: { rx: 0, ry: 180 }
   };
 
   function setDice(diceEl, value){
-    const p = patterns[value];
-    const dots = diceEl.querySelectorAll('.dot');
-    dots.forEach((dot, i) => {
-      if(p[i]) dot.classList.remove('h');
-      else dot.classList.add('h');
-    });
+    const r = rotations[value];
+    // Add random full spins for variety
+    const spins = 360 * (3 + Math.floor(Math.random() * 3));
+    diceEl.style.setProperty('--rx', (r.rx + spins) + 'deg');
+    diceEl.style.setProperty('--ry', (r.ry + spins) + 'deg');
   }
 
   function rollDice(){
@@ -61,26 +59,19 @@ document.addEventListener('DOMContentLoaded', function(){
     const d2 = Math.floor(Math.random() * 6) + 1;
     const sum = d1 + d2;
 
-    dice1.classList.add('roll');
-    dice2.classList.add('roll');
-
-    // Rapidly change faces during roll
-    let steps = 0;
-    const interval = setInterval(()=>{
-      setDice(dice1, Math.floor(Math.random() * 6) + 1);
-      setDice(dice2, Math.floor(Math.random() * 6) + 1);
-      steps++;
-    }, 70);
+    dice1.classList.add('rolling');
+    dice2.classList.add('rolling');
 
     return new Promise(resolve => {
       setTimeout(()=>{
-        clearInterval(interval);
-        dice1.classList.remove('roll');
-        dice2.classList.remove('roll');
+        dice1.classList.remove('rolling');
+        dice2.classList.remove('rolling');
         setDice(dice1, d1);
         setDice(dice2, d2);
+        dice1.style.transform = 'rotateX(' + dice1.style.getPropertyValue('--rx') + ') rotateY(' + dice1.style.getPropertyValue('--ry') + ')';
+        dice2.style.transform = 'rotateX(' + dice2.style.getPropertyValue('--rx') + ') rotateY(' + dice2.style.getPropertyValue('--ry') + ')';
         resolve({ d1, d2, sum });
-      }, 500);
+      }, 650);
     });
   }
 
