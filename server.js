@@ -1140,12 +1140,38 @@ app.get('/api/tg-photo/:id', async (req, res) => {
 });
 
 // === START ===
-const PORT = process.env.PORT || 3000;
+ const PORT = process.env.PORT || 3000;
 
-// Load users from PG before starting
-loadUsersFromPG().then(() => {
-  server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-});
+ // Load users from PG before starting
+ async function startServer() {
+   if (usePostgres) {
+     try {
+       await db.query(`
+         CREATE TABLE IF NOT EXISTS users (
+           id TEXT PRIMARY KEY,
+           balance REAL DEFAULT 0,
+           bonus_balance REAL DEFAULT 0,
+           wager_required REAL DEFAULT 0,
+           wager_total REAL DEFAULT 0,
+           deposit_total REAL DEFAULT 0,
+           wager_multiplier REAL DEFAULT 3,
+           first_name TEXT,
+           last_name TEXT,
+           username TEXT,
+           avatar TEXT,
+           sub_claimed BOOLEAN DEFAULT FALSE,
+           created_at TIMESTAMP DEFAULT NOW()
+         )
+       `);
+       await loadUsersFromPG();
+       console.log('🐘 Database ready');
+     } catch(e) {
+       console.error('DB start error:', e.message);
+     }
+   }
+   server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+ }
+ startServer();
 
 // === INIT DB ===
 async function initDb() {
