@@ -416,7 +416,10 @@ app.post('/api/wager/bet', (req, res) => {
   res.json({ ok: true, ...getWagerStatus(userId) });
 });
 
-// API: Apply bet to wager (called by client games)
+// API: Get wager status
+app.get('/api/wager/:userId', (req, res) => {
+  res.json({ ok: true, ...getWagerStatus(req.params.userId) });
+});
 
 // Add transaction to history
 async function addTx(type, userId, amount, status, extra) {
