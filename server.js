@@ -415,10 +415,10 @@ function applyDeposit(userId, amount) {
   if (usePostgres) {
     try {
       db.query(`
-        INSERT INTO users (id, balance, wager_required, wager_total, deposit_total, wager_multiplier) 
-        VALUES ($1, $2, $3, $4, $5, $6)
-        ON CONFLICT (id) DO UPDATE SET wager_required=$3, wager_total=$4, deposit_total=$5, wager_multiplier=$6
-      `, [userId, users[userId].balance, u.wager_required, u.wager_total, u.deposit_total, u.wager_multiplier]);
+        INSERT INTO users (id, wager_required, wager_total, deposit_total, wager_multiplier) 
+        VALUES ($1, $2, $3, $4, $5)
+        ON CONFLICT (id) DO UPDATE SET wager_required=$2, wager_total=$3, deposit_total=$4, wager_multiplier=$5
+      `, [userId, u.wager_required, u.wager_total, u.deposit_total, u.wager_multiplier]);
       console.log('[WAGER] Saved to PostgreSQL');
     } catch(e) { console.error('[WAGER] PG error:', e.message); }
   }
@@ -434,10 +434,10 @@ function applyPromo(userId, amount) {
   if (usePostgres) {
     try {
       db.query(`
-        INSERT INTO users (id, balance, wager_required, wager_total, wager_multiplier) 
-        VALUES ($1, $2, $3, $4, $5)
-        ON CONFLICT (id) DO UPDATE SET wager_required=$3, wager_total=$4, wager_multiplier=$5
-      `, [userId, users[userId].balance, u.wager_required, u.wager_total, u.wager_multiplier]);
+        INSERT INTO users (id, wager_required, wager_total, wager_multiplier) 
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (id) DO UPDATE SET wager_required=$2, wager_total=$3, wager_multiplier=$4
+      `, [userId, u.wager_required, u.wager_total, u.wager_multiplier]);
     } catch(e) {}
   }
 }
