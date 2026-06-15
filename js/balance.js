@@ -70,11 +70,22 @@
 
   function sendToServer(data){
     if(!_userId) return;
+    // Always include user info for proper record creation
+    const payload = Object.assign({
+      id: _userId,
+      first_name: null,
+      last_name: null,
+      username: null,
+      avatar: null
+    }, data);
+    
     fetch('/api/users', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(Object.assign({id: _userId}, data))
-    }).catch(function(){});
+      body: JSON.stringify(payload)
+    }).catch(function(err){
+      console.warn('⚠️ Failed to sync balance to server:', err);
+    });
   }
 
 function loadFromServer(){
