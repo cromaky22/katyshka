@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function(){
   const quickBtns = document.querySelectorAll('.quick-btn');
   const dice1 = document.getElementById('dice1');
   const dice2 = document.getElementById('dice2');
+  const diceStatus = document.getElementById('diceStatus');
 
   let lastChoice = null;
   let lastStake = 0;
@@ -35,7 +36,8 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   });
 
-  // Dice rotations for each face (1-6)
+  // Dice layout: front=1, back=6, right=2, left=5, top=3, bottom=4
+  // Rotations to show each face on top/front
   const diceRotations = {
     1: { rx: 0, ry: 0 },
     2: { rx: 0, ry: 90 },
@@ -44,6 +46,10 @@ document.addEventListener('DOMContentLoaded', function(){
     5: { rx: 0, ry: -90 },
     6: { rx: 0, ry: 180 }
   };
+
+  // Initial state - both showing 1
+  dice1.style.transform = 'rotateX(0deg) rotateY(0deg)';
+  dice2.style.transform = 'rotateX(0deg) rotateY(0deg)';
 
   function rollDice(){
     const d1 = Math.floor(Math.random() * 6) + 1;
@@ -60,56 +66,63 @@ document.addEventListener('DOMContentLoaded', function(){
 
     dice1.classList.add('rolling');
     dice2.classList.add('rolling');
+    diceStatus.textContent = 'Бросаем...';
+    diceStatus.style.color = 'var(--accent)';
 
-    setTimeout(()=>{
-      dice1.classList.remove('rolling');
-      dice2.classList.remove('rolling');
-      dice1.style.transform = `rotateX(${rot1.rx}deg) rotateY(${rot1.ry}deg)`;
-      dice2.style.transform = `rotateX(${rot2.rx}deg) rotateY(${rot2.ry}deg)`;
-      return { d1, d2, sum };
-    }, 600);
+    return new Promise(resolve => {
+      setTimeout(()=>{
+        dice1.classList.remove('rolling');
+        dice2.classList.remove('rolling');
+        dice1.style.transform = 'rotateX(' + rot1.rx + 'deg) rotateY(' + rot1.ry + 'deg)';
+        dice2.style.transform = 'rotateX(' + rot2.rx + 'deg) rotateY(' + rot2.ry + 'deg)';
+        diceStatus.textContent = d1 + ' + ' + d2 + ' = ' + sum;
+        diceStatus.style.color = 'var(--text)';
+        resolve({ d1, d2, sum });
+      }, 800);
+    });
   }
 
-  function play(choice){
+  async function play(choice){
     if(isRolling) return;
-    if(!choice){ resultMessage.textContent = 'Выберите ПОД 7, 7 или НАД 7'; return; }
+    if(!choice){ diceStatus.textContent = 'Выберите ПОД 7, 7 или НАД 7'; diceStatus.style.color = '#ef5350'; return; }
     const stake = parseFloat(stakeInput.value) || 0;
-    if(stake <= 0 || stake > getBalance()){ resultMessage.textContent = 'Недостаточно средств'; return; }
+    if(stake <= 0 || stake > getBalance()){ diceStatus.textContent = 'Недостаточно средств'; diceStatus.style.color = '#ef5350'; return; }
 
     isRolling = true;
     setBalance(getBalance() - stake);
     lastChoice = choice;
     lastStake = stake;
+    resultMessage.textContent = '';
+    resultMessage.className = 'result-message';
 
-    const { sum } = rollDice();
+    const { sum } = await rollDice();
 
-    setTimeout(()=>{
-      let win = false;
-      let multiplier = 0;
-      if(choice === 'under'){ win = sum < 7; multiplier = 2.3; }
-      else if(choice === 'over'){ win = sum > 7; multiplier = 2.3; }
-      else if(choice === 'exact'){ win = sum === 7; multiplier = 5.8; }
+    let win = false;
+    let multiplier = 0;
+    if(choice === 'under'){ win = sum < 7; multiplier = 2.3; }
+    else if(choice === 'over'){ win = sum > 7; multiplier = 2.3; }
+    else if(choice === 'exact'){ win = sum === 7; multiplier = 5.8; }
 
-      if(win){
-        const winAmount = stake * multiplier;
-        setBalance(getBalance() + winAmount);
-        resultMessage.textContent = 'Выигрыш! +$' + winAmount.toFixed(2);
-        addToHistory(winAmount, 'win', sum);
-      } else {
-        resultMessage.textContent = 'Проигрыш';
-        addToHistory(0, 'lose', sum);
-      }
-      isRolling = false;
-    }, 700);
+    if(win){
+      const winAmount = stake * multiplier;
+      setBalance(getBalance() + winAmount);
+      resultMessage.textContent = 'Выигрыш! +$' + winAmount.toFixed(2);
+      resultMessage.className = 'result-message win';
+      addToHistory(winAmount, 'win', sum);
+    } else {
+      resultMessage.textContent = 'Проигрыш';
+      resultMessage.className = 'result-message lose';
+      addToHistory(0, 'lose', sum);
+    }
+    isRolling = false;
   }
 
   function addToHistory(amount, type, result){
     const item = document.createElement('div');
     item.className = 'history-item ' + type;
-    const choiceText = lastChoice === 'under' ? 'ПОД 7' : lastChoice === 'over' ? 'НАД 7' : '7';
-    item.innerHTML = `<span>${choiceText} — ${result}</span><span>${type === 'win' ? '+' + amount.toFixed(2) : '0'}</span>`;
+    item.textContent = result;
     historyScroll.prepend(item);
-    while(historyScroll.children.length > 10) historyScroll.removeChild(historyScroll.lastChild);
+    while(historyScroll.children.length > 20) historyScroll.removeChild(historyScroll.lastChild);
   }
 
   btnUnder.addEventListener('click', ()=>play('under'));

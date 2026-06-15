@@ -47,23 +47,34 @@
 
         <div class="game-field">
           <div class="dice-container">
-            <div class="dice" id="dice1">
-              <div class="dice-face front">⚀</div>
-              <div class="dice-face back">⚁</div>
-              <div class="dice-face right">⚂</div>
-              <div class="dice-face left">⚃</div>
-              <div class="dice-face top">⚄</div>
-              <div class="dice-face bottom">⚅</div>
+            <div class="dice-wrapper">
+              <div class="dice" id="dice1">
+                <!-- 1 -->
+                <div class="dice-face front"><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div></div>
+                <!-- 6 -->
+                <div class="dice-face back"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+                <!-- 2 -->
+                <div class="dice-face right"><div class="dot"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot"></div></div>
+                <!-- 5 -->
+                <div class="dice-face left"><div class="dot"></div><div class="dot hidden"></div><div class="dot"></div><div class="dot hidden"></div><div class="dot"></div><div class="dot hidden"></div><div class="dot"></div><div class="dot hidden"></div><div class="dot"></div></div>
+                <!-- 3 -->
+                <div class="dice-face top"><div class="dot"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot"></div></div>
+                <!-- 4 -->
+                <div class="dice-face bottom"><div class="dot"></div><div class="dot hidden"></div><div class="dot"></div><div class="dot"></div><div class="dot hidden"></div><div class="dot"></div><div class="dot"></div><div class="dot hidden"></div><div class="dot"></div></div>
+              </div>
             </div>
-            <div class="dice" id="dice2">
-              <div class="dice-face front">⚀</div>
-              <div class="dice-face back">⚁</div>
-              <div class="dice-face right">⚂</div>
-              <div class="dice-face left">⚃</div>
-              <div class="dice-face top">⚄</div>
-              <div class="dice-face bottom">⚅</div>
+            <div class="dice-wrapper">
+              <div class="dice" id="dice2">
+                <div class="dice-face front"><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div></div>
+                <div class="dice-face back"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+                <div class="dice-face right"><div class="dot"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot"></div></div>
+                <div class="dice-face left"><div class="dot"></div><div class="dot hidden"></div><div class="dot"></div><div class="dot hidden"></div><div class="dot"></div><div class="dot hidden"></div><div class="dot"></div><div class="dot hidden"></div><div class="dot"></div></div>
+                <div class="dice-face top"><div class="dot"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div><div class="dot"></div></div>
+                <div class="dice-face bottom"><div class="dot"></div><div class="dot hidden"></div><div class="dot"></div><div class="dot"></div><div class="dot hidden"></div><div class="dot"></div><div class="dot"></div><div class="dot hidden"></div><div class="dot"></div></div>
+              </div>
             </div>
           </div>
+          <div class="dice-status" id="diceStatus">Сделайте ставку и выберите исход</div>
         </div>
 
         <div class="result-area">

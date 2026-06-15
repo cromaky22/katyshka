@@ -1,69 +1,101 @@
-.under7{display:flex;justify-content:center;padding:24px 0}
-.under7-board{width:100%;max-width:500px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:16px;border-radius:14px;box-shadow:0 18px 40px rgba(0,0,0,0.6)}
+/* ===== UNDER 7 GAME ===== */
+.under7{display:flex;justify-content:center;padding:16px 0}
+.under7-board{width:100%;max-width:500px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:16px;border-radius:14px;box-shadow:0 18px 40px rgba(0,0,0,0.6)}
 
-.history-header{font-size:14px;color:var(--muted);margin-bottom:10px;padding:0 4px}
-.history-scroll{max-height:120px;overflow-y:auto;margin-bottom:16px}
-.history-item{display:flex;justify-content:space-between;padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:6px;margin-bottom:4px;font-size:13px}
-.history-item.win{color:var(--accent-green)}
-.history-item.lose{color:var(--muted)}
+/* History */
+.history-header{font-size:13px;color:var(--muted);margin-bottom:8px;padding:0 4px}
+.history-scroll{display:flex;overflow-x:auto;gap:6px;padding-bottom:4px}
+.history-item{flex-shrink:0;width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.3)}
+.history-item.win{background:linear-gradient(135deg,#2e7d32,#43a047)}
+.history-item.lose{background:linear-gradient(135deg,#c62828,#ef5350)}
 
-.stake-section{margin-bottom:12px}
-.bet-display{font-size:14px;color:var(--muted);margin-bottom:8px}
-.stake-row{display:flex;align-items:center;gap:8px}
-.stake-row input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);color:var(--text);font-size:16px;text-align:center;font-weight:700}
-.stake-btns{display:flex;gap:6px}
-.modify-btn{width:40px;height:40px;border-radius:8px;border:none;background:linear-gradient(180deg,#374151,#1f2937);color:#fff;font-weight:700;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
-.modify-btn:hover{background:linear-gradient(180deg,#4b5563,#374151)}
-
-.quick-bet-btns{display:flex;gap:8px;margin-bottom:16px}
-.quick-btn{flex:1;padding:10px;border-radius:8px;border:none;background:rgba(255,255,255,0.05);color:var(--text);font-weight:600;cursor:pointer;font-size:14px}
-.quick-btn:hover{background:rgba(255,255,255,0.1)}
-
-.game-field{margin:16px 0;text-align:center}
-.dice-container{display:flex;justify-content:center;gap:24px;margin-bottom:12px;perspective:600px}
-.dice{width:64px;height:64px;position:relative;transform-style:preserve-3d;transition:transform 0.1s}
-.dice.rolling{animation:diceRoll 0.6s ease-out}
-.dice-face{position:absolute;width:64px;height:64px;display:flex;align-items:center;justify-content:center;font-size:40px;background:linear-gradient(145deg,#fff,#e0e0e0);border-radius:10px;box-shadow:inset 0 0 8px rgba(0,0,0,0.15);backface-visibility:hidden}
-.dice-face.front{transform:translateZ(32px)}
-.dice-face.back{transform:rotateY(180deg) translateZ(32px)}
-.dice-face.right{transform:rotateY(90deg) translateZ(32px)}
-.dice-face.left{transform:rotateY(-90deg) translateZ(32px)}
-.dice-face.top{transform:rotateX(90deg) translateZ(32px)}
-.dice-face.bottom{transform:rotateX(-90deg) translateZ(32px)}
-.dice-face.red{color:#e53935}
-.dice-sum{font-size:18px;font-weight:700;color:var(--accent);margin-top:8px}
+/* ===== DICE ===== */
+.game-field{margin:12px 0;text-align:center}
+.dice-container{display:flex;justify-content:center;gap:28px;margin-bottom:10px}
+.dice-wrapper{width:56px;height:56px;overflow:hidden;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.dice{width:56px;height:56px;position:relative;transform-style:preserve-3d;flex-shrink:0}
+.dice{width:56px;height:56px;position:relative;transform-style:preserve-3d;flex-shrink:0}
+.dice.rolling{animation:diceRoll 0.8s cubic-bezier(.25,.46,.45,.94) forwards}
+.dice-face{position:absolute;width:56px;height:56px;background:linear-gradient(145deg,#fff,#e0e0e0);border-radius:10px;box-shadow:inset 0 0 10px rgba(0,0,0,0.12);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:7px;box-sizing:border-box;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.dice-face.front{transform:translateZ(28px)}
+.dice-face.back{transform:rotateY(180deg) translateZ(28px)}
+.dice-face.right{transform:rotateY(90deg) translateZ(28px)}
+.dice-face.left{transform:rotateY(-90deg) translateZ(28px)}
+.dice-face.top{transform:rotateX(90deg) translateZ(28px)}
+.dice-face.bottom{transform:rotateX(-90deg) translateZ(28px)}
+.dice-face.front{transform:translateZ(28px)}
+.dice-face.back{transform:rotateY(180deg) translateZ(28px)}
+.dice-face.right{transform:rotateY(90deg) translateZ(28px)}
+.dice-face.left{transform:rotateY(-90deg) translateZ(28px)}
+.dice-face.top{transform:rotateX(90deg) translateZ(28px)}
+.dice-face.bottom{transform:rotateX(-90deg) translateZ(28px)}
+.dot{width:9px;height:9px;border-radius:50%;background:#1a1a1a;align-self:center;justify-self:center}
+.dot.hidden{visibility:hidden}
+.dice-status{font-size:13px;color:var(--muted);margin-top:4px;min-height:20px}
 
 @keyframes diceRoll{
-  0%{transform:rotateX(0) rotateY(0) rotateZ(0)}
-  25%{transform:rotateX(180deg) rotateY(90deg) rotateZ(45deg)}
-  50%{transform:rotateX(360deg) rotateY(270deg) rotateZ(-30deg)}
-  75%{transform:rotateX(540deg) rotateY(450deg) rotateZ(60deg)}
-  100%{transform:rotateX(var(--rx)) rotateY(var(--ry)) rotateZ(0)}
+  0%{transform:rotateX(0) rotateY(0) translateY(0) scale(1)}
+  20%{transform:rotateX(150deg) rotateY(120deg) translateY(-50px) scale(1.15)}
+  40%{transform:rotateX(300deg) rotateY(240deg) translateY(-70px) scale(1.2)}
+  60%{transform:rotateX(450deg) rotateY(360deg) translateY(-40px) scale(1.1)}
+  80%{transform:rotateX(600deg) rotateY(480deg) translateY(-10px) scale(1.03)}
+  100%{transform:rotateX(var(--rx)) rotateY(var(--ry)) translateY(0) scale(1)}
 }
 
-.result-area{margin:12px 0;text-align:center}
-.result-message{font-size:16px;color:var(--muted)}
+/* Result */
+.result-area{margin:10px 0 14px;text-align:center;min-height:22px}
+.result-message{font-size:15px;font-weight:700}
+.result-message.win{color:var(--accent-green)}
+.result-message.lose{color:#ef5350}
 
-.repeat-btn{width:100%;padding:12px;border-radius:8px;border:none;background:linear-gradient(180deg,#6b7280,#4b5563);color:#fff;font-weight:700;cursor:pointer;margin-bottom:16px;font-size:14px}
+/* Stake */
+.stake-section{margin-bottom:10px}
+.stake-row{display:flex;align-items:center;gap:8px}
+.stake-row input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);color:var(--text);font-size:16px;text-align:center;font-weight:700;outline:none}
+.stake-row input:focus{border-color:rgba(255,255,255,0.2)}
+.stake-btns{display:flex;gap:6px}
+.modify-btn{width:40px;height:40px;border-radius:8px;border:none;background:linear-gradient(180deg,#374151,#1f2937);color:#fff;font-weight:700;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center}
+.modify-btn:hover{background:linear-gradient(180deg,#4b5563,#374151)}
+.modify-btn:active{transform:scale(0.95)}
+
+/* Quick bet */
+.quick-bet-btns{display:flex;gap:6px;margin-bottom:12px}
+.quick-btn{flex:1;padding:9px;border-radius:8px;border:none;background:rgba(255,255,255,0.05);color:var(--text);font-weight:600;cursor:pointer;font-size:13px}
+.quick-btn:hover{background:rgba(255,255,255,0.1)}
+.quick-btn:active{transform:scale(0.97)}
+
+/* Repeat */
+.repeat-btn{width:100%;padding:11px;border-radius:8px;border:none;background:linear-gradient(180deg,#6b7280,#4b5563);color:#fff;font-weight:700;cursor:pointer;margin-bottom:14px;font-size:14px}
 .repeat-btn:hover{opacity:0.9}
+.repeat-btn:active{transform:scale(0.98)}
 
-.choice-buttons{display:flex;gap:8px;justify-content:center;margin:16px 0}
-.choice-btn{position:relative;flex:1;height:64px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;transition:transform .15s ease,box-shadow .15s ease;white-space:nowrap}
-.choice-btn .choice-multi{font-size:12px;opacity:0.85;font-weight:700;white-space:nowrap}
-.choice-btn .choice-text{font-size:15px;white-space:nowrap}
+/* Choice buttons */
+.choice-buttons{display:flex;gap:8px;justify-content:center}
+.choice-btn{position:relative;flex:1;height:60px;border-radius:12px;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;transition:transform .15s ease,box-shadow .15s ease}
+.choice-btn .choice-multi{font-size:12px;opacity:0.85;font-weight:700}
+.choice-btn .choice-text{font-size:15px}
 .under-btn{background:linear-gradient(180deg,#43a047,#2e7d32);color:#fff}
 .over-btn{background:linear-gradient(180deg,#ef5350,#c62828);color:#fff}
 .exact-btn{background:linear-gradient(180deg,#ffd54d,#ffb400);color:#2b1f00}
 .choice-btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,0,0,0.3)}
+.choice-btn:active{transform:scale(0.97)}
 
-@media (max-width:480px){
+/* ===== MOBILE ===== */
+@media(max-width:480px){
   .under7-board{padding:12px}
-  .choice-buttons{gap:6px}
-  .choice-btn{height:56px}
+  .dice{width:48px;height:48px}
+  .dice-face{width:48px;height:48px;padding:6px;border-radius:8px}
+  .dice-face.front{transform:translateZ(24px)}
+  .dice-face.back{transform:rotateY(180deg) translateZ(24px)}
+  .dice-face.right{transform:rotateY(90deg) translateZ(24px)}
+  .dice-face.left{transform:rotateY(-90deg) translateZ(24px)}
+  .dice-face.top{transform:rotateX(90deg) translateZ(24px)}
+  .dice-face.bottom{transform:rotateX(-90deg) translateZ(24px)}
+  .dot{width:7px;height:7px}
+  .dice-container{gap:20px}
+  .choice-btn{height:54px}
   .choice-btn .choice-text{font-size:13px}
   .choice-btn .choice-multi{font-size:10px}
-  .number-display{font-size:60px}
-  .quick-bet-btns{gap:6px}
-  .quick-btn{font-size:12px;padding:8px}
   .modify-btn{width:36px;height:36px;font-size:14px}
+  .quick-btn{font-size:12px;padding:8px}
 }
