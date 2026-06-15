@@ -385,20 +385,34 @@ function getWagerStatus(userId) {
 }
 
 function applyDeposit(userId, amount) {
-  if (!users[userId]) users[userId] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0 };
+  if (!users[userId]) users[userId] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
   var u = users[userId];
   u.wager_required = Math.round((u.wager_required + amount * WAGER_MULT_DEFAULT) * 100) / 100;
   u.wager_total = Math.round((u.wager_total + amount * WAGER_MULT_DEFAULT) * 100) / 100;
   u.deposit_total = Math.round((u.deposit_total + amount) * 100) / 100;
+  u.wager_multiplier = WAGER_MULT_DEFAULT;
   saveData();
+  if (usePostgres) {
+    try {
+      db.query('UPDATE users SET wager_required=$1, wager_total=$2, deposit_total=$3, wager_multiplier=$4 WHERE id=$5',
+        [u.wager_required, u.wager_total, u.deposit_total, u.wager_multiplier, userId]);
+    } catch(e) {}
+  }
 }
 
 function applyPromo(userId, amount) {
-  if (!users[userId]) users[userId] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0 };
+  if (!users[userId]) users[userId] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 5 };
   var u = users[userId];
   u.wager_required = Math.round((u.wager_required + amount * WAGER_MULT_PROMO) * 100) / 100;
   u.wager_total = Math.round((u.wager_total + amount * WAGER_MULT_PROMO) * 100) / 100;
+  u.wager_multiplier = WAGER_MULT_PROMO;
   saveData();
+  if (usePostgres) {
+    try {
+      db.query('UPDATE users SET wager_required=$1, wager_total=$2, wager_multiplier=$3 WHERE id=$4',
+        [u.wager_required, u.wager_total, u.wager_multiplier, userId]);
+    } catch(e) {}
+  }
 }
 
 function applyBet(userId, amount) {
@@ -406,6 +420,11 @@ function applyBet(userId, amount) {
   var u = users[userId];
   u.wager_required = Math.round(Math.max(0, u.wager_required - amount) * 100) / 100;
   saveData();
+  if (usePostgres) {
+    try {
+      db.query('UPDATE users SET wager_required=$1 WHERE id=$2', [u.wager_required, userId]);
+    } catch(e) {}
+  }
 }
 
 // API: Apply bet to wager (called by client games)

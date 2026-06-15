@@ -303,15 +303,8 @@
               console.log('check:',cd);
               if(cd.status==='paid'){
                 clearInterval(invChk);
-                var newBal=bal+parseFloat(cd.amount);
-                upd(newBal);
+                upd(bal+parseFloat(cd.amount));
                 msg(document.getElementById('dmsg'),'✅ Оплачено! +$'+fmt(cd.amount),'ok');
-                // Sync with server
-                fetch('/api/users', {
-                  method: 'POST',
-                  headers: {'Content-Type': 'application/json'},
-                  body: JSON.stringify({id: uid, balance: newBal})
-                }).catch(function(){});
               }
             }).catch(function(){});
           },3000);
