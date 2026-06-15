@@ -19,6 +19,22 @@ document.addEventListener('DOMContentLoaded', function(){
   function getBalance(){ return Balance.get(); }
   function setBalance(v){ Balance.set(v); }
 
+  halfBtn.addEventListener('click', ()=>{
+    const val = parseFloat(stakeInput.value) || 0;
+    stakeInput.value = Math.max(0.1, val / 2).toFixed(2);
+  });
+
+  doubleBtn.addEventListener('click', ()=>{
+    const val = parseFloat(stakeInput.value) || 0;
+    stakeInput.value = Math.min(200, val * 2).toFixed(2);
+  });
+
+  quickBtns.forEach(btn => {
+    btn.addEventListener('click', ()=>{
+      stakeInput.value = parseFloat(btn.dataset.amount).toFixed(2);
+    });
+  });
+
   // Dot patterns for dice faces 1-6
   // Grid positions: 0 1 2
   //                3 4 5
