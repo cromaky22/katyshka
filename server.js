@@ -249,17 +249,18 @@ async function loadUsersFromPG() {
   if (!usePostgres) return;
   try {
     const result = await db.query('SELECT id, balance, bonus_balance, wager_required, wager_total, deposit_total, wager_multiplier FROM users');
+    console.log('🐘 PG load result:', result.rows.length, 'rows');
     result.rows.forEach(row => {
       users[row.id] = {
-        balance: row.balance || 0,
-        bonus_balance: row.bonus_balance || 0,
-        wager_required: row.wager_required || 0,
-        wager_total: row.wager_total || 0,
-        deposit_total: row.deposit_total || 0,
-        wager_multiplier: row.wager_multiplier || 3
+        balance: parseFloat(row.balance) || 0,
+        bonus_balance: parseFloat(row.bonus_balance) || 0,
+        wager_required: parseFloat(row.wager_required) || 0,
+        wager_total: parseFloat(row.wager_total) || 0,
+        deposit_total: parseFloat(row.deposit_total) || 0,
+        wager_multiplier: parseFloat(row.wager_multiplier) || 3
       };
     });
-    console.log('🐘 Loaded from PostgreSQL:', result.rows.length, 'users');
+    console.log('🐘 Loaded from PostgreSQL:', Object.keys(users).length, 'users');
   } catch(e) { console.error('PG load error:', e.message); }
 }
 
@@ -684,41 +685,45 @@ app.post('/api/cryptobot-hook', express.raw({ type: 'application/json' }), async
         try {
           payload = typeof pay.payload === 'string' ? JSON.parse(pay.payload) : (pay.payload || pay || {});
         } catch(e) { payload = pay.payload || pay || {}; }
-        if (payload.userId) {
-          const userIdStr = String(payload.userId);
-          const amount = parseFloat(pay.amount);
-         if (isNaN(amount) || amount <= 0) {
-           console.error('[WAGER] CryptoBot: Invalid amount:', body.payload.amount);
-           return;
-         }
-         if (!users[userIdStr]) users[userIdStr] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
-         var u = users[userIdStr];
-         u.wager_required = Math.round((u.wager_required + amount * WAGER_MULT_DEFAULT) * 100) / 100;
-         u.wager_total = Math.round((u.wager_total + amount * WAGER_MULT_DEFAULT) * 100) / 100;
-         u.deposit_total = Math.round((u.deposit_total + amount) * 100) / 100;
-         u.wager_multiplier = WAGER_MULT_DEFAULT;
-         u.balance = Math.round((getBalance(userIdStr) + amount) * 100) / 100;
-         users[userIdStr] = u;
-         await addTx('deposit', userIdStr, amount, 'completed', { provider: 'cryptobot' });
-         saveData();
-         if (usePostgres) {
-           try {
-             await db.query(`
-               INSERT INTO users (id, balance, wager_required, wager_total, deposit_total, wager_multiplier) 
-               VALUES ($1, $2, $3, $4, $5, $6)
-               ON CONFLICT (id) DO UPDATE SET 
-                 balance = EXCLUDED.balance,
-                 wager_required = EXCLUDED.wager_required,
-                 wager_total = EXCLUDED.wager_total,
-                 deposit_total = EXCLUDED.deposit_total,
-                 wager_multiplier = EXCLUDED.wager_multiplier
-             `, [userIdStr, u.balance, u.wager_required, u.wager_total, u.deposit_total, u.wager_multiplier]);
-             console.log('[WAGER] Webhook saved to PostgreSQL');
-           } catch(e) { console.error('[WAGER] Webhook PG error:', e.message); }
-         }
-         io.emit('balance_update', { userId: userIdStr, balance: u.balance });
-         console.log(`Webhook: Credited $${amount} to ${userIdStr}, wager=$${u.wager_required}`);
-       }
+        console.log('[WAGER] CryptoBot webhook payload:', payload, 'amount:', body.payload?.amount);
+        // Get userId from payload or root
+        const uid = payload.userId || body.payload?.userId;
+        if (uid) {
+          const userIdStr = String(uid);
+          const amount = parseFloat(body.payload.amount);
+          if (isNaN(amount) || amount <= 0) {
+            console.error('[WAGER] CryptoBot: Invalid amount:', body.payload.amount);
+            return;
+          }
+          if (!users[userIdStr]) users[userIdStr] = { balance: 0, bonus_balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
+          var u = users[userIdStr];
+          u.wager_required = Math.round((u.wager_required + amount * WAGER_MULT_DEFAULT) * 100) / 100;
+          u.wager_total = Math.round((u.wager_total + amount * WAGER_MULT_DEFAULT) * 100) / 100;
+          u.deposit_total = Math.round((u.deposit_total + amount) * 100) / 100;
+          u.wager_multiplier = WAGER_MULT_DEFAULT;
+          u.balance = Math.round((getBalance(userIdStr) + amount) * 100) / 100;
+          users[userIdStr] = u;
+          await addTx('deposit', userIdStr, amount, 'completed', { provider: 'cryptobot' });
+          saveData();
+          if (usePostgres) {
+            try {
+              await db.query(`
+                INSERT INTO users (id, balance, bonus_balance, wager_required, wager_total, deposit_total, wager_multiplier) 
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                ON CONFLICT (id) DO UPDATE SET 
+                  balance = EXCLUDED.balance,
+                  bonus_balance = EXCLUDED.bonus_balance,
+                  wager_required = EXCLUDED.wager_required,
+                  wager_total = EXCLUDED.wager_total,
+                  deposit_total = EXCLUDED.deposit_total,
+                  wager_multiplier = EXCLUDED.wager_multiplier
+              `, [userIdStr, u.balance, u.bonus_balance || 0, u.wager_required, u.wager_total, u.deposit_total, u.wager_multiplier]);
+              console.log('[WAGER] Webhook saved to PostgreSQL');
+            } catch(e) { console.error('[WAGER] Webhook PG error:', e.message); }
+          }
+          io.emit('balance_update', { userId: userIdStr, balance: u.balance });
+          console.log(`Webhook: Credited $${amount} to ${userIdStr}, wager=$${u.wager_required}`);
+        }
      }
    } catch (e) {
      console.error('Webhook error:', e);
