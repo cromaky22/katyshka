@@ -256,25 +256,36 @@
 
     function loadHistory(){
       var el=document.getElementById('txList');
-      var txs=JSON.parse(localStorage.getItem('tx_history')||'[]');
-      if(txs.length===0){el.innerHTML='<div class="tx-empty">История пуста</div>';return;}
-      el.innerHTML='';
-      txs.forEach(function(tx){
-        var div=document.createElement('div');
-        div.className='tx-item';
-        var isDep=tx.type==='deposit';
-        var icon=isDep?'📥':'📤';
-        var typeText=isDep?'Пополнение':'Вывод';
-        var provider=tx.provider?' ('+tx.provider+')':'';
-        var amtClass=isDep?'plus':'minus';
-        var amtStr=(isDep?'+':'')+'$'+tx.amount;
-        var stClass=tx.status==='completed'?'completed':'pending';
-        var stText=tx.status==='completed'?'Выполнено':'Ожидание';
-        var dt=new Date(tx.date);
-        var dtStr=dt.toLocaleDateString('ru')+' '+dt.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
-        div.innerHTML='<div class="tx-left"><span class="tx-icon">'+icon+'</span><div class="tx-info"><div class="tx-type">'+typeText+provider+'</div><div class="tx-date">'+dtStr+'</div></div></div><div class="tx-right"><div class="tx-amount '+amtClass+'">'+amtStr+'</div><span class="tx-status '+stClass+'">'+stText+'</span></div>';
-        el.appendChild(div);
-      });
+      el.innerHTML='<div class="tx-empty">Загрузка...</div>';
+      fetch('/api/transactions/'+uid)
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(!d.ok || !d.transactions || d.transactions.length===0){el.innerHTML='<div class="tx-empty">История пуста</div>';return;}
+          el.innerHTML='';
+          d.transactions.forEach(function(tx){
+            var div=document.createElement('div');
+            div.className='tx-item';
+            var isDep=tx.type==='deposit';
+            var isPromo=tx.type==='promo';
+            var isWithdraw=tx.type==='withdraw';
+            var icon, typeText, amtClass, amtStr;
+            if(isDep){ icon='📥'; typeText='Пополнение'; amtClass='plus'; amtStr='+'+'$'+Number(tx.amount).toFixed(2); }
+            else if(isPromo){ icon='🎟'; typeText='Промокод'; amtClass='plus'; amtStr='+'+'$'+Number(tx.amount).toFixed(2); }
+            else if(isWithdraw){ icon='📤'; typeText='Вывод'; amtClass='minus'; amtStr='-'+'$'+Number(tx.amount).toFixed(2); }
+            else if(tx.type==='win'){ icon='🏆'; typeText='Выигрыш'; amtClass='plus'; amtStr='+'+'$'+Number(tx.amount).toFixed(2); }
+            else if(tx.type==='bet'){ icon='🎰'; typeText='Ставка'; amtClass='minus'; amtStr='-'+'$'+Number(tx.amount).toFixed(2); }
+            else if(tx.type==='loss'){ icon='💀'; typeText='Проигрыш'; amtClass=''; amtStr='$'+Number(tx.amount).toFixed(2); }
+            else{ icon='📋'; typeText=tx.type; amtClass=''; amtStr='$'+Number(tx.amount).toFixed(2); }
+            var provider=tx.game?' ('+tx.game+')':'';
+            var stClass=tx.status==='completed'?'completed':'pending';
+            var stText=tx.status==='completed'?'Выполнено':'Ожидание';
+            var dt=new Date(tx.time||tx.date);
+            var dtStr=dt.toLocaleDateString('ru')+' '+dt.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
+            div.innerHTML='<div class="tx-left"><span class="tx-icon">'+icon+'</span><div class="tx-info"><div class="tx-type">'+typeText+provider+'</div><div class="tx-date">'+dtStr+'</div></div></div><div class="tx-right"><div class="tx-amount '+amtClass+'">'+amtStr+'</div><span class="tx-status '+stClass+'">'+stText+'</span></div>';
+            el.appendChild(div);
+          });
+        })
+        .catch(function(){el.innerHTML='<div class="tx-empty">Ошибка загрузки</div>;});
     }
 
     window.doDeposit=function(){
@@ -320,8 +331,7 @@
       var amt=parseFloat(document.getElementById('wamt').value)||0;
       if(amt<1){msg(document.getElementById('wmsg'),'Мин. вывод $1','err');return;}
       var fee=Math.round(amt*0.03*100)/100;
-      var total=amt+fee;
-      if(total>bal){msg(document.getElementById('wmsg'),'❌ Недостаточно средств (комиссия 3%)','err');return;}
+      if(amt>bal){msg(document.getElementById('wmsg'),'❌ Недостаточно средств','err');return;}
       // Check wager first
       fetch('/api/wager/'+uid).then(function(r){return r.json();}).then(function(wd){
         if(!wd.ok || !wd.can_withdraw){
@@ -337,9 +347,9 @@
         .then(function(d){
           console.log('withdraw resp:',d);
           if(d.ok){
-            upd(bal-total);
-            addTx('withdraw',uid,amt,'completed',{provider:pay,fee:fee});
-            msg(document.getElementById('wmsg'),'✅ Вывод на $'+fmt(amt)+' выполнен! Комиссия: $'+fmt(fee),'ok');
+            upd(bal-amt);
+            msg(document.getElementById('wmsg'),'✅ Вывод на $'+fmt(amt)+' выполнено! Комиссия 3% ($'+fmt(fee)+'). К получению: $'+fmt(d.received),'ok');
+            loadWager();
           }else{
             var errMsg=typeof d.error==='string'?d.error:JSON.stringify(d.error)||'unknown';
             msg(document.getElementById('wmsg'),'❌ Ошибка: '+errMsg,'err');

@@ -199,26 +199,27 @@ window._invChk=setInterval(function(){
   document.getElementById('wfWdBtn').addEventListener('click', function(){
     var amt=parseFloat(document.getElementById('wfWdAmt').value)||0;
     if(amt<1){ sM('wfWdMsg','Мин. вывод $1','err'); return; }
-    var fee=Math.round(amt*0.03*100)/100, total=amt+fee, curBal=window.Balance?Balance.get():0;
-    if(total>curBal){ sM('wfWdMsg','❌ Недостаточно средств','err'); return; }
+    var fee=Math.round(amt*0.03*100)/100;
+    var curBal=window.Balance?Balance.get():0;
+    if(amt>curBal){ sM('wfWdMsg','❌ Недостаточно средств','err'); return; }
     // Check wager
     var uid=(window.Balance&&Balance.getUserId())||localStorage.getItem('tg_uid')||'';
     if(uid) {
       fetch('/api/wager/'+uid).then(function(r){return r.json();}).then(function(wd){
         if(!wd.ok || !wd.can_withdraw){ sM('wfWdMsg','❌ Отыграйте вагер! Осталось: $'+wd.wager_required.toFixed(2),'err'); return; }
-        doWithdraw(amt,fee,total,curBal);
+        doWithdraw(amt,fee,curBal);
       }).catch(function(){ sM('wfWdMsg','Ошибка проверки вагера','err'); });
-    } else { doWithdraw(amt,fee,total,curBal); }
+    } else { doWithdraw(amt,fee,curBal); }
   });
   
-  function doWithdraw(amt,fee,total,curBal){
+  function doWithdraw(amt,fee,curBal){
     var btn=document.getElementById('wfWdBtn'); btn.disabled=true; btn.textContent='⏳...';
     var ep=wdPay==='xr'?'/api/withdraw/xrocket':'/api/withdraw/cryptobot';
     var uid=(window.Balance&&Balance.getUserId())||localStorage.getItem('tg_uid')||'';
     fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid,amount:amt})})
     .then(function(r){return r.json();})
     .then(function(d){
-      if(d.ok){ if(window.Balance)Balance.set(curBal-total); sM('wfWdMsg','✅ Вывод на $'+fmt(amt)+' выполнен!','ok'); syncBal(); }
+      if(d.ok){ if(window.Balance)Balance.set(curBal-amt); sM('wfWdMsg','✅ Вывод $'+fmt(amt)+' выполнен! Комиссия 3% ($'+fmt(fee)+'). К получению: $'+fmt(d.received),'ok'); syncBal(); }
       else sM('wfWdMsg','❌ Ошибка: '+(typeof d.error==='string'?d.error:JSON.stringify(d.error)),'err');
     }).catch(function(){ sM('wfWdMsg','Ошибка сети','err'); })
     .finally(function(){ btn.disabled=false; btn.textContent='📤 Вывести'; });
@@ -228,14 +229,28 @@ window._invChk=setInterval(function(){
 
   function loadTx(){
     var el=document.getElementById('wfTxList'); if(!el)return;
-    var txs=JSON.parse(localStorage.getItem('tx_history')||'[]');
-    if(!txs.length){ el.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:12px">История пуста</div>'; return; }
-    el.innerHTML='';
-    txs.forEach(function(tx){
-      var row=document.createElement('div'); row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:9px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:6px';
-      var isD=tx.type==='deposit';
-      row.innerHTML='<div><div style="font-size:12px;font-weight:700;color:#fff">'+(isD?'📥 Пополнение':'📤 Вывод')+'</div><div style="font-size:10px;color:var(--muted)">'+new Date(tx.date).toLocaleDateString('ru')+'</div></div><div style="font-size:13px;font-weight:800;color:'+(isD?'#4caf50':'#f44336')+'">'+(isD?'+$':'-$')+tx.amount+'</div>';
-      el.appendChild(row);
-    });
+    el.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:12px">Загрузка...</div>';
+    var uid=(window.Balance&&Balance.getUserId())||localStorage.getItem('tg_uid')||'';
+    if(!uid){ el.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:12px">История пуста</div>'; return; }
+    fetch('/api/transactions/'+uid)
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(!d.ok||!d.transactions||d.transactions.length===0){ el.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:12px">История пуста</div>'; return; }
+        el.innerHTML='';
+        d.transactions.forEach(function(tx){
+          var row=document.createElement('div'); row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:9px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:6px';
+          var isDep=tx.type==='deposit', isPromo=tx.type==='promo', isWd=tx.type==='withdraw';
+          var label, clr, sign;
+          if(isDep){ label='📥 Пополнение'; clr='#4caf50'; sign='+'; }
+          else if(isPromo){ label='🎟 Промокод'; clr='#4caf50'; sign='+'; }
+          else if(isWd){ label='📤 Вывод'; clr='#f44336'; sign='-'; }
+          else if(tx.type==='win'){ label='🏆 Выигрыш'; clr='#4caf50'; sign='+'; }
+          else if(tx.type==='bet'){ label='🎰 Ставка'; clr='#f44336'; sign='-'; }
+          else{ label='📋 '+tx.type; clr='rgba(255,255,255,0.5)'; sign=''; }
+          row.innerHTML='<div><div style="font-size:12px;font-weight:700;color:#fff">'+label+'</div><div style="font-size:10px;color:var(--muted)">'+new Date(tx.time||tx.date).toLocaleDateString('ru')+'</div></div><div style="font-size:13px;font-weight:800;color:'+clr+'">'+sign+'$'+Number(tx.amount).toFixed(2)+'</div>';
+          el.appendChild(row);
+        });
+      })
+      .catch(function(){ el.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:12px">Ошибка загрузки</div>'; });
   }
 })();

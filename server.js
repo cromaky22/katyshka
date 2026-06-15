@@ -890,7 +890,7 @@ if (status === 'paid' || status === 'completed' || status === 'success') {
 // Withdraw via xRocket
 app.post('/api/withdraw/xrocket', async (req, res) => {
   try {
-    const { userId, amount, wallet } = req.body;
+    const { userId, amount } = req.body;
     if (!userId || !amount || amount < 1) return res.status(400).json({ error: 'Min $1' });
     
     // Check wager status
@@ -899,15 +899,28 @@ app.post('/api/withdraw/xrocket', async (req, res) => {
     
     const amt = Math.round(Number(amount) * 100) / 100;
     const fee = Math.round(amt * 0.03 * 100) / 100;
-    const total = amt + fee;
+    const net = Math.round((amt - fee) * 100) / 100;
     
-    if (getBalance(userId) < total) return res.status(400).json({ error: 'Insufficient balance' });
+    if (getBalance(userId) < amt) return res.status(400).json({ error: 'Insufficient balance' });
 
     const result = await xrocket('transfers', {
       user_id: parseInt(userId) || 0,
-      amount: String(amt.toFixed(2)),
+      amount: String(net.toFixed(2)),
       currency: 'TON'
     });
+
+    if (result.success || result.data) {
+      setBalance(userId, getBalance(userId) - amt);
+      addTx('withdraw', userId, amt, 'completed', { provider: 'xrocket', fee });
+      res.json({ ok: true, received: net, fee, sent: amt, balance: getBalance(userId) });
+    } else {
+      res.status(500).json({ error: result.message || result.error || 'Transfer failed' });
+    }
+  } catch (e) {
+    console.error('xRocket withdraw error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
 
     if (result.success || result.data) {
       setBalance(userId, getBalance(userId) - total);
@@ -933,9 +946,9 @@ app.post('/api/withdraw/cryptobot', async (req, res) => {
     
     const amt = Math.round(Number(amount) * 100) / 100;
     const fee = Math.round(amt * 0.03 * 100) / 100;
-    const total = amt + fee;
+    const net = Math.round((amt - fee) * 100) / 100;
     
-    if (getBalance(userId) < total) return res.status(400).json({ error: 'Insufficient balance' });
+    if (getBalance(userId) < amt) return res.status(400).json({ error: 'Insufficient balance' });
 
     const tgId = parseInt(userId) || 0;
     if (!tgId) return res.status(400).json({ error: 'Invalid user ID for transfer' });
@@ -945,17 +958,17 @@ app.post('/api/withdraw/cryptobot', async (req, res) => {
     const result = await cryptobot('transfer', {
       user_id: tgId,
       asset: 'USDT',
-      amount: String(amt.toFixed(2)),
+      amount: String(net.toFixed(2)),
       spend_id: spendId
     });
 
     console.log('CryptoBot transfer:', JSON.stringify(result));
 
     if (result.ok) {
-      setBalance(userId, getBalance(userId) - total);
-      addTx('withdraw', userId, amt, 'completed', { provider: 'cryptobot' });
+      setBalance(userId, getBalance(userId) - amt);
+      addTx('withdraw', userId, amt, 'completed', { provider: 'cryptobot', fee });
       io.emit('balance_update', { userId, balance: getBalance(userId) });
-      res.json({ ok: true, received: amt, fee, balance: getBalance(userId) });
+      res.json({ ok: true, received: net, fee, sent: amt, balance: getBalance(userId) });
     } else {
       res.status(500).json({ error: result.error || 'Transfer failed' });
     }
