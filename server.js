@@ -637,21 +637,22 @@ if (inv.status === 'paid' || inv.status === 'completed' || inv.status === 'succe
 u.wager_multiplier = WAGER_MULT_DEFAULT;
              await addTx('deposit', userIdStr, depAmount, 'completed', { provider: 'cryptobot' });
              saveData();
-            if (usePostgres) {
-              try {
-                await db.query(`
-                  INSERT INTO users (id, balance, wager_required, wager_total, deposit_total, wager_multiplier) 
-                  VALUES ($1, $2, $3, $4, $5, $6)
-                  ON CONFLICT (id) DO UPDATE SET 
-                    balance = EXCLUDED.balance,
-                    wager_required = EXCLUDED.wager_required,
-                    wager_total = EXCLUDED.wager_total,
-                    deposit_total = EXCLUDED.deposit_total,
-                    wager_multiplier = EXCLUDED.wager_multiplier
-                `, [userIdStr, u.balance, u.wager_required, u.wager_total, u.deposit_total, u.wager_multiplier]);
-                console.log('[WAGER] Saved to PostgreSQL');
-              } catch(e) { console.error('[WAGER] PG error:', e.message); }
-            }
+if (usePostgres) {
+               try {
+                 await db.query(`
+                   INSERT INTO users (id, balance, bonus_balance, wager_required, wager_total, deposit_total, wager_multiplier) 
+                   VALUES ($1, $2, $3, $4, $5, $6, $7)
+                   ON CONFLICT (id) DO UPDATE SET 
+                     balance = EXCLUDED.balance,
+                     bonus_balance = EXCLUDED.bonus_balance,
+                     wager_required = EXCLUDED.wager_required,
+                     wager_total = EXCLUDED.wager_total,
+                     deposit_total = EXCLUDED.deposit_total,
+                     wager_multiplier = EXCLUDED.wager_multiplier
+                 `, [userIdStr, u.balance, u.bonus_balance || 0, u.wager_required, u.wager_total, u.deposit_total, u.wager_multiplier]);
+                 console.log('[WAGER] Saved to PostgreSQL');
+               } catch(e) { console.error('[WAGER] PG error:', e.message); }
+             }
             io.emit('balance_update', { userId: userIdStr, balance: u.balance });
             console.log(`[WAGER] Credited $${depAmount} to ${userIdStr}, oldBal=$${oldBal}, wager=$${u.wager_required}`);
           } else {
@@ -834,20 +835,21 @@ if (status === 'paid' || status === 'completed' || status === 'success') {
                users[userIdStr] = u;
                await addTx('deposit', userIdStr, amount, 'completed', { provider: 'xrocket', invoiceId: String(invoiceId) });
                saveData();
-               if (usePostgres) {
-                 try {
-                   await db.query(`
-                     INSERT INTO users (id, balance, wager_required, wager_total, deposit_total, wager_multiplier) 
-                     VALUES ($1, $2, $3, $4, $5, $6)
-                     ON CONFLICT (id) DO UPDATE SET 
-                       balance = EXCLUDED.balance,
-                       wager_required = EXCLUDED.wager_required,
-                       wager_total = EXCLUDED.wager_total,
-                       deposit_total = EXCLUDED.deposit_total,
-                       wager_multiplier = EXCLUDED.wager_multiplier
-                   `, [userIdStr, u.balance, u.wager_required, u.wager_total, u.deposit_total, u.wager_multiplier]);
-                 } catch(e) { console.error('[WAGER] xRocket PG error:', e.message); }
-               }
+if (usePostgres) {
+                   try {
+                     await db.query(`
+                       INSERT INTO users (id, balance, bonus_balance, wager_required, wager_total, deposit_total, wager_multiplier) 
+                       VALUES ($1, $2, $3, $4, $5, $6, $7)
+                       ON CONFLICT (id) DO UPDATE SET 
+                         balance = EXCLUDED.balance,
+                         bonus_balance = EXCLUDED.bonus_balance,
+                         wager_required = EXCLUDED.wager_required,
+                         wager_total = EXCLUDED.wager_total,
+                         deposit_total = EXCLUDED.deposit_total,
+                         wager_multiplier = EXCLUDED.wager_multiplier
+                     `, [userIdStr, u.balance, u.bonus_balance || 0, u.wager_required, u.wager_total, u.deposit_total, u.wager_multiplier]);
+                   } catch(e) { console.error('[WAGER] xRocket PG error:', e.message); }
+                 }
                io.emit('balance_update', { userId: userIdStr, balance: u.balance });
                console.log(`xRocket: Credited $${inv.amount} to ${userIdStr}, wager=$${u.wager_required}`);
              }
