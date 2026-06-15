@@ -922,18 +922,6 @@ app.post('/api/withdraw/xrocket', async (req, res) => {
   }
 });
 
-    if (result.success || result.data) {
-      setBalance(userId, getBalance(userId) - total);
-      addTx('withdraw', userId, amt, 'completed', { provider: 'xrocket' });
-      res.json({ ok: true, received: amt, fee, balance: getBalance(userId) });
-    } else {
-      res.status(500).json({ error: result.message || result.error || 'Transfer failed' });
-    }
-  } catch (e) {
-    console.error('xRocket withdraw error:', e);
-    res.status(500).json({ error: e.message });
-  }
-});
 // Withdraw via CryptoBot (auto payout)
 app.post('/api/withdraw/cryptobot', async (req, res) => {
   try {
