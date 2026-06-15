@@ -403,22 +403,24 @@ function getWagerStatus(userId) {
 }
 
 function applyDeposit(userId, amount) {
+  console.log(`[WAGER] applyDeposit: user=${userId}, amount=$${amount}`);
   if (!users[userId]) users[userId] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
   var u = users[userId];
   u.wager_required = Math.round((u.wager_required + amount * WAGER_MULT_DEFAULT) * 100) / 100;
   u.wager_total = Math.round((u.wager_total + amount * WAGER_MULT_DEFAULT) * 100) / 100;
   u.deposit_total = Math.round((u.deposit_total + amount) * 100) / 100;
   u.wager_multiplier = WAGER_MULT_DEFAULT;
+  console.log(`[WAGER] New wager_required=$${u.wager_required}, wager_total=$${u.wager_total}`);
   saveData();
   if (usePostgres) {
     try {
-      // Insert user if not exists, then update wager
       db.query(`
         INSERT INTO users (id, balance, wager_required, wager_total, deposit_total, wager_multiplier) 
         VALUES ($1, $2, $3, $4, $5, $6)
         ON CONFLICT (id) DO UPDATE SET wager_required=$3, wager_total=$4, deposit_total=$5, wager_multiplier=$6
       `, [userId, users[userId].balance, u.wager_required, u.wager_total, u.deposit_total, u.wager_multiplier]);
-    } catch(e) {}
+      console.log('[WAGER] Saved to PostgreSQL');
+    } catch(e) { console.error('[WAGER] PG error:', e.message); }
   }
 }
 
@@ -565,14 +567,21 @@ app.post('/api/invoice/check', async (req, res) => {
       // If paid, credit balance + apply wager
       if (inv.status === 'paid') {
         try {
+          console.log('[WAGER] Invoice paid, payload:', inv.payload);
           const payload = JSON.parse(inv.payload || '{}');
+          console.log('[WAGER] Parsed payload:', payload);
           if (payload.userId) {
             var depAmount = parseFloat(inv.amount);
-            setBalance(payload.userId, getBalance(payload.userId) + depAmount);
+            var oldBal = getBalance(payload.userId);
+            setBalance(payload.userId, oldBal + depAmount);
             applyDeposit(payload.userId, depAmount);
-            console.log(`Credited $${depAmount} to ${payload.userId}, wager +$${depAmount * WAGER_MULT_DEFAULT}`);
+            console.log(`[WAGER] Credited $${depAmount} to ${payload.userId}, oldBal=$${oldBal}, wager=$${users[payload.userId]?.wager_required}`);
+          } else {
+            console.log('[WAGER] No userId in payload!');
           }
-        } catch (e) {}
+        } catch (e) {
+          console.error('[WAGER] Error:', e);
+        }
       }
 
       res.json({ ok: true, status: inv.status, amount: inv.amount });
