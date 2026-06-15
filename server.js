@@ -432,20 +432,26 @@ async function applyDeposit(userId, amount) {
    u.wager_required = Math.round((u.wager_required + amount * WAGER_MULT_DEFAULT) * 100) / 100;
    u.wager_total = Math.round((u.wager_total + amount * WAGER_MULT_DEFAULT) * 100) / 100;
    u.deposit_total = Math.round((u.deposit_total + amount) * 100) / 100;
-   u.wager_multiplier = WAGER_MULT_DEFAULT;
-   console.log(`[WAGER] New wager_required=$${u.wager_required}, wager_total=$${u.wager_total}`);
-   saveData();
-   if (usePostgres) {
-     try {
-       await db.query(`
-         INSERT INTO users (id, wager_required, wager_total, deposit_total, wager_multiplier) 
-         VALUES ($1, $2, $3, $4, $5)
-         ON CONFLICT (id) DO UPDATE SET wager_required=$2, wager_total=$3, deposit_total=$4, wager_multiplier=$5
-       `, [userId, u.wager_required, u.wager_total, u.deposit_total, u.wager_multiplier]);
-       console.log('[WAGER] Saved to PostgreSQL');
-     } catch(e) { console.error('[WAGER] PG error:', e.message); }
-   }
- }
+u.wager_multiplier = WAGER_MULT_DEFAULT;
+    console.log(`[WAGER] New wager_required=$${u.wager_required}, wager_total=$${u.wager_total}`);
+    saveData();
+    if (usePostgres) {
+      try {
+        await db.query(`
+          INSERT INTO users (id, balance, bonus_balance, wager_required, wager_total, deposit_total, wager_multiplier) 
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
+          ON CONFLICT (id) DO UPDATE SET 
+            balance = EXCLUDED.balance,
+            bonus_balance = EXCLUDED.bonus_balance,
+            wager_required = EXCLUDED.wager_required,
+            wager_total = EXCLUDED.wager_total,
+            deposit_total = EXCLUDED.deposit_total,
+            wager_multiplier = EXCLUDED.wager_multiplier
+        `, [userId, u.balance || 0, u.bonus_balance || 0, u.wager_required, u.wager_total, u.deposit_total, u.wager_multiplier]);
+        console.log('[WAGER] Saved to PostgreSQL');
+      } catch(e) { console.error('[WAGER] PG error:', e.message); }
+    }
+  }
 
 async function applyPromo(userId, amount) {
    if (!users[userId]) users[userId] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 5 };
