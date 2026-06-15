@@ -72,21 +72,21 @@ app.get('/api/stats', async (req, res) => {
 });
 
 app.post('/api/users', async (req, res) => {
-  const { id, balance, first_name, last_name, username, avatar } = req.body;
-  if (!id) return res.status(400).json({ error: 'Missing id' });
-  if (!users[id]) users[id] = { balance: 0 };
-  if (balance !== undefined) {
-    users[id].balance = Math.round(parseFloat(balance) * 100) / 100;
-  }
-  if (first_name !== undefined) users[id].first_name = first_name;
-  if (last_name !== undefined) users[id].last_name = last_name;
-  if (username !== undefined) users[id].username = username;
-  if (avatar !== undefined) users[id].avatar = avatar;
-  
-  // Save to DB
-  await dbSetUser(id, users[id]);
-  res.json({ ok: true, balance: users[id].balance });
-});
+   const { id, balance, first_name, last_name, username, avatar } = req.body;
+   if (!id) return res.status(400).json({ error: 'Missing id' });
+   if (!users[id]) users[id] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
+   if (balance !== undefined) {
+     users[id].balance = Math.round(parseFloat(balance) * 100) / 100;
+   }
+   if (first_name !== undefined) users[id].first_name = first_name;
+   if (last_name !== undefined) users[id].last_name = last_name;
+   if (username !== undefined) users[id].username = username;
+   if (avatar !== undefined) users[id].avatar = avatar;
+   
+   // Save to DB
+   await dbSetUser(id, users[id]);
+   res.json({ ok: true, balance: users[id].balance, wager_required: users[id].wager_required });
+ });
 
 // === ADMIN: UPDATE BALANCE (give/take) ===
 app.post('/api/admin/balance', async (req, res) => {
@@ -248,10 +248,11 @@ try {
 async function loadUsersFromPG() {
   if (!usePostgres) return;
   try {
-    const result = await db.query('SELECT id, balance, wager_required, wager_total, deposit_total, wager_multiplier FROM users');
+    const result = await db.query('SELECT id, balance, bonus_balance, wager_required, wager_total, deposit_total, wager_multiplier FROM users');
     result.rows.forEach(row => {
       users[row.id] = {
         balance: row.balance || 0,
+        bonus_balance: row.bonus_balance || 0,
         wager_required: row.wager_required || 0,
         wager_total: row.wager_total || 0,
         deposit_total: row.deposit_total || 0,
@@ -286,10 +287,11 @@ async function dbSetUser(id, data) {
    if (usePostgres) {
      try {
        await db.query(`
-         INSERT INTO users (id, balance, first_name, last_name, username, avatar, sub_claimed, wager_required, wager_total, deposit_total, wager_multiplier)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         INSERT INTO users (id, balance, bonus_balance, first_name, last_name, username, avatar, sub_claimed, wager_required, wager_total, deposit_total, wager_multiplier)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
          ON CONFLICT (id) DO UPDATE SET
            balance = EXCLUDED.balance,
+           bonus_balance = EXCLUDED.bonus_balance,
            first_name = EXCLUDED.first_name,
            last_name = EXCLUDED.last_name,
            username = EXCLUDED.username,
@@ -299,7 +301,7 @@ async function dbSetUser(id, data) {
            wager_total = EXCLUDED.wager_total,
            deposit_total = EXCLUDED.deposit_total,
            wager_multiplier = EXCLUDED.wager_multiplier
-       `, [id, data.balance || 0, data.first_name || null, data.last_name || null, data.username || null, data.avatar || null, data.sub_claimed || false, data.wager_required || 0, data.wager_total || 0, data.deposit_total || 0, data.wager_multiplier || 3]);
+       `, [id, data.balance || 0, data.bonus_balance || 0, data.first_name || null, data.last_name || null, data.username || null, data.avatar || null, data.sub_claimed || false, data.wager_required || 0, data.wager_total || 0, data.deposit_total || 0, data.wager_multiplier || 3]);
      } catch(e) { console.error('dbSetUser error:', e.message); }
    }
    users[id] = data;
@@ -382,22 +384,23 @@ function getBalance(id) {
 }
 
 async function setBalance(id, amt) {
-   if (!users[id]) users[id] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
+   if (!users[id]) users[id] = { balance: 0, bonus_balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
    users[id].balance = Math.round(amt * 100) / 100;
    
    if (usePostgres) {
      try {
        const u = users[id];
        await db.query(`
-         INSERT INTO users (id, balance, wager_required, wager_total, deposit_total, wager_multiplier) 
-         VALUES ($1, $2, $3, $4, $5, $6)
+         INSERT INTO users (id, balance, bonus_balance, wager_required, wager_total, deposit_total, wager_multiplier) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          ON CONFLICT (id) DO UPDATE SET 
            balance = EXCLUDED.balance,
+           bonus_balance = EXCLUDED.bonus_balance,
            wager_required = EXCLUDED.wager_required,
            wager_total = EXCLUDED.wager_total,
            deposit_total = EXCLUDED.deposit_total,
            wager_multiplier = EXCLUDED.wager_multiplier
-       `, [id, users[id].balance, u.wager_required || 0, u.wager_total || 0, u.deposit_total || 0, u.wager_multiplier || 3]);
+       `, [id, users[id].balance, u.bonus_balance || 0, u.wager_required || 0, u.wager_total || 0, u.deposit_total || 0, u.wager_multiplier || 3]);
      } catch (e) {}
    }
    saveData();
