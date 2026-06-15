@@ -256,6 +256,10 @@ try {
       console.error('DB init error:', e.message);
     });
   }
+} else {
+    console.log('⚠️  No DATABASE_URL set — data will be lost on restart!');
+    console.log('⚠️  Add PostgreSQL add-on on Railway to persist data');
+  }
 } catch (e) {
   console.log('PostgreSQL not available, using file storage');
 }
@@ -292,8 +296,8 @@ try {
 async function loadUsersFromPG() {
   if (!usePostgres) return;
   try {
-    const result = await db.query('SELECT id, balance, bonus_balance, wager_required, wager_total, deposit_total, wager_multiplier FROM users');
-    console.log('🐘 PG load result:', result.rows.length, 'rows');
+    const result = await db.query('SELECT * FROM users');
+    console.log('🐘 PG load result:', result.rows.length, 'users');
     result.rows.forEach(row => {
       users[row.id] = {
         balance: parseFloat(row.balance) || 0,
@@ -301,10 +305,19 @@ async function loadUsersFromPG() {
         wager_required: parseFloat(row.wager_required) || 0,
         wager_total: parseFloat(row.wager_total) || 0,
         deposit_total: parseFloat(row.deposit_total) || 0,
-        wager_multiplier: parseFloat(row.wager_multiplier) || 3
+        wager_multiplier: parseFloat(row.wager_multiplier) || 3,
+        first_name: row.first_name || null,
+        last_name: row.last_name || null,
+        username: row.username || null,
+        avatar: row.avatar || null,
+        sub_claimed: row.sub_claimed || false
       };
     });
     console.log('🐘 Loaded from PostgreSQL:', Object.keys(users).length, 'users');
+    if (result.rows.length > 0) {
+      const sample = result.rows[0];
+      console.log('🐘 Sample user:', sample.id, 'bal:', sample.balance, 'wager:', sample.wager_required);
+    }
   } catch(e) { console.error('PG load error:', e.message); }
 }
 
@@ -347,8 +360,21 @@ async function dbSetUser(id, data) {
            deposit_total = COALESCE(EXCLUDED.deposit_total, users.deposit_total),
            wager_multiplier = COALESCE(EXCLUDED.wager_multiplier, users.wager_multiplier)
        `, [id, data.balance ?? null, data.bonus_balance ?? null, data.first_name ?? null, data.last_name ?? null, data.username ?? null, data.avatar ?? null, data.sub_claimed ?? null, data.wager_required ?? null, data.wager_total ?? null, data.deposit_total ?? null, data.wager_multiplier ?? null]);
-     } catch(e) { console.error('dbSetUser error:', e.message); }
+     } catch(e) { console.error('[DB] dbSetUser error for', id, ':', e.message); }
    }
+   users[id] = data;
+   saveData();
+ }
+
+async function dbGetUser(id) {
+  if (usePostgres) {
+    try {
+      const res = await db.query('SELECT * FROM users WHERE id = $1', [id]);
+      if (res.rows[0]) return res.rows[0];
+    } catch (e) { console.error('[DB] dbGetUser error for', id, ':', e.message); }
+  }
+  return users[id] || null;
+}
    users[id] = data;
    saveData();
  }
