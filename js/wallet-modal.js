@@ -167,8 +167,30 @@
     fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid,amount:amt})})
     .then(function(r){return r.json();})
     .then(function(d){
-      if(d.ok&&d.payUrl){ sM('wfDepMsg','✅ Счёт создан!','ok'); if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openLink)window.Telegram.WebApp.openLink(d.payUrl,{try_instant_view:false}); else window.location.href=d.payUrl; }
-      else sM('wfDepMsg','Ошибка: '+(d.error||'unknown'),'err');
+      if(d.ok&&d.payUrl){
+        sM('wfDepMsg','✅ Счёт создан! Переход на оплату...','ok');
+        if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openLink)window.Telegram.WebApp.openLink(d.payUrl,{try_instant_view:false}); else window.location.href=d.payUrl;
+        // Check invoice status every 3 seconds
+        if(window._invChk) clearInterval(window._invChk);
+        var _chkEp=payMethod==='xr'?'/api/invoice/check/xrocket':'/api/invoice/check';
+        window._invChk=setInterval(function(){
+          fetch(_chkEp,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({invoiceId:d.invoiceId})})
+          .then(function(r){return r.json();})
+          .then(function(cd){
+            if(cd.status==='paid'){
+              clearInterval(window._invChk);
+              sM('wfDepMsg','✅ Оплачено! Баланс обновлён','ok');
+              // Update balance via server
+              fetch('/api/users?id='+uid).then(function(r){return r.json();}).then(function(ud){
+                if(ud.ok&&window.Balance) Balance.set(ud.balance);
+                syncBal();
+              }).catch(function(){});
+            }
+          }).catch(function(){});
+        },3000);
+      }else{
+        sM('wfDepMsg','Ошибка: '+(d.error||'unknown'),'err');
+      }
     }).catch(function(){ sM('wfDepMsg','Ошибка сети','err'); })
     .finally(function(){ btn.disabled=false; btn.textContent='💳 Пополнить'; });
   });
