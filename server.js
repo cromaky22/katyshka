@@ -207,17 +207,49 @@ if (usePostgres) {
 }
 
 let users = {};
-let promos = {
-  '1': 200.00,
-  '2': 200.00,
-  '3': 200.00,
-  '4': 200.00,
-  '5': 200.00,
-  '6': 200.00
-};
+let promos = {};
 let activated = {};
 let transactions = [];
 let paidInvoices = {};
+
+// Load promos from PG on start
+async function loadPromosFromPG() {
+  if (!usePostgres) return;
+  try {
+    const res = await db.query('SELECT code, amount, uses, wager_mult FROM promos');
+    res.rows.forEach(row => {
+      promos[row.code] = {
+        amount: parseFloat(row.amount) || 0,
+        uses: parseInt(row.uses) || 0,
+        wager_mult: parseFloat(row.wager_mult) || 5
+      };
+    });
+    if (res.rows.length > 0) console.log('🐘 Loaded', res.rows.length, 'promos from PG');
+  } catch(e) { console.error('PG load promos error:', e.message); }
+}
+
+// Save promo to DB
+async function savePromoToDB(code, data) {
+  if (!usePostgres) return;
+  try {
+    await db.query(`
+      INSERT INTO promos (code, amount, uses, wager_mult)
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT (code) DO UPDATE SET
+        amount = EXCLUDED.amount,
+        uses = EXCLUDED.uses,
+        wager_mult = EXCLUDED.wager_mult
+    `, [code, data.amount || 0, data.uses || 0, data.wager_mult || 5]);
+  } catch(e) { console.error('[DB] savePromo error:', e.message); }
+}
+
+// Delete promo from DB
+async function deletePromoFromDB(code) {
+  if (!usePostgres) return;
+  try {
+    await db.query('DELETE FROM promos WHERE code = $1', [code]);
+  } catch(e) { console.error('[DB] deletePromo error:', e.message); }
+}
 
 // Load data from file on start (fallback)
 try {
@@ -979,11 +1011,59 @@ app.post('/api/promos/:code/activate', async (req, res) => {
    if (!activated[userId]) activated[userId] = [];
    if (activated[userId].includes(code)) return res.status(400).json({ error: 'Already activated' });
    activated[userId].push(code);
+   // Increment promo uses counter
+   if (typeof promos[code] === 'object') {
+     promos[code].uses = (promos[code].uses || 0) + 1;
+     await savePromoToDB(code, promos[code]);
+   }
    var promoAmount = promos[code].amount || promos[code];
    setBalance(userId, getBalance(userId) + promoAmount);
    await applyPromo(userId, promoAmount);
    res.json({ ok: true, amount: promoAmount, balance: getBalance(userId) });
-});
+ });
+
+ // === ADMIN: PROMO MANAGEMENT ===
+
+ // List all promos
+ app.get('/api/admin/promos', async (req, res) => {
+   const { secret } = req.query;
+   if (secret !== 'obnul2026') return res.status(403).json({ error: 'Forbidden' });
+   const promoList = Object.entries(promos).map(([code, data]) => ({
+     code,
+     amount: data.amount || data,
+     uses: data.uses || 0,
+     wager_mult: data.wager_mult || 5
+   }));
+   res.json({ ok: true, promos: promoList });
+ });
+
+ // Create promo
+ app.post('/api/admin/promos', async (req, res) => {
+   const { secret, code, amount, wager_mult } = req.body;
+   if (secret !== 'obnul2026') return res.status(403).json({ error: 'Forbidden' });
+   if (!code || !amount) return res.status(400).json({ error: 'Missing code or amount' });
+   const upperCode = code.toUpperCase();
+   promos[upperCode] = {
+     amount: Math.round(parseFloat(amount) * 100) / 100,
+     uses: 0,
+     wager_mult: parseFloat(wager_mult) || 5
+   };
+   await savePromoToDB(upperCode, promos[upperCode]);
+   saveData();
+   res.json({ ok: true, code: upperCode, amount: promos[upperCode].amount });
+ });
+
+ // Delete promo
+ app.delete('/api/admin/promos/:code', async (req, res) => {
+   const { secret } = req.query;
+   if (secret !== 'obnul2026') return res.status(403).json({ error: 'Forbidden' });
+   const code = req.params.code.toUpperCase();
+   if (!promos[code]) return res.status(404).json({ error: 'Promo not found' });
+   delete promos[code];
+   await deletePromoFromDB(code);
+   saveData();
+   res.json({ ok: true });
+ });
 
 // === WHEEL GAME ===
 const WHEEL = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
@@ -1280,9 +1360,10 @@ app.get('/api/tg-photo/:id', async (req, res) => {
        `);
        console.log('✅ All tables ready');
 
-       // Load users from PG
+       // Load users and promos from PG
        await loadUsersFromPG();
-       console.log('🐘 Startup complete — users in memory:', Object.keys(users).length);
+       await loadPromosFromPG();
+       console.log('🐘 Startup complete — users:', Object.keys(users).length, 'promos:', Object.keys(promos).length);
      } catch(e) {
        console.error('❌ Startup DB error:', e.message);
        console.error('❌ Data may be lost!');

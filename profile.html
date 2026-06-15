@@ -194,6 +194,19 @@
       </div>
       
       <div class="admin-section">
+        <div class="admin-section-title">🎟 Промокоды</div>
+        <div class="admin-row">
+          <input type="text" class="admin-input" id="adminPromoCode" placeholder="Код">
+          <input type="number" class="admin-input admin-input-sm" id="adminPromoAmount" placeholder="Сумма">
+          <input type="number" class="admin-input admin-input-sm" id="adminPromoWager" placeholder="Вагер" value="5">
+          <button class="btn btn-sm" id="adminPromoCreateBtn">Создать</button>
+        </div>
+        <div id="adminPromoMsg" class="admin-search-result"></div>
+        <button class="btn btn-sm" id="adminLoadPromosBtn" style="margin-top:8px">📋 Список промокодов</button>
+        <div id="adminPromosList" class="admin-players-list"></div>
+      </div>
+      
+      <div class="admin-section">
         <div class="admin-section-title">🗑 Опасная зона</div>
         <button class="btn btn-sm btn-danger" id="adminObnulBtn">Обнулить ВСЁ</button>
       </div>

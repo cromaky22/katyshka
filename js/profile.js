@@ -447,6 +447,80 @@ document.addEventListener('DOMContentLoaded', function(){
           alert('❌ Ошибка: ' + (data.error || 'unknown'));
         }
       }catch(e){ alert('❌ Ошибка соединения'); }
-    });
-  }
-});
+     });
+     
+     // === PROMO MANAGEMENT ===
+     
+     // Create promo
+     document.getElementById('adminPromoCreateBtn').addEventListener('click', async function(){
+       const code = document.getElementById('adminPromoCode').value.trim().toUpperCase();
+       const amount = parseFloat(document.getElementById('adminPromoAmount').value);
+       const wagerMult = parseFloat(document.getElementById('adminPromoWager').value) || 5;
+       const msgEl = document.getElementById('adminPromoMsg');
+       if(!code){ msgEl.textContent = '❌ Введите код'; msgEl.classList.add('show'); return; }
+       if(isNaN(amount) || amount <= 0){ msgEl.textContent = '❌ Неверная сумма'; msgEl.classList.add('show'); return; }
+       try{
+         const res = await fetch('/api/admin/promos', {
+           method: 'POST',
+           headers: {'Content-Type': 'application/json'},
+           body: JSON.stringify({secret: 'obnul2026', code, amount, wager_mult: wagerMult})
+         });
+         const data = await res.json();
+         if(data.ok){
+           msgEl.textContent = `✅ Промокод ${code} создан! Сумма: $${data.amount}`;
+           msgEl.classList.add('show');
+           document.getElementById('adminPromoCode').value = '';
+           document.getElementById('adminPromoAmount').value = '';
+         } else {
+           msgEl.textContent = '❌ Ошибка: ' + (data.error || 'unknown');
+           msgEl.classList.add('show');
+         }
+       }catch(e){ msgEl.textContent = '❌ Ошибка сети'; msgEl.classList.add('show'); }
+     });
+     
+     // List promos
+     document.getElementById('adminLoadPromosBtn').addEventListener('click', async function(){
+       const listEl = document.getElementById('adminPromosList');
+       listEl.innerHTML = '⏳ Загрузка...';
+       try{
+         const res = await fetch('/api/admin/promos?secret=obnul2026');
+         const data = await res.json();
+         if(data.ok && data.promos && data.promos.length > 0){
+           listEl.innerHTML = '';
+           data.promos.forEach(p => {
+             const item = document.createElement('div');
+             item.className = 'admin-player-item';
+             item.innerHTML = `
+               <div class="admin-player-info">
+                 <div class="admin-player-name">🎟 ${p.code}</div>
+                 <div class="admin-player-id">$${p.amount.toFixed(2)} · вагер ×${p.wager_mult} · активаций: ${p.uses}</div>
+               </div>
+               <button class="btn btn-sm btn-danger admin-promo-delete" data-code="${p.code}">✕</button>
+             `;
+             listEl.appendChild(item);
+           });
+           // Add delete handlers
+           listEl.querySelectorAll('.admin-promo-delete').forEach(btn => {
+             btn.addEventListener('click', async function(e){
+               e.stopPropagation();
+               const delCode = this.dataset.code;
+               if(!confirm(`Удалить промокод ${delCode}?`)) return;
+               try{
+                 const res = await fetch('/api/admin/promos/' + delCode + '?secret=obnul2026', {method: 'DELETE'});
+                 const data = await res.json();
+                 if(data.ok){
+                   alert('✅ Промокод удалён');
+                   document.getElementById('adminLoadPromosBtn').click();
+                 } else {
+                   alert('❌ Ошибка: ' + (data.error || 'unknown'));
+                 }
+               }catch(e){ alert('❌ Ошибка сети'); }
+             });
+           });
+         } else {
+           listEl.innerHTML = '<div class="tx-empty">Промокодов нет</div>';
+         }
+       }catch(e){ listEl.innerHTML = '<div class="tx-empty">Ошибка загрузки</div>'; }
+     });
+   }
+ });
