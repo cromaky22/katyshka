@@ -102,12 +102,16 @@ app.get('/api/stats', async (req, res) => {
 });
 
 app.post('/api/users', async (req, res) => {
-   const { id, balance, first_name, last_name, username, avatar } = req.body;
+   const { id, balance, first_name, last_name, username, avatar, wager_required, wager_total, deposit_total, wager_multiplier } = req.body;
    if (!id) return res.status(400).json({ error: 'Missing id' });
    if (!users[id]) users[id] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
    if (balance !== undefined) {
      users[id].balance = Math.round(parseFloat(balance) * 100) / 100;
    }
+   if (wager_required !== undefined) users[id].wager_required = Math.round(parseFloat(wager_required) * 100) / 100;
+   if (wager_total !== undefined) users[id].wager_total = Math.round(parseFloat(wager_total) * 100) / 100;
+   if (deposit_total !== undefined) users[id].deposit_total = Math.round(parseFloat(deposit_total) * 100) / 100;
+   if (wager_multiplier !== undefined) users[id].wager_multiplier = parseFloat(wager_multiplier);
    if (first_name !== undefined) users[id].first_name = first_name;
    if (last_name !== undefined) users[id].last_name = last_name;
    if (username !== undefined) users[id].username = username;
@@ -331,18 +335,18 @@ async function dbSetUser(id, data) {
          INSERT INTO users (id, balance, bonus_balance, first_name, last_name, username, avatar, sub_claimed, wager_required, wager_total, deposit_total, wager_multiplier)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
          ON CONFLICT (id) DO UPDATE SET
-           balance = EXCLUDED.balance,
-           bonus_balance = EXCLUDED.bonus_balance,
-           first_name = EXCLUDED.first_name,
-           last_name = EXCLUDED.last_name,
-           username = EXCLUDED.username,
-           avatar = EXCLUDED.avatar,
-           sub_claimed = EXCLUDED.sub_claimed,
-           wager_required = EXCLUDED.wager_required,
-           wager_total = EXCLUDED.wager_total,
-           deposit_total = EXCLUDED.deposit_total,
-           wager_multiplier = EXCLUDED.wager_multiplier
-       `, [id, data.balance || 0, data.bonus_balance || 0, data.first_name || null, data.last_name || null, data.username || null, data.avatar || null, data.sub_claimed || false, data.wager_required || 0, data.wager_total || 0, data.deposit_total || 0, data.wager_multiplier || 3]);
+           balance = COALESCE(EXCLUDED.balance, users.balance),
+           bonus_balance = COALESCE(EXCLUDED.bonus_balance, users.bonus_balance),
+           first_name = COALESCE(EXCLUDED.first_name, users.first_name),
+           last_name = COALESCE(EXCLUDED.last_name, users.last_name),
+           username = COALESCE(EXCLUDED.username, users.username),
+           avatar = COALESCE(EXCLUDED.avatar, users.avatar),
+           sub_claimed = COALESCE(EXCLUDED.sub_claimed, users.sub_claimed),
+           wager_required = COALESCE(EXCLUDED.wager_required, users.wager_required),
+           wager_total = COALESCE(EXCLUDED.wager_total, users.wager_total),
+           deposit_total = COALESCE(EXCLUDED.deposit_total, users.deposit_total),
+           wager_multiplier = COALESCE(EXCLUDED.wager_multiplier, users.wager_multiplier)
+       `, [id, data.balance ?? null, data.bonus_balance ?? null, data.first_name ?? null, data.last_name ?? null, data.username ?? null, data.avatar ?? null, data.sub_claimed ?? null, data.wager_required ?? null, data.wager_total ?? null, data.deposit_total ?? null, data.wager_multiplier ?? null]);
      } catch(e) { console.error('dbSetUser error:', e.message); }
    }
    users[id] = data;
@@ -775,31 +779,7 @@ app.post('/api/invoice/check', async (req, res) => {
   }
 });
 
-// Cryptobot webhook fallback if the raw route above was not matched
-app.post('/api/cryptobot-hook', express.raw({ type: 'application/json' }), async (req, res) => {
-  try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-    if (body.update_type === 'invoice_paid') {
-      const inv = body.invoice || body.payload || body;
-      const payload = parsePayload(inv.payload || body.payload);
-      const uid = payload.userId || inv.userId || body.user_id;
-      const amount = parseFloat(inv.amount || inv.total || body.amount || body.payload?.amount);
-      const invoiceId = inv.invoice_id || inv.id || body.invoice_id;
 
-      if (uid && !isNaN(amount) && amount > 0) {
-        const credited = await creditDeposit(String(uid), amount, 'cryptobot', invoiceId ? String(invoiceId) : null);
-        if (credited.ok || credited.already) {
-          console.log(`Webhook: Credited $${amount} to ${uid}, wager=$${credited.wager_required || 0}`);
-        } else {
-          console.error('[WAGER] Webhook credit failed:', credited.error);
-        }
-      }
-    }
-  } catch (e) {
-    console.error('Webhook error:', e);
-  }
-  res.json({ ok: true });
-});
 
 // === XROCKET API ===
 const XROCKET_KEY = 'f391f7a440adb0cfb0f7a1afe';
@@ -1240,7 +1220,7 @@ app.get('/api/tg-photo/:id', async (req, res) => {
 // === START ===
  const PORT = process.env.PORT || 3000;
 
- // Load users from PG before starting
+  // Load users from PG before starting
  async function startServer() {
    if (usePostgres) {
      try {
@@ -1261,7 +1241,9 @@ app.get('/api/tg-photo/:id', async (req, res) => {
            created_at TIMESTAMP DEFAULT NOW()
          )
        `);
-        await db.query(`
+     } catch(e) { console.error('CREATE users error:', e.message); }
+     try {
+       await db.query(`
           CREATE TABLE IF NOT EXISTS paid_invoices (
             provider TEXT,
             invoice_id TEXT,
@@ -1271,27 +1253,14 @@ app.get('/api/tg-photo/:id', async (req, res) => {
             PRIMARY KEY (provider, invoice_id)
           )
         `);
-        await loadUsersFromPG();
+     } catch(e) { console.error('CREATE paid_invoices error:', e.message); }
+     try {
+       await loadUsersFromPG();
        console.log('🐘 Database ready, users loaded');
      } catch(e) {
-       console.error('DB start error:', e.message);
-       // Fallback to file storage
-       if (fs.existsSync(DATA_FILE)) {
-         try {
-           const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-            users = data.users || {};
-            promos = data.promos || promos;
-            activated = data.activated || {};
-            transactions = data.transactions || [];
-            paidInvoices = data.paidInvoices || {};
-           console.log('📂 Loaded', Object.keys(users).length, 'users from file fallback');
-         } catch(ex) {
-           console.error('Failed to load from file:', ex.message);
-         }
-       }
+       console.error('PG load users error:', e.message);
      }
-   } else {
-     // File-based loading
+    } else {
      console.log('📂 PostgreSQL not configured, using file storage');
    }
    server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
