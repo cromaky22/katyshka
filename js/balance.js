@@ -77,41 +77,39 @@
     }).catch(function(){});
   }
 
-  function loadFromServer(){
-    _userId = getUserId();
-    if(!_userId){
-      console.warn('⚠️ No Telegram user ID');
-      updateDOM(0);
-      return Promise.resolve();
-    }
-    
-    // Load from localStorage first for instant display
-    _balance = loadLocal();
-    updateDOM(_balance);
-    
-    return fetch('/api/users?id=' + encodeURIComponent(_userId))
-      .then(function(r){ return r.json(); })
-      .then(function(d){
-        if(d && d.balance !== undefined){
-          var serverBal = Math.round(parseFloat(d.balance) * 100) / 100;
-          // Use the higher value (server or local)
-          if(serverBal > _balance){
-            _balance = serverBal;
-          }
-        }
-        saveLocal();
-        updateDOM(_balance);
-        _ready = true;
-        _listeners.forEach(function(fn){ fn(_balance); });
-        _listeners = [];
-      })
-      .catch(function(){
-        // Keep local balance on error
-        _ready = true;
-        _listeners.forEach(function(fn){ fn(_balance); });
-        _listeners = [];
-      });
-  }
+function loadFromServer(){
+     _userId = getUserId();
+     if(!_userId){
+       console.warn('⚠️ No Telegram user ID');
+       updateDOM(0);
+       return Promise.resolve();
+     }
+     
+     // Load from localStorage first for instant display
+     _balance = loadLocal();
+     updateDOM(_balance);
+     
+     return fetch('/api/users?id=' + encodeURIComponent(_userId))
+       .then(function(r){ return r.json(); })
+       .then(function(d){
+         if(d && d.balance !== undefined){
+           var serverBal = Math.round(parseFloat(d.balance) * 100) / 100;
+           // Use server balance (not max of local/server)
+           _balance = serverBal;
+           saveLocal();
+           updateDOM(_balance);
+         }
+         _ready = true;
+         _listeners.forEach(function(fn){ fn(_balance); });
+         _listeners = [];
+       })
+       .catch(function(){
+         // Keep local balance on error
+         _ready = true;
+         _listeners.forEach(function(fn){ fn(_balance); });
+         _listeners = [];
+       });
+   }
 
   function initSocket(){
     if(_socket) return;
