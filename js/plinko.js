@@ -452,6 +452,20 @@ document.addEventListener('DOMContentLoaded', function(){
   playBtn.addEventListener('click', play);
   window.addEventListener('resize', resizeCanvas);
 
+  // Profile avatar (non-clickable display)
+  (function(){
+    var imgEl = document.getElementById('plinkoProfileImg');
+    if(!imgEl) return;
+    try{
+      var tg = window.Telegram && window.Telegram.WebApp;
+      if(tg && tg.initDataUnsafe && tg.initDataUnsafe.user){
+        var u = tg.initDataUnsafe.user;
+        if(u.photo_url){ imgEl.src = u.photo_url; imgEl.style.display = ''; }
+        else if(u.id){ imgEl.src = '/api/tg-photo/' + u.id; imgEl.style.display = ''; }
+      }
+    }catch(e){}
+  })();
+
   // Init
   function doInit(){
     resizeCanvas();
