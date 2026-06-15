@@ -179,17 +179,28 @@
     if(amt<1){ sM('wfWdMsg','Мин. вывод $1','err'); return; }
     var fee=Math.round(amt*0.03*100)/100, total=amt+fee, curBal=window.Balance?Balance.get():0;
     if(total>curBal){ sM('wfWdMsg','❌ Недостаточно средств','err'); return; }
-    var btn=this; btn.disabled=true; btn.textContent='⏳...';
+    // Check wager
+    var uid=(window.Balance&&Balance.getUserId())||localStorage.getItem('tg_uid')||'';
+    if(uid) {
+      fetch('/api/wager/'+uid).then(function(r){return r.json();}).then(function(wd){
+        if(!wd.ok || !wd.can_withdraw){ sM('wfWdMsg','❌ Отыграйте вагер! Осталось: $'+wd.wager_required.toFixed(2),'err'); return; }
+        doWithdraw(amt,fee,total,curBal);
+      }).catch(function(){ sM('wfWdMsg','Ошибка проверки вагера','err'); });
+    } else { doWithdraw(amt,fee,total,curBal); }
+  });
+  
+  function doWithdraw(amt,fee,total,curBal){
+    var btn=document.getElementById('wfWdBtn'); btn.disabled=true; btn.textContent='⏳...';
     var ep=wdPay==='xr'?'/api/withdraw/xrocket':'/api/withdraw/cryptobot';
     var uid=(window.Balance&&Balance.getUserId())||localStorage.getItem('tg_uid')||'';
     fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid,amount:amt})})
     .then(function(r){return r.json();})
     .then(function(d){
       if(d.ok){ if(window.Balance)Balance.set(curBal-total); sM('wfWdMsg','✅ Вывод на $'+fmt(amt)+' выполнен!','ok'); syncBal(); }
-      else sM('wfWdMsg','❌ Ошибка','err');
+      else sM('wfWdMsg','❌ Ошибка: '+(typeof d.error==='string'?d.error:JSON.stringify(d.error)),'err');
     }).catch(function(){ sM('wfWdMsg','Ошибка сети','err'); })
     .finally(function(){ btn.disabled=false; btn.textContent='📤 Вывести'; });
-  });
+  }
 
   function sM(id,t,y){ var el=document.getElementById(id); if(!el)return; el.textContent=t; el.style.display='block'; el.style.background=y==='ok'?'rgba(76,175,80,0.15)':'rgba(244,67,54,0.15)'; el.style.color=y==='ok'?'#4caf50':'#f44336'; }
 

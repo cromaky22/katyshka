@@ -117,6 +117,17 @@
             <div class="w-bal-label">Доступно к выводу</div>
             <div class="w-bal-val">$<span id="wbal">0.00</span></div>
           </div>
+          <!-- WAGER STATUS -->
+          <div id="wagerBox" style="background:rgba(255,107,157,0.08);border:1px solid rgba(255,107,157,0.2);border-radius:10px;padding:10px 14px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px">
+              <span style="color:var(--muted)">Отыгрыш (Wager)</span>
+              <span id="wagerReq" style="color:#ff6b9d;font-weight:700">$0.00</span>
+            </div>
+            <div style="margin-top:6px;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden">
+              <div id="wagerBar" style="height:100%;background:linear-gradient(90deg,#ff6b9d,#ffd700);border-radius:2px;width:100%;transition:width 0.3s"></div>
+            </div>
+            <div id="wagerStatus" style="font-size:10px;margin-top:4px;color:#4caf50;font-weight:600">✓ Вывод доступен</div>
+          </div>
           <div class="w-label">Способ вывода</div>
           <div class="w-methods">
             <div class="w-method sel" id="mw-cb" onclick="setPay('cb')"><span class="ico"><img src="assets/cryptobot.jpg" alt="CryptoBot" style="width:32px;height:32px;border-radius:50%;object-fit:cover"></span><span class="nm">CryptoBot</span></div>
@@ -196,7 +207,29 @@
 
     // Balance is loaded by Balance.init() via balance.js
     // Just ensure local uid is synced
-    if(window.Balance) Balance.ready(function(bal){ upd(bal); });
+    if(window.Balance) Balance.ready(function(bal){ upd(bal); loadWager(); });
+
+    // Load wager status
+    function loadWager(){
+      if(!uid) return;
+      fetch('/api/wager/'+uid).then(function(r){return r.json();}).then(function(d){
+        if(!d.ok) return;
+        var wReq=d.wager_required;
+        var wEl=document.getElementById('wagerReq');
+        var wBar=document.getElementById('wagerBar');
+        var wSt=document.getElementById('wagerStatus');
+        if(wEl) wEl.textContent='$'+wReq.toFixed(2);
+        if(wBar){
+          var pct=0;
+          if(d.wager_total>0) pct=Math.max(0,Math.min(100,100-(wReq/d.wager_total*100)));
+          wBar.style.width=pct+'%';
+        }
+        if(wSt){
+          if(wReq<=0){ wSt.textContent='✓ Вывод доступен'; wSt.style.color='#4caf50'; }
+          else{ wSt.textContent='Отыграйте вагер для вывода'; wSt.style.color='#ff6b9d'; }
+        }
+      }).catch(function(){});
+    }
 
     window.showTab=function(t){
       document.querySelectorAll('.w-tabs .tab').forEach(function(x,i){x.classList.toggle('active',(t==='dep'&&i===0)||(t==='wd'&&i===1)||(t==='hist'&&i===2));});
@@ -295,23 +328,31 @@
       var fee=Math.round(amt*0.03*100)/100;
       var total=amt+fee;
       if(total>bal){msg(document.getElementById('wmsg'),'❌ Недостаточно средств (комиссия 3%)','err');return;}
-      var btn=document.getElementById('wbtn');btn.disabled=true;btn.textContent='⏳ Вывод...';
-      clr(document.getElementById('wmsg'));
-      var ep=pay==='xr'?'/api/withdraw/xrocket':'/api/withdraw/cryptobot';
-      fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid,amount:amt})})
-      .then(function(r){return r.json();})
-      .then(function(d){
-        console.log('withdraw resp:',d);
-        if(d.ok){
-          upd(bal-total);
-          addTx('withdraw',uid,amt,'completed',{provider:pay,fee:fee});
-          msg(document.getElementById('wmsg'),'✅ Вывод на $'+fmt(amt)+' выполнен! Комиссия: $'+fmt(fee),'ok');
-        }else{
-          var errMsg = typeof d.error === 'string' ? d.error : JSON.stringify(d.error) || 'unknown';
-          msg(document.getElementById('wmsg'),'❌ Ошибка: '+errMsg,'err');
+      // Check wager first
+      fetch('/api/wager/'+uid).then(function(r){return r.json();}).then(function(wd){
+        if(!wd.ok || !wd.can_withdraw){
+          msg(document.getElementById('wmsg'),'❌ Отыграйте вагер! Осталось: $'+wd.wager_required.toFixed(2),'err');
+          return;
         }
-      }).catch(function(e){msg(document.getElementById('wmsg'),'Ошибка сети: '+e.message,'err');})
-      .finally(function(){btn.disabled=false;btn.textContent='📤 Вывести';});
+        // Wager OK, proceed with withdraw
+        var btn=document.getElementById('wbtn');btn.disabled=true;btn.textContent='⏳ Вывод...';
+        clr(document.getElementById('wmsg'));
+        var ep=pay==='xr'?'/api/withdraw/xrocket':'/api/withdraw/cryptobot';
+        fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid,amount:amt})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          console.log('withdraw resp:',d);
+          if(d.ok){
+            upd(bal-total);
+            addTx('withdraw',uid,amt,'completed',{provider:pay,fee:fee});
+            msg(document.getElementById('wmsg'),'✅ Вывод на $'+fmt(amt)+' выполнен! Комиссия: $'+fmt(fee),'ok');
+          }else{
+            var errMsg=typeof d.error==='string'?d.error:JSON.stringify(d.error)||'unknown';
+            msg(document.getElementById('wmsg'),'❌ Ошибка: '+errMsg,'err');
+          }
+        }).catch(function(e){msg(document.getElementById('wmsg'),'Ошибка сети: '+e.message,'err');})
+        .finally(function(){btn.disabled=false;btn.textContent='📤 Вывести';});
+      }).catch(function(){msg(document.getElementById('wmsg'),'Ошибка проверки вагера','err');});
     };
 
     // Init
