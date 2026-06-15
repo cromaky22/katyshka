@@ -204,12 +204,6 @@ try {
     }).catch(e => {
       console.error('DB init error:', e.message);
     });
-      db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS sub_claimed BOOLEAN DEFAULT FALSE')
-        .then(() => console.log('✅ sub_claimed column ready'))
-        .catch(() => {});
-    }).catch(e => {
-      console.error('DB init error:', e.message);
-    });
   }
 } catch (e) {
   console.log('PostgreSQL not available, using file storage');
