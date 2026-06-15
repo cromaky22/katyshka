@@ -356,7 +356,10 @@ async function setBalance(id, amt) {
   
   if (usePostgres) {
     try {
-      await db.query('UPDATE users SET balance = $1 WHERE id = $2', [users[id].balance, id]);
+      await db.query(`
+        INSERT INTO users (id, balance) VALUES ($1, $2) 
+        ON CONFLICT (id) DO UPDATE SET balance = EXCLUDED.balance
+      `, [id, users[id].balance]);
     } catch (e) {}
   }
   saveData();
