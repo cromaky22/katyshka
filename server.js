@@ -803,8 +803,11 @@ if (status === 'paid' || status === 'completed' || status === 'success') {
              try {
                payload = typeof inv.payload === 'string' ? JSON.parse(inv.payload) : (inv.payload || {});
              } catch(e) { payload = {}; }
-             if (payload.userId) {
-               const userIdStr = String(payload.userId);
+             console.log('[WAGER] xRocket payload:', payload, 'amount:', inv.amount);
+             // xRocket might have userId in payload or at root level
+             const uid = payload.userId || inv.userId;
+             if (uid) {
+               const userIdStr = String(uid);
                const amount = parseFloat(inv.amount);
                if (isNaN(amount) || amount <= 0) {
                  console.error('[WAGER] xRocket: Invalid amount:', inv.amount);
