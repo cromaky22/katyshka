@@ -659,6 +659,10 @@ app.post('/api/withdraw/xrocket', async (req, res) => {
     const { userId, amount, wallet } = req.body;
     if (!userId || !amount || amount < 1) return res.status(400).json({ error: 'Min $1' });
     
+    // Check wager status
+    var wager = getWagerStatus(userId);
+    if (!wager.can_withdraw) return res.status(400).json({ error: 'Wager not completed. Remaining: $' + wager.wager_required.toFixed(2) });
+    
     const amt = Math.round(Number(amount) * 100) / 100;
     const fee = Math.round(amt * 0.03 * 100) / 100;
     const total = amt + fee;
@@ -688,6 +692,10 @@ app.post('/api/withdraw/cryptobot', async (req, res) => {
   try {
     const { userId, amount } = req.body;
     if (!userId || !amount || amount < 1) return res.status(400).json({ error: 'Min $1' });
+    
+    // Check wager status
+    var wager = getWagerStatus(userId);
+    if (!wager.can_withdraw) return res.status(400).json({ error: 'Wager not completed. Remaining: $' + wager.wager_required.toFixed(2) });
     
     const amt = Math.round(Number(amount) * 100) / 100;
     const fee = Math.round(amt * 0.03 * 100) / 100;
