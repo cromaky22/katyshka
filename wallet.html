@@ -301,7 +301,7 @@
             .then(function(r){return r.json();})
             .then(function(cd){
               console.log('check:',cd);
-              if(cd.status==='paid'){
+              if(cd.status==='paid' || cd.status==='completed' || cd.status==='success'){
                 clearInterval(invChk);
                 upd(bal+parseFloat(cd.amount));
                 msg(document.getElementById('dmsg'),'✅ Оплачено! +$'+fmt(cd.amount),'ok');

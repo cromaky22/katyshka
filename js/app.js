@@ -444,13 +444,26 @@
   function getId(){
     try{
       const tg = window.Telegram && window.Telegram.WebApp;
-      if(tg && tg.initDataUnsafe && tg.initDataUnsafe.user) return String(tg.initDataUnsafe.user.id);
+      const candidates = [
+        tg && tg.initDataUnsafe && tg.initDataUnsafe.user,
+        tg && tg.initDataUnsafe && tg.initDataUnsafe.receiver,
+        tg && tg.user
+      ];
+      for (const user of candidates) {
+        if (user && user.id) return String(user.id);
+      }
     }catch(e){}
-    return '—';
+    return localStorage.getItem('tg_uid') || '—';
+  }
+
+  function syncId(){
+    if(pdUserId) pdUserId.textContent = getId();
   }
 
   function close(){ dd.classList.remove('open'); if(overlay) overlay.classList.remove('open'); }
-  function open(){ if(pdUserId) pdUserId.textContent = getId(); dd.classList.add('open'); if(overlay) overlay.classList.add('open'); }
+  function open(){ syncId(); dd.classList.add('open'); if(overlay) overlay.classList.add('open'); }
+
+  syncId();
 
   btn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); dd.classList.contains('open') ? close() : open(); });
   if(overlay) overlay.addEventListener('click', close);

@@ -6,8 +6,38 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
-app.use(express.json());
 app.use(express.static(__dirname));
+
+// CryptoBot webhook must be parsed as raw JSON before express.json()
+app.post('/api/cryptobot-hook', express.raw({ type: 'application/json' }), async (req, res) => {
+  try {
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    if (body.update_type === 'invoice_paid') {
+      const inv = body.invoice || body.payload || body;
+      const payload = parsePayload(inv.payload || body.payload);
+      const uid = payload.userId || inv.userId || body.user_id;
+      const amount = parseFloat(inv.amount || inv.total || body.amount || body.payload?.amount);
+      const invoiceId = inv.invoice_id || inv.id || body.invoice_id;
+
+      if (!uid || isNaN(amount) || amount <= 0) {
+        console.log('[WAGER] CryptoBot webhook skipped:', { uid, amount, invoiceId });
+        return res.json({ ok: true, skipped: true });
+      }
+
+      const credited = await creditDeposit(String(uid), amount, 'cryptobot', invoiceId ? String(invoiceId) : null);
+      if (!credited.ok && !credited.already) {
+        return res.status(500).json({ ok: false, error: credited.error || 'Credit failed' });
+      }
+      console.log(`Webhook: Credited $${amount} to ${uid}, wager=$${credited.wager_required || 0}`);
+    }
+  } catch (e) {
+    console.error('Webhook error:', e);
+    return res.status(400).json({ ok: false, error: e.message });
+  }
+  res.json({ ok: true });
+});
+
+app.use(express.json());
 
 // === GET USER BALANCE ===
 app.get('/api/users', async (req, res) => {
@@ -201,6 +231,14 @@ try {
         num INTEGER,
         created_at TIMESTAMP DEFAULT NOW()
       );
+      CREATE TABLE IF NOT EXISTS paid_invoices (
+        provider TEXT,
+        invoice_id TEXT,
+        user_id TEXT,
+        amount REAL,
+        time BIGINT,
+        PRIMARY KEY (provider, invoice_id)
+      );
     `).then(() => {
       console.log('✅ DB tables ready');
       // Add columns if not exist (migrations)
@@ -229,6 +267,7 @@ let promos = {
 };
 let activated = {};
 let transactions = [];
+let paidInvoices = {};
 
 // Load data from file on start (fallback)
 try {
@@ -238,6 +277,7 @@ try {
     promos = data.promos || promos;
     activated = data.activated || {};
     transactions = data.transactions || [];
+    paidInvoices = data.paidInvoices || {};
     console.log('📂 Loaded data from file:', Object.keys(users).length, 'users');
   }
 } catch (e) {
@@ -415,6 +455,92 @@ async function setBalance(id, amt) {
 const WAGER_MULT_DEFAULT = 3; // deposit × 3
 const WAGER_MULT_PROMO = 5;   // promo × 5
 
+function parsePayload(payload) {
+  if (!payload) return {};
+  if (typeof payload === 'string') {
+    try { return JSON.parse(payload); } catch (e) { return {}; }
+  }
+  if (typeof payload === 'object') return payload;
+  return {};
+}
+
+async function markPaidInvoice(provider, invoiceId, userId, amount) {
+  if (!provider || !invoiceId) return true;
+  const key = provider + ':' + invoiceId;
+  if (usePostgres) {
+    try {
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS paid_invoices (
+          provider TEXT,
+          invoice_id TEXT,
+          user_id TEXT,
+          amount REAL,
+          time BIGINT,
+          PRIMARY KEY (provider, invoice_id)
+        )
+      `);
+      const res = await db.query(
+        'INSERT INTO paid_invoices (provider, invoice_id, user_id, amount, time) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (provider, invoice_id) DO NOTHING RETURNING invoice_id',
+        [provider, String(invoiceId), String(userId), Math.round(parseFloat(amount) * 100) / 100, Date.now()]
+      );
+      return res.rowCount > 0;
+    } catch (e) {
+      console.error('[WAGER] paid_invoices error:', e.message);
+      paidInvoices[key] = { provider, invoiceId, userId, amount: Math.round(parseFloat(amount) * 100) / 100, time: Date.now() };
+      saveData();
+      return true;
+    }
+  }
+  if (paidInvoices[key]) return false;
+  paidInvoices[key] = { provider, invoiceId, userId, amount: Math.round(parseFloat(amount) * 100) / 100, time: Date.now() };
+  saveData();
+  return true;
+}
+
+async function creditDeposit(userIdStr, amount, provider, invoiceId) {
+  const depAmount = Math.round(parseFloat(amount) * 100) / 100;
+  const id = String(userIdStr || '');
+  if (!id || isNaN(depAmount) || depAmount <= 0) {
+    return { ok: false, error: !id ? 'Missing userId' : 'Invalid amount' };
+  }
+
+  const wasPaid = await markPaidInvoice(provider, invoiceId, id, depAmount);
+  if (!wasPaid) return { ok: false, already: true };
+
+  if (!users[id]) users[id] = { balance: 0, bonus_balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: WAGER_MULT_DEFAULT };
+  const u = users[id];
+  u.balance = Math.round((getBalance(id) + depAmount) * 100) / 100;
+  u.wager_required = Math.round((u.wager_required + depAmount * WAGER_MULT_DEFAULT) * 100) / 100;
+  u.wager_total = Math.round((u.wager_total + depAmount * WAGER_MULT_DEFAULT) * 100) / 100;
+  u.deposit_total = Math.round((u.deposit_total + depAmount) * 100) / 100;
+  u.wager_multiplier = WAGER_MULT_DEFAULT;
+  users[id] = u;
+
+  await addTx('deposit', id, depAmount, 'completed', { provider, invoiceId: invoiceId || null });
+  saveData();
+
+  if (usePostgres) {
+    try {
+      await db.query(`
+        INSERT INTO users (id, balance, bonus_balance, wager_required, wager_total, deposit_total, wager_multiplier) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        ON CONFLICT (id) DO UPDATE SET 
+          balance = EXCLUDED.balance,
+          bonus_balance = EXCLUDED.bonus_balance,
+          wager_required = EXCLUDED.wager_required,
+          wager_total = EXCLUDED.wager_total,
+          deposit_total = EXCLUDED.deposit_total,
+          wager_multiplier = EXCLUDED.wager_multiplier
+      `, [id, u.balance, u.bonus_balance || 0, u.wager_required, u.wager_total, u.deposit_total, u.wager_multiplier]);
+    } catch (e) {
+      console.error('[WAGER] Credit PG error:', e.message);
+    }
+  }
+
+  io.emit('balance_update', { userId: id, balance: u.balance });
+  return { ok: true, balance: u.balance, wager_required: u.wager_required, deposit_total: u.deposit_total };
+}
+
 function getWagerStatus(userId) {
   var u = users[userId];
   if (!u) return { wager_required: 0, wager_total: 0, deposit_total: 0, can_withdraw: true };
@@ -526,7 +652,7 @@ async function addTx(type, userId, amount, status, extra) {
 app.get('/api/transactions/:userId', (req, res) => {
   const txs = transactions
     .filter(t => t.userId === req.params.userId)
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .sort((a, b) => (b.time || 0) - (a.time || 0))
     .slice(0, 50);
   res.json({ ok: true, transactions: txs });
 });
@@ -568,12 +694,20 @@ app.post('/api/invoice', async (req, res) => {
 
      console.log('Cryptobot createInvoice:', JSON.stringify(result));
 
-     if (result.ok) {
-       res.json({
-         ok: true,
-         invoiceId: result.result.invoice_id,
-         payUrl: result.result.bot_invoice_url
+      if (result.ok) {
+        res.json({
+          ok: true,
+          invoiceId: result.result.invoice_id,
+          payUrl: result.result.bot_invoice_url
 });
+      } else {
+       res.status(500).json({ error: result.error || 'Failed to create invoice' });
+     }
+   } catch (e) {
+     console.error('Invoice error:', e);
+     res.status(500).json({ error: e.message });
+   }
+ });
 
 // API: Debug user data
 app.get('/api/debug/:userId', async (req, res) => {
@@ -587,14 +721,6 @@ app.get('/api/debug/:userId', async (req, res) => {
      }
    } else {
      res.json({ ok: true, memory: users[uid] || null, postgres: null });
-   }
- });
-     } else {
-       res.status(500).json({ error: result.error || 'Failed to create invoice' });
-     }
-   } catch (e) {
-     console.error('Invoice error:', e);
-     res.status(500).json({ error: e.message });
    }
  });
 
@@ -615,48 +741,22 @@ app.post('/api/invoice/check', async (req, res) => {
       const inv = result.result.items[0];
 
       // If paid, credit balance + apply wager
-if (inv.status === 'paid' || inv.status === 'completed' || inv.status === 'success') {
-         try {
-           console.log('[WAGER] Invoice paid, payload:', inv.payload);
-           const payload = JSON.parse(inv.payload || '{}');
-           console.log('[WAGER] Parsed payload:', payload);
-           if (payload.userId) {
-             var depAmount = parseFloat(inv.amount);
-             if (isNaN(depAmount) || depAmount <= 0) {
-               console.error('[WAGER] Invalid amount:', inv.amount);
-               return;
-             }
-            var userIdStr = String(payload.userId);
-            var oldBal = getBalance(userIdStr);
-            if (!users[userIdStr]) users[userIdStr] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
-            var u = users[userIdStr];
-            u.balance = Math.round((oldBal + depAmount) * 100) / 100;
-            u.wager_required = Math.round((u.wager_required + depAmount * WAGER_MULT_DEFAULT) * 100) / 100;
-            u.wager_total = Math.round((u.wager_total + depAmount * WAGER_MULT_DEFAULT) * 100) / 100;
-            u.deposit_total = Math.round((u.deposit_total + depAmount) * 100) / 100;
-u.wager_multiplier = WAGER_MULT_DEFAULT;
-             await addTx('deposit', userIdStr, depAmount, 'completed', { provider: 'cryptobot' });
-             saveData();
-if (usePostgres) {
-               try {
-                 await db.query(`
-                   INSERT INTO users (id, balance, bonus_balance, wager_required, wager_total, deposit_total, wager_multiplier) 
-                   VALUES ($1, $2, $3, $4, $5, $6, $7)
-                   ON CONFLICT (id) DO UPDATE SET 
-                     balance = EXCLUDED.balance,
-                     bonus_balance = EXCLUDED.bonus_balance,
-                     wager_required = EXCLUDED.wager_required,
-                     wager_total = EXCLUDED.wager_total,
-                     deposit_total = EXCLUDED.deposit_total,
-                     wager_multiplier = EXCLUDED.wager_multiplier
-                 `, [userIdStr, u.balance, u.bonus_balance || 0, u.wager_required, u.wager_total, u.deposit_total, u.wager_multiplier]);
-                 console.log('[WAGER] Saved to PostgreSQL');
-               } catch(e) { console.error('[WAGER] PG error:', e.message); }
-             }
-            io.emit('balance_update', { userId: userIdStr, balance: u.balance });
-            console.log(`[WAGER] Credited $${depAmount} to ${userIdStr}, oldBal=$${oldBal}, wager=$${u.wager_required}`);
+      if (inv.status === 'paid' || inv.status === 'completed' || inv.status === 'success') {
+        try {
+          const payload = parsePayload(inv.payload);
+          const userIdStr = String(payload.userId || inv.user_id || '');
+          const depAmount = parseFloat(inv.amount);
+          const invoiceId = inv.invoice_id || inv.id || invoiceId;
+
+          if (!payload.userId || isNaN(depAmount) || depAmount <= 0) {
+            console.error('[WAGER] Invalid invoice data:', { payload, amount: inv.amount, invoiceId });
           } else {
-            console.log('[WAGER] No userId in payload!');
+            const credited = await creditDeposit(userIdStr, depAmount, 'cryptobot', invoiceId ? String(invoiceId) : null);
+            if (!credited.ok && !credited.already) {
+              console.error('[WAGER] Credit failed:', credited.error);
+            } else {
+              console.log(`[WAGER] Credited $${depAmount} to ${userIdStr}, wager=$${credited.wager_required || 0}`);
+            }
           }
         } catch (e) {
           console.error('[WAGER] Error:', e);
@@ -675,61 +775,30 @@ if (usePostgres) {
   }
 });
 
-// Cryptobot webhook
+// Cryptobot webhook fallback if the raw route above was not matched
 app.post('/api/cryptobot-hook', express.raw({ type: 'application/json' }), async (req, res) => {
-   try {
-     const body = JSON.parse(req.body.toString());
-     if (body.update_type === 'invoice_paid') {
-// Handle payload as object or JSON string
-        let payload;
-        const pay = body.payload || {};
-        try {
-          payload = typeof pay.payload === 'string' ? JSON.parse(pay.payload) : (pay.payload || pay || {});
-        } catch(e) { payload = pay.payload || pay || {}; }
-        console.log('[WAGER] CryptoBot webhook payload:', payload, 'amount:', body.payload?.amount);
-        // Get userId from payload or root
-        const uid = payload.userId || body.payload?.userId;
-        if (uid) {
-          const userIdStr = String(uid);
-          const amount = parseFloat(body.payload.amount);
-          if (isNaN(amount) || amount <= 0) {
-            console.error('[WAGER] CryptoBot: Invalid amount:', body.payload.amount);
-            return;
-          }
-          if (!users[userIdStr]) users[userIdStr] = { balance: 0, bonus_balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
-          var u = users[userIdStr];
-          u.wager_required = Math.round((u.wager_required + amount * WAGER_MULT_DEFAULT) * 100) / 100;
-          u.wager_total = Math.round((u.wager_total + amount * WAGER_MULT_DEFAULT) * 100) / 100;
-          u.deposit_total = Math.round((u.deposit_total + amount) * 100) / 100;
-          u.wager_multiplier = WAGER_MULT_DEFAULT;
-          u.balance = Math.round((getBalance(userIdStr) + amount) * 100) / 100;
-          users[userIdStr] = u;
-          await addTx('deposit', userIdStr, amount, 'completed', { provider: 'cryptobot' });
-          saveData();
-          if (usePostgres) {
-            try {
-              await db.query(`
-                INSERT INTO users (id, balance, bonus_balance, wager_required, wager_total, deposit_total, wager_multiplier) 
-                VALUES ($1, $2, $3, $4, $5, $6, $7)
-                ON CONFLICT (id) DO UPDATE SET 
-                  balance = EXCLUDED.balance,
-                  bonus_balance = EXCLUDED.bonus_balance,
-                  wager_required = EXCLUDED.wager_required,
-                  wager_total = EXCLUDED.wager_total,
-                  deposit_total = EXCLUDED.deposit_total,
-                  wager_multiplier = EXCLUDED.wager_multiplier
-              `, [userIdStr, u.balance, u.bonus_balance || 0, u.wager_required, u.wager_total, u.deposit_total, u.wager_multiplier]);
-              console.log('[WAGER] Webhook saved to PostgreSQL');
-            } catch(e) { console.error('[WAGER] Webhook PG error:', e.message); }
-          }
-          io.emit('balance_update', { userId: userIdStr, balance: u.balance });
-          console.log(`Webhook: Credited $${amount} to ${userIdStr}, wager=$${u.wager_required}`);
+  try {
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    if (body.update_type === 'invoice_paid') {
+      const inv = body.invoice || body.payload || body;
+      const payload = parsePayload(inv.payload || body.payload);
+      const uid = payload.userId || inv.userId || body.user_id;
+      const amount = parseFloat(inv.amount || inv.total || body.amount || body.payload?.amount);
+      const invoiceId = inv.invoice_id || inv.id || body.invoice_id;
+
+      if (uid && !isNaN(amount) && amount > 0) {
+        const credited = await creditDeposit(String(uid), amount, 'cryptobot', invoiceId ? String(invoiceId) : null);
+        if (credited.ok || credited.already) {
+          console.log(`Webhook: Credited $${amount} to ${uid}, wager=$${credited.wager_required || 0}`);
+        } else {
+          console.error('[WAGER] Webhook credit failed:', credited.error);
         }
-     }
-   } catch (e) {
-     console.error('Webhook error:', e);
-   }
-   res.json({ ok: true });
+      }
+    }
+  } catch (e) {
+    console.error('Webhook error:', e);
+  }
+  res.json({ ok: true });
 });
 
 // === XROCKET API ===
@@ -810,48 +879,21 @@ app.post('/api/invoice/check/xrocket', async (req, res) => {
        
 if (status === 'paid' || status === 'completed' || status === 'success') {
            try {
-             // Handle payload as object or JSON string
-             let payload;
-             try {
-               payload = typeof inv.payload === 'string' ? JSON.parse(inv.payload) : (inv.payload || {});
-             } catch(e) { payload = {}; }
-             console.log('[WAGER] xRocket payload:', payload, 'amount:', inv.amount);
-             // xRocket might have userId in payload or at root level
-             const uid = payload.userId || inv.userId;
-             if (uid) {
-               const userIdStr = String(uid);
-               const amount = parseFloat(inv.amount);
-               if (isNaN(amount) || amount <= 0) {
-                 console.error('[WAGER] xRocket: Invalid amount:', inv.amount);
-                 return;
+             const payload = parsePayload(inv.payload);
+             const uid = payload.userId || inv.userId || inv.user_id;
+             const userIdStr = String(uid || '');
+             const amount = parseFloat(inv.amount || inv.total);
+             const invoiceId = inv.invoice_id || inv.id;
+
+             if (!uid || isNaN(amount) || amount <= 0) {
+               console.error('[WAGER] xRocket: Invalid invoice data:', { payload, amount: inv.amount, invoiceId });
+             } else {
+               const credited = await creditDeposit(userIdStr, amount, 'xrocket', invoiceId ? String(invoiceId) : null);
+               if (!credited.ok && !credited.already) {
+                 console.error('[WAGER] xRocket credit failed:', credited.error);
+               } else {
+                 console.log(`xRocket: Credited $${amount} to ${userIdStr}, wager=$${credited.wager_required || 0}`);
                }
-               if (!users[userIdStr]) users[userIdStr] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
-               var u = users[userIdStr];
-               u.wager_required = Math.round((u.wager_required + amount * WAGER_MULT_DEFAULT) * 100) / 100;
-               u.wager_total = Math.round((u.wager_total + amount * WAGER_MULT_DEFAULT) * 100) / 100;
-               u.deposit_total = Math.round((u.deposit_total + amount) * 100) / 100;
-               u.wager_multiplier = WAGER_MULT_DEFAULT;
-               u.balance = Math.round((getBalance(userIdStr) + amount) * 100) / 100;
-               users[userIdStr] = u;
-               await addTx('deposit', userIdStr, amount, 'completed', { provider: 'xrocket', invoiceId: String(invoiceId) });
-               saveData();
-if (usePostgres) {
-                   try {
-                     await db.query(`
-                       INSERT INTO users (id, balance, bonus_balance, wager_required, wager_total, deposit_total, wager_multiplier) 
-                       VALUES ($1, $2, $3, $4, $5, $6, $7)
-                       ON CONFLICT (id) DO UPDATE SET 
-                         balance = EXCLUDED.balance,
-                         bonus_balance = EXCLUDED.bonus_balance,
-                         wager_required = EXCLUDED.wager_required,
-                         wager_total = EXCLUDED.wager_total,
-                         deposit_total = EXCLUDED.deposit_total,
-                         wager_multiplier = EXCLUDED.wager_multiplier
-                     `, [userIdStr, u.balance, u.bonus_balance || 0, u.wager_required, u.wager_total, u.deposit_total, u.wager_multiplier]);
-                   } catch(e) { console.error('[WAGER] xRocket PG error:', e.message); }
-                 }
-               io.emit('balance_update', { userId: userIdStr, balance: u.balance });
-               console.log(`xRocket: Credited $${inv.amount} to ${userIdStr}, wager=$${u.wager_required}`);
              }
            } catch (e) { console.error('xRocket check error:', e); }
          }
@@ -1219,7 +1261,17 @@ app.get('/api/tg-photo/:id', async (req, res) => {
            created_at TIMESTAMP DEFAULT NOW()
          )
        `);
-       await loadUsersFromPG();
+        await db.query(`
+          CREATE TABLE IF NOT EXISTS paid_invoices (
+            provider TEXT,
+            invoice_id TEXT,
+            user_id TEXT,
+            amount REAL,
+            time BIGINT,
+            PRIMARY KEY (provider, invoice_id)
+          )
+        `);
+        await loadUsersFromPG();
        console.log('🐘 Database ready, users loaded');
      } catch(e) {
        console.error('DB start error:', e.message);
@@ -1227,7 +1279,11 @@ app.get('/api/tg-photo/:id', async (req, res) => {
        if (fs.existsSync(DATA_FILE)) {
          try {
            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-           users = data.users || {};
+            users = data.users || {};
+            promos = data.promos || promos;
+            activated = data.activated || {};
+            transactions = data.transactions || [];
+            paidInvoices = data.paidInvoices || {};
            console.log('📂 Loaded', Object.keys(users).length, 'users from file fallback');
          } catch(ex) {
            console.error('Failed to load from file:', ex.message);
