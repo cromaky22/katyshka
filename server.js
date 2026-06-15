@@ -104,22 +104,22 @@ app.get('/api/stats', async (req, res) => {
 app.post('/api/users', async (req, res) => {
    const { id, balance, first_name, last_name, username, avatar, wager_required, wager_total, deposit_total, wager_multiplier } = req.body;
    if (!id) return res.status(400).json({ error: 'Missing id' });
-   if (!users[id]) users[id] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
-   if (balance !== undefined) {
-     users[id].balance = Math.round(parseFloat(balance) * 100) / 100;
-   }
-   if (wager_required !== undefined) users[id].wager_required = Math.round(parseFloat(wager_required) * 100) / 100;
-   if (wager_total !== undefined) users[id].wager_total = Math.round(parseFloat(wager_total) * 100) / 100;
-   if (deposit_total !== undefined) users[id].deposit_total = Math.round(parseFloat(deposit_total) * 100) / 100;
-   if (wager_multiplier !== undefined) users[id].wager_multiplier = parseFloat(wager_multiplier);
-   if (first_name !== undefined) users[id].first_name = first_name;
-   if (last_name !== undefined) users[id].last_name = last_name;
-   if (username !== undefined) users[id].username = username;
-   if (avatar !== undefined) users[id].avatar = avatar;
-   
-   // Save to DB
-   await dbSetUser(id, users[id]);
-   res.json({ ok: true, balance: users[id].balance, wager_required: users[id].wager_required });
+  if (!users[id]) users[id] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
+    if (balance !== undefined) {
+      users[id].balance = Math.round(parseFloat(balance) * 100) / 100;
+    }
+    if (wager_required !== undefined) users[id].wager_required = Math.round(parseFloat(wager_required) * 100) / 100;
+    if (wager_total !== undefined) users[id].wager_total = Math.round(parseFloat(wager_total) * 100) / 100;
+    if (deposit_total !== undefined) users[id].deposit_total = Math.round(parseFloat(deposit_total) * 100) / 100;
+    if (wager_multiplier !== undefined) users[id].wager_multiplier = parseFloat(wager_multiplier);
+    if (first_name !== undefined) users[id].first_name = first_name;
+    if (last_name !== undefined) users[id].last_name = last_name;
+    if (username !== undefined) users[id].username = username;
+    if (avatar !== undefined) users[id].avatar = avatar;
+    
+    // Save to DB immediately
+    await dbSetUser(id, users[id]);
+    res.json({ ok: true, balance: users[id].balance, wager_required: users[id].wager_required, deposit_total: users[id].deposit_total });
  });
 
 // === ADMIN: UPDATE BALANCE (give/take) ===
@@ -286,52 +286,39 @@ async function dbGetUser(id) {
 async function dbSetUser(id, data) {
    if (usePostgres) {
      try {
-       // Dynamic query — only update fields that are explicitly provided
-       const sets = ['balance = EXCLUDED.balance'];
-       const vals = [
-         id,
-         data.balance ?? null,
-         data.bonus_balance ?? null,
-         data.first_name ?? null,
-         data.last_name ?? null,
-         data.username ?? null,
-         data.avatar ?? null,
-         data.sub_claimed ?? null,
-       ];
-       let idx = 9; // next param index
-
-       // Only include wager fields if they're explicitly provided
-       if (data.wager_required !== undefined && data.wager_required !== null) {
-         sets.push(`wager_required = $${idx++}`);
-         vals.push(data.wager_required);
-       } else {
-         sets.push('wager_required = users.wager_required');
-       }
-       if (data.wager_total !== undefined && data.wager_total !== null) {
-         sets.push(`wager_total = $${idx++}`);
-         vals.push(data.wager_total);
-       } else {
-         sets.push('wager_total = users.wager_total');
-       }
-       if (data.deposit_total !== undefined && data.deposit_total !== null) {
-         sets.push(`deposit_total = $${idx++}`);
-         vals.push(data.deposit_total);
-       } else {
-         sets.push('deposit_total = users.deposit_total');
-       }
-       if (data.wager_multiplier !== undefined && data.wager_multiplier !== null) {
-         sets.push(`wager_multiplier = $${idx++}`);
-         vals.push(data.wager_multiplier);
-       } else {
-         sets.push('wager_multiplier = users.wager_multiplier');
-       }
-
-       const sql = `
+       // Ensure user exists in memory with all fields before saving
+       if (!users[id]) users[id] = {};
+       const u = users[id];
+       // Merge: use provided data, fallback to existing memory values
+       const row = {
+         balance: data.balance !== undefined ? data.balance : (u.balance || 0),
+         bonus_balance: data.bonus_balance !== undefined ? data.bonus_balance : (u.bonus_balance || 0),
+         first_name: data.first_name !== undefined ? data.first_name : (u.first_name || null),
+         last_name: data.last_name !== undefined ? data.last_name : (u.last_name || null),
+         username: data.username !== undefined ? data.username : (u.username || null),
+         avatar: data.avatar !== undefined ? data.avatar : (u.avatar || null),
+         sub_claimed: data.sub_claimed !== undefined ? data.sub_claimed : (u.sub_claimed || false),
+         wager_required: data.wager_required !== undefined ? data.wager_required : (u.wager_required || 0),
+         wager_total: data.wager_total !== undefined ? data.wager_total : (u.wager_total || 0),
+         deposit_total: data.deposit_total !== undefined ? data.deposit_total : (u.deposit_total || 0),
+         wager_multiplier: data.wager_multiplier !== undefined ? data.wager_multiplier : (u.wager_multiplier || 3),
+       };
+       await db.query(`
          INSERT INTO users (id, balance, bonus_balance, first_name, last_name, username, avatar, sub_claimed, wager_required, wager_total, deposit_total, wager_multiplier)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-         ON CONFLICT (id) DO UPDATE SET ${sets.join(', ')}
-       `;
-       await db.query(sql, vals);
+         ON CONFLICT (id) DO UPDATE SET
+           balance = EXCLUDED.balance,
+           bonus_balance = EXCLUDED.bonus_balance,
+           first_name = EXCLUDED.first_name,
+           last_name = EXCLUDED.last_name,
+           username = EXCLUDED.username,
+           avatar = EXCLUDED.avatar,
+           sub_claimed = EXCLUDED.sub_claimed,
+           wager_required = EXCLUDED.wager_required,
+           wager_total = EXCLUDED.wager_total,
+           deposit_total = EXCLUDED.deposit_total,
+           wager_multiplier = EXCLUDED.wager_multiplier
+       `, [id, row.balance, row.bonus_balance, row.first_name, row.last_name, row.username, row.avatar, row.sub_claimed, row.wager_required, row.wager_total, row.deposit_total, row.wager_multiplier]);
      } catch(e) { console.error('[DB] dbSetUser error for', id, ':', e.message); }
    }
    users[id] = data;
@@ -1097,8 +1084,8 @@ io.on('connection', (socket) => {
   const userId = socket.handshake.query.userId || '0';
   if(userId && userId !== '0') {
     if (!users[userId]) {
-      users[userId] = { balance: 0 };
-      saveData();
+      users[userId] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
+      dbSetUser(userId, users[userId]);
     }
   }
   socket.emit('wheel:state', { phase: wheel.phase, timer: wheel.timer, myBets: wheel.bets[userId] || [], balance: getBalance(userId) || 0, history: wheel.history });
