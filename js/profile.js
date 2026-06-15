@@ -13,43 +13,81 @@ document.addEventListener('DOMContentLoaded', function(){
     return localStorage.getItem('tg_uid') || '—';
   }
 
-  function getUserName(){
-    const u = getUser();
-    if(u) return u.username || ((u.first_name||'') + (u.last_name?' '+u.last_name:'')).trim() || 'Игрок';
-    return 'Игрок';
-  }
-
-  function getUserAvatar(){
-    const u = getUser();
-    if(u) return u.photo_url || u.avatar || '';
-    return '';
-  }
-
-  function getUserInitials(){
-    const n = getUserName();
-    return n.trim().split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2) || '?';
-  }
-
   // === USER CARD ===
   const userId = getUserId();
-  const userName = getUserName();
-  const userAvatar = getUserAvatar();
+  const tgUser = getUser();
 
   const nameEl = document.getElementById('profileName');
   const idDisplay = document.getElementById('profileIdDisplay');
   const avatarImg = document.getElementById('profileAvatarImg');
   const avatarWrap = document.getElementById('profileAvatarBig');
 
-  if(nameEl) nameEl.textContent = userName;
   if(idDisplay) idDisplay.textContent = userId;
 
-  if(avatarImg && userAvatar){ avatarImg.src = userAvatar; avatarImg.style.display=''; avatarImg.onerror=function(){this.style.display='none';}; }
-  if(avatarWrap){
+  // Set initial name from TG if available
+  if(tgUser){
+    const tgName = tgUser.username || ((tgUser.first_name||'') + (tgUser.last_name?' '+tgUser.last_name:'')).trim() || 'Игрок';
+    if(nameEl) nameEl.textContent = tgName;
+    if(tgUser.photo_url && avatarImg){
+      avatarImg.src = tgUser.photo_url;
+      avatarImg.style.display = '';
+      avatarImg.onerror = function(){ this.style.display='none'; };
+    }
+  }
+
+  // Set initials fallback
+  function setInitials(name){
+    if(!avatarWrap) return;
     let el = avatarWrap.querySelector('.avatar-initials');
     if(!el){ el=document.createElement('div'); el.className='avatar-initials'; avatarWrap.appendChild(el); }
-    el.textContent = getUserInitials();
-    el.style.display = userAvatar ? 'none' : 'flex';
+    const n = name || 'Игрок';
+    el.textContent = n.trim().split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2) || '?';
+    el.style.display = (avatarImg && avatarImg.src && avatarImg.style.display !== 'none') ? 'none' : 'flex';
   }
+
+  setInitials(tgUser ? (tgUser.first_name || tgUser.username || 'Игрок') : 'Игрок');
+
+  // Load profile data from server (name, avatar, balance)
+  async function loadUserProfile(){
+    try{
+      const res = await fetch('/api/users?id=' + encodeURIComponent(userId));
+      const data = await res.json();
+      console.log('👤 Profile data:', data);
+
+      if(data && data.balance !== undefined){
+        const serverName = data.first_name || data.username;
+        if(serverName && nameEl){ nameEl.textContent = serverName; }
+
+        // Server avatar from saved user data
+        if(data.avatar && avatarImg){
+          avatarImg.src = data.avatar;
+          avatarImg.style.display = '';
+          avatarImg.onerror = function(){ this.style.display='none'; };
+          setInitials(serverName || 'Игрок');
+        }
+
+        // Balance display
+        const balEl = document.querySelector('.balance-value');
+        if(balEl) balEl.textContent = Number(data.balance).toFixed(2);
+      }
+
+      // Retry with TG data if available (in case WebApp loaded late)
+      const lateTg = getUser();
+      if(lateTg && lateTg.first_name){
+        const lateName = lateTg.username || ((lateTg.first_name||'') + (lateTg.last_name?' '+lateTg.last_name:'')).trim();
+        if(lateName && nameEl) nameEl.textContent = lateName;
+        if(lateTg.photo_url && avatarImg){
+          avatarImg.src = lateTg.photo_url;
+          avatarImg.style.display = '';
+          setInitials(lateName);
+        }
+      }
+    }catch(e){
+      console.error('Profile load error:', e);
+    }
+  }
+
+  loadUserProfile();
 
   // === STATS (from server) ===
   async function loadStats(){
