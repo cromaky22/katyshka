@@ -286,22 +286,52 @@ async function dbGetUser(id) {
 async function dbSetUser(id, data) {
    if (usePostgres) {
      try {
-       await db.query(`
+       // Dynamic query — only update fields that are explicitly provided
+       const sets = ['balance = EXCLUDED.balance'];
+       const vals = [
+         id,
+         data.balance ?? null,
+         data.bonus_balance ?? null,
+         data.first_name ?? null,
+         data.last_name ?? null,
+         data.username ?? null,
+         data.avatar ?? null,
+         data.sub_claimed ?? null,
+       ];
+       let idx = 9; // next param index
+
+       // Only include wager fields if they're explicitly provided
+       if (data.wager_required !== undefined && data.wager_required !== null) {
+         sets.push(`wager_required = $${idx++}`);
+         vals.push(data.wager_required);
+       } else {
+         sets.push('wager_required = users.wager_required');
+       }
+       if (data.wager_total !== undefined && data.wager_total !== null) {
+         sets.push(`wager_total = $${idx++}`);
+         vals.push(data.wager_total);
+       } else {
+         sets.push('wager_total = users.wager_total');
+       }
+       if (data.deposit_total !== undefined && data.deposit_total !== null) {
+         sets.push(`deposit_total = $${idx++}`);
+         vals.push(data.deposit_total);
+       } else {
+         sets.push('deposit_total = users.deposit_total');
+       }
+       if (data.wager_multiplier !== undefined && data.wager_multiplier !== null) {
+         sets.push(`wager_multiplier = $${idx++}`);
+         vals.push(data.wager_multiplier);
+       } else {
+         sets.push('wager_multiplier = users.wager_multiplier');
+       }
+
+       const sql = `
          INSERT INTO users (id, balance, bonus_balance, first_name, last_name, username, avatar, sub_claimed, wager_required, wager_total, deposit_total, wager_multiplier)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-         ON CONFLICT (id) DO UPDATE SET
-           balance = COALESCE(EXCLUDED.balance, users.balance),
-           bonus_balance = COALESCE(EXCLUDED.bonus_balance, users.bonus_balance),
-           first_name = COALESCE(EXCLUDED.first_name, users.first_name),
-           last_name = COALESCE(EXCLUDED.last_name, users.last_name),
-           username = COALESCE(EXCLUDED.username, users.username),
-           avatar = COALESCE(EXCLUDED.avatar, users.avatar),
-           sub_claimed = COALESCE(EXCLUDED.sub_claimed, users.sub_claimed),
-           wager_required = COALESCE(EXCLUDED.wager_required, users.wager_required),
-           wager_total = COALESCE(EXCLUDED.wager_total, users.wager_total),
-           deposit_total = COALESCE(EXCLUDED.deposit_total, users.deposit_total),
-           wager_multiplier = COALESCE(EXCLUDED.wager_multiplier, users.wager_multiplier)
-       `, [id, data.balance ?? null, data.bonus_balance ?? null, data.first_name ?? null, data.last_name ?? null, data.username ?? null, data.avatar ?? null, data.sub_claimed ?? null, data.wager_required ?? null, data.wager_total ?? null, data.deposit_total ?? null, data.wager_multiplier ?? null]);
+         ON CONFLICT (id) DO UPDATE SET ${sets.join(', ')}
+       `;
+       await db.query(sql, vals);
      } catch(e) { console.error('[DB] dbSetUser error for', id, ':', e.message); }
    }
    users[id] = data;
@@ -394,16 +424,40 @@ function getBalance(id) {
 }
 
 async function setBalance(id, amt) {
-   if (!users[id]) users[id] = { balance: 0, bonus_balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
+   if (!users[id]) {
+     // Try to load from DB first
+     if (usePostgres) {
+       try {
+         const res = await db.query('SELECT * FROM users WHERE id = $1', [id]);
+         if (res.rows[0]) {
+           const r = res.rows[0];
+           users[id] = {
+             balance: parseFloat(r.balance) || 0,
+             bonus_balance: parseFloat(r.bonus_balance) || 0,
+             wager_required: parseFloat(r.wager_required) || 0,
+             wager_total: parseFloat(r.wager_total) || 0,
+             deposit_total: parseFloat(r.deposit_total) || 0,
+             wager_multiplier: parseFloat(r.wager_multiplier) || 3,
+             first_name: r.first_name || null,
+             last_name: r.last_name || null,
+             username: r.username || null,
+             avatar: r.avatar || null,
+             sub_claimed: r.sub_claimed || false
+           };
+         }
+       } catch(e) { console.error('[DB] setBalance load error:', e.message); }
+     }
+     if (!users[id]) users[id] = { balance: 0, bonus_balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
+   }
    users[id].balance = Math.round(amt * 100) / 100;
    
    if (usePostgres) {
      try {
        const u = users[id];
        await db.query(`
-         INSERT INTO users (id, balance, bonus_balance, wager_required, wager_total, deposit_total, wager_multiplier) 
+         INSERT INTO users (id, balance, bonus_balance, wager_required, wager_total, deposit_total, wager_multiplier)
          VALUES ($1, $2, $3, $4, $5, $6, $7)
-         ON CONFLICT (id) DO UPDATE SET 
+         ON CONFLICT (id) DO UPDATE SET
            balance = EXCLUDED.balance,
            bonus_balance = EXCLUDED.bonus_balance,
            wager_required = EXCLUDED.wager_required,
@@ -411,7 +465,7 @@ async function setBalance(id, amt) {
            deposit_total = EXCLUDED.deposit_total,
            wager_multiplier = EXCLUDED.wager_multiplier
        `, [id, users[id].balance, u.bonus_balance || 0, u.wager_required || 0, u.wager_total || 0, u.deposit_total || 0, u.wager_multiplier || 3]);
-     } catch (e) {}
+     } catch (e) { console.error('[DB] setBalance save error:', e.message); }
    }
    saveData();
  }
@@ -1251,7 +1305,74 @@ app.get('/api/tg-photo/:id', async (req, res) => {
    }
    server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
  }
- startServer();
+  startServer();
+
+ // Graceful shutdown — save all users to DB before exit
+ async function gracefulShutdown(signal) {
+   console.log(`\n⚠️  Received ${signal} — saving all users to DB...`);
+   if (usePostgres && Object.keys(users).length > 0) {
+     try {
+       for (const id in users) {
+         const u = users[id];
+         await db.query(`
+           INSERT INTO users (id, balance, bonus_balance, wager_required, wager_total, deposit_total, wager_multiplier, first_name, last_name, username, avatar, sub_claimed)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+           ON CONFLICT (id) DO UPDATE SET
+             balance = EXCLUDED.balance,
+             bonus_balance = EXCLUDED.bonus_balance,
+             wager_required = EXCLUDED.wager_required,
+             wager_total = EXCLUDED.wager_total,
+             deposit_total = EXCLUDED.deposit_total,
+             wager_multiplier = EXCLUDED.wager_multiplier,
+             first_name = EXCLUDED.first_name,
+             last_name = EXCLUDED.last_name,
+             username = EXCLUDED.username,
+             avatar = EXCLUDED.avatar,
+             sub_claimed = EXCLUDED.sub_claimed
+         `, [id, u.balance||0, u.bonus_balance||0, u.wager_required||0, u.wager_total||0, u.deposit_total||0, u.wager_multiplier||3, u.first_name||null, u.last_name||null, u.username||null, u.avatar||null, u.sub_claimed||false]);
+       }
+       console.log(`✅ Saved ${Object.keys(users).length} users to DB`);
+     } catch(e) {
+       console.error('❌ Shutdown save error:', e.message);
+     }
+   }
+   saveData();
+   process.exit(0);
+ }
+
+ process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+ // Periodic auto-save every 60 seconds
+ if (usePostgres) {
+   setInterval(async () => {
+     if (Object.keys(users).length === 0) return;
+     try {
+       for (const id in users) {
+         const u = users[id];
+         await db.query(`
+           INSERT INTO users (id, balance, bonus_balance, wager_required, wager_total, deposit_total, wager_multiplier, first_name, last_name, username, avatar, sub_claimed)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+           ON CONFLICT (id) DO UPDATE SET
+             balance = EXCLUDED.balance,
+             bonus_balance = EXCLUDED.bonus_balance,
+             wager_required = EXCLUDED.wager_required,
+             wager_total = EXCLUDED.wager_total,
+             deposit_total = EXCLUDED.deposit_total,
+             wager_multiplier = EXCLUDED.wager_multiplier,
+             first_name = EXCLUDED.first_name,
+             last_name = EXCLUDED.last_name,
+             username = EXCLUDED.username,
+             avatar = EXCLUDED.avatar,
+             sub_claimed = EXCLUDED.sub_claimed
+         `, [id, u.balance||0, u.bonus_balance||0, u.wager_required||0, u.wager_total||0, u.deposit_total||0, u.wager_multiplier||3, u.first_name||null, u.last_name||null, u.username||null, u.avatar||null, u.sub_claimed||false]);
+       }
+       console.log(`💾 Auto-save: ${Object.keys(users).length} users synced to DB`);
+     } catch(e) {
+       console.error('❌ Auto-save error:', e.message);
+     }
+   }, 60000);
+ }
 
 // Bot disabled — run separately via bot.js
 // Set SERVER_URL env var on Railway for bot to work
