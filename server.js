@@ -373,19 +373,26 @@ function getBalance(id) {
 }
 
 async function setBalance(id, amt) {
-  if (!users[id]) users[id] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0 };
-  users[id].balance = Math.round(amt * 100) / 100;
-  
-  if (usePostgres) {
-    try {
-      await db.query(`
-        INSERT INTO users (id, balance) VALUES ($1, $2) 
-        ON CONFLICT (id) DO UPDATE SET balance = EXCLUDED.balance
-      `, [id, users[id].balance]);
-    } catch (e) {}
-  }
-  saveData();
-}
+   if (!users[id]) users[id] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0 };
+   users[id].balance = Math.round(amt * 100) / 100;
+   
+   if (usePostgres) {
+     try {
+       const u = users[id];
+       await db.query(`
+         INSERT INTO users (id, balance, wager_required, wager_total, deposit_total, wager_multiplier) 
+         VALUES ($1, $2, $3, $4, $5, $6)
+         ON CONFLICT (id) DO UPDATE SET 
+           balance = EXCLUDED.balance,
+           wager_required = COALESCE(users.wager_required, 0),
+           wager_total = COALESCE(users.wager_total, 0),
+           deposit_total = COALESCE(users.deposit_total, 0),
+           wager_multiplier = COALESCE(users.wager_multiplier, 3)
+       `, [id, users[id].balance, u.wager_required || 0, u.wager_total || 0, u.deposit_total || 0, u.wager_multiplier || 3]);
+     } catch (e) {}
+   }
+   saveData();
+ }
 
 // === WAGER SYSTEM ===
 // When user deposits, add to wager requirement
@@ -406,64 +413,64 @@ function getWagerStatus(userId) {
   };
 }
 
-function applyDeposit(userId, amount) {
-  console.log(`[WAGER] applyDeposit: user=${userId}, amount=$${amount}`);
-  if (!users[userId]) users[userId] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
-  var u = users[userId];
-  u.wager_required = Math.round((u.wager_required + amount * WAGER_MULT_DEFAULT) * 100) / 100;
-  u.wager_total = Math.round((u.wager_total + amount * WAGER_MULT_DEFAULT) * 100) / 100;
-  u.deposit_total = Math.round((u.deposit_total + amount) * 100) / 100;
-  u.wager_multiplier = WAGER_MULT_DEFAULT;
-  console.log(`[WAGER] New wager_required=$${u.wager_required}, wager_total=$${u.wager_total}`);
-  saveData();
-  if (usePostgres) {
-    try {
-      db.query(`
-        INSERT INTO users (id, wager_required, wager_total, deposit_total, wager_multiplier) 
-        VALUES ($1, $2, $3, $4, $5)
-        ON CONFLICT (id) DO UPDATE SET wager_required=$2, wager_total=$3, deposit_total=$4, wager_multiplier=$5
-      `, [userId, u.wager_required, u.wager_total, u.deposit_total, u.wager_multiplier]);
-      console.log('[WAGER] Saved to PostgreSQL');
-    } catch(e) { console.error('[WAGER] PG error:', e.message); }
-  }
-}
+async function applyDeposit(userId, amount) {
+   console.log(`[WAGER] applyDeposit: user=${userId}, amount=$${amount}`);
+   if (!users[userId]) users[userId] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
+   var u = users[userId];
+   u.wager_required = Math.round((u.wager_required + amount * WAGER_MULT_DEFAULT) * 100) / 100;
+   u.wager_total = Math.round((u.wager_total + amount * WAGER_MULT_DEFAULT) * 100) / 100;
+   u.deposit_total = Math.round((u.deposit_total + amount) * 100) / 100;
+   u.wager_multiplier = WAGER_MULT_DEFAULT;
+   console.log(`[WAGER] New wager_required=$${u.wager_required}, wager_total=$${u.wager_total}`);
+   saveData();
+   if (usePostgres) {
+     try {
+       await db.query(`
+         INSERT INTO users (id, wager_required, wager_total, deposit_total, wager_multiplier) 
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (id) DO UPDATE SET wager_required=$2, wager_total=$3, deposit_total=$4, wager_multiplier=$5
+       `, [userId, u.wager_required, u.wager_total, u.deposit_total, u.wager_multiplier]);
+       console.log('[WAGER] Saved to PostgreSQL');
+     } catch(e) { console.error('[WAGER] PG error:', e.message); }
+   }
+ }
 
-function applyPromo(userId, amount) {
-  if (!users[userId]) users[userId] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 5 };
-  var u = users[userId];
-  u.wager_required = Math.round((u.wager_required + amount * WAGER_MULT_PROMO) * 100) / 100;
-  u.wager_total = Math.round((u.wager_total + amount * WAGER_MULT_PROMO) * 100) / 100;
-  u.wager_multiplier = WAGER_MULT_PROMO;
-  saveData();
-  if (usePostgres) {
-    try {
-      db.query(`
-        INSERT INTO users (id, wager_required, wager_total, wager_multiplier) 
-        VALUES ($1, $2, $3, $4)
-        ON CONFLICT (id) DO UPDATE SET wager_required=$2, wager_total=$3, wager_multiplier=$4
-      `, [userId, u.wager_required, u.wager_total, u.wager_multiplier]);
-    } catch(e) {}
-  }
-}
+async function applyPromo(userId, amount) {
+   if (!users[userId]) users[userId] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 5 };
+   var u = users[userId];
+   u.wager_required = Math.round((u.wager_required + amount * WAGER_MULT_PROMO) * 100) / 100;
+   u.wager_total = Math.round((u.wager_total + amount * WAGER_MULT_PROMO) * 100) / 100;
+   u.wager_multiplier = WAGER_MULT_PROMO;
+   saveData();
+   if (usePostgres) {
+     try {
+       await db.query(`
+         INSERT INTO users (id, wager_required, wager_total, wager_multiplier) 
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (id) DO UPDATE SET wager_required=$2, wager_total=$3, wager_multiplier=$4
+       `, [userId, u.wager_required, u.wager_total, u.wager_multiplier]);
+     } catch(e) {}
+   }
+ }
 
-function applyBet(userId, amount) {
-  if (!users[userId]) return;
-  var u = users[userId];
-  u.wager_required = Math.round(Math.max(0, u.wager_required - amount) * 100) / 100;
-  saveData();
-  if (usePostgres) {
-    try {
-      db.query('UPDATE users SET wager_required=$1 WHERE id=$2', [u.wager_required, userId]);
-    } catch(e) {}
-  }
-}
+async function applyBet(userId, amount) {
+   if (!users[userId]) return;
+   var u = users[userId];
+   u.wager_required = Math.round(Math.max(0, u.wager_required - amount) * 100) / 100;
+   saveData();
+   if (usePostgres) {
+     try {
+       await db.query('UPDATE users SET wager_required=$1 WHERE id=$2', [u.wager_required, userId]);
+     } catch(e) {}
+   }
+ }
 
 // API: Apply bet to wager (called by client games)
-app.post('/api/wager/bet', (req, res) => {
-  const { userId, amount } = req.body;
-  if (!userId || !amount) return res.status(400).json({ error: 'Missing params' });
-  applyBet(userId, Math.abs(amount));
-  res.json({ ok: true, ...getWagerStatus(userId) });
+app.post('/api/wager/bet', async (req, res) => {
+   const { userId, amount } = req.body;
+   if (!userId || !amount) return res.status(400).json({ error: 'Missing params' });
+   await applyBet(userId, Math.abs(amount));
+   res.json({ ok: true, ...getWagerStatus(userId) });
 });
 
 // API: Get wager status
@@ -568,26 +575,26 @@ app.post('/api/invoice/check', async (req, res) => {
     if (result.ok && result.result?.items?.length > 0) {
       const inv = result.result.items[0];
 
-// If paid, credit balance + apply wager
-       if (inv.status === 'paid') {
-         try {
-           console.log('[WAGER] Invoice paid, payload:', inv.payload);
-           const payload = JSON.parse(inv.payload || '{}');
-           console.log('[WAGER] Parsed payload:', payload);
-           if (payload.userId) {
-             var depAmount = parseFloat(inv.amount);
-             var oldBal = getBalance(payload.userId);
-             setBalance(payload.userId, oldBal + depAmount);
-             applyDeposit(payload.userId, depAmount);
-             io.emit('balance_update', { userId: payload.userId, balance: getBalance(payload.userId) });
-             console.log(`[WAGER] Credited $${depAmount} to ${payload.userId}, oldBal=$${oldBal}, wager=$${users[payload.userId]?.wager_required}`);
-           } else {
-             console.log('[WAGER] No userId in payload!');
-           }
-         } catch (e) {
-           console.error('[WAGER] Error:', e);
-         }
-       }
+      // If paid, credit balance + apply wager
+      if (inv.status === 'paid') {
+        try {
+          console.log('[WAGER] Invoice paid, payload:', inv.payload);
+          const payload = JSON.parse(inv.payload || '{}');
+          console.log('[WAGER] Parsed payload:', payload);
+          if (payload.userId) {
+            var depAmount = parseFloat(inv.amount);
+            var oldBal = getBalance(payload.userId);
+            setBalance(payload.userId, oldBal + depAmount);
+            await applyDeposit(payload.userId, depAmount);
+            io.emit('balance_update', { userId: payload.userId, balance: getBalance(payload.userId) });
+            console.log(`[WAGER] Credited $${depAmount} to ${payload.userId}, oldBal=$${oldBal}, wager=$${users[payload.userId]?.wager_required}`);
+          } else {
+            console.log('[WAGER] No userId in payload!');
+          }
+        } catch (e) {
+          console.error('[WAGER] Error:', e);
+        }
+      }
 
       res.json({ ok: true, status: inv.status, amount: inv.amount });
     } else {
@@ -600,7 +607,7 @@ app.post('/api/invoice/check', async (req, res) => {
 });
 
 // Cryptobot webhook
-app.post('/api/cryptobot-hook', express.raw({ type: 'application/json' }), (req, res) => {
+app.post('/api/cryptobot-hook', express.raw({ type: 'application/json' }), async (req, res) => {
    try {
      const body = JSON.parse(req.body.toString());
      if (body.update_type === 'invoice_paid') {
@@ -608,7 +615,7 @@ app.post('/api/cryptobot-hook', express.raw({ type: 'application/json' }), (req,
        if (payload.userId) {
          const amount = parseFloat(body.payload.amount);
          setBalance(payload.userId, getBalance(payload.userId) + amount);
-         applyDeposit(payload.userId, amount);
+         await applyDeposit(payload.userId, amount);
          io.emit('balance_update', { userId: payload.userId, balance: getBalance(payload.userId) });
          console.log(`Webhook: Credited $${amount} to ${payload.userId}`);
        }
@@ -617,7 +624,7 @@ app.post('/api/cryptobot-hook', express.raw({ type: 'application/json' }), (req,
      console.error('Webhook error:', e);
    }
    res.json({ ok: true });
- });
+});
 
 // === XROCKET API ===
 const XROCKET_KEY = 'f391f7a440adb0cfb0f7a1afe';
@@ -694,19 +701,19 @@ app.post('/api/invoice/check/xrocket', async (req, res) => {
       const inv = result.data || result;
       const status = inv.status || inv.state;
       
-if (status === 'paid' || status === 'completed' || status === 'success') {
-         try {
-           const payload = JSON.parse(inv.payload || '{}');
-           if (payload.userId) {
-             setBalance(payload.userId, getBalance(payload.userId) + parseFloat(inv.amount));
-             applyDeposit(payload.userId, parseFloat(inv.amount));
-             io.emit('balance_update', { userId: payload.userId, balance: getBalance(payload.userId) });
-             const tx = transactions.find(t => t.invoiceId === String(invoiceId));
-             if (tx) tx.status = 'completed';
-             console.log(`xRocket: Credited $${inv.amount} to ${payload.userId}`);
-           }
-         } catch (e) {}
-       }
+      if (status === 'paid' || status === 'completed' || status === 'success') {
+        try {
+          const payload = JSON.parse(inv.payload || '{}');
+          if (payload.userId) {
+            setBalance(payload.userId, getBalance(payload.userId) + parseFloat(inv.amount));
+            await applyDeposit(payload.userId, parseFloat(inv.amount));
+            io.emit('balance_update', { userId: payload.userId, balance: getBalance(payload.userId) });
+            const tx = transactions.find(t => t.invoiceId === String(invoiceId));
+            if (tx) tx.status = 'completed';
+            console.log(`xRocket: Credited $${inv.amount} to ${payload.userId}`);
+          }
+        } catch (e) {}
+      }
       res.json({ ok: true, status, amount: inv.amount });
     } else {
       res.json({ ok: true, status: 'not_found' });
@@ -795,17 +802,17 @@ app.post('/api/withdraw/cryptobot', async (req, res) => {
   }
 });
 
-app.post('/api/promos/:code/activate', (req, res) => {
-  const code = (req.params.code || '').toUpperCase();
-  const userId = req.body?.userId;
-  if (!promos[code]) return res.status(404).json({ error: 'Promo not found' });
-  if (!activated[userId]) activated[userId] = [];
-  if (activated[userId].includes(code)) return res.status(400).json({ error: 'Already activated' });
-  activated[userId].push(code);
-  var promoAmount = promos[code].amount || promos[code];
-  setBalance(userId, getBalance(userId) + promoAmount);
-  applyPromo(userId, promoAmount);
-  res.json({ ok: true, amount: promoAmount, balance: getBalance(userId) });
+app.post('/api/promos/:code/activate', async (req, res) => {
+   const code = (req.params.code || '').toUpperCase();
+   const userId = req.body?.userId;
+   if (!promos[code]) return res.status(404).json({ error: 'Promo not found' });
+   if (!activated[userId]) activated[userId] = [];
+   if (activated[userId].includes(code)) return res.status(400).json({ error: 'Already activated' });
+   activated[userId].push(code);
+   var promoAmount = promos[code].amount || promos[code];
+   setBalance(userId, getBalance(userId) + promoAmount);
+   await applyPromo(userId, promoAmount);
+   res.json({ ok: true, amount: promoAmount, balance: getBalance(userId) });
 });
 
 // === WHEEL GAME ===
@@ -862,26 +869,26 @@ function spinWheel() {
     wheel.bets[uid].forEach(b => allBets.push({ userId: uid, type: b.type, amount: b.amount, playerName: b.playerName || 'Player' }));
   }
 
-  const results = {};
-  for (const uid in wheel.bets) {
-    let win = 0;
-    let totalBet = 0;
-    wheel.bets[uid].forEach(b => { 
-      totalBet += b.amount;
-      if (betWins(b.type, num)) win += b.amount * getCoef(b.type); 
-    });
-    win = Math.round(win * 100) / 100;
-    results[uid] = win;
-    setBalance(uid, getBalance(uid) + win);
-    // Record transaction
-     addTx('bet', uid, totalBet, 'completed', { game: 'Wheel', detail: `Bet ${totalBet.toFixed(2)}` });
-     applyBet(uid, totalBet);
-    if (win > 0) {
-      addTx('win', uid, win, 'completed', { game: 'Wheel', detail: `Won ${win.toFixed(2)} on ${num}` });
-    } else {
-      addTx('loss', uid, totalBet, 'completed', { game: 'Wheel', detail: `Lost on ${num}` });
-    }
-  }
+const results = {};
+   for (const uid in wheel.bets) {
+     let win = 0;
+     let totalBet = 0;
+     wheel.bets[uid].forEach(b => { 
+       totalBet += b.amount;
+       if (betWins(b.type, num)) win += b.amount * getCoef(b.type); 
+     });
+     win = Math.round(win * 100) / 100;
+     results[uid] = win;
+     setBalance(uid, getBalance(uid) + win);
+     // Record transaction
+      addTx('bet', uid, totalBet, 'completed', { game: 'Wheel', detail: `Bet ${totalBet.toFixed(2)}` });
+      await applyBet(uid, totalBet);
+     if (win > 0) {
+       addTx('win', uid, win, 'completed', { game: 'Wheel', detail: `Won ${win.toFixed(2)} on ${num}` });
+     } else {
+       addTx('loss', uid, totalBet, 'completed', { game: 'Wheel', detail: `Lost on ${num}` });
+     }
+   }
 
   wheel.result = { num, color, index: idx };
   wheel.history.unshift({ num, color });
