@@ -48,10 +48,10 @@
           '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Способ вывода</div>' +
           '<div style="display:flex;gap:8px;margin-bottom:12px"><div class="wf-mpay sel" data-mpay="cb" style="flex:1;padding:12px;border-radius:12px;border:2px solid #4caf50;background:rgba(76,175,80,0.12);text-align:center;cursor:pointer"><img src="assets/cryptobot.jpg" style="width:28px;height:28px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 4px"><span style="font-size:10px;font-weight:700;color:#fff">CryptoBot</span></div><div class="wf-mpay" data-mpay="xr" style="flex:1;padding:12px;border-radius:12px;border:2px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);text-align:center;cursor:pointer"><img src="assets/xrocket.jpg" style="width:28px;height:28px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 4px"><span style="font-size:10px;font-weight:700;color:#fff">xRocket</span></div></div>' +
           '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Сумма вывода (USDT)</div>' +
-          '<input id="wfWdAmt" type="number" min="1" step="0.1" placeholder="Мин. $1" style="width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.2);color:#fff;font-size:17px;font-weight:700;outline:none;box-sizing:border-box">' +
+          '<input id="wfWdAmt" type="number" min="1.05" step="0.01" placeholder="Мин. $1.05" style="width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.2);color:#fff;font-size:17px;font-weight:700;outline:none;box-sizing:border-box">' +
           '<div style="font-size:18px;font-weight:900;color:#4caf50;padding:8px;background:rgba(0,0,0,0.2);border-radius:8px;margin:6px 0 10px;text-align:center">К получению: $<span id="wfRec">0.00</span> <span style="font-size:10px;color:var(--muted)">(комиссия 3%)</span></div>' +
           '<button id="wfWdBtn" disabled style="width:100%;padding:14px;border-radius:12px;border:none;font-size:14px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#2196f3,#1565c0);color:#fff;opacity:0.4">📤 Вывести</button>' +
-          '<div style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.4">Мин. вывод $1 / Комиссия 3%</div>' +
+          '<div style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.4">Мин. вывод $1.05 / Комиссия 3%</div>' +
           '<div id="wfWdMsg" style="padding:10px;border-radius:10px;text-align:center;font-weight:600;font-size:12px;margin-top:8px;display:none"></div>' +
         '</div>' +
         '<div class="wf-p" data-p="hist" style="display:none"><div id="wfTxList"><div style="text-align:center;padding:30px;color:var(--muted);font-size:12px">История пуста</div></div></div>' +
@@ -154,7 +154,7 @@
   // Withdraw input
   document.getElementById('wfWdAmt').addEventListener('input', function(){
     var v=parseFloat(this.value)||0; document.getElementById('wfRec').textContent=fmt(Math.max(0,v*0.97));
-    var btn=document.getElementById('wfWdBtn'); btn.disabled=v<1; btn.style.opacity=v<1?'0.4':'1';
+    var btn=document.getElementById('wfWdBtn'); btn.disabled=v<1.05; btn.style.opacity=v<1.05?'0.4':'1';
   });
 
   // Deposit
@@ -198,7 +198,7 @@ window._invChk=setInterval(function(){
   // Withdraw
   document.getElementById('wfWdBtn').addEventListener('click', function(){
     var amt=parseFloat(document.getElementById('wfWdAmt').value)||0;
-    if(amt<1){ sM('wfWdMsg','Мин. вывод $1','err'); return; }
+    if(amt<1.05){ sM('wfWdMsg','Мин. вывод $1.05','err'); return; }
     var fee=Math.round(amt*0.03*100)/100;
     var curBal=window.Balance?Balance.get():0;
     if(amt>curBal){ sM('wfWdMsg','❌ Недостаточно средств','err'); return; }

@@ -134,10 +134,10 @@
             <div class="w-method" id="mw-xr" onclick="setPay('xr')"><span class="ico"><img src="assets/xrocket.jpg" alt="xRocket" style="width:32px;height:32px;border-radius:50%;object-fit:cover"></span><span class="nm">xRocket</span></div>
           </div>
           <div class="w-label">Сумма вывода (USDT)</div>
-          <input class="w-input" id="wamt" type="number" min="1" step="0.1" value="" placeholder="Мин. $1">
+          <input class="w-input" id="wamt" type="number" min="1.05" step="0.01" value="" placeholder="Мин. $1.05">
           <div class="w-receive">К получению: $<span id="wrec">0.00</span> <span style="font-size:10px;color:var(--muted)">(комиссия 3%)</span></div>
           <button class="w-btn w-wd-btn" id="wbtn" onclick="doWithdraw()" disabled>📤 Вывести</button>
-          <div class="w-wd-info">Мин. вывод $1 / Комиссия 3% / Автоматический вывод через CryptoBot</div>
+          <div class="w-wd-info">Мин. вывод $1.05 / Комиссия 3% / Автоматический вывод через CryptoBot</div>
           <div class="w-msg" id="wmsg"></div>
         </div>
 
@@ -251,7 +251,7 @@
       var v=parseFloat(this.value)||0;
       var r=Math.max(0,v*0.97);
       document.getElementById('wrec').textContent=fmt(r);
-      document.getElementById('wbtn').disabled=v<1;
+      document.getElementById('wbtn').disabled=v<1.05;
     };
 
     function loadHistory(){
@@ -329,7 +329,7 @@
 
     window.doWithdraw=function(){
       var amt=parseFloat(document.getElementById('wamt').value)||0;
-      if(amt<1){msg(document.getElementById('wmsg'),'Мин. вывод $1','err');return;}
+      if(amt<1.05){msg(document.getElementById('wmsg'),'Мин. вывод $1.05','err');return;}
       var fee=Math.round(amt*0.03*100)/100;
       if(amt>bal){msg(document.getElementById('wmsg'),'❌ Недостаточно средств','err');return;}
       // Check wager first

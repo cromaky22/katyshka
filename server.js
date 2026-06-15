@@ -986,7 +986,7 @@ if (status === 'paid' || status === 'completed' || status === 'success') {
 app.post('/api/withdraw/xrocket', async (req, res) => {
   try {
     const { userId, amount } = req.body;
-    if (!userId || !amount || amount < 1) return res.status(400).json({ error: 'Min $1' });
+    if (!userId || !amount || amount < 1.05) return res.status(400).json({ error: 'Min $1.05' });
     
     // Check wager status
     var wager = getWagerStatus(userId);
@@ -1021,7 +1021,7 @@ app.post('/api/withdraw/xrocket', async (req, res) => {
 app.post('/api/withdraw/cryptobot', async (req, res) => {
   try {
     const { userId, amount } = req.body;
-    if (!userId || !amount || amount < 1) return res.status(400).json({ error: 'Min $1' });
+    if (!userId || !amount || amount < 1.05) return res.status(400).json({ error: 'Min $1.05' });
     
     // Check wager status
     var wager = getWagerStatus(userId);
