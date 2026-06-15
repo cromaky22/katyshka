@@ -14,8 +14,13 @@ app.get('/api/users', async (req, res) => {
   const id = req.query.id;
   if (id) {
     const dbUser = await dbGetUser(id);
-    if (dbUser) return res.json({ ok: true, balance: dbUser.balance, ...dbUser });
-    return res.json({ ok: true, balance: getBalance(id) });
+    if (dbUser) {
+      const { id: uid, ...rest } = dbUser;
+      return res.json({ ok: true, balance: dbUser.balance, wager_required: dbUser.wager_required || 0, wager_total: dbUser.wager_total || 0, deposit_total: dbUser.deposit_total || 0, ...rest });
+    }
+    const bal = getBalance(id);
+    const u = users[id] || {};
+    return res.json({ ok: true, balance: bal, wager_required: u.wager_required || 0, wager_total: u.wager_total || 0, deposit_total: u.deposit_total || 0 });
   }
   const userList = await dbGetAllUsers();
   res.json(userList);
