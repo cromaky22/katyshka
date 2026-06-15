@@ -563,7 +563,22 @@ app.post('/api/invoice', async (req, res) => {
          ok: true,
          invoiceId: result.result.invoice_id,
          payUrl: result.result.bot_invoice_url
-       });
+});
+
+// API: Debug user data
+app.get('/api/debug/:userId', async (req, res) => {
+   const uid = String(req.params.userId);
+   if (usePostgres) {
+     try {
+       const result = await db.query('SELECT * FROM users WHERE id = $1', [uid]);
+       res.json({ ok: true, postgres: result.rows[0] || null, memory: users[uid] || null });
+     } catch(e) {
+       res.json({ ok: false, error: e.message });
+     }
+   } else {
+     res.json({ ok: true, memory: users[uid] || null, postgres: null });
+   }
+ });
      } else {
        res.status(500).json({ error: result.error || 'Failed to create invoice' });
      }
@@ -1172,53 +1187,6 @@ app.get('/api/tg-photo/:id', async (req, res) => {
    server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
  }
  startServer();
-
-// === INIT DB ===
-async function initDb() {
-  console.log('🔍 DATABASE_URL:', process.env.DATABASE_URL ? 'SET' : 'NOT SET');
-  console.log('🔍 usePostgres:', usePostgres);
-  if (!usePostgres) {
-    console.log('⚠️ PostgreSQL not configured — transactions will NOT be saved permanently!');
-    return;
-  }
-  try {
-    // Create tables
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id TEXT PRIMARY KEY,
-        balance REAL DEFAULT 0,
-        first_name TEXT,
-        last_name TEXT,
-        username TEXT,
-        avatar TEXT,
-        created_at TIMESTAMP DEFAULT NOW()
-      );
-      CREATE TABLE IF NOT EXISTS transactions (
-        id SERIAL PRIMARY KEY,
-        type TEXT,
-        user_id TEXT,
-        amount REAL,
-        detail TEXT,
-        game TEXT,
-        time BIGINT,
-        status TEXT DEFAULT 'completed',
-        created_at TIMESTAMP DEFAULT NOW()
-      );
-    `);
-    
-    // Load users from DB to memory
-    const res = await db.query('SELECT * FROM users');
-    res.rows.forEach(row => {
-      users[row.id] = { balance: row.balance, first_name: row.first_name, last_name: row.last_name, username: row.username, avatar: row.avatar };
-    });
-    console.log('🐘 Loaded', res.rows.length, 'users from PostgreSQL');
-    
-    // Transactions are loaded on-demand per user
-  } catch (e) {
-    console.error('DB init error:', e.message);
-  }
-}
-initDb();
 
 // Bot disabled — run separately via bot.js
 // Set SERVER_URL env var on Railway for bot to work
