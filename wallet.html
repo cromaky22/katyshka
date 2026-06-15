@@ -305,6 +305,7 @@
                 clearInterval(invChk);
                 upd(bal+parseFloat(cd.amount));
                 msg(document.getElementById('dmsg'),'✅ Оплачено! +$'+fmt(cd.amount),'ok');
+                loadWager();
               }
             }).catch(function(){});
           },3000);

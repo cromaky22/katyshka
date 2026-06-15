@@ -235,6 +235,24 @@ try {
   console.error('Failed to load data:', e);
 }
 
+// Load users from PostgreSQL on start (overrides file data if PG is available)
+async function loadUsersFromPG() {
+  if (!usePostgres) return;
+  try {
+    const result = await db.query('SELECT id, balance, wager_required, wager_total, deposit_total, wager_multiplier FROM users');
+    result.rows.forEach(row => {
+      users[row.id] = {
+        balance: row.balance || 0,
+        wager_required: row.wager_required || 0,
+        wager_total: row.wager_total || 0,
+        deposit_total: row.deposit_total || 0,
+        wager_multiplier: row.wager_multiplier || 3
+      };
+    });
+    console.log('🐘 Loaded from PostgreSQL:', result.rows.length, 'users');
+  } catch(e) { console.error('PG load error:', e.message); }
+}
+
 // Save data to file (fallback)
 function saveData() {
   try {
@@ -394,8 +412,12 @@ function applyDeposit(userId, amount) {
   saveData();
   if (usePostgres) {
     try {
-      db.query('UPDATE users SET wager_required=$1, wager_total=$2, deposit_total=$3, wager_multiplier=$4 WHERE id=$5',
-        [u.wager_required, u.wager_total, u.deposit_total, u.wager_multiplier, userId]);
+      // Insert user if not exists, then update wager
+      db.query(`
+        INSERT INTO users (id, balance, wager_required, wager_total, deposit_total, wager_multiplier) 
+        VALUES ($1, $2, $3, $4, $5, $6)
+        ON CONFLICT (id) DO UPDATE SET wager_required=$3, wager_total=$4, deposit_total=$5, wager_multiplier=$6
+      `, [userId, users[userId].balance, u.wager_required, u.wager_total, u.deposit_total, u.wager_multiplier]);
     } catch(e) {}
   }
 }
@@ -409,8 +431,11 @@ function applyPromo(userId, amount) {
   saveData();
   if (usePostgres) {
     try {
-      db.query('UPDATE users SET wager_required=$1, wager_total=$2, wager_multiplier=$3 WHERE id=$4',
-        [u.wager_required, u.wager_total, u.wager_multiplier, userId]);
+      db.query(`
+        INSERT INTO users (id, balance, wager_required, wager_total, wager_multiplier) 
+        VALUES ($1, $2, $3, $4, $5)
+        ON CONFLICT (id) DO UPDATE SET wager_required=$3, wager_total=$4, wager_multiplier=$5
+      `, [userId, users[userId].balance, u.wager_required, u.wager_total, u.wager_multiplier]);
     } catch(e) {}
   }
 }
@@ -1007,7 +1032,11 @@ app.get('/api/tg-photo/:id', async (req, res) => {
 
 // === START ===
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+// Load users from PG before starting
+loadUsersFromPG().then(() => {
+  server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+});
 
 // === INIT DB ===
 async function initDb() {
