@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Under 7 — Nvuti</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/under7.css">
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<body class="page-under7">
+  <header class="app-header">
+    <div class="left-controls"></div>
+    <div class="header-title">UNDER 7</div>
+    <div class="right-controls" style="position:relative">
+      <div class="balance-pill">
+        <span class="wallet-icon">💠</span>
+        <span class="balance-value">0.00</span>
+        <span class="currency">$</span>
+        <span class="caret">▾</span>
+      </div>
+      <button class="profile" id="profileBtn" title="Профиль" aria-label="Профиль"><img class="profile-icon" src="" alt="Аватар" onerror="this.style.display='none'"></button>
+      <div class="profile-dropdown" id="profileDropdown">
+        <div class="pd-header">
+          <div class="pd-id-label">ID игрока</div>
+          <div class="pd-id-value">
+            <span id="pdUserId">—</span>
+          </div>
+        </div>
+        <div class="pd-body">
+          <a href="profile.html" class="pd-btn"><span class="pd-btn-icon">👤</span>Профиль<span class="pd-btn-arrow">→</span></a>
+          <button class="pd-btn" id="pdPromoBtn"><span class="pd-btn-icon">🎟</span>Промокод<span class="pd-btn-arrow">→</span></button>
+        </div>
+      </div>
+      <div class="pd-overlay" id="pdOverlay"></div>
+    </div>
+  </header>
+
+  <main class="content">
+    <section class="under7">
+      <div class="under7-board">
+        <div class="history-section">
+          <div class="history-header"><span>📊 ИСТОРИЯ</span></div>
+          <div class="history-scroll" id="historyScroll"></div>
+        </div>
+
+        <div class="game-field">
+          <div class="dice-container">
+            <div class="dice" id="dice1">
+              <div class="dice-face front">⚀</div>
+              <div class="dice-face back">⚁</div>
+              <div class="dice-face right">⚂</div>
+              <div class="dice-face left">⚃</div>
+              <div class="dice-face top">⚄</div>
+              <div class="dice-face bottom">⚅</div>
+            </div>
+            <div class="dice" id="dice2">
+              <div class="dice-face front">⚀</div>
+              <div class="dice-face back">⚁</div>
+              <div class="dice-face right">⚂</div>
+              <div class="dice-face left">⚃</div>
+              <div class="dice-face top">⚄</div>
+              <div class="dice-face bottom">⚅</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="result-area">
+          <div class="result-message" id="resultMessage"></div>
+        </div>
+
+        <div class="stake-section">
+          <div class="stake-row">
+            <input id="stakeInput" type="number" min="0.1" step="0.1" value="0.1">
+            <div class="stake-btns">
+              <button class="modify-btn" id="halfBtn">½</button>
+              <button class="modify-btn" id="doubleBtn">×2</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="quick-bet-btns">
+          <button class="quick-btn" data-amount="1">1$</button>
+          <button class="quick-btn" data-amount="3">3$</button>
+          <button class="quick-btn" data-amount="5">5$</button>
+          <button class="quick-btn" data-amount="10">10$</button>
+        </div>
+
+        <button id="repeatBtn" class="btn repeat-btn">Повторить ставку</button>
+
+        <div class="choice-buttons">
+          <button id="btnUnder" class="btn choice-btn under-btn">
+            <span class="choice-multi">x2.3</span>
+            <span class="choice-text">ПОД 7</span>
+          </button>
+          <button id="btnExact" class="btn choice-btn exact-btn">
+            <span class="choice-multi">x5.8</span>
+            <span class="choice-text">7</span>
+          </button>
+          <button id="btnOver" class="btn choice-btn over-btn">
+            <span class="choice-multi">x2.3</span>
+            <span class="choice-text">НАД 7</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <a href="home.html#games" class="nav-item" data-name="games"><span class="icon">🎮</span><span class="label">Games</span></a>
+    <a href="wallet.html" class="nav-item" data-name="wallet"><span class="icon">💼</span><span class="label">Wallet</span></a>
+    <a href="home.html" class="nav-item center" data-name=""><span class="icon">💎</span></a>
+    <a href="bonus.html" class="nav-item" data-name="bonus"><span class="icon">🎁</span><span class="label">Bonus</span></a>
+    <a href="menu.html" class="nav-item" data-name="menu"><span class="icon">☰</span><span class="label">Menu</span></a>
+  </nav>
+
+  <script src="js/app.js"></script>
+  <script src="js/balance.js"></script>
+  <script src="js/under7.js"></script>
+</body>
+</html>
