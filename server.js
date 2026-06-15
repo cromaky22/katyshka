@@ -605,13 +605,17 @@ app.post('/api/invoice/check', async (req, res) => {
       const inv = result.result.items[0];
 
       // If paid, credit balance + apply wager
-      if (inv.status === 'paid' || inv.status === 'completed' || inv.status === 'success') {
-        try {
-          console.log('[WAGER] Invoice paid, payload:', inv.payload);
-          const payload = JSON.parse(inv.payload || '{}');
-          console.log('[WAGER] Parsed payload:', payload);
-          if (payload.userId) {
-            var depAmount = parseFloat(inv.amount);
+if (inv.status === 'paid' || inv.status === 'completed' || inv.status === 'success') {
+         try {
+           console.log('[WAGER] Invoice paid, payload:', inv.payload);
+           const payload = JSON.parse(inv.payload || '{}');
+           console.log('[WAGER] Parsed payload:', payload);
+           if (payload.userId) {
+             var depAmount = parseFloat(inv.amount);
+             if (isNaN(depAmount) || depAmount <= 0) {
+               console.error('[WAGER] Invalid amount:', inv.amount);
+               return;
+             }
             var userIdStr = String(payload.userId);
             var oldBal = getBalance(userIdStr);
             if (!users[userIdStr]) users[userIdStr] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
@@ -620,8 +624,9 @@ app.post('/api/invoice/check', async (req, res) => {
             u.wager_required = Math.round((u.wager_required + depAmount * WAGER_MULT_DEFAULT) * 100) / 100;
             u.wager_total = Math.round((u.wager_total + depAmount * WAGER_MULT_DEFAULT) * 100) / 100;
             u.deposit_total = Math.round((u.deposit_total + depAmount) * 100) / 100;
-            u.wager_multiplier = WAGER_MULT_DEFAULT;
-            saveData();
+u.wager_multiplier = WAGER_MULT_DEFAULT;
+             await addTx('deposit', userIdStr, depAmount, 'completed', { provider: 'cryptobot' });
+             saveData();
             if (usePostgres) {
               try {
                 await db.query(`
@@ -664,10 +669,19 @@ app.post('/api/cryptobot-hook', express.raw({ type: 'application/json' }), async
    try {
      const body = JSON.parse(req.body.toString());
      if (body.update_type === 'invoice_paid') {
-       const payload = JSON.parse(body.payload.payload || '{}');
-       if (payload.userId) {
-         const userIdStr = String(payload.userId);
-         const amount = parseFloat(body.payload.amount);
+// Handle payload as object or JSON string
+        let payload;
+        const pay = body.payload || {};
+        try {
+          payload = typeof pay.payload === 'string' ? JSON.parse(pay.payload) : (pay.payload || pay || {});
+        } catch(e) { payload = pay.payload || pay || {}; }
+        if (payload.userId) {
+          const userIdStr = String(payload.userId);
+          const amount = parseFloat(pay.amount);
+         if (isNaN(amount) || amount <= 0) {
+           console.error('[WAGER] CryptoBot: Invalid amount:', body.payload.amount);
+           return;
+         }
          if (!users[userIdStr]) users[userIdStr] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
          var u = users[userIdStr];
          u.wager_required = Math.round((u.wager_required + amount * WAGER_MULT_DEFAULT) * 100) / 100;
@@ -676,6 +690,7 @@ app.post('/api/cryptobot-hook', express.raw({ type: 'application/json' }), async
          u.wager_multiplier = WAGER_MULT_DEFAULT;
          u.balance = Math.round((getBalance(userIdStr) + amount) * 100) / 100;
          users[userIdStr] = u;
+         await addTx('deposit', userIdStr, amount, 'completed', { provider: 'cryptobot' });
          saveData();
          if (usePostgres) {
            try {
@@ -778,42 +793,49 @@ app.post('/api/invoice/check/xrocket', async (req, res) => {
        const inv = result.data || result;
        const status = inv.status || inv.state;
        
-       if (status === 'paid' || status === 'completed' || status === 'success') {
-         try {
-           const payload = JSON.parse(inv.payload || '{}');
-           if (payload.userId) {
-             const userIdStr = String(payload.userId);
-             const amount = parseFloat(inv.amount);
-             if (!users[userIdStr]) users[userIdStr] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
-             var u = users[userIdStr];
-             u.wager_required = Math.round((u.wager_required + amount * WAGER_MULT_DEFAULT) * 100) / 100;
-             u.wager_total = Math.round((u.wager_total + amount * WAGER_MULT_DEFAULT) * 100) / 100;
-             u.deposit_total = Math.round((u.deposit_total + amount) * 100) / 100;
-             u.wager_multiplier = WAGER_MULT_DEFAULT;
-             u.balance = Math.round((getBalance(userIdStr) + amount) * 100) / 100;
-             users[userIdStr] = u;
-             saveData();
-             if (usePostgres) {
-               try {
-                 await db.query(`
-                   INSERT INTO users (id, balance, wager_required, wager_total, deposit_total, wager_multiplier) 
-                   VALUES ($1, $2, $3, $4, $5, $6)
-                   ON CONFLICT (id) DO UPDATE SET 
-                     balance = EXCLUDED.balance,
-                     wager_required = EXCLUDED.wager_required,
-                     wager_total = EXCLUDED.wager_total,
-                     deposit_total = EXCLUDED.deposit_total,
-                     wager_multiplier = EXCLUDED.wager_multiplier
-                 `, [userIdStr, u.balance, u.wager_required, u.wager_total, u.deposit_total, u.wager_multiplier]);
-               } catch(e) { console.error('[WAGER] xRocket PG error:', e.message); }
+if (status === 'paid' || status === 'completed' || status === 'success') {
+           try {
+             // Handle payload as object or JSON string
+             let payload;
+             try {
+               payload = typeof inv.payload === 'string' ? JSON.parse(inv.payload) : (inv.payload || {});
+             } catch(e) { payload = {}; }
+             if (payload.userId) {
+               const userIdStr = String(payload.userId);
+               const amount = parseFloat(inv.amount);
+               if (isNaN(amount) || amount <= 0) {
+                 console.error('[WAGER] xRocket: Invalid amount:', inv.amount);
+                 return;
+               }
+               if (!users[userIdStr]) users[userIdStr] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
+               var u = users[userIdStr];
+               u.wager_required = Math.round((u.wager_required + amount * WAGER_MULT_DEFAULT) * 100) / 100;
+               u.wager_total = Math.round((u.wager_total + amount * WAGER_MULT_DEFAULT) * 100) / 100;
+               u.deposit_total = Math.round((u.deposit_total + amount) * 100) / 100;
+               u.wager_multiplier = WAGER_MULT_DEFAULT;
+               u.balance = Math.round((getBalance(userIdStr) + amount) * 100) / 100;
+               users[userIdStr] = u;
+               await addTx('deposit', userIdStr, amount, 'completed', { provider: 'xrocket', invoiceId: String(invoiceId) });
+               saveData();
+               if (usePostgres) {
+                 try {
+                   await db.query(`
+                     INSERT INTO users (id, balance, wager_required, wager_total, deposit_total, wager_multiplier) 
+                     VALUES ($1, $2, $3, $4, $5, $6)
+                     ON CONFLICT (id) DO UPDATE SET 
+                       balance = EXCLUDED.balance,
+                       wager_required = EXCLUDED.wager_required,
+                       wager_total = EXCLUDED.wager_total,
+                       deposit_total = EXCLUDED.deposit_total,
+                       wager_multiplier = EXCLUDED.wager_multiplier
+                   `, [userIdStr, u.balance, u.wager_required, u.wager_total, u.deposit_total, u.wager_multiplier]);
+                 } catch(e) { console.error('[WAGER] xRocket PG error:', e.message); }
+               }
+               io.emit('balance_update', { userId: userIdStr, balance: u.balance });
+               console.log(`xRocket: Credited $${inv.amount} to ${userIdStr}, wager=$${u.wager_required}`);
              }
-             io.emit('balance_update', { userId: userIdStr, balance: u.balance });
-             const tx = transactions.find(t => t.invoiceId === String(invoiceId));
-             if (tx) tx.status = 'completed';
-             console.log(`xRocket: Credited $${inv.amount} to ${userIdStr}, wager=$${u.wager_required}`);
-           }
-         } catch (e) { console.error('xRocket check error:', e); }
-       }
+           } catch (e) { console.error('xRocket check error:', e); }
+         }
        res.json({ ok: true, status, amount: inv.amount });
      } else {
        res.json({ ok: true, status: 'not_found' });
