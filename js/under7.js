@@ -35,26 +35,25 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   });
 
-  // Target rotation to show a specific face on top
-  // f1=front, f6=back, f2=right, f5=left, f3=top, f4=bottom
-  // To show face N on top, we need specific rotateX/rotateY
-  const faceRotation = {
-    1: { x: 0, y: 0 },
-    2: { x: 0, y: 90 },
-    3: { x: -90, y: 0 },
-    4: { x: 90, y: 0 },
-    5: { x: 0, y: -90 },
-    6: { x: 0, y: 180 }
+  // Dot patterns for dice faces 1-6
+  // 9 grid positions: 0 1 2 / 3 4 5 / 6 7 8
+  // true = dot visible, false = hidden
+  const patterns = {
+    1: [0,0,0, 0,1,0, 0,0,0],  // center only
+    2: [1,0,0, 0,0,0, 0,0,1],  // top-left + bottom-right
+    3: [1,0,0, 0,1,0, 0,0,1],  // diagonal
+    4: [1,0,1, 0,0,0, 1,0,1],  // 4 corners
+    5: [1,0,1, 0,1,0, 1,0,1],  // 4 corners + center
+    6: [1,0,1, 1,0,1, 1,0,1]   // 6 dots (3 per column)
   };
 
-  // Set dice to show specific value (1-6)
-  function setDiceValue(diceEl, value){
-    const rot = faceRotation[value];
-    // Add extra full spins for visual effect
-    const extraX = 360 * (2 + Math.floor(Math.random() * 3));
-    const extraY = 360 * (2 + Math.floor(Math.random() * 3));
-    diceEl.style.setProperty('--fx', (rot.x + extraX) + 'deg');
-    diceEl.style.setProperty('--fy', (rot.y + extraY) + 'deg');
+  function setDice(diceEl, value){
+    const p = patterns[value];
+    const dots = diceEl.querySelectorAll('.dot');
+    dots.forEach((dot, i) => {
+      if(p[i]) dot.classList.remove('h');
+      else dot.classList.add('h');
+    });
   }
 
   function rollDice(){
@@ -62,39 +61,26 @@ document.addEventListener('DOMContentLoaded', function(){
     const d2 = Math.floor(Math.random() * 6) + 1;
     const sum = d1 + d2;
 
-    // Start rolling animation
-    dice1.classList.add('rolling');
-    dice2.classList.add('rolling');
+    dice1.classList.add('roll');
+    dice2.classList.add('roll');
 
-    // Show random faces during roll for visual effect
-    // We do this by quickly changing the target and letting CSS animation handle it
-    let rollSteps = 0;
-    const maxRollSteps = 8;
-    const rollInterval = setInterval(()=>{
-      if(rollSteps < maxRollSteps - 2){
-        // Random faces during roll
-        const rand1 = Math.floor(Math.random() * 6) + 1;
-        const rand2 = Math.floor(Math.random() * 6) + 1;
-        const rot1 = faceRotation[rand1];
-        const rot2 = faceRotation[rand2];
-        dice1.style.transform = 'rotateX(' + rot1.x + 'deg) rotateY(' + rot1.y + 'deg)';
-        dice2.style.transform = 'rotateX(' + rot2.x + 'deg) rotateY(' + rot2.y + 'deg)';
-      }
-      rollSteps++;
-    }, 80);
+    // Rapidly change faces during roll
+    let steps = 0;
+    const interval = setInterval(()=>{
+      setDice(dice1, Math.floor(Math.random() * 6) + 1);
+      setDice(dice2, Math.floor(Math.random() * 6) + 1);
+      steps++;
+    }, 70);
 
     return new Promise(resolve => {
       setTimeout(()=>{
-        clearInterval(rollInterval);
-        dice1.classList.remove('rolling');
-        dice2.classList.remove('rolling');
-        // Set final values with extra rotation spins
-        setDiceValue(dice1, d1);
-        setDiceValue(dice2, d2);
-        dice1.style.transform = 'rotateX(' + dice1.style.getPropertyValue('--fx').replace('deg','') + 'deg) rotateY(' + dice1.style.getPropertyValue('--fy').replace('deg','') + 'deg)';
-        dice2.style.transform = 'rotateX(' + dice2.style.getPropertyValue('--fx').replace('deg','') + 'deg) rotateY(' + dice2.style.getPropertyValue('--fy').replace('deg','') + 'deg)';
+        clearInterval(interval);
+        dice1.classList.remove('roll');
+        dice2.classList.remove('roll');
+        setDice(dice1, d1);
+        setDice(dice2, d2);
         resolve({ d1, d2, sum });
-      }, 700);
+      }, 500);
     });
   }
 
@@ -146,9 +132,7 @@ document.addEventListener('DOMContentLoaded', function(){
   btnExact.addEventListener('click', ()=>play('exact'));
 
   repeatBtn.addEventListener('click', ()=>{
-    if(lastStake > 0){
-      stakeInput.value = lastStake.toFixed(2);
-    }
+    if(lastStake > 0) stakeInput.value = lastStake.toFixed(2);
   });
 
   document.addEventListener('keydown', (e)=>{
