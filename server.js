@@ -1179,10 +1179,23 @@ app.get('/api/tg-photo/:id', async (req, res) => {
          )
        `);
        await loadUsersFromPG();
-       console.log('🐘 Database ready');
+       console.log('🐘 Database ready, users loaded');
      } catch(e) {
        console.error('DB start error:', e.message);
+       // Fallback to file storage
+       if (fs.existsSync(DATA_FILE)) {
+         try {
+           const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+           users = data.users || {};
+           console.log('📂 Loaded', Object.keys(users).length, 'users from file fallback');
+         } catch(ex) {
+           console.error('Failed to load from file:', ex.message);
+         }
+       }
      }
+   } else {
+     // File-based loading
+     console.log('📂 PostgreSQL not configured, using file storage');
    }
    server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
  }
