@@ -169,6 +169,8 @@ try {
         balance REAL DEFAULT 0,
         bonus_balance REAL DEFAULT 0,
         wager_required REAL DEFAULT 0,
+        wager_total REAL DEFAULT 0,
+        deposit_total REAL DEFAULT 0,
         wager_multiplier REAL DEFAULT 3,
         first_name TEXT,
         last_name TEXT,
@@ -199,6 +201,8 @@ try {
       // Add columns if not exist (migrations)
       db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS bonus_balance REAL DEFAULT 0').catch(()=>{});
       db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS wager_required REAL DEFAULT 0').catch(()=>{});
+      db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS wager_total REAL DEFAULT 0').catch(()=>{});
+      db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS deposit_total REAL DEFAULT 0').catch(()=>{});
       db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS wager_multiplier REAL DEFAULT 3').catch(()=>{});
       db.query('ALTER TABLE promos ADD COLUMN IF NOT EXISTS wager_mult REAL DEFAULT 5').catch(()=>{});
     }).catch(e => {
@@ -592,12 +596,11 @@ app.post('/api/invoice/check', async (req, res) => {
             var oldBal = getBalance(userIdStr);
             if (!users[userIdStr]) users[userIdStr] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
             var u = users[userIdStr];
+            u.balance = Math.round((oldBal + depAmount) * 100) / 100;
             u.wager_required = Math.round((u.wager_required + depAmount * WAGER_MULT_DEFAULT) * 100) / 100;
             u.wager_total = Math.round((u.wager_total + depAmount * WAGER_MULT_DEFAULT) * 100) / 100;
             u.deposit_total = Math.round((u.deposit_total + depAmount) * 100) / 100;
             u.wager_multiplier = WAGER_MULT_DEFAULT;
-            u.balance = Math.round((oldBal + depAmount) * 100) / 100;
-            users[userIdStr] = u;
             saveData();
             if (usePostgres) {
               try {
