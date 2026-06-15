@@ -245,7 +245,6 @@ try {
       );
     `).then(() => {
       console.log('✅ DB tables ready');
-      // Add columns if not exist (migrations)
       db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS bonus_balance REAL DEFAULT 0').catch(()=>{});
       db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS wager_required REAL DEFAULT 0').catch(()=>{});
       db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS wager_total REAL DEFAULT 0').catch(()=>{});
@@ -255,8 +254,7 @@ try {
     }).catch(e => {
       console.error('DB init error:', e.message);
     });
-  }
-} else {
+  } else {
     console.log('⚠️  No DATABASE_URL set — data will be lost on restart!');
     console.log('⚠️  Add PostgreSQL add-on on Railway to persist data');
   }
