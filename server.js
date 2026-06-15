@@ -373,7 +373,7 @@ function getBalance(id) {
 }
 
 async function setBalance(id, amt) {
-   if (!users[id]) users[id] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0 };
+   if (!users[id]) users[id] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
    users[id].balance = Math.round(amt * 100) / 100;
    
    if (usePostgres) {
@@ -384,10 +384,10 @@ async function setBalance(id, amt) {
          VALUES ($1, $2, $3, $4, $5, $6)
          ON CONFLICT (id) DO UPDATE SET 
            balance = EXCLUDED.balance,
-           wager_required = COALESCE(users.wager_required, 0),
-           wager_total = COALESCE(users.wager_total, 0),
-           deposit_total = COALESCE(users.deposit_total, 0),
-           wager_multiplier = COALESCE(users.wager_multiplier, 3)
+           wager_required = EXCLUDED.wager_required,
+           wager_total = EXCLUDED.wager_total,
+           deposit_total = EXCLUDED.deposit_total,
+           wager_multiplier = EXCLUDED.wager_multiplier
        `, [id, users[id].balance, u.wager_required || 0, u.wager_total || 0, u.deposit_total || 0, u.wager_multiplier || 3]);
      } catch (e) {}
    }
@@ -475,8 +475,12 @@ app.post('/api/wager/bet', async (req, res) => {
 
 // API: Get wager status
 app.get('/api/wager/:userId', (req, res) => {
-  res.json({ ok: true, ...getWagerStatus(req.params.userId) });
-});
+   const uid = String(req.params.userId);
+   console.log('[WAGER API] Getting status for user:', uid);
+   const status = getWagerStatus(uid);
+   console.log('[WAGER API] Status:', status);
+   res.json({ ok: true, ...status });
+ });
 
 // Add transaction to history
 async function addTx(type, userId, amount, status, extra) {
@@ -526,38 +530,39 @@ async function cryptobot(method, params) {
 
 // Create invoice
 app.post('/api/invoice', async (req, res) => {
-  try {
-    const { userId, amount } = req.body;
-    if (!userId || !amount || amount < 0.1) {
-      return res.status(400).json({ error: 'Min amount: $0.1' });
-    }
+   try {
+     const { userId, amount } = req.body;
+     if (!userId || !amount || amount < 0.1) {
+       return res.status(400).json({ error: 'Min amount: $0.1' });
+     }
 
-    const result = await cryptobot('createInvoice', {
-      asset: 'USDT',
-      amount: String(Number(amount).toFixed(2)),
-      description: `Deposit for ${userId}`,
-      payload: JSON.stringify({ userId }),
-      expires_in: 1800,
-      allow_anonymous: false,
-      allow_comments: false
-    });
+     const userIdStr = String(userId);
+     const result = await cryptobot('createInvoice', {
+       asset: 'USDT',
+       amount: String(Number(amount).toFixed(2)),
+       description: `Deposit for ${userIdStr}`,
+       payload: JSON.stringify({ userId: userIdStr }),
+       expires_in: 1800,
+       allow_anonymous: false,
+       allow_comments: false
+     });
 
-    console.log('Cryptobot createInvoice:', JSON.stringify(result));
+     console.log('Cryptobot createInvoice:', JSON.stringify(result));
 
-    if (result.ok) {
-      res.json({
-        ok: true,
-        invoiceId: result.result.invoice_id,
-        payUrl: result.result.bot_invoice_url
-      });
-    } else {
-      res.status(500).json({ error: result.error || 'Failed to create invoice' });
-    }
-  } catch (e) {
-    console.error('Invoice error:', e);
-    res.status(500).json({ error: e.message });
-  }
-});
+     if (result.ok) {
+       res.json({
+         ok: true,
+         invoiceId: result.result.invoice_id,
+         payUrl: result.result.bot_invoice_url
+       });
+     } else {
+       res.status(500).json({ error: result.error || 'Failed to create invoice' });
+     }
+   } catch (e) {
+     console.error('Invoice error:', e);
+     res.status(500).json({ error: e.message });
+   }
+ });
 
 // Check invoice
 app.post('/api/invoice/check', async (req, res) => {
@@ -576,7 +581,7 @@ app.post('/api/invoice/check', async (req, res) => {
       const inv = result.result.items[0];
 
       // If paid, credit balance + apply wager
-      if (inv.status === 'paid') {
+      if (inv.status === 'paid' || inv.status === 'completed' || inv.status === 'success') {
         try {
           console.log('[WAGER] Invoice paid, payload:', inv.payload);
           const payload = JSON.parse(inv.payload || '{}');
@@ -594,6 +599,8 @@ app.post('/api/invoice/check', async (req, res) => {
         } catch (e) {
           console.error('[WAGER] Error:', e);
         }
+      } else {
+        console.log('[WAGER] Invoice status:', inv.status, '(not paid)');
       }
 
       res.json({ ok: true, status: inv.status, amount: inv.amount });
@@ -652,28 +659,29 @@ async function xrocket(method, params) {
 
 // Create xRocket invoice
 app.post('/api/invoice/xrocket', async (req, res) => {
-  try {
-    const { userId, amount } = req.body;
-    if (!userId || !amount || amount < 0.1) {
-      return res.status(400).json({ error: 'Min amount: $0.1' });
-    }
+   try {
+     const { userId, amount } = req.body;
+     if (!userId || !amount || amount < 0.1) {
+       return res.status(400).json({ error: 'Min amount: $0.1' });
+     }
 
-    console.log('Creating xRocket invoice:', { userId, amount });
+     const userIdStr = String(userId);
+     console.log('Creating xRocket invoice:', { userId: userIdStr, amount });
 
-    const result = await xrocket('invoices', {
-      amount: String(Number(amount).toFixed(2)),
-      currency: 'TON',
-      description: `Deposit for ${userId}`,
-      payload: JSON.stringify({ userId }),
-      expire: 1800
-    });
+     const result = await xrocket('invoices', {
+       amount: String(Number(amount).toFixed(2)),
+       currency: 'TON',
+       description: `Deposit for ${userIdStr}`,
+       payload: JSON.stringify({ userId: userIdStr }),
+       expire: 1800
+     });
 
-    console.log('xRocket response:', JSON.stringify(result));
+     console.log('xRocket response:', JSON.stringify(result));
 
-    if (result.success || result.data || result.invoice_id || result.id) {
-      const invoice = result.data || result;
-      const invoiceId = invoice.invoice_id || invoice.id;
-      const payUrl = invoice.pay_url || invoice.bot_invoice_url || invoice.mini_app_invoice_url || `https://t.me/xRocket?start=invoice_${invoiceId}`;
+     if (result.success || result.data || result.invoice_id || result.id) {
+       const invoice = result.data || result;
+       const invoiceId = invoice.invoice_id || invoice.id;
+       const payUrl = invoice.pay_url || invoice.bot_invoice_url || invoice.mini_app_invoice_url || `https://t.me/xRocket?start=invoice_${invoiceId}`;
       
       addTx('deposit', userId, Number(amount), 'pending', { provider: 'xrocket', invoiceId: String(invoiceId) });
       
