@@ -6,16 +6,23 @@
   <title>Бонус — KATYSHKA</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
-    .bonus-section{padding:16px 16px 100px;max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
-
-    /* Subscribe card */
+    body.page-bonus::before{
+      content:'';position:fixed;top:-100px;left:-100px;right:-100px;bottom:-100px;pointer-events:none;z-index:1;
+      background:url('../assets/ssa.jpg') center/cover no-repeat;
+      opacity:0.5;
+    }
+    body.page-bonus::after{
+      content:'';position:fixed;inset:0;pointer-events:none;z-index:1;
+      background:linear-gradient(160deg,rgba(6,0,18,0.7) 0%,rgba(13,5,32,0.6) 40%,rgba(10,21,37,0.65) 70%,rgba(6,0,18,0.7) 100%);
+    }
+    .bonus-section{padding:16px 16px 100px;max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:14px;position:relative;z-index:2}
     .subscribe-box{background:linear-gradient(135deg,rgba(21,97,255,0.3),rgba(46,227,107,0.2));border-radius:14px;padding:14px;border:1px solid rgba(255,255,255,0.1)}
     .subscribe-title{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-    .subscribe-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#1559ff,#2b84ea);color:#fff;text-decoration:none;transition:all 0.2s}
+    .subscribe-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:10px 16px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#1559ff,#2b84ea);color:#fff;text-decoration:none;transition:all 0.2s}
+    .subscribe-btn .telega-icon{width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0}
     .subscribe-btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(21,89,255,0.3)}
-    .subscribe-btn.subscribed{background:#2a2a3a;color:#888;cursor:default;pointer-events:none}
-    .subscribe-btn.subscribed:hover{transform:none;box-shadow:none}
-    .subscribe-btn img{width:20px;height:20px;border-radius:50%;flex-shrink:0}
+    .subscribe-btn.done{background:#2a2a3a;color:#888;cursor:default;pointer-events:none}
+    .subscribe-btn.done:hover{transform:none;box-shadow:none}
     .subscribe-claim{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#ffd700,#ff6b9d);color:#000;margin-top:8px;transition:all 0.2s}
     .subscribe-claim:hover{transform:translateY(-1px)}
     .subscribe-claim:disabled{opacity:0.4;cursor:not-allowed;transform:none}
@@ -23,29 +30,22 @@
     .subscribe-status.show{display:block}
     .subscribe-status.success{background:rgba(46,227,107,0.12);color:#2ee36b;border:1px solid rgba(46,227,107,0.25)}
     .subscribe-status.error{background:rgba(244,67,54,0.12);color:#f44336;border:1px solid rgba(244,67,54,0.25)}
-
-    /* Wheel area */
     .wheel-card{background:rgba(12,14,32,0.7);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;border:1px solid rgba(255,255,255,0.08)}
     .wheel-header{text-align:center}
     .wheel-title{font-size:20px;font-weight:900}
     .wheel-sub{font-size:12px;color:var(--muted);margin-top:2px}
-
     .wheel-container{position:relative;width:100%;max-width:280px;margin:0 auto}
     .wheel-canvas{width:100%;aspect-ratio:1;border-radius:50%;box-shadow:0 0 0 6px rgba(255,255,255,0.08),0 0 40px rgba(107,47,160,0.4);background:#0a0118;display:block}
     .wheel-pointer{position:absolute;top:6px;left:50%;transform:translateX(-50%) rotate(180deg);font-size:24px;color:#ffd700;z-index:10;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.6));pointer-events:none}
-
     .bonus-status{padding:10px;border-radius:10px;font-weight:600;font-size:13px;text-align:center;background:rgba(10,10,30,0.6);border:1px solid rgba(255,255,255,0.08)}
     .bonus-status.win{background:rgba(76,175,80,0.15);color:#4caf50;border-color:rgba(76,175,80,0.4)}
     .bonus-status.wait{background:rgba(255,193,7,0.15);color:#ffc107;border-color:rgba(255,193,7,0.4)}
-
     .timer-block{text-align:center;padding:4px 0}
     .timer-big{font-size:32px;font-weight:900;color:#ffd700}
     .timer-label{font-size:11px;color:var(--muted);margin-top:2px}
-
     .bonus-btn{width:100%;padding:14px;border-radius:12px;border:none;font-size:16px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#ff6b9d,#ffd700);color:#000;text-transform:uppercase;letter-spacing:1px;transition:all 0.2s;box-shadow:0 8px 24px rgba(255,107,157,0.3);margin-top:4px}
     .bonus-btn:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(255,107,157,0.4)}
     .bonus-btn:disabled{opacity:0.35;cursor:not-allowed;transform:none;box-shadow:none}
-
     @media(max-width:380px){
       .bonus-section{padding:12px 10px 90px}
       .wheel-title{font-size:18px}
@@ -57,29 +57,6 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body class="page-bonus">
-
-  <!-- Cosmic background -->
-  <div class="cosmic-bg">
-    <div class="nebula n1"></div>
-    <div class="nebula n2"></div>
-    <div class="nebula n3"></div>
-    <div class="nebula n4"></div>
-    <div class="nebula n5"></div>
-    <div class="stars-layer">
-      <div class="star s1"></div><div class="star s2"></div><div class="star s3"></div>
-      <div class="star s4"></div><div class="star s5"></div><div class="star s6"></div>
-      <div class="star s7"></div><div class="star s8"></div><div class="star s9"></div>
-      <div class="star s10"></div><div class="star s11"></div><div class="star s12"></div>
-      <div class="star s13"></div><div class="star s14"></div><div class="star s15"></div>
-      <div class="star s16"></div><div class="star s17"></div><div class="star s18"></div>
-      <div class="star s19"></div><div class="star s20"></div><div class="star s21"></div>
-      <div class="star s22"></div><div class="star s23"></div><div class="star s24"></div>
-      <div class="star s25"></div><div class="star s26"></div><div class="star s27"></div>
-      <div class="star s28"></div><div class="star s29"></div><div class="star s30"></div>
-    </div>
-    <div class="comet c1"></div><div class="comet c2"></div><div class="comet c3"></div><div class="comet c4"></div>
-    <div class="shooting-star ss1"></div><div class="shooting-star ss2"></div><div class="shooting-star ss3"></div>
-  </div>
 
   <header class="app-header">
     <div class="left-controls" style="width:32px"></div>
@@ -108,43 +85,37 @@
 
   <main class="bonus-section" style="position:relative;z-index:2">
 
-    <!-- Subscribe reward -->
     <div class="subscribe-box">
       <div class="subscribe-title">💎 Подпишитесь на канал и получите $0.3</div>
-      <a href="#" class="subscribe-btn" id="subscribeBtn">
-        <img src="assets/telega.jpg" alt="Telegram" onerror="this.style.display='none'">
+      <a href="#" class="subscribe-btn no-loader" id="subscribeBtn">
+         <img class="telega-icon" src="assets/telega-small.jpg" alt="Telegram" onerror="this.style.display='none'">
         <span>ПОДПИСАТЬСЯ</span>
       </a>
       <button class="subscribe-claim" id="claimSubBtn" style="display:none">🎁 ПОЛУЧИТЬ $0.3</button>
       <div class="subscribe-status" id="subStatus"></div>
     </div>
 
-    <!-- Wheel -->
     <div class="wheel-card">
       <div class="wheel-header">
         <div class="wheel-title">🎡 Колесо Удачи</div>
         <div class="wheel-sub">Крути раз в день — выигрывай до $10!</div>
       </div>
-
       <div class="wheel-container">
         <canvas id="bonusWheel" class="wheel-canvas"></canvas>
         <div class="wheel-pointer">▼</div>
       </div>
-
       <div class="bonus-status" id="bonusStatus">Нажмите кнопку чтобы крутить!</div>
-
       <div class="timer-block" id="timerBlock" style="display:none">
         <div class="timer-big" id="timerVal">00:00:00</div>
         <div class="timer-label">до следующего бонуса</div>
       </div>
-
       <button class="bonus-btn" id="spinBtn">🎰 КРУТИТЬ</button>
     </div>
 
   </main>
 
   <nav class="bottom-nav">
-    <a href="home.html#games" class="nav-item" data-name="games"><span class="icon">🎮</span><span class="label">Games</span></a>
+    <a href="games.html" class="nav-item" data-name="games"><span class="icon">🎮</span><span class="label">Games</span></a>
     <a href="wallet.html" class="nav-item" data-name="wallet"><span class="icon">💼</span><span class="label">Wallet</span></a>
     <a href="home.html" class="nav-item center" data-name=""><span class="icon">💎</span></a>
     <a href="bonus.html" class="nav-item active" data-name="bonus"><span class="icon">🎁</span><span class="label">Bonus</span></a>
@@ -153,11 +124,10 @@
 
   <script src="js/app.js"></script>
   <script src="js/balance.js"></script>
-  <script src="js/wallet-modal.js"></script>
   <script>
   (function(){
     // === USER ID ===
-    var uid = 'u' + Math.random().toString(36).substr(2, 9);
+    var uid = localStorage.getItem('tg_uid') || '';
     try {
       var tg = window.Telegram && window.Telegram.WebApp;
       if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
@@ -165,64 +135,54 @@
         localStorage.setItem('tg_uid', uid);
       }
     } catch(e) {}
-    var savedUid = localStorage.getItem('tg_uid');
-    if (savedUid) uid = savedUid;
+    if (!uid) uid = 'u' + Math.random().toString(36).substr(2, 9);
 
-    // === SUBSCRIBE ===
+    // === SUBSCRIBE LOGIC ===
     var subBtn = document.getElementById('subscribeBtn');
     var claimSubBtn = document.getElementById('claimSubBtn');
     var subStatus = document.getElementById('subStatus');
 
-    function showSubStatus(msg, type){
-      subStatus.style.display='block';
+    function showSubStatus(msg, type) {
+      subStatus.style.display = 'block';
       subStatus.textContent = msg;
-      subStatus.className = 'subscribe-status show ' + (type||'');
+      subStatus.className = 'subscribe-status show ' + (type || '');
     }
 
-    function setSubscribedUI(){
-      subBtn.classList.add('subscribed');
+    function setSubscribedUI() {
+      subBtn.classList.add('done');
       subBtn.innerHTML = '<span>✅ ВЫ ПОДПИСАНЫ</span>';
       subBtn.style.pointerEvents = 'none';
     }
 
-    // States: 'loading', 'not_subscribed', 'subscribed_not_claimed', 'claimed'
-    function checkSub(){
-      var claimed = localStorage.getItem('sub_claimed_'+uid);
-      if(claimed){
+    // Check subscription status on load
+    function checkSub() {
+      if (localStorage.getItem('sub_claimed_' + uid)) {
         setSubscribedUI();
         claimSubBtn.style.display = 'none';
         showSubStatus('✅ Награда уже получена', 'success');
         return;
       }
-
-      // Check if we already know user is subscribed (cached)
-      var cachedSub = localStorage.getItem('sub_status_'+uid);
-      if(cachedSub === 'subscribed'){
+      if (localStorage.getItem('sub_ok_' + uid)) {
         setSubscribedUI();
         claimSubBtn.style.display = 'flex';
         return;
       }
-
-      // Check if subscribed via API (silent, button stays visible while loading)
-      var timeout = setTimeout(function(){}, 5000);
-
-      fetch('/api/check-subscribe/'+uid)
-      .then(function(r){ return r.json(); })
-      .then(function(data){
-        clearTimeout(timeout);
-        if(data.subscribed){
-          localStorage.setItem('sub_status_'+uid, 'subscribed');
-          setSubscribedUI();
-          claimSubBtn.style.display = 'flex';
-        }
-      }).catch(function(){
-        // On error — button stays as-is, user can still click subscribe
-      });
+      fetch('/api/check-subscribe/' + uid)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.subscribed) {
+            localStorage.setItem('sub_ok_' + uid, '1');
+            setSubscribedUI();
+            claimSubBtn.style.display = 'flex';
+          }
+        }).catch(function(){});
     }
+    checkSub();
 
-    // Open Telegram channel properly inside WebApp
-    subBtn.addEventListener('click', function(e){
+    // Open Telegram channel
+    subBtn.addEventListener('click', function(e) {
       e.preventDefault();
+      e.stopPropagation();
       try {
         var tgApp = window.Telegram && window.Telegram.WebApp;
         if (tgApp && tgApp.openTelegramLink) {
@@ -233,42 +193,49 @@
       } catch(err) {
         window.open('https://t.me/milfacasino', '_blank');
       }
+      return false;
     });
 
-    claimSubBtn.addEventListener('click', function(){
-      if(claimSubBtn.disabled) return;
+    // Claim reward
+    claimSubBtn.addEventListener('click', function() {
+      if (claimSubBtn.disabled) return;
       claimSubBtn.disabled = true;
       showSubStatus('⏳ Проверяем...', '');
 
-      fetch('/api/bonus/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid})})
-      .then(function(r){return r.json();})
-      .then(function(data){
-        if(data.ok){
-          localStorage.setItem('sub_claimed_'+uid,'1');
-          localStorage.removeItem('sub_status_'+uid);
+      fetch('/api/bonus/subscribe', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({userId: uid})
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.ok) {
+          localStorage.setItem('sub_claimed_' + uid, '1');
+          localStorage.removeItem('sub_ok_' + uid);
           setSubscribedUI();
           claimSubBtn.style.display = 'none';
-          Balance.set(Math.round((Balance.get()+0.3)*100)/100);
+          if (window.Balance) Balance.set(Math.round((Balance.get() + 0.3) * 100) / 100);
           showSubStatus('🎉 Вам начислено $0.3!', 'success');
-        } else if(data.error === 'not_subscribed'){
+        } else if (data.error === 'not_subscribed') {
           showSubStatus('❌ Вы не подписаны на канал!', 'error');
           claimSubBtn.disabled = false;
-        } else if(data.error === 'already_claimed'){
-          localStorage.setItem('sub_claimed_'+uid,'1');
+        } else if (data.error === 'already_claimed') {
+          localStorage.setItem('sub_claimed_' + uid, '1');
           setSubscribedUI();
           claimSubBtn.style.display = 'none';
           showSubStatus('✅ Награда уже была получена ранее', 'success');
         } else {
-          showSubStatus('❌ '+(data.error||'Ошибка'), 'error');
+          showSubStatus('❌ ' + (data.error || 'Ошибка'), 'error');
           claimSubBtn.disabled = false;
         }
-      }).catch(function(){
+      })
+      .catch(function() {
         showSubStatus('❌ Ошибка соединения', 'error');
         claimSubBtn.disabled = false;
       });
     });
 
-    // === WHEEL ===
+    // === WHEEL LOGIC ===
     var canvas = document.getElementById('bonusWheel');
     var ctx = canvas.getContext('2d');
     var spinBtn = document.getElementById('spinBtn');
@@ -363,83 +330,68 @@
       bonusStatus.textContent = 'Колесо крутится...'; bonusStatus.className = 'bonus-status';
 
       var weights = SECTORS.map(function(s){
-        if(s.payout >= 10) return 1;
-        if(s.payout >= 5)  return 2;
-        if(s.payout >= 1)  return 5;
-        if(s.payout >= 0.5) return 10;
-        if(s.payout >= 0.25) return 18;
-        if(s.payout >= 0.10) return 25;
+        if (s.payout >= 10) return 1;
+        if (s.payout >= 5)  return 2;
+        if (s.payout >= 1)  return 5;
+        if (s.payout >= 0.5) return 10;
+        if (s.payout >= 0.25) return 18;
+        if (s.payout >= 0.10) return 25;
         return 35;
       });
       var totalW = 0;
-      for(var w=0;w<weights.length;w++) totalW+=weights[w];
+      for (var w = 0; w < weights.length; w++) totalW += weights[w];
       var rand = Math.random() * totalW;
       var chosenIdx = 0;
-      for(var i=0;i<weights.length;i++){ rand-=weights[i]; if(rand<=0){chosenIdx=i;break;} }
+      for (var i = 0; i < weights.length; i++) { rand -= weights[i]; if (rand <= 0) { chosenIdx = i; break; } }
 
-      // Simple animation: random extra spins + align to chosen sector visually
-      // Each sector is SEG_ANGLE degrees wide
-      // We want chosenIdx to end up at top (pointer)
-      // Extra random offset within sector so it doesn't look too predictable
       var seg = SEG_ANGLE;
-      var randomOffset = Math.random() * (seg - 2); // -1 to +1 deg inside sector
-      var targetRot = rotation - 360 * 6 - chosenIdx * seg + randomOffset;
+      var randomOffset = Math.random() * (seg - 2) + 1;
+      var targetMod = ((-chosenIdx * seg - randomOffset) % 360 + 360) % 360;
+      var currentMod = ((rotation % 360) + 360) % 360;
+      var diff = currentMod - targetMod;
+      var targetRot = rotation - 360 * 6 - diff;
       var startRot = rotation, t0 = performance.now(), dur = 5000;
+
       function tick(now) {
-        var p = Math.min((now-t0)/dur,1);
-        var ease = 1-Math.pow(1-p,3);
+        var p = Math.min((now - t0) / dur, 1);
+        var ease = 1 - Math.pow(1 - p, 3);
         rotation = startRot + (targetRot - startRot) * ease;
         drawWheel();
-        if(p<1){requestAnimationFrame(tick);}
-        else{rotation=targetRot;drawWheel();finish(chosenIdx);}
-      }
-      requestAnimationFrame(tick);
-    });
-        var p = Math.min((now-t0)/dur,1);
-        var ease = 1-Math.pow(1-p,4);
-        rotation = startRot - totalRot * ease;
-        drawWheel();
-        if(p<1){requestAnimationFrame(tick);}
-        else{
-          rotation = startRot - totalRot;
+        if (p < 1) { requestAnimationFrame(tick); }
+        else {
+          rotation = targetRot;
           drawWheel();
           finish(chosenIdx);
         }
       }
       requestAnimationFrame(tick);
     });
-      function tick(now) {
-        var p = Math.min((now-t0)/dur,1);
-        var ease = 1-Math.pow(1-p,4);
-        rotation = startRot-totalRot*ease;
-        drawWheel();
-        if(p<1){requestAnimationFrame(tick);}
-        else{rotation=startRot-totalRot;drawWheel();finish(chosenIdx);}
-      }
-      requestAnimationFrame(tick);
-    });
 
     function finish(idx) {
-      var sector = SECTORS[idx]; setLastSpin();
-      Balance.set(Math.round((Balance.get()+sector.payout)*100)/100);
-      bonusStatus.textContent = '🎉 Вы выиграли '+sector.label+'!';
+      var sector = SECTORS[idx];
+      setLastSpin();
+      if (window.Balance) Balance.set(Math.round((Balance.get() + sector.payout) * 100) / 100);
+      bonusStatus.textContent = '🎉 Вы выиграли ' + sector.label + '!';
       bonusStatus.className = 'bonus-status win';
       updateStatus();
     }
 
-    // Photo
-    try{
-      var tg2=window.Telegram&&window.Telegram.WebApp;
-      if(tg2&&tg2.initDataUnsafe&&tg2.initDataUnsafe.user){
-        var u=tg2.initDataUnsafe.user;
-        var pImg=document.getElementById('profileImg');
-        if(pImg){
-          if(u.photo_url){pImg.src=u.photo_url;pImg.style.display='';}
-          else if(u.id){pImg.src='/api/tg-photo/'+u.id;pImg.style.display='';}
+    // Profile photo
+    try {
+      var tg2 = window.Telegram && window.Telegram.WebApp;
+      if (tg2 && tg2.initDataUnsafe && tg2.initDataUnsafe.user) {
+        var u = tg2.initDataUnsafe.user;
+        var pImg = document.getElementById('profileImg');
+        if (pImg) {
+          if (u.photo_url) { pImg.src = u.photo_url; pImg.style.display = ''; }
+          else if (u.id) { pImg.src = '/api/tg-photo/' + u.id; pImg.style.display = ''; }
         }
       }
-    }catch(e){}
+    } catch(e) {}
+
   })();
   </script>
+   <script src="js/wallet-modal.js"></script>
 </body>
 </html>
+

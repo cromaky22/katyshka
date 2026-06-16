@@ -445,7 +445,7 @@
   const overlay = document.getElementById('pdOverlay');
   const pdUserId = document.getElementById('pdUserId');
   const pdPromoBtn = document.getElementById('pdPromoBtn');
-  if(!btn || !dd) return;
+  if(!btn || !dd){ console.log('Profile not found:', {btn, dd}); return; }
 
   function getId(){
     try{

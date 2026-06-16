@@ -1,9 +1,8 @@
 // WALLET MODAL — dropdown (fixed, in body) + fullscreen wallet overlay
 (function(){
   'use strict';
-  var isGame = /(double|dreamcatcher|nvuti|crash|mines|coinflip|tower|wheel|goldwest|dice|plinko)\.html$/i.test(location.pathname);
   var trigger = document.getElementById('balTrigger');
-  if (isGame || !trigger) return;
+  if (!trigger) return;
 
   function fmt(n){ var v=Number(n); return isNaN(v)?'0.00':v.toFixed(2); }
 

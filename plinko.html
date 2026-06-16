@@ -13,10 +13,11 @@
     <div class="left-controls"></div>
     <div class="header-title" style="color:var(--accent)">🎯 PLINKO</div>
     <div class="right-controls" style="position:relative">
-      <div class="balance-pill">
-        <span class="wallet-icon">💠</span>
-        <span class="balance-value">0.00</span>
+      <div class="balance-pill" id="balTrigger" style="cursor:pointer">
+        <span class="wallet-icon">👛</span>
+        <span class="balance-value" id="hbal">0.00</span>
         <span class="currency">$</span>
+        <span class="caret">▾</span>
       </div>
       <div style="width:32px;height:32px"></div>
     </div>
@@ -95,7 +96,7 @@
   </main>
 
   <nav class="bottom-nav">
-    <a href="home.html#games" class="nav-item" data-name="games"><span class="icon">🎮</span><span class="label">Games</span></a>
+    <a href="games.html" class="nav-item" data-name="games"><span class="icon">🎮</span><span class="label">Games</span></a>
     <a href="wallet.html" class="nav-item" data-name="wallet"><span class="icon">💼</span><span class="label">Wallet</span></a>
     <a href="home.html" class="nav-item center" data-name=""><span class="icon">💎</span></a>
     <a href="bonus.html" class="nav-item" data-name="bonus"><span class="icon">🎁</span><span class="label">Bonus</span></a>
@@ -104,6 +105,7 @@
 
   <script src="js/app.js"></script>
   <script src="js/balance.js"></script>
+  <script src="js/wallet-modal.js"></script>
   <script src="js/plinko.js"></script>
   <script>
     function joinGame(){

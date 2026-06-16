@@ -41,10 +41,11 @@
     </div>
     <div class="header-title">ИГРЫ</div>
     <div class="right-controls" style="position:relative">
-      <div class="balance-pill">
-        <span class="wallet-icon">💠</span>
+      <div class="balance-pill" id="balTrigger" style="cursor:pointer">
+        <span class="wallet-icon">👛</span>
         <span class="balance-value" id="gbal">0.00</span>
         <span class="currency">$</span>
+        <span class="caret">▾</span>
       </div>
       <button class="profile" id="profileBtn" title="Профиль" aria-label="Профиль"><img class="profile-icon" src="" alt="Аватар" onerror="this.style.display='none'"></button>
       <div class="profile-dropdown" id="profileDropdown">
@@ -182,6 +183,7 @@
 
   <script src="js/balance.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/wallet-modal.js"></script>
   <script>
     // Search filter
     var searchInput = document.getElementById('gameSearch');
@@ -208,27 +210,12 @@
       var socket = (window.Balance && Balance.getSocket) ? Balance.getSocket() : null;
       if(!socket) return;
       socket.on('online_count', function(data){
-<<<<<<< HEAD
         document.querySelectorAll('.online-count').forEach(function(el){
           var game = el.getAttribute('data-game');
           el.textContent = (data.games && data.games[game] !== undefined) ? data.games[game] : '0';
         });
       });
       socket.emit('get_online');
-=======
-        var games = document.querySelectorAll('.online-count');
-        games.forEach(function(el){
-          var gameName = el.getAttribute('data-game');
-          if(gameName && data.games && data.games[gameName] !== undefined){
-            el.textContent = data.games[gameName];
-          } else {
-            el.textContent = '0';
-          }
-        });
-      });
-      socket.emit('get_online');
-      socket.emit('join_game', 'games');
->>>>>>> 0d7782ec34c833fd36e199026c0237a3d47790de
     }
     setTimeout(updateOnlinePlayers, 1500);
   </script>
