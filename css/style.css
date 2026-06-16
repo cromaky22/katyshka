@@ -125,7 +125,13 @@ body::after{
 .page-menu{background:transparent}
 .wallet-content,.menu-content{position:relative;z-index:2}
 
-/* Content above background */
+/* Background floating stars */
+.bg-stars{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.bg-star{position:absolute;top:-30px;color:#fff;text-shadow:0 0 8px rgba(255,255,255,0.8),0 0 15px rgba(255,255,255,0.4);animation:starFall linear forwards;user-select:none;pointer-events:none}
+@keyframes starFall{
+  0%{transform:translateY(0) rotate(0deg);opacity:1}
+  100%{transform:translateY(110vh) rotate(720deg);opacity:0}
+}
 .home-content,.games-content{position:relative;z-index:2}
 
 /* Widget blocks */

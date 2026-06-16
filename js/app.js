@@ -715,48 +715,39 @@
   })();
 })();
 
-// Background floating hearts/bombs
+// Background floating stars
 (function(){
-  const MAX = 28;
-  const spawnInterval = 700; // ms
-  const containerClass = 'bg-hearts';
+  const MAX = 40;
+  const spawnInterval = 600;
+  const containerClass = 'bg-stars';
   
-  // Check if we're on mines page
-  const isMinesPage = document.body.classList.contains('page-mines');
-  const emoji = isMinesPage ? '💣' : '❤';
-
   let container = document.querySelector('.' + containerClass);
   if(!container){
     container = document.createElement('div');
-    container.className = containerClass;
+    container.className = 'bg-stars';
     document.body.prepend(container);
   }
 
   function rand(min, max){ return Math.random() * (max - min) + min }
 
-  function createHeart(){
+  function createStar(){
     if(container.children.length > MAX) return;
     const s = document.createElement('span');
-    s.className = 'bg-heart';
-    s.textContent = emoji;
-    const size = Math.round(rand(12,28));
+    s.className = 'bg-star';
+    s.innerHTML = '&#10022;'; // ✦ star symbol
+    const size = Math.round(rand(10,22));
     const left = Math.round(rand(2,98));
-    const tx = Math.round(rand(-80,80)) + 'px';
-    const dur = (rand(4.5,9.5)).toFixed(2) + 's';
+    const dur = (rand(5,12)).toFixed(2) + 's';
     s.style.fontSize = size + 'px';
     s.style.left = left + '%';
-    s.style.setProperty('--tx', tx);
     s.style.animationDuration = dur;
-    s.style.opacity = (rand(0.6,1)).toFixed(2);
+    s.style.opacity = (rand(0.5,1)).toFixed(2);
     container.appendChild(s);
-    // remove after animation
     setTimeout(()=>{ if(s && s.parentNode) s.parentNode.removeChild(s) }, (parseFloat(dur) * 1000) + 500);
   }
 
-  // gentle initial burst
-  for(let i=0;i<6;i++) setTimeout(createHeart, i*200);
-  const handle = setInterval(createHeart, spawnInterval);
-  // stop generating on page hide to save work
+  for(let i=0;i<8;i++) setTimeout(createStar, i*150);
+  const handle = setInterval(createStar, spawnInterval);
   document.addEventListener('visibilitychange', ()=>{
     if(document.hidden) clearInterval(handle);
   });
