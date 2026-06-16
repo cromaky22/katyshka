@@ -198,7 +198,14 @@ function loadFromServer(){
       else _listeners.push(fn);
     },
     getUserId: function(){ return _userId || getUserId(); },
-    getSocket: function(){ if(!_socket) initSocket(); return _socket; }
+    getSocket: function(){ 
+       if(!_socket) initSocket(); 
+       return _socket; 
+     },
+     getSocketReady: function(){
+       return _socket && _socket.connected;
+     }
+   };
   };
 
   if(document.readyState === 'loading') {

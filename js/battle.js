@@ -533,6 +533,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // === BET ACTION ===
   function placeBet() {
+    console.log('[BATTLE] placeBet called, isSpinning:', isSpinning, 'socketReady:', socketReady, 'balance:', Balance.get());
     if (isSpinning) return;
     if (!socketReady) {
       statusEl.textContent = 'Ожидание подключения...';
@@ -551,7 +552,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     if (amount > Balance.get()) {
-      statusEl.textContent = 'Недостаточно средств';
+      statusEl.textContent = 'Недостаточно средств (нужно: $' + amount + ', есть: $' + Balance.get().toFixed(2) + ')';
       statusEl.className = 'battle-status error';
       return;
     }
