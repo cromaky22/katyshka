@@ -208,12 +208,27 @@
       var socket = (window.Balance && Balance.getSocket) ? Balance.getSocket() : null;
       if(!socket) return;
       socket.on('online_count', function(data){
+<<<<<<< HEAD
         document.querySelectorAll('.online-count').forEach(function(el){
           var game = el.getAttribute('data-game');
           el.textContent = (data.games && data.games[game] !== undefined) ? data.games[game] : '0';
         });
       });
       socket.emit('get_online');
+=======
+        var games = document.querySelectorAll('.online-count');
+        games.forEach(function(el){
+          var gameName = el.getAttribute('data-game');
+          if(gameName && data.games && data.games[gameName] !== undefined){
+            el.textContent = data.games[gameName];
+          } else {
+            el.textContent = '0';
+          }
+        });
+      });
+      socket.emit('get_online');
+      socket.emit('join_game', 'games');
+>>>>>>> 0d7782ec34c833fd36e199026c0237a3d47790de
     }
     setTimeout(updateOnlinePlayers, 1500);
   </script>

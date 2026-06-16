@@ -131,13 +131,16 @@
   <script src="js/balance.js"></script>
   <script src="js/dice.js"></script>
   <script>
-    setTimeout(function(){
+    function joinGame(){
       var socket = (window.Balance && Balance.getSocket) ? Balance.getSocket() : null;
-      if(socket){
+      if(socket && socket.connected){
         socket.emit('join_game', 'dice');
         window.addEventListener('beforeunload', function(){ socket.emit('leave_game', 'dice'); });
+      } else {
+        setTimeout(joinGame, 500);
       }
-    }, 1000);
+    }
+    setTimeout(joinGame, 1000);
   </script>
 </body>
 </html>
