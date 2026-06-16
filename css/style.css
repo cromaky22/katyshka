@@ -13,18 +13,29 @@ html,body{
   font-family:Inter,Arial,Helvetica,sans-serif;
   color:var(--text);
   overflow-x:hidden;
-  background:linear-gradient(160deg,#060012 0%,#0d0520 20%,#150a35 40%,#0a1525 60%,#1a0a2e 80%,#060012 100%);
-  background-size:300% 300%;
-  animation:bgShift 20s ease infinite;
+  background:#060012;
 }
-@keyframes bgShift{
-  0%{background-position:0% 50%}
-  50%{background-position:100% 50%}
-  100%{background-position:0% 50%}
+
+/* Background image */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:url('../assets/bg.jpg') center/cover no-repeat;
+  opacity:0.35;
+  animation:bgPulse 8s ease-in-out infinite alternate;
+}
+@keyframes bgPulse{
+  0%{opacity:0.25;transform:scale(1)}
+  100%{opacity:0.4;transform:scale(1.02)}
+}
+
+/* Dark overlay for readability */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:linear-gradient(160deg,rgba(6,0,18,0.7) 0%,rgba(13,5,32,0.6) 30%,rgba(10,21,37,0.65) 60%,rgba(26,10,46,0.6) 80%,rgba(6,0,18,0.7) 100%);
 }
 
 /* ===== COSMIC BACKGROUND ===== */
-.cosmic-bg{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.cosmic-bg{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
 
 /* Nebula glow blobs */
 .nebula{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.4;animation:nebulaFloat 25s ease-in-out infinite}
@@ -90,16 +101,11 @@ html,body{
 }
 
 /* Page-specific backgrounds */
-.page-home{
-  background:linear-gradient(160deg,#060012 0%,#0d0520 20%,#150a35 40%,#0a1525 60%,#1a0a2e 80%,#060012 100%);
-  background-size:300% 300%;
-  animation:bgShift 20s ease infinite;
-}
-.page-games{
-  background:linear-gradient(160deg,#050010 0%,#0b0418 25%,#120828 50%,#081020 75%,#050010 100%);
-  background-size:300% 300%;
-  animation:bgShift 25s ease infinite;
-}
+.page-home{background:transparent}
+.page-games{background:transparent}
+
+/* Content above background */
+.home-content,.games-content{position:relative;z-index:2}
 
 /* Widget blocks */
 .widget-block{margin:0 0 16px;border-radius:18px;padding:16px;background:linear-gradient(180deg,rgba(12,14,32,0.8),rgba(8,10,26,0.9));border:1px solid rgba(255,255,255,0.05);box-shadow:0 4px 20px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.03);position:relative}
