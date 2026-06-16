@@ -121,6 +121,9 @@ body::after{
 /* Page-specific backgrounds */
 .page-home{background:transparent}
 .page-bonus{background:transparent}
+.page-wallet{background:transparent}
+.page-menu{background:transparent}
+.wallet-content,.menu-content{position:relative;z-index:2}
 
 /* Content above background */
 .home-content,.games-content{position:relative;z-index:2}
