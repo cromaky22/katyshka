@@ -302,19 +302,23 @@ document.addEventListener('DOMContentLoaded', function() {
   let socketReady = false;
 
   function onSocketReady() {
+    if (socketReady) return;
     socketReady = true;
     statusEl.textContent = 'Подключено';
     statusEl.className = 'battle-status';
   }
 
-  if (socket && socket.connected) {
-    onSocketReady();
-  } else if (socket) {
-    socket.on('connect', onSocketReady);
-  } else {
-    statusEl.textContent = 'Ошибка: нет соединения';
-    statusEl.className = 'battle-status error';
-  }
+// Handle socket connection
+   if (socket) {
+     if (socket.connected) {
+       onSocketReady();
+     } else {
+       socket.on('connect', onSocketReady);
+     }
+   } else {
+     statusEl.textContent = 'Ошибка: нет соединения';
+     statusEl.className = 'battle-status error';
+   }
 
   setTimeout(() => {
     if (!socketReady) {
