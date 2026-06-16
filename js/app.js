@@ -89,6 +89,12 @@
         if(a.dataset.name===activeName) a.classList.add('active');
         else a.classList.remove('active');
       });
+      // Always highlight center button on home
+      if(path === 'home.html' && !hash){
+        document.querySelectorAll('.bottom-nav .nav-item').forEach(a=>a.classList.remove('active'));
+        const centerBtn = document.querySelector('.bottom-nav .nav-item.center');
+        if(centerBtn) centerBtn.classList.add('active');
+      }
     }
 
       // Games search: filter tiles and highlight matches
