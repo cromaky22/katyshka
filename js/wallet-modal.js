@@ -14,7 +14,7 @@
     dd.style.cssText = 'position:fixed;z-index:999999;opacity:0;pointer-events:none;transform:translateY(-8px);transition:opacity .2s,transform .2s;overflow:hidden;width:280px;background:linear-gradient(180deg,rgba(12,16,30,0.98),rgba(8,12,24,0.98));border-radius:14px;border:1px solid rgba(255,255,255,0.06);box-shadow:0 20px 60px rgba(0,0,0,0.6)';
     dd.innerHTML = '<div style="padding:14px">' +
       '<div style="text-align:center;padding:12px;background:rgba(0,0,0,0.2);border-radius:10px;margin-bottom:10px"><div style="font-size:11px;color:var(--muted)">Основной баланс</div><div style="font-size:28px;font-weight:900;color:#ffd700;margin-top:4px">$<span id="wdBal">0.00</span></div></div>' +
-      '<div style="text-align:center;padding:10px;background:rgba(0,0,0,0.2);border-radius:10px;margin-bottom:8px"><div style="font-size:11px;color:var(--muted)">Отыгрыш (Wager)</div><div style="font-size:14px;font-weight:700;color:#ff6b9d;margin-top:2px">Осталось: $<span id="wdWager">0.00</span></div><div style="font-size:10px;color:var(--muted);margin-top:4px">Ввод: <span id="wdWithdraw">доступен</span></div></div>' +
+      '<div style="text-align:center;padding:10px;background:rgba(0,0,0,0.2);border-radius:10px;margin-bottom:8px"><div style="font-size:11px;color:var(--muted)">Отыгрыш (Wager)</div><div style="font-size:14px;font-weight:700;color:#ff6b9d;margin-top:2px">Осталось: $<span id="wdWager">0.00</span></div><div style="font-size:10px;color:var(--muted);margin-top:2px">Всего: $<span id="wdWagerTotal">0.00</span> | Отыграно: $<span id="wdWagerDone">0.00</span></div><div style="margin-top:6px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden"><div id="wdWagerBar" style="height:100%;width:0%;background:linear-gradient(90deg,#4caf50,#2ee36b);border-radius:2px;transition:width 0.5s"></div></div><div style="font-size:10px;color:var(--muted);margin-top:4px">Вывод: <span id="wdWithdraw" style="font-weight:700;color:#4caf50">доступен</span></div></div>' +
       '<button id="wdOpen" style="width:100%;padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#2196f3,#1565c0);color:#fff">💼 Кошелёк</button>' +
     '</div>';
     document.body.appendChild(dd);
@@ -45,6 +45,7 @@
         '</div>' +
         '<div class="wf-p" data-p="wd" style="display:none">' +
           '<div style="text-align:center;padding:14px;background:rgba(0,0,0,0.2);border-radius:12px;margin-bottom:14px"><div style="font-size:11px;color:var(--muted)">Доступно к выводу</div><div style="font-size:28px;font-weight:900;color:#ffd700;margin-top:4px">$<span id="wfWdBal">0.00</span></div></div>' +
+          '<div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:10px;margin-bottom:12px"><div style="font-size:11px;color:var(--muted);margin-bottom:4px">Отыгрыш (Wager)</div><div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:var(--muted)">Осталось:</span><span style="font-weight:700;color:#ff6b9d">$<span id="wfWagerReq">0.00</span></span></div><div style="display:flex;justify-content:space-between;font-size:11px;margin-top:2px"><span style="color:var(--muted)">Отыграно:</span><span style="font-weight:700;color:#4caf50">$<span id="wfWagerDone">0.00</span></span></div><div style="margin-top:6px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden"><div id="wfWagerBar" style="height:100%;width:0%;background:linear-gradient(90deg,#4caf50,#2ee36b);border-radius:2px"></div></div><div id="wfWagerStatus" style="font-size:10px;color:#4caf50;margin-top:4px;font-weight:600">✅ Ввод доступен</div></div>' +
           '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Способ вывода</div>' +
           '<div style="display:flex;gap:8px;margin-bottom:12px"><div class="wf-mpay sel" data-mpay="cb" style="flex:1;padding:12px;border-radius:12px;border:2px solid #4caf50;background:rgba(76,175,80,0.12);text-align:center;cursor:pointer"><img src="assets/cryptobot.jpg" style="width:28px;height:28px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 4px"><span style="font-size:10px;font-weight:700;color:#fff">CryptoBot</span></div><div class="wf-mpay" data-mpay="xr" style="flex:1;padding:12px;border-radius:12px;border:2px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);text-align:center;cursor:pointer"><img src="assets/xrocket.jpg" style="width:28px;height:28px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 4px"><span style="font-size:10px;font-weight:700;color:#fff">xRocket</span></div></div>' +
           '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Сумма вывода (USDT)</div>' +
@@ -75,8 +76,20 @@
       fetch('/api/wager/'+uid).then(function(r){return r.json();}).then(function(d){
         if(d.ok) {
           var wEl=document.getElementById('wdWager'); var wdEl=document.getElementById('wdWithdraw');
+          var wtEl=document.getElementById('wdWagerTotal'); var wdoneEl=document.getElementById('wdWagerDone');
+          var wBar=document.getElementById('wdWagerBar');
+          var wfWagerReq=document.getElementById('wfWagerReq'); var wfWagerDone=document.getElementById('wfWagerDone');
+          var wfWagerBar=document.getElementById('wfWagerBar'); var wfWagerStatus=document.getElementById('wfWagerStatus');
           if(wEl) wEl.textContent=d.wager_required.toFixed(2);
-          if(wdEl){ wdEl.textContent=d.can_withdraw?'доступен':'отыграйте вагер'; wdEl.style.color=d.can_withdraw?'#4caf50':'#ff6b9d'; }
+          if(wtEl) wtEl.textContent=(d.wager_total||0).toFixed(2);
+          if(wdoneEl) wdoneEl.textContent=((d.wager_total||0)-(d.wager_required||0)).toFixed(2);
+          if(wfWagerReq) wfWagerReq.textContent=d.wager_required.toFixed(2);
+          if(wfWagerDone) wfWagerDone.textContent=((d.wager_total||0)-(d.wager_required||0)).toFixed(2);
+          var pct=d.wager_total>0?Math.max(0,Math.min(100,((d.wager_total-d.wager_required)/d.wager_total)*100)):0;
+          if(wBar) wBar.style.width=pct.toFixed(0)+'%';
+          if(wfWagerBar) wfWagerBar.style.width=pct.toFixed(0)+'%';
+          if(wfWagerStatus){ wfWagerStatus.textContent=d.can_withdraw?'✅ Вывод доступен':'❌ Отыграйте вагер'; wfWagerStatus.style.color=d.can_withdraw?'#4caf50':'#f44336'; }
+          if(wdEl){ wdEl.textContent=d.can_withdraw?'доступен':'недоступен'; wdEl.style.color=d.can_withdraw?'#4caf50':'#f44336'; }
           var wfBtn=document.getElementById('wfWdBtn');
           if(wfBtn && d.can_withdraw){ wfBtn.disabled=false; wfBtn.style.opacity='1'; }
         }
