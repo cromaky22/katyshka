@@ -354,10 +354,16 @@ document.addEventListener('DOMContentLoaded', function() {
   const socket = Balance.getSocket();
   const userId = Balance.getUserId();
 
-  socket.on('connect', () => {
+  function onSocketReady() {
     statusEl.textContent = 'Подключено';
     statusEl.className = 'battle-status';
-  });
+  }
+
+  if (socket.connected) {
+    onSocketReady();
+  } else {
+    socket.on('connect', onSocketReady);
+  }
 
   socket.on('battle:state', (state) => {
     roundId = state.roundId || 0;

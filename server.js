@@ -1223,8 +1223,6 @@ let gameOnline = {};
 
 // (connection handler moved below after battle game setup)
 
-startWheel();
-
 // === BATTLE WHEEL GAME ===
 let battle = {
   phase: 'betting',
@@ -1472,12 +1470,13 @@ io.on('connection', (socket) => {
       balance: getBalance(userId)
     });
   });
+  });
 });
 
+startWheel();
 startBattle();
 
 // === TELEGRAM BOT ===
-const BOT_TOKEN = process.env.BOT_TOKEN || '8962248830:AAEoWT12lZEzttXXHxt3c48wLGh5HcZ6FoQ';
 const CHANNEL_ID = '@milfacasino';
 const SUB_REWARD = 0.3;
 
