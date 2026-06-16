@@ -24,24 +24,32 @@ document.addEventListener('DOMContentLoaded', function(){
 
   if(idDisplay) idDisplay.textContent = userId;
 
-  function setInitials(name){
-    if(!avatarWrap) return;
-    let el = avatarWrap.querySelector('.avatar-initials');
-    if(!el){ el=document.createElement('div'); el.className='avatar-initials'; avatarWrap.appendChild(el); }
-    const n = name || 'Игрок';
-    el.textContent = n.trim().split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2) || '?';
-    el.style.display = (avatarImg && avatarImg.src && avatarImg.style.display !== 'none') ? 'none' : 'flex';
-  }
+function setInitials(name){
+     if(!avatarWrap) return;
+     let el = avatarWrap.querySelector('.avatar-initials');
+     if(!el){ 
+       el=document.createElement('div'); 
+       el.className='avatar-initials'; 
+       avatarWrap.appendChild(el); 
+     }
+     const n = name || 'Игрок';
+     el.textContent = n.trim().split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2) || '?';
+     const hasPhoto = avatarImg && avatarImg.style.display !== 'none';
+     el.style.display = hasPhoto ? 'none' : 'flex';
+   }
 
-  function applyUser(name, photoUrl){
-    if(name && nameEl) nameEl.textContent = name;
-    if(photoUrl && avatarImg){
-      avatarImg.src = photoUrl;
-      avatarImg.style.display = '';
-      avatarImg.onerror = function(){ this.style.display='none'; };
-    }
-    setInitials(name);
-  }
+function applyUser(name, photoUrl){
+     if(name && nameEl) nameEl.textContent = name;
+     if(photoUrl && avatarImg){
+       avatarImg.src = photoUrl;
+       avatarImg.style.display = '';
+       avatarImg.onerror = function(){ 
+         this.style.display='none';
+         setInitials(name);
+       };
+     }
+     setInitials(name);
+   }
 
   // Set initial from TG
   if(tgUser){
