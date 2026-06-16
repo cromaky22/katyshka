@@ -1,6 +1,7 @@
 const { Telegraf } = require('telegraf');
 
-const token = '8962248830:AAEoWT12lZEzttXXHxt3c48wLGh5HcZ6FoQ';
+const token = process.env.BOT_TOKEN;
+  if(!token){ console.error('BOT_TOKEN not set'); process.exit(1); }
 const bot = new Telegraf(token);
 
 const SERVER_URL = process.env.SERVER_URL || 'http://localhost:3000';
