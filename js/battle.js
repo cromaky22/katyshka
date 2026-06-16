@@ -21,8 +21,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const halfBtn = document.getElementById('battleHalfBtn');
   const doubleBtn = document.getElementById('battleDoubleBtn');
   const quickBtns = document.querySelectorAll('.battle-quick-btn');
-  
-  console.log('[BATTLE] Elements:', { betBtn: !!betBtn, halfBtn: !!halfBtn, doubleBtn: !!doubleBtn, quickBtns: quickBtns.length });
 
   // === STATE ===
   let rotation = 0;

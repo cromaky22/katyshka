@@ -197,14 +197,8 @@ function loadFromServer(){
       if(_ready) fn(_balance);
       else _listeners.push(fn);
     },
-    getUserId: function(){ return _userId || getUserId(); },
-    getSocket: function(){ 
-       if(!_socket) initSocket(); 
-       return _socket; 
-     },
-     getSocketReady: function(){
-       return _socket && _socket.connected;
-     }
+getUserId: function(){ return _userId || getUserId(); },
+     getSocket: function(){ if(!_socket) initSocket(); return _socket; }
    };
   };
 
