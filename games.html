@@ -35,7 +35,19 @@
   </header>
 
   <main class="content" style="position:relative;z-index:1">
-    <div class="games-grid">
+
+    <!-- Search -->
+    <div class="search-block">
+      <div class="search-input-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="search" id="gameSearch" placeholder="Поиск игр..." autocomplete="off">
+      </div>
+    </div>
+
+    <!-- Games count -->
+    <div class="games-count" id="gamesCount">11 игр</div>
+
+    <div class="games-grid" id="gamesGrid">
 
       <div class="game-card">
         <a href="double.html" class="game-card-inner">
@@ -147,7 +159,29 @@
   <script src="js/balance.js"></script>
   <script src="js/app.js"></script>
   <script>
-    // Update balance display
+    // Search filter
+    var searchInput = document.getElementById('gameSearch');
+    var gameCards = document.querySelectorAll('.game-card');
+    var gamesCount = document.getElementById('gamesCount');
+    function updateCount(){
+      var visible = 0;
+      gameCards.forEach(function(c){ if(c.style.display !== 'none') visible++; });
+      gamesCount.textContent = visible + ' из ' + gameCards.length + ' игр';
+    }
+    if(searchInput){
+      searchInput.addEventListener('input', function(){
+        var q = this.value.trim().toLowerCase();
+        gameCards.forEach(function(card){
+          var name = card.querySelector('.game-card-name');
+          var txt = name ? name.textContent.trim().toLowerCase() : '';
+          card.style.display = (!q || txt.includes(q)) ? '' : 'none';
+        });
+        updateCount();
+      });
+    }
+    updateCount();
+
+    // Balance
     setTimeout(function(){
       var balEl = document.getElementById('gbal');
       if(balEl && window.Balance) balEl.textContent = Balance.get().toFixed(2);
