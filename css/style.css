@@ -31,14 +31,12 @@ body::after{
 
 /* ===== COSMIC BACKGROUND ===== */
 .cosmic-bg{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
-
-/* Nebula glow blobs — static for performance */
 .nebula{position:absolute;border-radius:50%;opacity:0.3}
 .nebula.n1{width:400px;height:400px;background:radial-gradient(circle,rgba(139,92,246,0.4),transparent 70%);top:-5%;left:-5%}
 .nebula.n2{width:450px;height:450px;background:radial-gradient(circle,rgba(46,227,107,0.25),transparent 70%);bottom:-10%;right:-8%}
 .nebula.n3{width:350px;height:350px;background:radial-gradient(circle,rgba(236,72,153,0.3),transparent 70%);top:35%;left:55%}
-
-/* Stars layer — static, no animation for performance */
+.nebula.n4{width:300px;height:300px;background:radial-gradient(circle,rgba(21,97,255,0.2),transparent 70%);top:60%;left:20%}
+.nebula.n5{width:250px;height:250px;background:radial-gradient(circle,rgba(255,215,0,0.15),transparent 70%);top:10%;left:80%}
 .stars-layer{position:absolute;inset:0}
 .star{position:absolute;border-radius:50%;background:#fff;opacity:0.5}
 .star.s1{width:2px;height:2px;top:10%;left:15%}
@@ -53,24 +51,41 @@ body::after{
 .star.s10{width:1.5px;height:1.5px;top:5%;left:60%}
 .star.s11{width:2px;height:2px;top:55%;left:95%}
 .star.s12{width:1px;height:1px;top:95%;left:50%}
-
-/* Comets — reduced */
+.star.s13{width:2px;height:2px;top:8%;left:30%}
+.star.s14{width:1.5px;height:1.5px;top:42%;left:65%}
+.star.s15{width:2px;height:2px;top:72%;left:40%}
+.star.s16{width:1px;height:1px;top:88%;left:70%}
+.star.s17{width:2px;height:2px;top:18%;left:5%}
+.star.s18{width:1.5px;height:1.5px;top:62%;left:88%}
+.star.s19{width:2px;height:2px;top:32%;left:50%}
+.star.s20{width:1px;height:1px;top:52%;left:38%}
+.star.s21{width:2px;height:2px;top:92%;left:15%}
+.star.s22{width:1.5px;height:1.5px;top:22%;left:72%}
+.star.s23{width:2px;height:2px;top:48%;left:92%}
+.star.s24{width:1px;height:1px;top:78%;left:58%}
+.star.s25{width:2px;height:2px;top:38%;left:22%}
+.star.s26{width:1.5px;height:1.5px;top:58%;left:48%}
+.star.s27{width:2px;height:2px;top:68%;left:8%}
+.star.s28{width:1px;height:1px;top:12%;left:52%}
+.star.s29{width:2px;height:2px;top:82%;left:28%}
+.star.s30{width:1.5px;height:1.5px;top:44%;left:18%}
 .comet{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;opacity:0}
 .comet::after{content:'';position:absolute;top:0;right:0;width:50px;height:1px;background:linear-gradient(90deg,rgba(255,255,255,0.7),transparent);transform-origin:right center}
 .comet.c1{top:20%;left:10%;animation:cometFly 10s linear infinite;animation-delay:0s}
 .comet.c2{top:50%;left:5%;animation:cometFly 12s linear infinite;animation-delay:5s}
+.comet.c3{top:35%;left:60%;animation:cometFly 14s linear infinite;animation-delay:9s}
+.comet.c4{top:70%;left:30%;animation:cometFly 11s linear infinite;animation-delay:14s}
 @keyframes cometFly{
   0%{opacity:0;transform:translate(0,0) rotate(35deg)}
   5%{opacity:0.8}
   40%{opacity:0;transform:translate(350px,180px) rotate(35deg)}
   100%{opacity:0;transform:translate(350px,180px) rotate(35deg)}
 }
-
-/* Shooting stars — reduced */
 .shooting-star{position:absolute;width:1px;height:1px;background:#fff;border-radius:50%;opacity:0}
 .shooting-star::after{content:'';position:absolute;top:0;left:0;width:60px;height:1px;background:linear-gradient(270deg,rgba(255,255,255,0.8),transparent);transform-origin:left center}
 .shooting-star.ss1{top:15%;left:20%;animation:shootStar 8s linear infinite;animation-delay:3s}
 .shooting-star.ss2{top:45%;left:10%;animation:shootStar 10s linear infinite;animation-delay:7s}
+.shooting-star.ss3{top:65%;left:40%;animation:shootStar 9s linear infinite;animation-delay:12s}
 @keyframes shootStar{
   0%{opacity:0;transform:translate(0,0) rotate(-30deg)}
   3%{opacity:0.8}
@@ -108,69 +123,6 @@ body::after{
 .games-widget::before{content:'';position:absolute;inset:0;border-radius:20px;background:linear-gradient(135deg,rgba(139,92,246,0.05),transparent 40%,rgba(46,227,107,0.03) 60%,transparent);pointer-events:none}
 .games-widget-inner{padding:16px;position:relative;z-index:1}
 
-/* Page-specific backgrounds */
-.page-home{
-  background:linear-gradient(135deg,#0a0118 0%,#1a0a3e 12%,#2d1b69 25%,#0f2a4a 40%,#6b2fa0 55%,#1b4d3e 70%,#0d1f3c 85%,#0a0118 100%);
-  background-size:400% 400%;
-  animation:gradientShift 15s ease infinite;
-}
-.page-games{
-  background:linear-gradient(135deg,#08001a 0%,#150830 15%,#2a1560 30%,#0a1f3a 50%,#5a2580 65%,#153d30 80%,#0b1a30 90%,#08001a 100%);
-  background-size:400% 400%;
-  animation:gradientShift 18s ease infinite;
-}
-
-/* Floating orbs — big colorful blobs */
-body::before{
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:
-    radial-gradient(ellipse 800px 800px at 15% 25%, var(--glow-purple), transparent),
-    radial-gradient(ellipse 700px 700px at 85% 75%, var(--glow-green), transparent),
-    radial-gradient(ellipse 600px 600px at 50% 10%, var(--glow-orange), transparent),
-    radial-gradient(ellipse 500px 500px at 75% 40%, var(--glow-pink), transparent),
-    radial-gradient(ellipse 550px 550px at 25% 80%, var(--glow-blue), transparent),
-    radial-gradient(ellipse 450px 450px at 90% 15%, var(--glow-red), transparent);
-  animation:orbsFloat 20s ease-in-out infinite;
-}
-@keyframes orbsFloat{
-  0%,100%{transform:translate(0,0) scale(1);opacity:0.7}
-  20%{transform:translate(40px,-30px) scale(1.15);opacity:0.9}
-  40%{transform:translate(-20px,40px) scale(0.85);opacity:0.6}
-  60%{transform:translate(30px,20px) scale(1.1);opacity:0.85}
-  80%{transform:translate(-30px,-20px) scale(0.95);opacity:0.65}
-}
-
-/* Sparkle stars */
-body::after{
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background-image:
-    radial-gradient(2px 2px at 8% 15%, rgba(255,255,255,0.25), transparent),
-    radial-gradient(2px 2px at 22% 45%, rgba(139,92,246,0.3), transparent),
-    radial-gradient(2px 2px at 38% 8%, rgba(46,227,107,0.25), transparent),
-    radial-gradient(2px 2px at 55% 65%, rgba(255,184,107,0.3), transparent),
-    radial-gradient(2px 2px at 72% 25%, rgba(236,72,153,0.25), transparent),
-    radial-gradient(2px 2px at 88% 55%, rgba(33,150,243,0.3), transparent),
-    radial-gradient(2px 2px at 12% 78%, rgba(255,255,255,0.2), transparent),
-    radial-gradient(2px 2px at 48% 92%, rgba(46,227,107,0.2), transparent),
-    radial-gradient(2px 2px at 65% 38%, rgba(139,92,246,0.2), transparent),
-    radial-gradient(2px 2px at 82% 82%, rgba(255,184,107,0.2), transparent),
-    radial-gradient(1.5px 1.5px at 33% 58%, rgba(255,255,255,0.15), transparent),
-    radial-gradient(1.5px 1.5px at 95% 42%, rgba(236,72,153,0.2), transparent),
-    radial-gradient(1.5px 1.5px at 5% 52%, rgba(33,150,243,0.2), transparent),
-    radial-gradient(1.5px 1.5px at 58% 18%, rgba(255,255,255,0.18), transparent),
-    radial-gradient(1.5px 1.5px at 42% 72%, rgba(46,227,107,0.15), transparent);
-  animation:sparkle 6s ease-in-out infinite alternate;
-}
-@keyframes sparkle{
-  0%{opacity:0.3;transform:scale(1)}
-  50%{opacity:0.8;transform:scale(1.02)}
-  100%{opacity:0.5;transform:scale(0.98)}
-}
-}
-@keyframes sparkle{
-  0%{opacity:0.4}
-  100%{opacity:1}
-}
 .app-header{padding:10px 14px;background:rgba(255,255,255,0.02);backdrop-filter:blur(6px);box-shadow:0 1px 0 rgba(0,0,0,0.4);display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;position:relative;z-index:99990}
 .app-header .left-controls{display:flex;align-items:center;gap:8px}
 .app-header .btn-icon{background:transparent;border:none;color:var(--muted);font-size:20px;padding:6px;border-radius:8px}

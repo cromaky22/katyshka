@@ -6,6 +6,37 @@
     return;
   }
 
+  // === COSMIC BACKGROUND ===
+  (function(){
+    if(document.querySelector('.cosmic-bg')) return;
+    var isBonus = document.body.classList.contains('page-bonus');
+    var isWallet = document.body.classList.contains('page-wallet');
+    if(isBonus || isWallet) return;
+    var bg = document.createElement('div');
+    bg.className = 'cosmic-bg';
+    bg.innerHTML =
+      '<div class="nebula n1"></div>' +
+      '<div class="nebula n2"></div>' +
+      '<div class="nebula n3"></div>' +
+      '<div class="nebula n4"></div>' +
+      '<div class="nebula n5"></div>' +
+      '<div class="stars-layer">' +
+        '<div class="star s1"></div><div class="star s2"></div><div class="star s3"></div>' +
+        '<div class="star s4"></div><div class="star s5"></div><div class="star s6"></div>' +
+        '<div class="star s7"></div><div class="star s8"></div><div class="star s9"></div>' +
+        '<div class="star s10"></div><div class="star s11"></div><div class="star s12"></div>' +
+        '<div class="star s13"></div><div class="star s14"></div><div class="star s15"></div>' +
+        '<div class="star s16"></div><div class="star s17"></div><div class="star s18"></div>' +
+        '<div class="star s19"></div><div class="star s20"></div><div class="star s21"></div>' +
+        '<div class="star s22"></div><div class="star s23"></div><div class="star s24"></div>' +
+        '<div class="star s25"></div><div class="star s26"></div><div class="star s27"></div>' +
+        '<div class="star s28"></div><div class="star s29"></div><div class="star s30"></div>' +
+      '</div>' +
+      '<div class="comet c1"></div><div class="comet c2"></div><div class="comet c3"></div><div class="comet c4"></div>' +
+      '<div class="shooting-star ss1"></div><div class="shooting-star ss2"></div><div class="shooting-star ss3"></div>';
+    document.body.insertBefore(bg, document.body.firstChild);
+  })();
+
   // === Referral commission helper ===
   window.reportBet = function(game, amount){
     var uid = (window.Balance && window.Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
