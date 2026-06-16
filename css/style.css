@@ -168,7 +168,7 @@ body::after{
   0%{opacity:0.4}
   100%{opacity:1}
 }
-.app-header{padding:10px 14px;background:rgba(255,255,255,0.02);backdrop-filter:blur(6px);box-shadow:0 1px 0 rgba(0,0,0,0.4);display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px}
+.app-header{padding:10px 14px;background:rgba(255,255,255,0.02);backdrop-filter:blur(6px);box-shadow:0 1px 0 rgba(0,0,0,0.4);display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;position:relative;z-index:99990}
 .app-header .left-controls{display:flex;align-items:center;gap:8px}
 .app-header .btn-icon{background:transparent;border:none;color:var(--muted);font-size:20px;padding:6px;border-radius:8px}
 .app-header .logo-small{width:34px;height:34px;object-fit:cover;border-radius:8px}
@@ -211,7 +211,7 @@ body::after{
 }
 
 /* Profile dropdown */
-.profile-dropdown{position:absolute;top:52px;right:0;width:240px;background:linear-gradient(180deg, rgba(12,16,30,0.98), rgba(8,12,24,0.98));border-radius:14px;border:1px solid rgba(255,255,255,0.06);box-shadow:0 20px 60px rgba(0,0,0,0.6);z-index:9999;opacity:0;pointer-events:none;transform:translateY(-8px);transition:opacity .2s,transform .2s}
+.profile-dropdown{position:absolute;top:52px;right:0;width:240px;background:linear-gradient(180deg, rgba(12,16,30,0.98), rgba(8,12,24,0.98));border-radius:14px;border:1px solid rgba(255,255,255,0.06);box-shadow:0 20px 60px rgba(0,0,0,0.6);z-index:99999;opacity:0;pointer-events:none;transform:translateY(-8px);transition:opacity .2s,transform .2s}
 .profile-dropdown.open{opacity:1;pointer-events:auto;transform:translateY(0)}
 .profile-dropdown::before{content:'';position:fixed;inset:0;z-index:-1}
 .pd-header{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.04)}
@@ -224,7 +224,7 @@ body::after{
 .pd-btn:hover{background:rgba(255,255,255,0.05)}
 .pd-btn .pd-btn-icon{font-size:18px;width:24px;text-align:center}
 .pd-btn .pd-btn-arrow{margin-left:auto;font-size:12px;color:var(--muted)}
-.pd-overlay{position:fixed;inset:0;z-index:9998;display:none}
+.pd-overlay{position:fixed;inset:0;z-index:99998;display:none}
 .pd-overlay.open{display:block}
 .content{padding:20px;padding-bottom:90px;background:transparent}
 
