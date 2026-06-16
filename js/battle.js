@@ -521,14 +521,14 @@ document.addEventListener('DOMContentLoaded', function() {
   function renderTop() {
     historyEl.innerHTML = '';
     if (topPlayers.length === 0) {
-      historyEl.innerHTML = '<div style="color:rgba(255,255,255,0.4); font-size:12px; padding:8px;">Нет данных</div>';
+      historyEl.innerHTML = '<div style="color:rgba(255,255,255,0.4); font-size:12px; padding:8px;">Ожидание данных...</div>';
       return;
     }
     topPlayers.slice(0, 10).forEach((p, i) => {
       const el = document.createElement('div');
       el.className = 'battle-history-item';
       el.style.background = 'rgba(139,92,246,0.15)';
-      el.innerHTML = `<span>#${i+1}</span> <span>${p.name}</span> $${p.winnings.toFixed(0)}`;
+      el.innerHTML = `<span>#${i+1}</span> <span>${p.winnerName || p.name}</span> $${p.winnerAmount.toFixed(0)}`;
       historyEl.appendChild(el);
     });
   }

@@ -1496,14 +1496,11 @@ io.on('connection', (socket) => {
   });
 
   socket.on('battle:getTop', () => {
-    const topPlayers = Object.entries(users)
-      .map(([id, data]) => ({
-        userId: id,
-        name: data.first_name || data.username || 'Player',
-        winnings: data.deposit_total || 0
-      }))
-      .sort((a, b) => b.winnings - a.winnings)
-      .slice(0, 10);
+    const topPlayers = battle.history.slice(0, 10).map((h, i) => ({
+      winnerName: h.winnerName,
+      winnerAmount: h.winnerAmount,
+      color: h.color
+    }));
     socket.emit('battle:top', { players: topPlayers });
   });
 });
