@@ -515,7 +515,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   const tabs = document.querySelectorAll('.battle-tab');
-  const historyEl = document.getElementById('battleHistory');
   let topPlayers = [];
   let currentTab = 'top';
 
