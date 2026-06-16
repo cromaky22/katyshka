@@ -1235,6 +1235,28 @@ let battle = {
 let battleTimer = null;
 let battleTimerStarted = false;
 
+const BOT_NAMES = ['LuckyBot', 'SpinMaster', 'WheelKing', 'BetPro', 'WinStreak'];
+
+function addBotPlayer() {
+  if (battle.phase !== 'betting' && battle.phase !== 'waiting') return;
+  const botName = BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
+  const botId = 'bot_' + Math.floor(Math.random() * 5 + 1);
+  const botAmount = (1 + Math.random() * 3).toFixed(2);
+  
+  if (!battle.players[botId]) {
+    battle.players[botId] = { name: botName, avatar: '', amount: 0 };
+  }
+  battle.players[botId].amount = Math.round((parseFloat(battle.players[botId].amount || 0) + parseFloat(botAmount)) * 100) / 100;
+  
+  const playersList = getBattlePlayersList();
+  const total = getBattleTotalBank();
+  io.emit('battle:playersUpdate', { players: playersList, totalBank: total });
+  
+  if (!battleTimerStarted && Object.keys(battle.players).length >= 2) {
+    startBattle();
+  }
+}
+
 function getBattlePlayersList() {
   const list = [];
   for (const uid in battle.players) {
@@ -1244,8 +1266,10 @@ function getBattlePlayersList() {
       name: p.name || 'Player',
       avatar: p.avatar || '',
       amount: p.amount || 0
-    });
-  }
+});
+}
+
+setInterval(addBotPlayer, 8000);
   return list;
 }
 
@@ -1506,7 +1530,11 @@ io.on('connection', (socket) => {
 });
 
 startWheel();
-io.emit('battle:timer', { timer: 0, phase: 'waiting' });
+  io.emit('battle:timer', { timer: 0, phase: 'waiting' });
+  setInterval(addBotPlayer, 8000);
+
+// Battle bot
+setInterval(addBotPlayer, 8000);
 
 // === TELEGRAM BOT ===
 const CHANNEL_ID = '@milfacasino';
