@@ -721,42 +721,29 @@
   })();
 })();
 
-// Background floating stars
+// Background floating stars — optimized
 (function(){
-  const MAX = 40;
-  const spawnInterval = 600;
-  const containerClass = 'bg-stars';
-  
-  let container = document.querySelector('.' + containerClass);
-  if(!container){
-    container = document.createElement('div');
-    container.className = 'bg-stars';
-    document.body.prepend(container);
-  }
-
-  function rand(min, max){ return Math.random() * (max - min) + min }
+  const MAX = 15;
+  const spawnInterval = 1200;
+  const container = document.createElement('div');
+  container.className = 'bg-stars';
+  document.body.prepend(container);
 
   function createStar(){
     if(container.children.length > MAX) return;
     const s = document.createElement('span');
     s.className = 'bg-star';
-    s.innerHTML = '&#10022;'; // ✦ star symbol
-    const size = Math.round(rand(10,22));
-    const left = Math.round(rand(2,98));
-    const dur = (rand(5,12)).toFixed(2) + 's';
-    s.style.fontSize = size + 'px';
-    s.style.left = left + '%';
-    s.style.animationDuration = dur;
-    s.style.opacity = (rand(0.5,1)).toFixed(2);
+    s.textContent = '✦';
+    s.style.left = (Math.random() * 96 + 2) + '%';
+    s.style.animationDuration = (Math.random() * 7 + 5) + 's';
+    s.style.opacity = (Math.random() * 0.5 + 0.3).toFixed(2);
     container.appendChild(s);
-    setTimeout(()=>{ if(s && s.parentNode) s.parentNode.removeChild(s) }, (parseFloat(dur) * 1000) + 500);
+    setTimeout(()=>{ s.remove(); }, 12000);
   }
 
-  for(let i=0;i<8;i++) setTimeout(createStar, i*150);
+  for(let i=0;i<5;i++) setTimeout(createStar, i*300);
   const handle = setInterval(createStar, spawnInterval);
-  document.addEventListener('visibilitychange', ()=>{
-    if(document.hidden) clearInterval(handle);
-  });
+  document.addEventListener('visibilitychange', ()=>{ if(document.hidden) clearInterval(handle); });
 })();
 
 
