@@ -1226,13 +1226,14 @@ let gameOnline = {};
 
 // === BATTLE WHEEL GAME ===
 let battle = {
-  phase: 'betting',
+  phase: 'waiting',
   timer: 20,
   roundId: 0,
   players: {},
   history: []
 };
 let battleTimer = null;
+let battleTimerStarted = false;
 
 function getBattlePlayersList() {
   const list = [];
@@ -1258,14 +1259,16 @@ function getBattleTotalBank() {
 
 function startBattle() {
   if (battleTimer) clearInterval(battleTimer);
-  battle.timer = 20;
   battle.phase = 'betting';
+  battle.timer = 20;
+  battleTimerStarted = true;
   io.emit('battle:timer', { timer: 20, phase: 'betting' });
   battleTimer = setInterval(() => {
     battle.timer--;
     io.emit('battle:timer', { timer: battle.timer, phase: battle.phase });
     if (battle.timer <= 0) {
       clearInterval(battleTimer);
+      battleTimerStarted = false;
       spinBattle();
     }
   }, 1000);
@@ -1359,8 +1362,11 @@ function spinBattle() {
   setTimeout(() => {
     battle.players = {};
     battle.roundId++;
+    battle.phase = 'waiting';
+    battle.timer = 0;
+    battleTimerStarted = false;
     io.emit('battle:newRound', { roundId: battle.roundId, history: battle.history });
-    startBattle();
+    io.emit('battle:timer', { timer: 0, phase: 'waiting' });
   }, 7000);
 }
 
@@ -1443,7 +1449,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('battle:bet', (data) => {
-    if (battle.phase !== 'betting') return;
+    if (battle.phase !== 'betting' && battle.phase !== 'waiting') return;
     const { amount, playerName, playerAvatar } = data;
     if (!amount || amount <= 0 || amount > 500) return;
 
@@ -1470,12 +1476,16 @@ io.on('connection', (socket) => {
       myBets: [{ userId, amount: battle.players[userId].amount }],
       balance: getBalance(userId)
     });
+    
+    if (!battleTimerStarted && Object.keys(battle.players).length >= 2) {
+      startBattle();
+    }
   });
 
   socket.on('battle:getState', () => {
     socket.emit('battle:state', {
-      phase: battle.phase,
-      timer: battle.timer,
+      phase: battleTimerStarted ? battle.phase : 'waiting',
+      timer: battleTimerStarted ? battle.timer : 0,
       roundId: battle.roundId,
       players: getBattlePlayersList(),
       totalBank: getBattleTotalBank(),
@@ -1487,7 +1497,7 @@ io.on('connection', (socket) => {
 });
 
 startWheel();
-startBattle();
+  io.emit('battle:timer', { timer: 0, phase: 'waiting' });
 
 // === TELEGRAM BOT ===
 const CHANNEL_ID = '@milfacasino';

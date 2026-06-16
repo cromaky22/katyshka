@@ -199,9 +199,14 @@ document.addEventListener('DOMContentLoaded', function() {
   function updatePhase(phase, timer) {
     timerEl.textContent = timer;
     timerEl.classList.toggle('urgent', timer <= 5);
-    phaseEl.classList.remove('betting', 'spinning', 'result');
+    phaseEl.classList.remove('betting', 'spinning', 'result', 'waiting');
 
-    if (phase === 'betting') {
+    if (phase === 'waiting') {
+      phaseEl.textContent = 'Ожидание игроков...';
+      phaseEl.classList.add('waiting');
+      isSpinning = false;
+      betBtn.disabled = false;
+    } else if (phase === 'betting') {
       phaseEl.textContent = `Ставки открыты — ${timer}с`;
       phaseEl.classList.add('betting');
       isSpinning = false;
@@ -299,6 +304,7 @@ document.addEventListener('DOMContentLoaded', function() {
     socketReady = true;
     statusEl.textContent = 'Подключено';
     statusEl.className = 'battle-status';
+    socket.emit('battle:getState');
   }
 
   // Handle socket connection
@@ -339,13 +345,17 @@ document.addEventListener('DOMContentLoaded', function() {
       if (state.phase === 'betting' && state.timer > 0) {
         startLocalTimer(state.timer, 'betting');
       }
+    } else {
+      updatePhase('waiting', 0);
     }
     drawWheel();
   });
 
   socket.on('battle:timer', (data) => {
     updatePhase(data.phase, data.timer);
-    startLocalTimer(data.timer, data.phase);
+    if (data.phase !== 'waiting') {
+      startLocalTimer(data.timer, data.phase);
+    }
   });
 
   socket.on('battle:playersUpdate', (data) => {
@@ -433,10 +443,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (data.history) loadHistory(data.history);
 
-    statusEl.textContent = 'Новый раунд! Делайте ставки';
+    statusEl.textContent = 'Новый раунд! Ждём игроков...';
     statusEl.className = 'battle-status';
     isSpinning = false;
     betBtn.disabled = false;
+    updatePhase('waiting', 0);
   });
 
   // === LOCAL TIMER ===
