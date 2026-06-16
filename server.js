@@ -1363,8 +1363,84 @@ app.post('/api/bonus/subscribe', async (req, res) => {
   }
   saveData();
 
-  console.log(`💰 Sub reward: user ${userId} +$${SUB_REWARD}, balance: ${users[userId].balance}`);
-  res.json({ ok: true, balance: users[userId].balance });
+   console.log(`💰 Sub reward: user ${userId} +$${SUB_REWARD}, balance: ${users[userId].balance}`);
+   res.json({ ok: true, balance: users[userId].balance });
+});
+
+// === DAILY WHEEL BONUS ===
+const DAILY_WHEEL_COOLDOWN = 24 * 60 * 60 * 1000;
+
+const DAILY_SECTORS = [
+  { label: '$0.01', payout: 0.01 },
+  { label: '$0.10', payout: 0.10 },
+  { label: '$0.50', payout: 0.50 },
+  { label: '$0.02', payout: 0.02 },
+  { label: '$0.07', payout: 0.07 },
+  { label: '$5',    payout: 5.00 },
+  { label: '$0.03', payout: 0.03 },
+  { label: '$0.25', payout: 0.25 },
+  { label: '$0.05', payout: 0.05 },
+  { label: '$1',    payout: 1.00 },
+  { label: '$0.01', payout: 0.01 },
+  { label: '$10',   payout: 10.00 }
+];
+
+function getDailyWheelResult() {
+  const weights = DAILY_SECTORS.map(function(s) {
+    if (s.payout >= 10) return 1;
+    if (s.payout >= 5)  return 2;
+    if (s.payout >= 1)  return 5;
+    if (s.payout >= 0.5) return 10;
+    if (s.payout >= 0.25) return 18;
+    if (s.payout >= 0.10) return 25;
+    return 35;
+  });
+  let totalW = 0;
+  for (let w = 0; w < weights.length; w++) totalW += weights[w];
+  let rand = Math.random() * totalW;
+  let chosenIdx = 0;
+  for (let i = 0; i < weights.length; i++) { rand -= weights[i]; if (rand <= 0) { chosenIdx = i; break; } }
+  return DAILY_SECTORS[chosenIdx];
+}
+
+app.post('/api/bonus/daily-spin', async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: 'Missing userId' });
+
+  if (!users[userId]) users[userId] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
+
+  const now = Date.now();
+  const lastSpin = users[userId].lastDailySpin || 0;
+  const remaining = lastSpin ? Math.max(0, DAILY_WHEEL_COOLDOWN - (now - lastSpin)) : 0;
+  if (remaining > 0) {
+    return res.status(400).json({ error: 'cooldown', remaining });
+  }
+
+  const sector = getDailyWheelResult();
+  const oldBal = users[userId].balance || 0;
+  users[userId].balance = Math.round((oldBal + sector.payout) * 100) / 100;
+  users[userId].lastDailySpin = now;
+
+  io.emit('balance_update', { userId, balance: users[userId].balance });
+
+  if (usePostgres) {
+    try {
+      await db.query('UPDATE users SET balance = $1, last_daily_spin = $2 WHERE id = $3', [users[userId].balance, now, userId]);
+    } catch(e) { console.error('[DB] daily spin save error:', e.message); }
+  }
+  saveData();
+
+  console.log(`🎡 Daily spin: user ${userId} won ${sector.label}, balance: ${oldBal.toFixed(2)} → ${users[userId].balance.toFixed(2)}`);
+  res.json({ ok: true, payout: sector.payout, label: sector.label, balance: users[userId].balance });
+});
+
+// === DAILY WHEEL STATUS ===
+app.get('/api/bonus/daily-spin-status', (req, res) => {
+  const userId = req.query.userId;
+  if (!userId) return res.status(400).json({ error: 'Missing userId' });
+  const lastSpin = users[userId]?.lastDailySpin || 0;
+  const remaining = lastSpin ? Math.max(0, DAILY_WHEEL_COOLDOWN - (Date.now() - lastSpin)) : 0;
+  res.json({ lastSpin, remaining, canSpin: remaining <= 0 });
 });
 
 // Telegram photo API endpoint

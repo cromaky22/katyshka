@@ -323,6 +323,16 @@
     setInterval(updateStatus, 1000);
     updateStatus();
 
+    // Sync cooldown with server on load
+    fetch('/api/bonus/daily-spin-status?userId=' + encodeURIComponent(uid))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.lastSpin) {
+          localStorage.setItem(LAST_SPIN_KEY, String(data.lastSpin));
+          updateStatus();
+        }
+      }).catch(function(){});
+
     spinBtn.addEventListener('click', function() {
       if (isSpinning) return;
       if (getRemaining() > 0) return;
@@ -370,10 +380,36 @@
     function finish(idx) {
       var sector = SECTORS[idx];
       setLastSpin();
-      if (window.Balance) Balance.set(Math.round((Balance.get() + sector.payout) * 100) / 100);
-      bonusStatus.textContent = '🎉 Вы выиграли ' + sector.label + '!';
-      bonusStatus.className = 'bonus-status win';
-      updateStatus();
+      spinBtn.disabled = true; spinBtn.textContent = '⏳ ПОДОЖДИТЕ...';
+      bonusStatus.textContent = 'Начисляем выигрыш...'; bonusStatus.className = 'bonus-status';
+
+      fetch('/api/bonus/daily-spin', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({userId: uid})
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.ok) {
+          if (window.Balance) Balance.set(data.balance);
+          bonusStatus.textContent = '🎉 Вы выиграли ' + data.label + '!';
+          bonusStatus.className = 'bonus-status win';
+        } else if (data.error === 'cooldown') {
+          bonusStatus.textContent = '⏳ Бонус уже получен!';
+          bonusStatus.className = 'bonus-status wait';
+        } else {
+          bonusStatus.textContent = '❌ Ошибка: ' + (data.error || 'неизвестная');
+          bonusStatus.className = 'bonus-status';
+          spinBtn.disabled = false; spinBtn.textContent = '🎰 КРУТИТЬ';
+        }
+        updateStatus();
+      })
+      .catch(function() {
+        bonusStatus.textContent = '❌ Ошибка соединения';
+        bonusStatus.className = 'bonus-status';
+        spinBtn.disabled = false; spinBtn.textContent = '🎰 КРУТИТЬ';
+        updateStatus();
+      });
     }
 
     // Profile photo

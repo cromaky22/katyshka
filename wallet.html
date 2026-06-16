@@ -53,6 +53,9 @@
     .tx-status.completed{background:rgba(76,175,80,0.2);color:#4caf50}
     .tx-status.pending{background:rgba(255,193,7,0.2);color:#ffc107}
     .tx-empty{text-align:center;padding:30px;color:var(--muted);font-size:12px}
+    .tx-filters{display:flex;gap:4px;margin-bottom:10px}
+    .tx-filter{padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:var(--muted);cursor:pointer;font-size:10px;font-weight:600;transition:all 0.2s}
+    .tx-filter.active{background:linear-gradient(135deg,#ff6b9d,#ffd700);color:#000;border-color:transparent}
     .profile-icon{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.15)}
   </style>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -167,6 +170,10 @@
 
         <!-- HISTORY -->
         <div class="w-panel" id="tab-hist">
+          <div class="tx-filters">
+            <button class="tx-filter active" id="tf-dep" onclick="setTxFilter('dep')">Пополнения</button>
+            <button class="tx-filter" id="tf-wd" onclick="setTxFilter('wd')">Выводы</button>
+          </div>
           <div id="txList"><div class="tx-empty">Загрузка...</div></div>
         </div>
       </div>
@@ -264,6 +271,16 @@
       document.getElementById('tab-hist').classList.toggle('active',t==='hist');
       if(t==='hist')loadHistory();
     };
+
+    var txFilter = 'dep';
+    window.setTxFilter = function(f) {
+      txFilter = f;
+      document.querySelectorAll('.tx-filter').forEach(function(el){ el.classList.remove('active'); });
+      var activeId = f === 'dep' ? 'tf-dep' : 'tf-wd';
+      var activeEl = document.getElementById(activeId);
+      if (activeEl) activeEl.classList.add('active');
+      loadHistory();
+    };
     window.setPay=function(p){
       pay=p;
       document.getElementById('m-cb').classList.toggle('sel',p==='cb');
@@ -287,8 +304,12 @@
         .then(function(r){return r.json();})
         .then(function(d){
           if(!d.ok || !d.transactions || d.transactions.length===0){el.innerHTML='<div class="tx-empty">История пуста</div>';return;}
+          var txs = d.transactions;
+          if(txFilter==='dep') txs = txs.filter(function(tx){ return tx.type==='deposit'||tx.type==='promo'; });
+          else txs = txs.filter(function(tx){ return tx.type==='withdraw'; });
+          if(txs.length===0){el.innerHTML='<div class="tx-empty">Нет операций</div>';return;}
           el.innerHTML='';
-          d.transactions.forEach(function(tx){
+          txs.forEach(function(tx){
             var div=document.createElement('div');
             div.className='tx-item';
             var isDep=tx.type==='deposit';
