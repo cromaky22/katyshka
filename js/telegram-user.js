@@ -37,17 +37,7 @@
             })
             .catch(function(){
               // Show initials as fallback
-              var name = user.username || (user.first_name || '') + (user.last_name ? ' ' + user.last_name : '');
-              var initials = name.trim() ? name.trim().split(' ').map(function(n){ return n[0]; }).join('').toUpperCase().slice(0, 2) : '?';
-              profileImg.style.display = 'none';
-              var initialsEl = profileBtn.querySelector('.avatar-initials');
-              if(!initialsEl){
-                initialsEl = document.createElement('div');
-                initialsEl.className = 'avatar-initials';
-                profileBtn.appendChild(initialsEl);
-              }
-              initialsEl.textContent = initials;
-              initialsEl.style.display = 'flex';
+              showInitials(profileBtn, profileImg, user);
             });
         }
       }
@@ -74,6 +64,20 @@
     }catch(e){}
 
     return true;
+  }
+
+  function showInitials(profileBtn, profileImg, user){
+    var name = user.username || (user.first_name || '') + (user.last_name ? ' ' + user.last_name : '');
+    var initials = name.trim() ? name.trim().split(' ').map(function(n){ return n[0]; }).join('').toUpperCase().slice(0, 2) : '?';
+    profileImg.style.display = 'none';
+    var initialsEl = profileBtn.querySelector('.avatar-initials');
+    if(!initialsEl){
+      initialsEl = document.createElement('div');
+      initialsEl.className = 'avatar-initials';
+      profileBtn.appendChild(initialsEl);
+    }
+    initialsEl.textContent = initials;
+    initialsEl.style.display = 'flex';
   }
 
   function tryFill(){
@@ -118,13 +122,13 @@
     }
   }catch(e){ console.error('❌ WebApp init error:', e); }
 
-  // Attempt multiple times
+  // Attempt multiple times with increasing delays
   console.log('🚀 Starting Telegram user detection...');
   tryFill();
   var attempts = 0;
   var t = setInterval(function(){
     attempts++;
-    if(attempts<=6){ console.log('🔄 Retry ' + attempts + '...'); tryFill(); }
-    if(attempts>=6) clearInterval(t);
-  }, 500);
+    if(attempts<=10){ console.log('🔄 Retry ' + attempts + '...'); tryFill(); }
+    if(attempts>=10) clearInterval(t);
+  }, 300);
 })();
