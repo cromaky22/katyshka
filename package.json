@@ -4,8 +4,7 @@
   "description": "KATYSHKA game platform",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "bot": "node bot-casino.js"
+    "start": "node server.js & node bot-casino.js"
   },
   "dependencies": {
     "express": "^4.18.2",
