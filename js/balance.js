@@ -196,11 +196,10 @@ function loadFromServer(){
     ready: function(fn){
       if(_ready) fn(_balance);
       else _listeners.push(fn);
-    },
-getUserId: function(){ return _userId || getUserId(); },
+},
+     getUserId: function(){ return _userId || getUserId(); },
      getSocket: function(){ if(!_socket) initSocket(); return _socket; }
    };
-  };
 
   if(document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function(){ Balance.init(); });
