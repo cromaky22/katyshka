@@ -206,7 +206,7 @@
       if(balEl && window.Balance) balEl.textContent = Balance.get().toFixed(2);
     }, 500);
 
-    // Real online players
+    // Real online players — same as home.html
     function updateOnlinePlayers(){
       var socket = (window.Balance && Balance.getSocket) ? Balance.getSocket() : null;
       if(!socket) return;
@@ -217,8 +217,10 @@
         });
       });
       socket.emit('get_online');
+      socket.emit('join_game', 'games');
     }
-    setTimeout(updateOnlinePlayers, 1500);
+    if(window.Balance) Balance.ready(function(){ updateOnlinePlayers(); });
+    setTimeout(updateOnlinePlayers, 1000);
   </script>
 </body>
 </html>
