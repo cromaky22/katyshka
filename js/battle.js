@@ -199,6 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function updatePhase(phase, timer) {
     timerEl.textContent = timer;
     timerEl.classList.toggle('urgent', timer <= 5);
+    timerEl.style.visibility = phase === 'waiting' ? 'hidden' : 'visible';
     phaseEl.classList.remove('betting', 'spinning', 'result', 'waiting');
 
     if (phase === 'waiting') {
@@ -305,6 +306,7 @@ document.addEventListener('DOMContentLoaded', function() {
     statusEl.textContent = 'Подключено';
     statusEl.className = 'battle-status';
     socket.emit('battle:getState');
+    socket.emit('battle:getTop');
   }
 
   // Handle socket connection
@@ -510,6 +512,44 @@ document.addEventListener('DOMContentLoaded', function() {
   doubleBtn.addEventListener('click', () => {
     const v = parseFloat(betInput.value) || 0;
     betInput.value = Math.min(500, v * 2).toFixed(2);
+  });
+
+  const tabs = document.querySelectorAll('.battle-tab');
+  const historyEl = document.getElementById('battleHistory');
+  let topPlayers = [];
+  let currentTab = 'top';
+
+  function renderTop() {
+    historyEl.innerHTML = '';
+    if (topPlayers.length === 0) {
+      historyEl.innerHTML = '<div style="color:rgba(255,255,255,0.4); font-size:12px; padding:8px;">Нет данных</div>';
+      return;
+    }
+    topPlayers.slice(0, 10).forEach((p, i) => {
+      const el = document.createElement('div');
+      el.className = 'battle-history-item';
+      el.style.background = 'rgba(139,92,246,0.15)';
+      el.innerHTML = `<span>#${i+1}</span> <span>${p.name}</span> $${p.winnings.toFixed(0)}`;
+      historyEl.appendChild(el);
+    });
+  }
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentTab = tab.dataset.tab;
+      if (currentTab === 'top') {
+        renderTop();
+      } else {
+        loadHistory(battle.history);
+      }
+    });
+  });
+
+  socket.on('battle:top', (data) => {
+    topPlayers = data.players || [];
+    if (currentTab === 'top') renderTop();
   });
 
   document.addEventListener('click', () => initAudio(), { once: true });

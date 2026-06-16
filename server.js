@@ -1494,10 +1494,22 @@ io.on('connection', (socket) => {
       history: battle.history
     });
   });
+
+  socket.on('battle:getTop', () => {
+    const topPlayers = Object.entries(users)
+      .map(([id, data]) => ({
+        userId: id,
+        name: data.first_name || data.username || 'Player',
+        winnings: data.deposit_total || 0
+      }))
+      .sort((a, b) => b.winnings - a.winnings)
+      .slice(0, 10);
+    socket.emit('battle:top', { players: topPlayers });
+  });
 });
 
 startWheel();
-  io.emit('battle:timer', { timer: 0, phase: 'waiting' });
+io.emit('battle:timer', { timer: 0, phase: 'waiting' });
 
 // === TELEGRAM BOT ===
 const CHANNEL_ID = '@milfacasino';
