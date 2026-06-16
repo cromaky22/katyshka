@@ -19,7 +19,7 @@ html,body{
 /* Background image */
 body::before{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:url('../assets/bg.jpg') center/cover no-repeat;
+  background:url('../assets/bg.jpg?v=2') center/cover no-repeat;
   opacity:0.35;
   animation:bgPulse 8s ease-in-out infinite alternate;
 }
