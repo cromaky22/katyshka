@@ -344,6 +344,7 @@ body::after{
 /* Wallet modal styles removed - now inline in wallet-modal.js */
 
 .games-count{font-size:13px;color:var(--muted);margin-bottom:12px;padding:0 4px}
+.games-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 
 /* Hero section */
 .hero-section{text-align:center;padding:32px 0 20px;position:relative}
@@ -410,7 +411,7 @@ body::after{
 
 @media(max-width:420px){
   .hero-title{font-size:24px}
-  .games-grid{grid-template-columns:repeat(3,1fr);gap:8px}
+  .games-grid{grid-template-columns:repeat(2,1fr);gap:8px}
   .game-card-img{height:75px}
   .game-card-name{font-size:11px}
   .qc-icon{width:46px;height:46px;font-size:18px}

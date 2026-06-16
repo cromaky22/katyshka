@@ -44,9 +44,6 @@
       </div>
     </div>
 
-    <!-- Games count -->
-    <div class="games-count" id="gamesCount">11 игр</div>
-
     <div class="games-grid" id="gamesGrid">
 
       <div class="game-card">
@@ -162,12 +159,6 @@
     // Search filter
     var searchInput = document.getElementById('gameSearch');
     var gameCards = document.querySelectorAll('.game-card');
-    var gamesCount = document.getElementById('gamesCount');
-    function updateCount(){
-      var visible = 0;
-      gameCards.forEach(function(c){ if(c.style.display !== 'none') visible++; });
-      gamesCount.textContent = visible + ' из ' + gameCards.length + ' игр';
-    }
     if(searchInput){
       searchInput.addEventListener('input', function(){
         var q = this.value.trim().toLowerCase();
@@ -176,10 +167,8 @@
           var txt = name ? name.textContent.trim().toLowerCase() : '';
           card.style.display = (!q || txt.includes(q)) ? '' : 'none';
         });
-        updateCount();
       });
     }
-    updateCount();
 
     // Balance
     setTimeout(function(){
