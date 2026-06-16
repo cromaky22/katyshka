@@ -101,10 +101,10 @@ app.get('/api/stats', async (req, res) => {
   res.json({ deposits, withdraws, totalWin, maxWin, totalBets, games, wins, losses, winRate, history, ip: lastIp });
 });
 
-app.post('/api/users', async (req, res) => {
-   const { id, balance, first_name, last_name, username, avatar, wager_required, wager_total, deposit_total, wager_multiplier } = req.body;
-   if (!id) return res.status(400).json({ error: 'Missing id' });
-  if (!users[id]) users[id] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
+  app.post('/api/users', async (req, res) => {
+    const { id, balance, first_name, last_name, username, avatar, wager_required, wager_total, deposit_total, wager_multiplier, referredBy } = req.body;
+    if (!id) return res.status(400).json({ error: 'Missing id' });
+    if (!users[id]) users[id] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
     if (balance !== undefined) {
       users[id].balance = Math.round(parseFloat(balance) * 100) / 100;
     }
@@ -116,6 +116,11 @@ app.post('/api/users', async (req, res) => {
     if (last_name !== undefined) users[id].last_name = last_name;
     if (username !== undefined) users[id].username = username;
     if (avatar !== undefined) users[id].avatar = avatar;
+    if (referredBy && !users[id].referredBy) {
+      users[id].referredBy = referredBy;
+      if (!referrals[referredBy]) referrals[referredBy] = {};
+      referrals[referredBy][id] = true;
+    }
     
     // Save to DB immediately
     await dbSetUser(id, users[id]);
@@ -221,6 +226,8 @@ let promos = {};
 let activated = {};
 let transactions = [];
 let paidInvoices = {};
+let referrals = {}; // { referrerId: { referredId: true, ... } }
+let referralEarnings = {}; // { referrerId: { available, earned, volume } }
 
 // Load promos from PG on start
 async function loadPromosFromPG() {
@@ -1292,6 +1299,10 @@ io.on('connection', (socket) => {
     setBalance(userId, serverBalance - amount);
      addTx('bet', userId, amount, 'completed', { game: 'Wheel', detail: type });
      applyBet(userId, amount);
+     // Referral commission
+     if (users[userId] && users[userId].referredBy) {
+       addRefCommission(users[userId].referredBy, amount);
+     }
     io.emit('balance_update', { userId, balance: getBalance(userId) });
     const allBets = [];
     for (const uid in wheel.bets) {
@@ -1480,6 +1491,105 @@ app.get('/api/tg-photo/:id', async (req, res) => {
    }
    server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
  }
+  // === REFERRAL SYSTEM ===
+  const REF_BASE_RATE = 0.015; // 1.5%
+  const REF_MAX_RATE = 0.03;   // 3%
+  const REF_CLAIM_MIN = 0.25;
+
+  function getRefRate(count) {
+    // 1.5% base, +0.15% per referral, max 3%
+    return Math.min(REF_BASE_RATE + count * 0.0015, REF_MAX_RATE);
+  }
+
+  function getRefData(uid) {
+    if (!referralEarnings[uid]) referralEarnings[uid] = { available: 0, earned: 0, volume: 0 };
+    return referralEarnings[uid];
+  }
+
+  function addRefCommission(referrerId, betAmount) {
+    if (!referrerId) return;
+    const ref = getRefData(referrerId);
+    const referredCount = referrals[referrerId] ? Object.keys(referrals[referrerId]).length : 0;
+    const rate = getRefRate(referredCount);
+    const commission = Math.round(betAmount * rate * 100) / 100;
+    ref.available = Math.round((ref.available + commission) * 100) / 100;
+    ref.earned = Math.round((ref.earned + commission) * 100) / 100;
+    ref.volume = Math.round((ref.volume + betAmount) * 100) / 100;
+    saveData();
+  }
+
+  // Get referral info
+  app.get('/api/referral/:userId', (req, res) => {
+    const uid = req.params.userId;
+    const ref = getRefData(uid);
+    const referredIds = referrals[uid] || {};
+    const count = Object.keys(referredIds).length;
+    // Count active (made at least 1 bet)
+    let active = 0;
+    for (const rid in referredIds) {
+      if (users[rid] && (users[rid].wager_total || 0) > 0) active++;
+    }
+    const link = `https://t.me/katyshka_casino_bot?start=${uid}`;
+    res.json({
+      ok: true,
+      link,
+      available: ref.available,
+      earned: ref.earned,
+      count,
+      active,
+      volume: ref.volume
+    });
+  });
+
+  // Claim referral earnings
+  app.post('/api/referral/claim', async (req, res) => {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: 'Missing userId' });
+    const ref = getRefData(userId);
+    if (ref.available < REF_CLAIM_MIN) {
+      return res.json({ ok: false, error: `Minimum $${REF_CLAIM_MIN} required` });
+    }
+    const amount = ref.available;
+    ref.available = 0;
+    // Add to balance
+    if (!users[userId]) users[userId] = { balance: 0 };
+    users[userId].balance = Math.round((users[userId].balance + amount) * 100) / 100;
+    await addTx('deposit', userId, amount, 'completed', { provider: 'referral', detail: 'Referral commission' });
+    saveData();
+    io.emit('balance_update', { userId, balance: users[userId].balance });
+    res.json({ ok: true, amount, newBalance: users[userId].balance });
+  });
+
+  // Track referral on user registration (called from bot or link)
+  app.post('/api/referral/track', (req, res) => {
+    const { referredId, referrerId } = req.body;
+    if (!referredId || !referrerId) return res.status(400).json({ error: 'Missing params' });
+    if (referredId === referrerId) return res.json({ ok: false, error: 'Self referral' });
+    if (!referrals[referrerId]) referrals[referrerId] = {};
+    referrals[referrerId][referredId] = true;
+    saveData();
+    res.json({ ok: true });
+  });
+
+  // Report bet from client-side games (mines, crash, coinflip, etc.)
+  // This is called AFTER the client already deducted balance locally
+  app.post('/api/game/bet', async (req, res) => {
+    const { userId, game, amount } = req.body;
+    if (!userId || !game || !amount) return res.status(400).json({ error: 'Missing params' });
+    const amt = Math.abs(parseFloat(amount) || 0);
+    if (amt <= 0) return res.json({ ok: false });
+    // Only record transaction and referral — balance already deducted client-side
+    await addTx('bet', userId, amt, 'completed', { game, detail: 'bet' });
+    applyBet(userId, amt);
+    // Referral commission
+    if (users[userId] && users[userId].referredBy) {
+      addRefCommission(users[userId].referredBy, amt);
+    }
+    res.json({ ok: true });
+  });
+
+  // === END REFERRAL SYSTEM ===
+
   startServer();
 
  // Graceful shutdown — save all users to DB before exit

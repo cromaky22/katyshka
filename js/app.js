@@ -6,6 +6,16 @@
     return;
   }
 
+  // === Referral commission helper ===
+  window.reportBet = function(game, amount){
+    var uid = (window.Balance && window.Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
+    if(!uid || !amount) return;
+    fetch('/api/game/bet', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({userId: uid, game: game, amount: Math.abs(amount)})
+    }).catch(function(){});
+
   // === Stats & History helpers ===
   window.mcStats = {
     addBet: function(amount, game, detail){
@@ -438,52 +448,7 @@
   })();
 })();
 
-// Profile dropdown
-(function(){
-  const btn = document.getElementById('profileBtn');
-  const dd = document.getElementById('profileDropdown');
-  const overlay = document.getElementById('pdOverlay');
-  const pdUserId = document.getElementById('pdUserId');
-  const pdPromoBtn = document.getElementById('pdPromoBtn');
-  if(!btn || !dd){ console.log('Profile not found:', {btn, dd}); return; }
-
-  function getId(){
-    try{
-      const tg = window.Telegram && window.Telegram.WebApp;
-      const candidates = [
-        tg && tg.initDataUnsafe && tg.initDataUnsafe.user,
-        tg && tg.initDataUnsafe && tg.initDataUnsafe.receiver,
-        tg && tg.user
-      ];
-      for (const user of candidates) {
-        if (user && user.id) return String(user.id);
-      }
-    }catch(e){}
-    return localStorage.getItem('tg_uid') || '—';
-  }
-
-  function syncId(){
-    if(pdUserId) pdUserId.textContent = getId();
-  }
-
-  function close(){ dd.classList.remove('open'); if(overlay) overlay.classList.remove('open'); }
-  function open(){ syncId(); dd.classList.add('open'); if(overlay) overlay.classList.add('open'); }
-
-  syncId();
-
-  btn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); dd.classList.contains('open') ? close() : open(); });
-  if(overlay) overlay.addEventListener('click', close);
-
-  if(pdPromoBtn){
-    pdPromoBtn.addEventListener('click', function(){
-      close();
-      const modal = document.getElementById('promoModal');
-      const input = document.getElementById('promoCodeInput');
-      if(modal){ modal.style.display = ''; modal.setAttribute('aria-hidden','false'); }
-      if(input) input.focus();
-    });
-  }
-})();
+// Profile dropdown moved to js/profile-dropdown.js
 
 // Populate recipient info from Telegram WebApp when available
 (function(){

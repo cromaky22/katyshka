@@ -15,8 +15,16 @@
       '<div style="text-align:center;padding:12px;background:rgba(0,0,0,0.2);border-radius:10px;margin-bottom:10px"><div style="font-size:11px;color:var(--muted)">Основной баланс</div><div style="font-size:28px;font-weight:900;color:#ffd700;margin-top:4px">$<span id="wdBal">0.00</span></div></div>' +
       '<div style="text-align:center;padding:10px;background:rgba(0,0,0,0.2);border-radius:10px;margin-bottom:8px"><div style="font-size:11px;color:var(--muted)">Отыгрыш (Wager)</div><div style="font-size:14px;font-weight:700;color:#ff6b9d;margin-top:2px">Осталось: $<span id="wdWager">0.00</span></div><div style="font-size:10px;color:var(--muted);margin-top:2px">Всего: $<span id="wdWagerTotal">0.00</span> | Отыграно: $<span id="wdWagerDone">0.00</span></div><div style="margin-top:6px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden"><div id="wdWagerBar" style="height:100%;width:0%;background:linear-gradient(90deg,#4caf50,#2ee36b);border-radius:2px;transition:width 0.5s"></div></div><div style="font-size:10px;color:var(--muted);margin-top:4px">Вывод: <span id="wdWithdraw" style="font-weight:700;color:#4caf50">доступен</span></div></div>' +
       '<button id="wdOpen" style="width:100%;padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#2196f3,#1565c0);color:#fff">💼 Кошелёк</button>' +
-    '</div>';
+      '</div>';
     document.body.appendChild(dd);
+  }
+
+  if (!document.getElementById('walletDropOverlay')) {
+    var wol = document.createElement('div');
+    wol.id = 'walletDropOverlay';
+    wol.style.cssText = 'position:fixed;inset:0;z-index:999998;display:none;background:transparent;';
+    wol.addEventListener('click', function(){ closeDrop(); });
+    document.body.appendChild(wol);
   }
 
   // === FULLSCREEN WALLET OVERLAY ===
@@ -105,6 +113,8 @@
     dd.style.pointerEvents = 'auto';
     dd.style.transform = 'translateY(0)';
     trigger.classList.add('open');
+    var wol = document.getElementById('walletDropOverlay');
+    if(wol) wol.style.display = 'block';
     syncBal();
   }
   function closeDrop(){
@@ -112,6 +122,8 @@
     dd.style.pointerEvents = 'none';
     dd.style.transform = 'translateY(-8px)';
     trigger.classList.remove('open');
+    var wol = document.getElementById('walletDropOverlay');
+    if(wol) wol.style.display = 'none';
   }
 
   // Toggle dropdown on balance click
@@ -120,12 +132,7 @@
     if (dd.style.opacity==='1') closeDrop(); else openDrop();
   });
 
-  // Close dropdown on outside click
-  document.addEventListener('click', function(e){
-    if (dd.style.opacity==='1' && !dd.contains(e.target) && e.target!==trigger) closeDrop();
-  });
-
-  // Open wallet fullscreen
+  // Close wallet fullscreen
   document.getElementById('wdOpen').addEventListener('click', function(e){
     e.stopPropagation(); closeDrop(); wf.style.display='flex'; syncBal();
   });

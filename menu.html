@@ -68,7 +68,7 @@
       <div class="quick-menu">
         <div class="menu-actions">
           <a href="#" class="promo-btn" data-action="promo"><img src="assets/promo.png" alt="Активация промокода"></a>
-          <a href="#" class="chip" data-action="ref">❖ Рефка</a>
+           <a href="#" class="chip" data-action="ref">🔗 Рефка</a>
           <a href="#" class="chip" data-action="faq">❓ FAQ</a>
           <a href="https://t.me/tabaef" target="_blank" rel="noopener noreferrer" class="chip">💬 Поддержка</a>
           <a href="https://t.me/milfacasino" target="_blank" rel="noopener noreferrer" class="chip">ℹ️ О нас</a>
@@ -90,6 +90,47 @@
       <div id="promoMessage" class="promo-message" aria-live="polite"></div>
     </div>
   </div>
+  <!-- Referral modal -->
+  <div class="promo-modal" id="refModal" aria-hidden="true" style="display:none">
+    <div class="promo-card" style="width:340px;max-width:94%">
+      <button class="promo-close" id="refClose" aria-label="Close">✕</button>
+      <h3 style="margin-top:4px">🔗 Партнёрская программа</h3>
+      <p class="promo-sub">Приглашай друзей и зарабатывай <b style="color:var(--accent-green)">1.5–3%</b> с каждой ставки приглашённых игроков!</p>
+      <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Ваша реферальная ссылка</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input id="refLink" readonly style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:var(--text);font-size:12px;outline:none" value="">
+          <button id="refCopy" style="padding:8px 12px;border-radius:8px;border:none;background:linear-gradient(135deg,#2196f3,#1565c0);color:#fff;font-size:12px;font-weight:700;cursor:pointer">📋</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <div style="flex:1;text-align:center;padding:8px;background:rgba(0,0,0,0.2);border-radius:8px">
+          <div style="font-size:10px;color:var(--muted)">Доступно</div>
+          <div id="refAvailable" style="font-size:16px;font-weight:800;color:#ffd700">$0.00</div>
+        </div>
+        <div style="flex:1;text-align:center;padding:8px;background:rgba(0,0,0,0.2);border-radius:8px">
+          <div style="font-size:10px;color:var(--muted)">Заработано</div>
+          <div id="refEarned" style="font-size:16px;font-weight:800;color:var(--accent-green)">$0.00</div>
+        </div>
+      </div>
+      <button id="refClaim" class="btn" style="width:100%;margin-bottom:10px;background:linear-gradient(135deg,#4caf50,#2e7d32)" disabled>💰 Получить минимум $0.25</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;text-align:center">
+        <div style="padding:6px;background:rgba(0,0,0,0.15);border-radius:6px">
+          <div style="font-size:9px;color:var(--muted)">Рефералов</div>
+          <div id="refCount" style="font-size:13px;font-weight:700;color:var(--text)">0</div>
+        </div>
+        <div style="padding:6px;background:rgba(0,0,0,0.15);border-radius:6px">
+          <div style="font-size:9px;color:var(--muted)">Активных</div>
+          <div id="refActive" style="font-size:13px;font-weight:700;color:var(--text)">0</div>
+        </div>
+        <div style="padding:6px;background:rgba(0,0,0,0.15);border-radius:6px;grid-column:span 2">
+          <div style="font-size:9px;color:var(--muted)">Оборот рефералов</div>
+          <div id="refVolume" style="font-size:13px;font-weight:700;color:var(--text)">$0.00</div>
+        </div>
+      </div>
+      <div id="refMessage" class="promo-message" style="margin-top:8px" aria-live="polite"></div>
+    </div>
+  </div>
   <nav class="bottom-nav">
     <a href="games.html" class="nav-item" data-name="games"><span class="icon">🎮</span><span class="label">Games</span></a>
     <a href="wallet.html" class="nav-item" data-name="wallet"><span class="icon">💼</span><span class="label">Wallet</span></a>
@@ -100,6 +141,95 @@
   <script src="js/balance.js"></script>
   <script src="js/app.js"></script>
   <script src="js/wallet-modal.js"></script>
+  <script src="js/profile-dropdown.js"></script>
+  <script>
+    (function(){
+      var refModal = document.getElementById('refModal');
+      var refClose = document.getElementById('refClose');
+      var refLink = document.getElementById('refLink');
+      var refCopy = document.getElementById('refCopy');
+      var refClaim = document.getElementById('refClaim');
+      var refAvailable = document.getElementById('refAvailable');
+      var refEarned = document.getElementById('refEarned');
+      var refCount = document.getElementById('refCount');
+      var refActive = document.getElementById('refActive');
+      var refVolume = document.getElementById('refVolume');
+      var refMessage = document.getElementById('refMessage');
+
+      var refBtn = document.querySelector('[data-action="ref"]');
+      if(refBtn) refBtn.addEventListener('click', function(e){ e.preventDefault(); openRef(); });
+      if(refClose) refClose.addEventListener('click', closeRef);
+      if(refModal) refModal.addEventListener('click', function(e){ if(e.target===refModal) closeRef(); });
+      if(refCopy) refCopy.addEventListener('click', function(){
+        refLink.select();
+        document.execCommand('copy');
+        refCopy.textContent = '✅';
+        setTimeout(function(){ refCopy.textContent = '📋'; }, 1500);
+      });
+      if(refClaim) refClaim.addEventListener('click', claimRef);
+
+      function openRef(){
+        refModal.style.display = '';
+        refModal.setAttribute('aria-hidden','false');
+        loadRefData();
+      }
+      function closeRef(){
+        refModal.style.display = 'none';
+        refModal.setAttribute('aria-hidden','true');
+      }
+      function fmt(n){ return Number(n).toFixed(2); }
+      function loadRefData(){
+        var uid = (window.Balance && window.Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
+        if(!uid) return;
+        fetch('/api/referral/' + uid).then(function(r){ return r.json(); }).then(function(d){
+          if(d.ok){
+            refLink.value = d.link || '';
+            refAvailable.textContent = '$' + fmt(d.available || 0);
+            refEarned.textContent = '$' + fmt(d.earned || 0);
+            refCount.textContent = d.count || 0;
+            refActive.textContent = d.active || 0;
+            refVolume.textContent = '$' + fmt(d.volume || 0);
+            if(d.available >= 0.25){
+              refClaim.disabled = false;
+              refClaim.style.opacity = '1';
+              refClaim.textContent = '💰 Получить $' + fmt(d.available);
+            } else {
+              refClaim.disabled = true;
+              refClaim.style.opacity = '0.4';
+              refClaim.textContent = '💰 Минимум $0.25 (осталось $' + fmt(0.25 - d.available) + ')';
+            }
+          }
+        }).catch(function(){});
+      }
+      function claimRef(){
+        var uid = (window.Balance && window.Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
+        if(!uid) return;
+        refClaim.disabled = true;
+        refClaim.textContent = '⏳...';
+        fetch('/api/referral/claim', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid})})
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if(d.ok){
+            refMessage.textContent = '✅ Выведено $' + fmt(d.amount) + ' на баланс!';
+            refMessage.style.color = 'var(--accent-green)';
+            if(window.Balance && d.newBalance !== undefined) Balance.set(d.newBalance);
+            loadRefData();
+          } else {
+            refMessage.textContent = '❌ ' + (d.error || 'Ошибка');
+            refMessage.style.color = '#ff6b6b';
+            refClaim.disabled = false;
+            refClaim.textContent = '💰 Получить';
+          }
+          setTimeout(function(){ refMessage.textContent=''; }, 3000);
+        }).catch(function(){
+          refMessage.textContent = '❌ Ошибка сети';
+          refMessage.style.color = '#ff6b6b';
+          refClaim.disabled = false;
+          refClaim.textContent = '💰 Получить';
+        });
+      }
+    })();
+  </script>
 </body>
 </html>
 
