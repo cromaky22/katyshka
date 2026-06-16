@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const canvas = document.getElementById('battleWheelCanvas');
   const ctx = canvas.getContext('2d');
   const timerEl = document.getElementById('battleTimer');
-  const resultEl = document.getElementById('battleWheelResult');
+  const resultEl = document.getElementById('battleResult');
   const phaseEl = document.getElementById('battlePhase');
   const betInput = document.getElementById('battleBetInput');
   const betBtn = document.getElementById('battleBetBtn');
@@ -565,22 +565,22 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // === UI EVENTS ===
-  betBtn.addEventListener('click', placeBet);
+  if (betBtn) betBtn.addEventListener('click', placeBet);
 
   quickBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
+    if (btn) btn.addEventListener('click', () => {
       const a = parseFloat(btn.dataset.amount);
       const cur = parseFloat(betInput.value) || 0;
       betInput.value = Math.min(500, Math.max(0.1, cur + a)).toFixed(2);
     });
   });
 
-  halfBtn.addEventListener('click', () => {
+  if (halfBtn) halfBtn.addEventListener('click', () => {
     const v = parseFloat(betInput.value) || 0;
     betInput.value = Math.max(0.1, v / 2).toFixed(2);
   });
 
-  doubleBtn.addEventListener('click', () => {
+  if (doubleBtn) doubleBtn.addEventListener('click', () => {
     const v = parseFloat(betInput.value) || 0;
     betInput.value = Math.min(500, v * 2).toFixed(2);
   });
