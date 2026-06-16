@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
   // === DOM ===
   const canvas = document.getElementById('battleWheelCanvas');
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas ? canvas.getContext('2d') : null;
   const timerEl = document.getElementById('battleTimer');
   const resultEl = document.getElementById('battleResult');
   const phaseEl = document.getElementById('battlePhase');
@@ -33,15 +33,15 @@ document.addEventListener('DOMContentLoaded', function() {
   let audioCtx = null;
   let localTimer = null;
 
-  // === CANVAS SETUP ===
+  // === CANVAS SETUP (moved after DOM but before drawWheel) ===
   function setupCanvas() {
+    if (!canvas) return;
     const wrapper = document.getElementById('wheelWrapper');
     if (!wrapper) return;
     const size = wrapper.offsetWidth;
     if (size < 50) return;
     canvas.width = size * 2;
     canvas.height = size * 2;
-    drawWheel();
   }
   setupCanvas();
   window.addEventListener('resize', setupCanvas);
@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // === DRAW WHEEL ===
   function drawWheel() {
+    if (!canvas || !ctx) return;
     const cx = CX(), cy = CY(), r = R();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -253,20 +254,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalRot = 360 * 6 + diff;
     const startRot = rotation;
     const t0 = performance.now();
-    let lastTick = -1;
 
     function tick(now) {
       const p = Math.min((now - t0) / dur, 1);
       const ease = 1 - Math.pow(1 - p, 4);
       rotation = startRot - totalRot * ease;
       drawWheel();
-
-      const norm = ((-rotation % 360) + 360) % 360;
-      const segSize = allPlayers.length > 0 ? 360 / allPlayers.length : 30;
-      const seg = Math.floor(norm / segSize);
-      if (seg !== lastTick && p < 0.92) {
-        lastTick = seg;
-      }
 
       if (p < 1) {
         requestAnimationFrame(tick);
@@ -308,17 +301,17 @@ document.addEventListener('DOMContentLoaded', function() {
     statusEl.className = 'battle-status';
   }
 
-// Handle socket connection
-   if (socket) {
-     if (socket.connected) {
-       onSocketReady();
-     } else {
-       socket.on('connect', onSocketReady);
-     }
-   } else {
-     statusEl.textContent = 'Ошибка: нет соединения';
-     statusEl.className = 'battle-status error';
-   }
+  // Handle socket connection
+  if (socket) {
+    if (socket.connected) {
+      onSocketReady();
+    } else {
+      socket.on('connect', onSocketReady);
+    }
+  } else {
+    statusEl.textContent = 'Ошибка: нет соединения';
+    statusEl.className = 'battle-status error';
+  }
 
   setTimeout(() => {
     if (!socketReady) {
