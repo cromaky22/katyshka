@@ -484,13 +484,10 @@ async function setBalance(id, amt) {
      if (usePostgres) {
        try { await db.query('UPDATE users SET wager_required = 0 WHERE id = $1', [id]); } catch(e){}
      }
-   }
-   }
-
    if (usePostgres) {
-      try {
-        const u = users[id];
-        db.query(`
+       try {
+         const u = users[id];
+         db.query(`
          INSERT INTO users (id, balance, bonus_balance, wager_required, wager_total, deposit_total, wager_multiplier)
          VALUES ($1, $2, $3, $4, $5, $6, $7)
          ON CONFLICT (id) DO UPDATE SET
