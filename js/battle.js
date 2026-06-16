@@ -368,27 +368,36 @@ document.addEventListener('DOMContentLoaded', function() {
     playerAvatar = localStorage.getItem('player_avatar') || '';
   }
 
-  // === SOCKET ===
-  const socket = Balance.getSocket();
-  const userId = Balance.getUserId();
+// === SOCKET ===
+   const socket = Balance.getSocket();
+   const userId = Balance.getUserId();
 
-  let socketReady = false;
-  let stateReceived = false;
+   let socketReady = false;
+   let stateReceived = false;
 
-  function onSocketReady() {
-    socketReady = true;
-    statusEl.textContent = 'Подключено';
-    statusEl.className = 'battle-status';
-    if (!stateReceived) {
-      socket.emit('battle:getState');
-    }
-  }
+   function onSocketReady() {
+     socketReady = true;
+     statusEl.textContent = 'Подключено';
+     statusEl.className = 'battle-status';
+     socket.emit('battle:getState');
+   }
 
-  if (socket.connected) {
-    onSocketReady();
-  } else {
-    socket.on('connect', onSocketReady);
-  }
+   if (socket && socket.connected) {
+     onSocketReady();
+   } else if (socket) {
+     socket.on('connect', onSocketReady);
+   } else {
+     statusEl.textContent = 'Ошибка: нет соединения';
+     statusEl.className = 'battle-status error';
+   }
+
+   // Fallback timer check
+   setTimeout(() => {
+     if (!socketReady) {
+       statusEl.textContent = 'Ошибка соединения';
+       statusEl.className = 'battle-status error';
+     }
+   }, 5000);
 
   socket.on('battle:state', (state) => {
     stateReceived = true;
