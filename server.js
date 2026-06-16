@@ -1483,7 +1483,6 @@ io.on('connection', (socket) => {
       history: battle.history
     });
   });
-  });
 });
 
 startWheel();
