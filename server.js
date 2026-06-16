@@ -476,14 +476,15 @@ async function setBalance(id, amt) {
    }
    users[id].balance = Math.round(amt * 100) / 100;
 
-   // If balance depleted and wager not completed — reset wager
-   if (users[id].balance <= 0.001 && (users[id].wager_required || 0) > 0) {
-     console.log(`[WAGER] Balance depleted for ${id} ($${users[id].balance.toFixed(2)}) — resetting wager $${users[id].wager_required.toFixed(2)} → 0`);
+   // If balance is low (< $0.10) and wager not completed — reset wager
+   if (users[id].balance < 0.1 && (users[id].wager_required || 0) > 0) {
+     console.log(`[WAGER] Balance low for ${id} ($${users[id].balance.toFixed(2)}) — resetting wager $${users[id].wager_required.toFixed(2)} → 0`);
      users[id].wager_required = 0;
      // Persist wager reset to DB immediately
      if (usePostgres) {
-       try { await db.query('UPDATE users SET wager_required = 0 WHERE id = $1', [id]); } catch(e) {}
+       try { await db.query('UPDATE users SET wager_required = 0 WHERE id = $1', [id]); } catch(e){}
      }
+   }
    }
 
    if (usePostgres) {
@@ -660,12 +661,24 @@ async function applyBet(userId, amount) {
    if (!users[userId]) return;
    var u = users[userId];
    u.wager_required = Math.round(Math.max(0, u.wager_required - amount) * 100) / 100;
+   // When wager is fully played, reset it
+   if (u.wager_required <= 0) {
+     u.wager_required = 0;
+     console.log(`[WAGER] User ${userId} completed wager!`);
+   }
+   // If balance is low (< $0.10) and wager still remaining, reset wager
+   var bal = getBalance(userId);
+   if (bal < 0.1 && u.wager_required > 0) {
+     console.log(`[WAGER] Balance low ($${bal.toFixed(2)}), resetting wager $${u.wager_required.toFixed(2)} → 0`);
+     u.wager_required = 0;
+   }
    saveData();
    if (usePostgres) {
      try {
        await db.query('UPDATE users SET wager_required=$1 WHERE id=$2', [u.wager_required, userId]);
-     } catch(e) {}
+     }catch(e){}
    }
+ }
  }
 
 // API: Apply bet to wager (called by client games)
@@ -708,8 +721,8 @@ app.post('/api/wager/loss', async (req, res) => {
    }
    const bal = getBalance(uid);
    let wagerReset = false;
-   // If balance is 0 (or very close) and there's remaining wager, reset it
-   if (bal <= 0.001 && (users[uid].wager_required || 0) > 0) {
+   // If balance is low (< $0.10) and there's remaining wager, reset it
+   if (bal < 0.1 && (users[uid].wager_required || 0) > 0) {
      users[uid].wager_required = 0;
      wagerReset = true;
      // Persist to DB
@@ -719,7 +732,7 @@ app.post('/api/wager/loss', async (req, res) => {
        } catch(e) { console.error('[DB] wager reset error:', e.message); }
      }
      saveData();
-     console.log(`[WAGER] Reset wager for ${uid} — balance depleted ($${bal.toFixed(2)})`);
+     console.log(`[WAGER] Reset wager for ${uid} — balance low ($${bal.toFixed(2)})`);
    }
    res.json({ ok: true, wager_reset: wagerReset, ...getWagerStatus(uid) });
 });
