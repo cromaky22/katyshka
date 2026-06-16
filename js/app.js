@@ -15,6 +15,7 @@
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({userId: uid, game: game, amount: Math.abs(amount)})
     }).catch(function(){});
+  };
 
   // === Stats & History helpers ===
   window.mcStats = {
@@ -72,289 +73,248 @@
       }catch(e){}
     }
   };
+})();
 
-  // Initialize activation system (max 10 activations)
-  (function(){
-    const MAX_ACTIVATIONS = 10;
-    let activations = parseInt(localStorage.getItem('mc_activations') || '0');
-    
-    if(activations < MAX_ACTIVATIONS){
-      activations++;
-      localStorage.setItem('mc_activations', activations.toString());
-    }
-    
-    // Store activation info for debugging
-    localStorage.setItem('mc_last_activation', new Date().toISOString());
-    localStorage.setItem('mc_activation_count', activations.toString());
-  })();
+// Initialize activation system (max 10 activations)
+(function(){
+  const MAX_ACTIVATIONS = 10;
+  let activations = parseInt(localStorage.getItem('mc_activations') || '0');
+  if(activations < MAX_ACTIVATIONS){
+    activations++;
+    localStorage.setItem('mc_activations', activations.toString());
+  }
+  localStorage.setItem('mc_last_activation', new Date().toISOString());
+  localStorage.setItem('mc_activation_count', activations.toString());
+})();
 
-  // highlight active nav item and handle hash navigation
-  (function(){
-    function updateActive(){
-      const path = location.pathname.split('/').pop() || 'home.html';
-      const hash = (location.hash || '').replace('#','');
-      const nameFromPath = path === 'home.html' ? '' : path.replace('.html','');
-      const activeName = hash || nameFromPath;
-      document.querySelectorAll('.bottom-nav .nav-item').forEach(a=>{
-        if(a.dataset.name===activeName) a.classList.add('active');
-        else a.classList.remove('active');
-      });
-      // Always highlight center button on home
-      if(path === 'home.html' && !hash){
-        document.querySelectorAll('.bottom-nav .nav-item').forEach(a=>a.classList.remove('active'));
-        const centerBtn = document.querySelector('.bottom-nav .nav-item.center');
-        if(centerBtn) centerBtn.classList.add('active');
-      }
-    }
-
-      // Games search: filter tiles and highlight matches
-      (function(){
-        const input = document.getElementById('gameSearch');
-        const grid = document.querySelector('.games-grid');
-        if(!input || !grid) return;
-
-        const tiles = Array.from(grid.querySelectorAll('.game-tile'));
-
-        function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
-        function highlight(text, q){
-          if(!q) return text;
-          const re = new RegExp('(' + escapeRegExp(q) + ')', 'ig');
-          return text.replace(re, '<mark class="game-match">$1</mark>');
-        }
-
-        let emptyEl = document.querySelector('.games-empty');
-        if(!emptyEl){
-          emptyEl = document.createElement('div');
-          emptyEl.className = 'games-empty';
-          emptyEl.textContent = 'Ничего не найдено';
-          emptyEl.style.display = 'none';
-          const section = document.getElementById('games');
-          if(section) section.appendChild(emptyEl);
-        }
-
-        input.addEventListener('input', ()=>{
-          const q = input.value.trim().toLowerCase();
-          let any = false;
-          tiles.forEach(tile => {
-            const nameEl = tile.querySelector('.game-name');
-            const name = nameEl && nameEl.textContent ? nameEl.textContent.trim() : '';
-            if(!q){
-              tile.style.display = '';
-              // remove highlights
-              if(nameEl) nameEl.innerHTML = name;
-              any = true;
-              return;
-            }
-            if(name.toLowerCase().includes(q)){
-              tile.style.display = '';
-              if(nameEl) nameEl.innerHTML = highlight(name, q);
-              any = true;
-            } else {
-              tile.style.display = 'none';
-              // remove highlights
-              if(nameEl) nameEl.innerHTML = name;
-            }
-          });
-          emptyEl.style.display = any ? 'none' : '';
-        });
-      })();
-    function scrollToHash(){
-      const path = location.pathname.split('/').pop() || 'home.html';
-      const hash = (location.hash || '').replace('#','');
-      if(hash && path === 'home.html'){
-        const el = document.getElementById(hash);
-        if(el) setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),120);
-      }
-    }
-
-    // Initial update
-    updateActive();
-    scrollToHash();
-
-    // Update on hashchange
-    window.addEventListener('hashchange', ()=>{ updateActive(); scrollToHash(); });
-
-    // Also update on clicks of nav items without full reload (same-page links)
+// highlight active nav item and handle hash navigation
+(function(){
+  function updateActive(){
+    const path = location.pathname.split('/').pop() || 'home.html';
+    const hash = (location.hash || '').replace('#','');
+    const nameFromPath = path === 'home.html' ? '' : path.replace('.html','');
+    const activeName = hash || nameFromPath;
     document.querySelectorAll('.bottom-nav .nav-item').forEach(a=>{
-      a.addEventListener('click', (e)=>{
-        const href = a.getAttribute('href') || '';
-        // if link is same-page anchor (home.html#...) or just #..., let browser change hash and handle it
-        if(href.includes('#')){
-          // if link points to home.html#games but we're already on home, prevent full navigation and set hash
-          const current = location.pathname.split('/').pop() || 'home.html';
-          const targetPath = href.split('#')[0] || 'home.html';
-          const targetHash = href.split('#')[1] || '';
-          if((targetPath === '' || targetPath === current) && targetHash){
-            e.preventDefault();
-            location.hash = targetHash;
-            // update immediately
-            updateActive();
-            scrollToHash();
-          }
-        }
-      });
+      if(a.dataset.name===activeName) a.classList.add('active');
+      else a.classList.remove('active');
     });
-  })();
-  // Balance module auto-initializes from balance.js on DOMContentLoaded
+    if(path === 'home.html' && !hash){
+      document.querySelectorAll('.bottom-nav .nav-item').forEach(a=>a.classList.remove('active'));
+      const centerBtn = document.querySelector('.bottom-nav .nav-item.center');
+      if(centerBtn) centerBtn.classList.add('active');
+    }
+  }
 
+  function scrollToHash(){
+    const path = location.pathname.split('/').pop() || 'home.html';
+    const hash = (location.hash || '').replace('#','');
+    if(hash && path === 'home.html'){
+      const el = document.getElementById(hash);
+      if(el) setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),120);
+    }
+  }
+
+  updateActive();
+  scrollToHash();
+  window.addEventListener('hashchange', ()=>{ updateActive(); scrollToHash(); });
+
+  document.querySelectorAll('.bottom-nav .nav-item').forEach(a=>{
+    a.addEventListener('click', (e)=>{
+      const href = a.getAttribute('href') || '';
+      if(href.includes('#')){
+        const current = location.pathname.split('/').pop() || 'home.html';
+        const targetPath = href.split('#')[0] || 'home.html';
+        const targetHash = href.split('#')[1] || '';
+        if((targetPath === '' || targetPath === current) && targetHash){
+          e.preventDefault();
+          location.hash = targetHash;
+          updateActive();
+          scrollToHash();
+        }
+      }
+    });
+  });
+})();
+
+// Games search
+(function(){
+  const input = document.getElementById('gameSearch');
+  const grid = document.querySelector('.games-grid');
+  if(!input || !grid) return;
+  const tiles = Array.from(grid.querySelectorAll('.game-tile'));
+
+  function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function highlight(text, q){
+    if(!q) return text;
+    const re = new RegExp('(' + escapeRegExp(q) + ')', 'ig');
+    return text.replace(re, '<mark class="game-match">$1</mark>');
+  }
+
+  let emptyEl = document.querySelector('.games-empty');
+  if(!emptyEl){
+    emptyEl = document.createElement('div');
+    emptyEl.className = 'games-empty';
+    emptyEl.textContent = 'Ничего не найдено';
+    emptyEl.style.display = 'none';
+    const section = document.getElementById('games');
+    if(section) section.appendChild(emptyEl);
+  }
+
+  input.addEventListener('input', ()=>{
+    const q = input.value.trim().toLowerCase();
+    let any = false;
+    tiles.forEach(tile => {
+      const nameEl = tile.querySelector('.game-name');
+      const name = nameEl && nameEl.textContent ? nameEl.textContent.trim() : '';
+      if(!q){
+        tile.style.display = '';
+        if(nameEl) nameEl.innerHTML = name;
+        any = true;
+        return;
+      }
+      if(name.toLowerCase().includes(q)){
+        tile.style.display = '';
+        if(nameEl) nameEl.innerHTML = highlight(name, q);
+        any = true;
+      } else {
+        tile.style.display = 'none';
+        if(nameEl) nameEl.innerHTML = name;
+      }
+    });
+    emptyEl.style.display = any ? 'none' : '';
+  });
+})();
+
+// Balance module auto-initializes from balance.js on DOMContentLoaded
 // Promo modal moved to js/promo-modal.js
 
-  // simple auto-scrolling carousel for empty promo cards
-  (function(){
-    const carousel = document.getElementById('mainCarousel');
-    if(!carousel) return;
-    let cards = carousel.querySelectorAll('.card');
-    if(!cards.length) return;
-    // original count (we won't clone; keep only original cards)
-    const originalCount = cards.length;
-
-    const gap = parseInt(getComputedStyle(carousel).gap || 12);
-    function getStep(){
-      const card = carousel.querySelector('.card');
-      return (card ? card.offsetWidth : 200) + gap;
-    }
-
-    // dots
-    const dotsContainer = document.getElementById('carouselDots');
-    if(dotsContainer){
-      dotsContainer.innerHTML = '';
-      for(let i=0;i<originalCount;i++){
-        const d = document.createElement('button');
-        d.className = 'dot';
-        d.dataset.index = i;
-        d.type = 'button';
-        d.addEventListener('click', ()=>{
-          // scroll to card i
-          const step = getStep();
-          carousel.scrollTo({left: i * step, behavior: 'smooth'});
-          updateDots(i);
-        });
-        dotsContainer.appendChild(d);
-      }
-    }
-
-    function updateDots(activeIdx){
-      if(!dotsContainer) return;
-      dotsContainer.querySelectorAll('.dot').forEach((dot,idx)=>{
-        dot.classList.toggle('active', idx===activeIdx);
+// simple auto-scrolling carousel
+(function(){
+  const carousel = document.getElementById('mainCarousel');
+  if(!carousel) return;
+  let cards = carousel.querySelectorAll('.card');
+  if(!cards.length) return;
+  const originalCount = cards.length;
+  const gap = parseInt(getComputedStyle(carousel).gap || 12);
+  function getStep(){
+    const card = carousel.querySelector('.card');
+    return (card ? card.offsetWidth : 200) + gap;
+  }
+  const dotsContainer = document.getElementById('carouselDots');
+  if(dotsContainer){
+    dotsContainer.innerHTML = '';
+    for(let i=0;i<originalCount;i++){
+      const d = document.createElement('button');
+      d.className = 'dot';
+      d.dataset.index = i;
+      d.type = 'button';
+      d.addEventListener('click', ()=>{
+        const step = getStep();
+        carousel.scrollTo({left: i * step, behavior: 'smooth'});
+        updateDots(i);
       });
+      dotsContainer.appendChild(d);
     }
-
-    // initial dot state
-    updateDots(0);
-
-    let pos = 0;
-    const step = getStep();
-    const delay = 2200;
-    let anim;
-    function tick(){
-      pos += step;
-      if(pos > carousel.scrollWidth - carousel.clientWidth + step/2){
-        // smooth reset back to 0
-        carousel.scrollTo({left:0,behavior:'smooth'});
-        pos = 0;
-      } else {
-        carousel.scrollTo({left:pos,behavior:'smooth'});
-      }
-      // update active dot based on current pos
-      const idx = Math.round((carousel.scrollLeft || pos) / step) % originalCount;
-      updateDots(idx);
-    }
-    anim = setInterval(tick, delay);
-    // pause on hover / pointerdown
-    ['pointerenter','pointerdown'].forEach(ev=>carousel.addEventListener(ev, ()=>clearInterval(anim)));
-    ['pointerleave','pointerup'].forEach(ev=>carousel.addEventListener(ev, ()=>{anim = setInterval(tick, delay)}));
-    // update dots on user scroll
-    carousel.addEventListener('scroll', ()=>{
-      const idx = Math.round(carousel.scrollLeft / step) % originalCount;
-      updateDots(idx);
+  }
+  function updateDots(activeIdx){
+    if(!dotsContainer) return;
+    dotsContainer.querySelectorAll('.dot').forEach((dot,idx)=>{
+      dot.classList.toggle('active', idx===activeIdx);
     });
-  })();
-
-  // chips active behavior
-  (function(){
-    const chips = document.querySelectorAll('.chip');
-    if(!chips.length) return;
-    chips.forEach(ch => {
-      ch.addEventListener('click', ()=> {
-        // single-active behaviour
-        chips.forEach(c=> c.classList.remove('active'));
-        ch.classList.add('active');
-      });
-      ch.addEventListener('keydown', (e)=>{
-        if(e.key === 'Enter' || e.key === ' '){
-          e.preventDefault();
-          ch.click();
-        }
-      });
-    });
-  })();
-
-  // Page loader overlay: inject DOM node and handle navigation transitions
-  (function(){
-    // create loader element (ring of hearts + text)
-    const loader = document.createElement('div');
-    loader.className = 'page-loader';
-     loader.innerHTML = '<div class="loader-box"><div class="loader-ring" id="loaderRing" aria-hidden="true"></div><div class="loader-text" id="loaderText">ЗАГРУЗКА...</div></div>';
-     document.body.appendChild(loader);
-
-     // Simple spinner — pure CSS, no hearts needed
-
-     function showLoader(text, mode){
-      const t = document.getElementById('loaderText');
-      if(t && text) t.textContent = text;
-      loader.classList.remove('startup','nav');
-      if(mode) loader.classList.add(mode);
-      loader.classList.add('active');
+  }
+  updateDots(0);
+  let pos = 0;
+  const step = getStep();
+  const delay = 2200;
+  let anim;
+  function tick(){
+    pos += step;
+    if(pos > carousel.scrollWidth - carousel.clientWidth + step/2){
+      carousel.scrollTo({left:0,behavior:'smooth'});
+      pos = 0;
+    } else {
+      carousel.scrollTo({left:pos,behavior:'smooth'});
     }
-    function hideLoader(){ loader.classList.remove('active'); loader.classList.remove('startup','nav'); }
+    const idx = Math.round((carousel.scrollLeft || pos) / step) % originalCount;
+    updateDots(idx);
+  }
+  anim = setInterval(tick, delay);
+  ['pointerenter','pointerdown'].forEach(ev=>carousel.addEventListener(ev, ()=>clearInterval(anim)));
+  ['pointerleave','pointerup'].forEach(ev=>carousel.addEventListener(ev, ()=>{anim = setInterval(tick, delay)}));
+  carousel.addEventListener('scroll', ()=>{
+    const idx = Math.round(carousel.scrollLeft / step) % originalCount;
+    updateDots(idx);
+  });
+})();
 
-    // show startup loader on first entry to games page only
-    try{
-      const path = location.pathname.split('/').pop() || 'home.html';
-      const isGames = path === 'games.html' || location.hash.replace('#','') === 'games' || !!document.getElementById('games');
-      if(isGames && !sessionStorage.getItem('startupLoaderShown')){
-        sessionStorage.setItem('startupLoaderShown','1');
-        showLoader('ЗАГРУЗКА...', 'startup');
-        // удлиним показ стартового лоадера на 2 секунды
-        setTimeout(hideLoader, 3400);
-      }
-    }catch(e){/*ignore*/}
-
-    // Intercept bottom-nav and top nav clicks to show loader before navigation
-    document.querySelectorAll('a').forEach(a=>{
-      a.addEventListener('click', (e)=>{
-        const href = a.getAttribute('href') || '';
-        // ignore anchors that are just hashes or on-page links
-        if(href.startsWith('#') || href === '' ) return;
-        // don't show loader for menu action buttons or elements opting out
-        if(a.closest && a.closest('.menu-actions')) return;
-        if(a.classList && (a.classList.contains('no-loader') || a.dataset && a.dataset.noLoader)) return;
-        // allow in-page hash navigation without loader when target is same page
-        const current = location.pathname.split('/').pop() || 'home.html';
-        const targetPath = href.split('#')[0] || '';
-        if(targetPath === '' || targetPath === current) return;
-        // otherwise show loader and navigate after a slightly longer delay
+// chips active behavior
+(function(){
+  const chips = document.querySelectorAll('.chip');
+  if(!chips.length) return;
+  chips.forEach(ch => {
+    ch.addEventListener('click', ()=> {
+      chips.forEach(c=> c.classList.remove('active'));
+      ch.classList.add('active');
+    });
+    ch.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter' || e.key === ' '){
         e.preventDefault();
-        showLoader('ЗАГРУЖАЕМ…', 'nav');
-        // устанавливаем задержку перехода в 1000ms
-        setTimeout(()=>{ location.href = href; }, 1000);
-      });
+        ch.click();
+      }
     });
+  });
+})();
 
-  })();
+// Page loader overlay
+(function(){
+  const loader = document.createElement('div');
+  loader.className = 'page-loader';
+  loader.innerHTML = '<div class="loader-box"><div class="loader-ring" id="loaderRing" aria-hidden="true"></div><div class="loader-text" id="loaderText">ЗАГРУЗКА...</div></div>';
+  document.body.appendChild(loader);
+
+  function showLoader(text, mode){
+    const t = document.getElementById('loaderText');
+    if(t && text) t.textContent = text;
+    loader.classList.remove('startup','nav');
+    if(mode) loader.classList.add(mode);
+    loader.classList.add('active');
+  }
+  function hideLoader(){ loader.classList.remove('active'); loader.classList.remove('startup','nav'); }
+
+  try{
+    const path = location.pathname.split('/').pop() || 'home.html';
+    const isGames = path === 'games.html' || location.hash.replace('#','') === 'games' || !!document.getElementById('games');
+    if(isGames && !sessionStorage.getItem('startupLoaderShown')){
+      sessionStorage.setItem('startupLoaderShown','1');
+      showLoader('ЗАГРУЗКА...', 'startup');
+      setTimeout(hideLoader, 3400);
+    }
+  }catch(e){/*ignore*/}
+
+  document.querySelectorAll('a').forEach(a=>{
+    a.addEventListener('click', (e)=>{
+      const href = a.getAttribute('href') || '';
+      if(href.startsWith('#') || href === '' ) return;
+      if(a.closest && a.closest('.menu-actions')) return;
+      if(a.classList && (a.classList.contains('no-loader') || a.dataset && a.dataset.noLoader)) return;
+      const current = location.pathname.split('/').pop() || 'home.html';
+      const targetPath = href.split('#')[0] || '';
+      if(targetPath === '' || targetPath === current) return;
+      e.preventDefault();
+      showLoader('ЗАГРУЖАЕМ…', 'nav');
+      setTimeout(()=>{ location.href = href; }, 1000);
+    });
+  });
 })();
 
 // Profile dropdown moved to js/profile-dropdown.js
 
-// Populate recipient info from Telegram WebApp when available
+// Populate recipient info from Telegram WebApp
 (function(){
-  // CSS diagnostic: log any stylesheet access errors to console
   try{
     setTimeout(()=>{
       Array.from(document.styleSheets).forEach((ss)=>{
         try{
-          // accessing cssRules may throw for cross-origin or parse errors
           const rules = ss.cssRules && ss.cssRules.length;
           console.log('Stylesheet loaded:', ss.href || '[inline]', 'rules:', rules);
         }catch(e){
@@ -371,7 +331,6 @@
       console.log('📷 Telegram user data:', user);
       if(nameEl) nameEl.textContent = (user.username) || ((user.first_name||'') + (user.last_name ? (' ' + user.last_name) : '') ).trim() || '';
       if(subEl) subEl.textContent = 'Telegram ID ' + (user.id || '');
-      // set header profile image if available
       try{
         const profileImg = document.querySelector('.app-header .profile img');
         const profileBtn = document.querySelector('.app-header .profile');
@@ -384,7 +343,6 @@
             console.log('✅ Avatar set to:', candidate);
             profileImg.onerror = function(){ console.warn('❌ Avatar failed to load'); this.style.display = 'none'; };
           } else if(user.id) {
-            // Try to load avatar from Telegram API
             fetch('/api/tg-photo/' + user.id)
               .then(res => {
                 if(res.ok) return res.blob();
@@ -397,7 +355,6 @@
                 console.log('✅ Avatar loaded from API');
               })
               .catch(() => {
-                // Show initials as fallback
                 const name = user.username || (user.first_name || '') + (user.last_name ? ' ' + user.last_name : '');
                 const initials = name.trim() ? name.trim().split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '?';
                 profileImg.style.display = 'none';
@@ -413,9 +370,7 @@
           }
         }
       }catch(e){ console.error('❌ Error setting avatar:', e); }
-      // save locally for offline fallback
       try{ localStorage.setItem('tg_user', JSON.stringify(user)); }catch(e){}
-      // try send to local API (if server running)
       try{
         fetch('/api/users', {
           method: 'POST',
@@ -428,7 +383,6 @@
             avatar: user.photo_url || user.avatar || null
           })
         }).then(res => res.json()).then(data => {
-          // Balance will be loaded by Balance.init()
           console.log('✅ User registered:', user.id);
         }).catch(()=>{});
       }catch(e){}
@@ -467,7 +421,6 @@
       }catch(e){ console.error('❌ tryFill error:', e); }
     }
 
-    // Initialize Telegram WebApp
     try{
       const tg = window.Telegram && window.Telegram.WebApp;
       if(tg){
@@ -477,14 +430,11 @@
       }
     }catch(e){ console.error('❌ WebApp init error:', e); }
 
-    // attempt multiple times in case WebApp initializes slightly later
     console.log('🚀 Starting Telegram user detection...');
     tryFill();
     let attempts = 0;
     const t = setInterval(()=>{ attempts++; if(attempts<=6) { console.log(`🔄 Retry ${attempts}...`); tryFill(); } if(attempts>=6) clearInterval(t); }, 500);
-  }catch(e){
-    // ignore if WebApp not present
-  }
+  }catch(e){}
 })();
 
 // Wallet UI interactions
@@ -492,7 +442,6 @@
   const modal = document.querySelector('.wallet-modal');
   if(!modal) return;
 
-  // tabs
   function showPanel(name){
     modal.querySelectorAll('.panel').forEach(p=>{ p.style.display = (p.dataset.panel===name) ? '' : 'none' });
   }
@@ -506,14 +455,11 @@
     });
   });
 
-  // initial panels
   showPanel('topup');
 
-  // close
   const closeBtn = modal.querySelector('.close-modal');
   if(closeBtn) closeBtn.addEventListener('click', ()=>{ modal.style.display='none' });
 
-  // methods
   modal.querySelectorAll('.method').forEach(m=>{
     m.addEventListener('click', ()=>{
       modal.querySelectorAll('.method').forEach(x=>x.classList.remove('selected'));
@@ -521,7 +467,6 @@
     });
   });
 
-  // quick amount buttons
   const amountInput = modal.querySelector('.amount-input input');
   modal.querySelectorAll('.quick-buttons .chip').forEach(b=>{
     b.addEventListener('click', ()=>{
@@ -530,7 +475,6 @@
     });
   });
 
-  // pay button (placeholder)
   const pay = modal.querySelector('.pay-btn');
   if(pay) pay.addEventListener('click', ()=>{
     const val = parseFloat(amountInput.value)||0;
@@ -538,7 +482,6 @@
     alert('Перейти к оплате: $' + val);
   });
 
-  // history sub-tabs
   modal.querySelectorAll('.history-tab').forEach(ht=>{
     ht.addEventListener('click', ()=>{
       modal.querySelectorAll('.history-tab').forEach(h=>h.classList.remove('active'));
@@ -548,7 +491,6 @@
     });
   });
 
-  // Withdraw calculations
   (function(){
     const withdrawInput = modal.querySelector('.withdraw-input');
     const receiveAmountEl = modal.querySelector('.receive-amount .amount');
@@ -568,7 +510,6 @@
       const received = Math.max(0, val - fee);
       receiveAmountEl.textContent = format(received);
       commissionValueEl.textContent = format(fee);
-      // disable button if below min
       if(withdrawBtn){
         if(val < MIN_WITHDRAW) withdrawBtn.disabled = true;
         else withdrawBtn.disabled = false;
@@ -577,13 +518,12 @@
 
     if(withdrawInput){
       withdrawInput.addEventListener('input', update);
-      // initialize
       update();
     }
   })();
 })();
 
-// Background floating stars — optimized
+// Background floating stars
 (function(){
   const MAX = 15;
   const spawnInterval = 1200;
@@ -609,36 +549,36 @@
 })();
 
 // === FOOTER ===
-(function() {
-  function initFooter() {
-    if (document.getElementById('app-footer')) return;
+(function(){
+  function initFooter(){
+    if(document.getElementById('app-footer')) return;
     var footer = document.createElement('div');
     footer.id = 'app-footer';
-    footer.style.cssText = 'text-align:center;padding:20px 16px 100px;color:rgba(255,255,255,0.25);font-size:11px;line-height:1.8;';
+    footer.style.cssText = 'text-align:center;padding:20px 16px 120px;color:rgba(255,255,255,0.25);font-size:11px;line-height:1.8;';
     footer.innerHTML =
-      '<div style="margin-bottom:6px">18+ · Все права защищены</div>' +
+      '<div style="margin-bottom:6px">18+ \u00b7 Все права защищены</div>' +
       '<div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:6px">' +
-        '<a href="#" id="footer-privacy" style="color:rgba(255,255,255,0.35);text-decoration:none;font-size:11px;border-bottom:1px solid transparent;transition:color 0.2s" onmouseover="this.style.color=\'#ffd700\'" onmouseout="this.style.color=\'rgba(255,255,255,0.35)\'">Политика конфиденциальности</a>' +
-        '<span style="color:rgba(255,255,255,0.15)">·</span>' +
+        '<a href="#" id="footer-privacy" style="color:rgba(255,255,255,0.35);text-decoration:none;font-size:11px;transition:color 0.2s">Политика конфиденциальности</a>' +
+        '<span style="color:rgba(255,255,255,0.15)">\u00b7</span>' +
         '<span style="color:rgba(255,255,255,0.25);font-size:11px">AML Policy</span>' +
       '</div>';
     document.body.appendChild(footer);
-    document.getElementById('footer-privacy').addEventListener('click', function(e) {
+    document.getElementById('footer-privacy').addEventListener('click', function(e){
       e.preventDefault();
       showPrivacy();
     });
   }
 
-  function showPrivacy() {
-    if (document.getElementById('privacy-modal-overlay')) return;
+  function showPrivacy(){
+    if(document.getElementById('privacy-modal-overlay')) return;
     var overlay = document.createElement('div');
     overlay.id = 'privacy-modal-overlay';
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:10000;display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px)';
     overlay.innerHTML =
       '<div style="background:#1a1a2e;border:1px solid rgba(255,255,255,0.1);border-radius:16px;max-width:460px;width:100%;max-height:80vh;display:flex;flex-direction:column;overflow:hidden">' +
         '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0">' +
-          '<span style="font-size:16px;font-weight:800;color:#fff">🔒 Политика конфиденциальности</span>' +
-          '<button id="privacy-close" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:22px;cursor:pointer;padding:0 4px;line-height:1">✕</button>' +
+          '<span style="font-size:16px;font-weight:800;color:#fff">\ud83d\udd12 Политика конфиденциальности</span>' +
+          '<button id="privacy-close" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:22px;cursor:pointer;padding:0 4px;line-height:1">\u2715</button>' +
         '</div>' +
         '<div style="padding:20px;overflow-y:auto;font-size:12px;line-height:1.7;color:rgba(255,255,255,0.6)">' +
           '<p style="margin-bottom:12px"><strong style="color:#fff">1. Общие положения</strong><br>Настоящая политика конфиденциальности описывает, как мы собираем, используем и защищаем персональные данные пользователей. Используя приложение, вы соглашаетесь с условиями данной политики.</p>' +
@@ -650,20 +590,18 @@
         '</div>' +
       '</div>';
     document.body.appendChild(overlay);
-    overlay.addEventListener('click', function(e) { if (e.target === overlay) closePrivacy(); });
+    overlay.addEventListener('click', function(e){ if(e.target === overlay) closePrivacy(); });
     document.getElementById('privacy-close').addEventListener('click', closePrivacy);
   }
 
-  function closePrivacy() {
+  function closePrivacy(){
     var el = document.getElementById('privacy-modal-overlay');
-    if (el) el.remove();
+    if(el) el.remove();
   }
 
-  if (document.readyState === 'loading') {
+  if(document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', initFooter);
   } else {
     initFooter();
   }
 })();
-
-
