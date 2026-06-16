@@ -1239,8 +1239,8 @@ const BOT_NAMES = ['LuckyBot', 'SpinMaster', 'WheelKing', 'BetPro', 'WinStreak']
 
 function addBotPlayer() {
   if (battle.phase !== 'betting' && battle.phase !== 'waiting') return;
-  const botName = BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
-  const botId = 'bot_' + Math.floor(Math.random() * 5 + 1);
+  const botName = 'LuckyBot';
+  const botId = 'bot_1';
   const botAmount = (1 + Math.random() * 3).toFixed(2);
   
   if (!battle.players[botId]) {
