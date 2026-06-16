@@ -1,8 +1,11 @@
+const BOT_TOKEN = process.env.BOT_TOKEN;
 const { Telegraf } = require('telegraf');
 
-const token = process.env.BOT_TOKEN;
-  if(!token){ console.error('BOT_TOKEN not set'); process.exit(1); }
-const bot = new Telegraf(token);
+if (!BOT_TOKEN) {
+  console.error('BOT_TOKEN not set');
+  process.exit(1);
+}
+const bot = new Telegraf(BOT_TOKEN);
 
 const SERVER_URL = process.env.SERVER_URL || 'https://katyshka-production.up.railway.app';
 
