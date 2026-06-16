@@ -1278,7 +1278,7 @@ function spinBattle() {
   const players = getBattlePlayersList();
   const total = getBattleTotalBank();
 
-  if (players.length === 0 || total === 0) {
+  if (players.length < 2 || total === 0) {
     setTimeout(() => {
       battle.roundId++;
       battle.players = {};
