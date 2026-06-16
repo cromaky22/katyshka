@@ -5,16 +5,6 @@
   min-height: 100vh;
 }
 
-/* Lighter overlay so cosmic bg is visible but content stays readable */
-.page-battle::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background: linear-gradient(160deg, rgba(6,0,18,0.3) 0%, rgba(13,5,32,0.2) 40%, rgba(10,21,37,0.25) 70%, rgba(6,0,18,0.3) 100%);
-}
-
 .page-battle .app-header,
 .page-battle .battle-game {
   position: relative;
@@ -42,6 +32,8 @@
   display: flex;
   justify-content: center;
   padding: 10px 0 90px;
+  position: relative;
+  z-index: 2;
 }
 .page-battle .battle-board {
   width: 100%;

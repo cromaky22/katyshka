@@ -371,10 +371,15 @@ document.addEventListener('DOMContentLoaded', function() {
   const userId = Balance.getUserId();
 
   let socketReady = false;
+  let stateReceived = false;
+
   function onSocketReady() {
     socketReady = true;
     statusEl.textContent = 'Подключено';
     statusEl.className = 'battle-status';
+    if (!stateReceived) {
+      socket.emit('battle:getState');
+    }
   }
 
   if (socket.connected) {
@@ -384,6 +389,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   socket.on('battle:state', (state) => {
+    stateReceived = true;
     roundId = state.roundId || 0;
     allPlayers = state.players || [];
     totalBank = state.totalBank || 0;

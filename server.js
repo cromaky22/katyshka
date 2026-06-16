@@ -1470,6 +1470,19 @@ io.on('connection', (socket) => {
       balance: getBalance(userId)
     });
   });
+
+  socket.on('battle:getState', () => {
+    socket.emit('battle:state', {
+      phase: battle.phase,
+      timer: battle.timer,
+      roundId: battle.roundId,
+      players: getBattlePlayersList(),
+      totalBank: getBattleTotalBank(),
+      myBets: battle.players[userId] ? [{ userId, amount: battle.players[userId].amount }] : [],
+      balance: getBalance(userId) || 0,
+      history: battle.history
+    });
+  });
   });
 });
 

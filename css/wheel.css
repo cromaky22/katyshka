@@ -1,6 +1,6 @@
 /* ======= WHEEL GAME ======= */
-.page-wheel{background:#0a0118;color:var(--text);min-height:100vh}
-.page-wheel .wheel-game{display:flex;justify-content:center;padding:10px 0 80px}
+.page-wheel{background:transparent;color:var(--text);min-height:100vh}
+.page-wheel .wheel-game{display:flex;justify-content:center;padding:10px 0 80px;position:relative;z-index:2}
 .page-wheel .wheel-board{width:100%;max-width:480px;display:flex;flex-direction:column;gap:12px;padding:0 12px}
 
 /* Balance cards */
