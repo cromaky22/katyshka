@@ -237,16 +237,16 @@ window._invChk=setInterval(function(){
       .then(function(d){
         if(!d.ok||!d.transactions||d.transactions.length===0){ el.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:12px">История пуста</div>'; return; }
         el.innerHTML='';
-        d.transactions.forEach(function(tx){
+        // Filter: only deposits, promos and withdrawals
+        var filtered = d.transactions.filter(function(tx){ return tx.type==='deposit'||tx.type==='promo'||tx.type==='withdraw'; });
+        if(filtered.length===0){ el.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:12px">Нет операций</div>'; return; }
+        filtered.forEach(function(tx){
           var row=document.createElement('div'); row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:9px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:6px';
           var isDep=tx.type==='deposit', isPromo=tx.type==='promo', isWd=tx.type==='withdraw';
           var label, clr, sign;
           if(isDep){ label='📥 Пополнение'; clr='#4caf50'; sign='+'; }
           else if(isPromo){ label='🎟 Промокод'; clr='#4caf50'; sign='+'; }
           else if(isWd){ label='📤 Вывод'; clr='#f44336'; sign='-'; }
-          else if(tx.type==='win'){ label='🏆 Выигрыш'; clr='#4caf50'; sign='+'; }
-          else if(tx.type==='bet'){ label='🎰 Ставка'; clr='#f44336'; sign='-'; }
-          else{ label='📋 '+tx.type; clr='rgba(255,255,255,0.5)'; sign=''; }
           row.innerHTML='<div><div style="font-size:12px;font-weight:700;color:#fff">'+label+'</div><div style="font-size:10px;color:var(--muted)">'+new Date(tx.time||tx.date).toLocaleDateString('ru')+'</div></div><div style="font-size:13px;font-weight:800;color:'+clr+'">'+sign+'$'+Number(tx.amount).toFixed(2)+'</div>';
           el.appendChild(row);
         });
