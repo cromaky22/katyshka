@@ -202,6 +202,26 @@
       var balEl = document.getElementById('gbal');
       if(balEl && window.Balance) balEl.textContent = Balance.get().toFixed(2);
     }, 500);
+
+    // Real online players
+    function updateOnlinePlayers(){
+      var socket = (window.Balance && Balance.getSocket) ? Balance.getSocket() : null;
+      if(!socket) return;
+      socket.on('online_count', function(data){
+        var games = document.querySelectorAll('.online-count');
+        games.forEach(function(el){
+          var gameName = el.getAttribute('data-game');
+          if(gameName && data.games && data.games[gameName] !== undefined){
+            el.textContent = data.games[gameName];
+          } else {
+            el.textContent = '0';
+          }
+        });
+      });
+      socket.emit('get_online');
+      socket.emit('join_game', 'games');
+    }
+    setTimeout(updateOnlinePlayers, 1500);
   </script>
 </body>
 </html>

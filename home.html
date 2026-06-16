@@ -270,13 +270,12 @@
           var gameName = el.getAttribute('data-game');
           if(gameName && data.games && data.games[gameName] !== undefined){
             el.textContent = data.games[gameName];
-          } else if(data.count){
-            el.textContent = Math.max(1, Math.floor(data.count / games.length));
+          } else {
+            el.textContent = '0';
           }
         });
       });
       socket.emit('get_online');
-      // Tell server we're on home page
       socket.emit('join_game', 'home');
     }
     setTimeout(updateOnlinePlayers, 1500);

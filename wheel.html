@@ -137,13 +137,16 @@
   <script src="js/app.js"></script>
   <script src="js/wheel.js"></script>
   <script>
-    setTimeout(function(){
+    function joinGame(){
       var socket = (window.Balance && Balance.getSocket) ? Balance.getSocket() : null;
-      if(socket){
+      if(socket && socket.connected){
         socket.emit('join_game', 'wheel');
         window.addEventListener('beforeunload', function(){ socket.emit('leave_game', 'wheel'); });
+      } else {
+        setTimeout(joinGame, 500);
       }
-    }, 1000);
+    }
+    setTimeout(joinGame, 1000);
   </script>
 </body>
 </html>

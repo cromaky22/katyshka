@@ -106,13 +106,16 @@
   <script src="js/balance.js"></script>
   <script src="js/plinko.js"></script>
   <script>
-    setTimeout(function(){
+    function joinGame(){
       var socket = (window.Balance && Balance.getSocket) ? Balance.getSocket() : null;
-      if(socket){
+      if(socket && socket.connected){
         socket.emit('join_game', 'plinko');
         window.addEventListener('beforeunload', function(){ socket.emit('leave_game', 'plinko'); });
+      } else {
+        setTimeout(joinGame, 500);
       }
-    }, 1000);
+    }
+    setTimeout(joinGame, 1000);
   </script>
 </body>
 </html>
