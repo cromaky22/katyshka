@@ -209,13 +209,12 @@
       })
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        if (data.ok) {
-          localStorage.setItem('sub_claimed_' + uid, '1');
-          localStorage.removeItem('sub_ok_' + uid);
-          setSubscribedUI();
-          claimSubBtn.style.display = 'none';
-          if (window.Balance) Balance.set(Math.round((Balance.get() + 0.3) * 100) / 100);
-          showSubStatus('🎉 Вам начислено $0.3!', 'success');
+           if (data.ok) {
+           localStorage.setItem('sub_claimed_' + uid, '1');
+           localStorage.removeItem('sub_ok_' + uid);
+           setSubscribedUI();
+           claimSubBtn.style.display = 'none';
+           showSubStatus('🎉 Вам начислено $0.3!', 'success');
         } else if (data.error === 'not_subscribed') {
           showSubStatus('❌ Вы не подписаны на канал!', 'error');
           claimSubBtn.disabled = false;
