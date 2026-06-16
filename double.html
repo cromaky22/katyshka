@@ -99,5 +99,15 @@
   <script src="js/app.js"></script>
   <script src="js/balance.js"></script>
   <script src="js/double.js"></script>
+  <script>
+    // Notify server that player joined this game
+    setTimeout(function(){
+      var socket = (window.Balance && Balance.getSocket) ? Balance.getSocket() : null;
+      if(socket){
+        socket.emit('join_game', 'double');
+        window.addEventListener('beforeunload', function(){ socket.emit('leave_game', 'double'); });
+      }
+    }, 1000);
+  </script>
 </body>
 </html>

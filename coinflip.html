@@ -122,5 +122,14 @@
   <script src="js/app.js"></script>
   <script src="js/balance.js"></script>
   <script src="js/coinflip.js"></script>
+  <script>
+    setTimeout(function(){
+      var socket = (window.Balance && Balance.getSocket) ? Balance.getSocket() : null;
+      if(socket){
+        socket.emit('join_game', 'coinflip');
+        window.addEventListener('beforeunload', function(){ socket.emit('leave_game', 'coinflip'); });
+      }
+    }, 1000);
+  </script>
 </body>
 </html>

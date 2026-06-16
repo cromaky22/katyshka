@@ -139,7 +139,7 @@
         </div>
 
       </div>
-    </section>
+</section>
   </main>
 
   <nav class="bottom-nav">
@@ -153,5 +153,14 @@
   <script src="js/app.js"></script>
   <script src="js/balance.js"></script>
   <script src="js/crash.js"></script>
+  <script>
+    setTimeout(function(){
+      var socket = (window.Balance && Balance.getSocket) ? Balance.getSocket() : null;
+      if(socket){
+        socket.emit('join_game', 'crash');
+        window.addEventListener('beforeunload', function(){ socket.emit('leave_game', 'crash'); });
+      }
+    }, 1000);
+  </script>
 </body>
 </html>

@@ -80,7 +80,10 @@ body::after{
 
 /* Page-specific backgrounds */
 .page-home{background:transparent}
-.page-bonus{background:transparent}
+.page-under7{background:transparent}
+.page-goldwest{background:transparent}
+.page-nvuti{background:transparent}
+.page-dream{background:transparent}
 .page-wallet{background:transparent}
 .page-menu{background:transparent}
 .wallet-content,.menu-content{position:relative;z-index:2}
@@ -516,6 +519,7 @@ body::after{
 .online-dot{width:6px;height:6px;border-radius:50%;background:var(--accent-green);box-shadow:0 0 6px var(--accent-green);animation:onlinePulse 2s ease-in-out infinite}
 @keyframes onlinePulse{0%,100%{opacity:1;box-shadow:0 0 6px var(--accent-green)}50%{opacity:0.5;box-shadow:0 0 3px var(--accent-green)}}
 .online-count{color:var(--accent-green);font-weight:700}
+.online-label{font-size:9px;color:var(--muted);margin-left:2px}
 
 @media(max-width:420px){
   .hero-title{font-size:24px}

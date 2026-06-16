@@ -1226,14 +1226,55 @@ const results = {};
   }, 7000);
 }
 
+function getGameOnlineCounts(){
+  let counts = {};
+  for(let g in gameOnline) counts[g] = gameOnline[g].size;
+  return counts;
+}
+
+// === ONLINE PLAYERS TRACKING ===
+let onlinePlayers = new Set();
+let gameOnline = {}; // { gameName: Set(userId) }
+
 io.on('connection', (socket) => {
   const userId = socket.handshake.query.userId || '0';
   if(userId && userId !== '0') {
+    onlinePlayers.add(userId);
     if (!users[userId]) {
       users[userId] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 3 };
       dbSetUser(userId, users[userId]);
     }
   }
+  io.emit('online_count', { count: onlinePlayers.size, games: getGameOnlineCounts() });
+
+  // Player joins a game
+  socket.on('join_game', (game) => {
+    if(!game || !userId || userId === '0') return;
+    if(!gameOnline[game]) gameOnline[game] = new Set();
+    gameOnline[game].add(userId);
+    io.emit('online_count', { count: onlinePlayers.size, games: getGameOnlineCounts() });
+  });
+
+  // Player leaves a game
+  socket.on('leave_game', (game) => {
+    if(!game || !userId || userId === '0') return;
+    if(gameOnline[game]) gameOnline[game].delete(userId);
+    io.emit('online_count', { count: onlinePlayers.size, games: getGameOnlineCounts() });
+  });
+
+  socket.on('disconnect', () => {
+    if(userId && userId !== '0') {
+      onlinePlayers.delete(userId);
+      // Remove from all games
+      for(let g in gameOnline) gameOnline[g].delete(userId);
+      io.emit('online_count', { count: onlinePlayers.size, games: getGameOnlineCounts() });
+    }
+  });
+
+  socket.on('get_online', () => {
+    socket.emit('online_count', { count: onlinePlayers.size, games: getGameOnlineCounts() });
+  });
+
   socket.emit('wheel:state', { phase: wheel.phase, timer: wheel.timer, myBets: wheel.bets[userId] || [], balance: getBalance(userId) || 0, history: wheel.history });
 
   socket.on('wheel:bet', (data) => {

@@ -195,5 +195,14 @@
   <script src="js/app.js"></script>
   <script src="js/balance.js"></script>
   <script src="js/mines.js"></script>
+  <script>
+    setTimeout(function(){
+      var socket = (window.Balance && Balance.getSocket) ? Balance.getSocket() : null;
+      if(socket){
+        socket.emit('join_game', 'mines');
+        window.addEventListener('beforeunload', function(){ socket.emit('leave_game', 'mines'); });
+      }
+    }, 1000);
+  </script>
 </body>
 </html>

@@ -114,8 +114,9 @@
       <div class="hash-display" id="hashDisplay" style="display:none">
         <span class="hash-label">Hash:</span>
         <span class="hash-value" id="hashValue"></span>
+</div>
       </div>
-    </div>
+    </section>
   </main>
 
   <nav class="bottom-nav">
@@ -129,5 +130,14 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="js/balance.js"></script>
   <script src="js/dice.js"></script>
+  <script>
+    setTimeout(function(){
+      var socket = (window.Balance && Balance.getSocket) ? Balance.getSocket() : null;
+      if(socket){
+        socket.emit('join_game', 'dice');
+        window.addEventListener('beforeunload', function(){ socket.emit('leave_game', 'dice'); });
+      }
+    }, 1000);
+  </script>
 </body>
 </html>
