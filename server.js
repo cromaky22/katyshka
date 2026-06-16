@@ -1221,6 +1221,150 @@ function getGameOnlineCounts() {
 let onlinePlayers = new Set();
 let gameOnline = {};
 
+// (connection handler moved below after battle game setup)
+
+startWheel();
+
+// === BATTLE WHEEL GAME ===
+let battle = {
+  phase: 'betting',
+  timer: 20,
+  roundId: 0,
+  players: {},
+  history: []
+};
+let battleTimer = null;
+
+function getBattlePlayersList() {
+  const list = [];
+  for (const uid in battle.players) {
+    const p = battle.players[uid];
+    list.push({
+      userId: uid,
+      name: p.name || 'Player',
+      avatar: p.avatar || '',
+      amount: p.amount || 0
+    });
+  }
+  return list;
+}
+
+function getBattleTotalBank() {
+  let total = 0;
+  for (const uid in battle.players) {
+    total += battle.players[uid].amount || 0;
+  }
+  return Math.round(total * 100) / 100;
+}
+
+function startBattle() {
+  if (battleTimer) clearInterval(battleTimer);
+  battle.timer = 20;
+  battle.phase = 'betting';
+  io.emit('battle:timer', { timer: 20, phase: 'betting' });
+  battleTimer = setInterval(() => {
+    battle.timer--;
+    io.emit('battle:timer', { timer: battle.timer, phase: battle.phase });
+    if (battle.timer <= 0) {
+      clearInterval(battleTimer);
+      spinBattle();
+    }
+  }, 1000);
+}
+
+function spinBattle() {
+  battle.phase = 'spinning';
+  io.emit('battle:timer', { timer: 0, phase: 'spinning' });
+
+  const players = getBattlePlayersList();
+  const total = getBattleTotalBank();
+
+  if (players.length === 0 || total === 0) {
+    setTimeout(() => {
+      battle.roundId++;
+      battle.players = {};
+      io.emit('battle:newRound', { roundId: battle.roundId, history: battle.history });
+      startBattle();
+    }, 2000);
+    return;
+  }
+
+  // Weighted random selection — higher bet = higher chance
+  let rand = Math.random() * total;
+  let winner = players[0];
+  for (const p of players) {
+    rand -= p.amount;
+    if (rand <= 0) { winner = p; break; }
+  }
+
+  const payout = Math.round(total * 0.95 * 100) / 100;
+
+  // Credit winner
+  const winnerBal = getBalance(winner.userId) + payout;
+  setBalance(winner.userId, winnerBal);
+  addTx('bet', winner.userId, winner.amount, 'completed', { game: 'Battle Wheel', detail: `Battle bet $${winner.amount.toFixed(2)}` });
+  addTx('win', winner.userId, payout, 'completed', { game: 'Battle Wheel', detail: `Battle winner! Won $${payout.toFixed(2)}` });
+  applyBet(winner.userId, winner.amount);
+
+  // Record losses for others
+  for (const p of players) {
+    if (p.userId !== winner.userId) {
+      addTx('bet', p.userId, p.amount, 'completed', { game: 'Battle Wheel', detail: `Battle bet $${p.amount.toFixed(2)}` });
+      addTx('loss', p.userId, p.amount, 'completed', { game: 'Battle Wheel', detail: `Battle lost to ${winner.name}` });
+      applyBet(p.userId, p.amount);
+      if (getBalance(p.userId) <= 0.001 && (users[p.userId]?.wager_required || 0) > 0) {
+        users[p.userId].wager_required = 0;
+        if (usePostgres) {
+          try { db.query('UPDATE users SET wager_required = 0 WHERE id = $1', [p.userId]); } catch(e) {}
+        }
+        saveData();
+      }
+    }
+  }
+
+  // Referral commission
+  if (users[winner.userId] && users[winner.userId].referredBy) {
+    addRefCommission(users[winner.userId].referredBy, winner.amount);
+  }
+
+  // History
+  const BATTLE_COLORS = ['#e53935','#8b5cf6','#2196f3','#4caf50','#ff9800','#00bcd4','#e91e63','#3f51b5','#009688','#ff5722','#607d8b','#795548','#9c27b0','#03a9f4','#cddc39','#f44336','#673ab7','#00acc1','#8bc34a','#ffc107'];
+  battle.history.unshift({
+    winnerName: winner.name,
+    winnerAmount: payout,
+    winnerId: winner.userId,
+    totalBank: total,
+    players: players.length,
+    color: BATTLE_COLORS[Math.floor(Math.random() * BATTLE_COLORS.length)]
+  });
+  if (battle.history.length > 20) battle.history.pop();
+
+  const balances = {};
+  for (const p of players) {
+    balances[p.userId] = getBalance(p.userId);
+  }
+
+  io.emit('battle:spin', {
+    winner: { userId: winner.userId, name: winner.name, avatar: winner.avatar },
+    payout,
+    totalBank: total,
+    players,
+    balances,
+    history: battle.history
+  });
+
+  for (const uid in balances) {
+    io.emit('balance_update', { userId: uid, balance: balances[uid] });
+  }
+
+  setTimeout(() => {
+    battle.players = {};
+    battle.roundId++;
+    io.emit('battle:newRound', { roundId: battle.roundId, history: battle.history });
+    startBattle();
+  }, 7000);
+}
+
 io.on('connection', (socket) => {
   const userId = socket.handshake.query.userId || '0';
   if (userId && userId !== '0') {
@@ -1257,6 +1401,7 @@ io.on('connection', (socket) => {
     socket.emit('online_count', { count: onlinePlayers.size, games: getGameOnlineCounts() });
   });
 
+  // === WHEEL ===
   socket.emit('wheel:state', { phase: wheel.phase, timer: wheel.timer, myBets: wheel.bets[userId] || [], balance: getBalance(userId) || 0, history: wheel.history });
 
   socket.on('wheel:bet', (data) => {
@@ -1285,9 +1430,51 @@ io.on('connection', (socket) => {
     io.emit('wheel:betsUpdate', { allBets });
     socket.emit('wheel:myBets', { myBets: wheel.bets[userId] || [], balance: getBalance(userId) });
   });
+
+  // === BATTLE WHEEL ===
+  socket.emit('battle:state', {
+    phase: battle.phase,
+    timer: battle.timer,
+    roundId: battle.roundId,
+    players: getBattlePlayersList(),
+    totalBank: getBattleTotalBank(),
+    myBets: battle.players[userId] ? [{ userId, amount: battle.players[userId].amount }] : [],
+    balance: getBalance(userId) || 0,
+    history: battle.history
+  });
+
+  socket.on('battle:bet', (data) => {
+    if (battle.phase !== 'betting') return;
+    const { amount, playerName, playerAvatar } = data;
+    if (!amount || amount <= 0 || amount > 500) return;
+
+    const existing = battle.players[userId]?.amount || 0;
+    const serverBalance = getBalance(userId);
+    if (existing + amount > serverBalance) {
+      socket.emit('battle:myBet', { myBets: battle.players[userId] ? [{ userId, amount: existing }] : [], balance: serverBalance });
+      return;
+    }
+
+    if (!battle.players[userId]) {
+      battle.players[userId] = { name: playerName || 'Player', avatar: playerAvatar || '', amount: 0 };
+    }
+    battle.players[userId].name = playerName || battle.players[userId].name;
+    battle.players[userId].avatar = playerAvatar || battle.players[userId].avatar;
+    battle.players[userId].amount = Math.round((battle.players[userId].amount + amount) * 100) / 100;
+
+    setBalance(userId, serverBalance - amount);
+
+    const playersList = getBattlePlayersList();
+    const total = getBattleTotalBank();
+    io.emit('battle:playersUpdate', { players: playersList, totalBank: total });
+    socket.emit('battle:myBet', {
+      myBets: [{ userId, amount: battle.players[userId].amount }],
+      balance: getBalance(userId)
+    });
+  });
 });
 
-startWheel();
+startBattle();
 
 // === TELEGRAM BOT ===
 const BOT_TOKEN = process.env.BOT_TOKEN || '8962248830:AAEoWT12lZEzttXXHxt3c48wLGh5HcZ6FoQ';

@@ -458,13 +458,13 @@
     if(document.getElementById('app-footer')) return;
     var footer = document.createElement('div');
     footer.id = 'app-footer';
-    footer.style.cssText = 'text-align:center;padding:20px 16px 120px;color:rgba(255,255,255,0.25);font-size:11px;line-height:1.8;';
-    footer.innerHTML =
-      '<div style="margin-bottom:6px">18+ \u00b7 Все права защищены</div>' +
-      '<div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:6px">' +
-        '<a href="#" id="footer-privacy" style="color:rgba(255,255,255,0.35);text-decoration:none;font-size:11px;transition:color 0.2s">Политика конфиденциальности</a>' +
-        '<span style="color:rgba(255,255,255,0.15)">\u00b7</span>' +
-        '<span style="color:rgba(255,255,255,0.25);font-size:11px">AML Policy</span>' +
+  footer.style.cssText = 'text-align:center;padding:20px 16px 120px;color:rgba(255,255,255,0.5);font-size:12px;line-height:1.8;';
+  footer.innerHTML =
+    '<div style="margin-bottom:6px;color:rgba(255,255,255,0.7);font-size:12px">18+ \u00b7 Все права защищены</div>' +
+    '<div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:6px">' +
+      '<a href="#" id="footer-privacy" style="color:rgba(255,255,255,0.6);text-decoration:none;font-size:12px;transition:color 0.2s">Политика конфиденциальности</a>' +
+      '<span style="color:rgba(255,255,255,0.3)">\u00b7</span>' +
+      '<span style="color:rgba(255,255,255,0.5);font-size:12px">AML Policy</span>' +
       '</div>';
     document.body.appendChild(footer);
     document.getElementById('footer-privacy').addEventListener('click', function(e){

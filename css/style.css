@@ -30,7 +30,7 @@ body::after{
 }
 
 /* ===== COSMIC BACKGROUND ===== */
-.cosmic-bg{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.cosmic-bg{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
 .nebula{position:absolute;border-radius:50%;opacity:0.3}
 .nebula.n1{width:400px;height:400px;background:radial-gradient(circle,rgba(139,92,246,0.4),transparent 70%);top:-5%;left:-5%}
 .nebula.n2{width:450px;height:450px;background:radial-gradient(circle,rgba(46,227,107,0.25),transparent 70%);bottom:-10%;right:-8%}
@@ -104,7 +104,7 @@ body::after{
 .wallet-content,.menu-content{position:relative;z-index:2}
 
 /* Background floating stars */
-.bg-stars{position:fixed;inset:0;pointer-events:none;z-index:3;overflow:hidden}
+.bg-stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
 .bg-star{position:absolute;top:-30px;color:#fff;text-shadow:0 0 8px rgba(255,255,255,0.8),0 0 15px rgba(255,255,255,0.4);animation:starFall linear forwards;user-select:none;pointer-events:none}
 @keyframes starFall{
   0%{transform:translateY(0) rotate(0deg);opacity:1}
@@ -181,7 +181,7 @@ body::after{
 .pd-btn .pd-btn-arrow{margin-left:auto;font-size:12px;color:var(--muted)}
 .pd-overlay{position:fixed;inset:0;z-index:99998;display:none}
 .pd-overlay.open{display:block}
-.content{padding:20px;padding-bottom:90px;background:transparent}
+.content{padding:20px;padding-bottom:90px;background:transparent;position:relative;z-index:2}
 
 /* ===== ADAPTIVE FOR MOBILE ===== */
 @media(max-width:480px){

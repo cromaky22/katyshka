@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Battle Wheel</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/battle.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="page-battle">
+
+  <header class="app-header">
+    <div class="left-controls">
+      <a href="home.html" class="back-btn" aria-label="Назад">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:#9aa4b2"><path d="M15 18l-6-6 6-6"/></svg>
+      </a>
+    </div>
+    <div class="header-title">BATTLE WHEEL</div>
+    <div class="right-controls" style="position:relative">
+      <div class="balance-pill" id="balTrigger" style="cursor:pointer">
+        <span class="wallet-icon">👛</span>
+        <span class="balance-value" id="hbal">0.00</span>
+        <span class="currency">$</span>
+        <span class="caret">▾</span>
+      </div>
+      <button class="profile" id="profileBtn" title="Профиль" aria-label="Профиль"><img class="profile-icon" id="profileImg" src="" alt="Аватар" onerror="this.style.display='none'"></button>
+      <div class="profile-dropdown" id="profileDropdown">
+        <div class="pd-header">
+          <div class="pd-id-label">ID игрока</div>
+          <div class="pd-id-value"><span id="pdUserId">—</span></div>
+        </div>
+        <div class="pd-body">
+          <a href="profile.html" class="pd-btn"><span class="pd-btn-icon">👤</span>Профиль<span class="pd-btn-arrow">→</span></a>
+          <button class="pd-btn" id="pdPromoBtn"><span class="pd-btn-icon">🎟</span>Промокод<span class="pd-btn-arrow">→</span></button>
+        </div>
+      </div>
+      <div class="pd-overlay" id="pdOverlay"></div>
+    </div>
+  </header>
+
+  <main class="battle-game">
+
+    <div class="battle-board">
+
+      <!-- Top / History bar -->
+      <div class="battle-top-bar">
+        <div class="battle-tabs">
+          <button class="battle-tab active" data-tab="top">Топ</button>
+          <button class="battle-tab" data-tab="history">История</button>
+        </div>
+        <div class="battle-history-scroll" id="battleHistory"></div>
+      </div>
+
+      <!-- Wheel section -->
+      <div class="battle-wheel-section">
+        <div class="battle-game-number" id="gameNumber">Игра #1</div>
+        <div class="battle-wheel-container">
+          <div class="battle-wheel-wrapper" id="wheelWrapper">
+            <canvas id="battleWheelCanvas" width="600" height="600"></canvas>
+            <div class="battle-wheel-pointer">▼</div>
+            <div class="battle-wheel-center">
+              <span class="battle-wheel-timer" id="battleTimer">20</span>
+            </div>
+            <div class="battle-wheel-result" id="battleResult"></div>
+          </div>
+        </div>
+        <div class="battle-winner-display" id="battleWinnerDisplay" style="display:none">
+          <div class="battle-winner-crown">👑</div>
+          <div class="battle-winner-name" id="battleWinnerName">—</div>
+          <div class="battle-winner-amount" id="battleWinnerAmount">+$0.00</div>
+        </div>
+      </div>
+
+      <!-- Timer display (phase) -->
+      <div class="battle-phase" id="battlePhase">Ожидание ставок...</div>
+
+      <!-- Bet input section -->
+      <div class="battle-bet-section">
+        <div class="battle-bet-input-row">
+          <div class="battle-input-wrap">
+            <span class="battle-input-icon">$</span>
+            <input type="number" id="battleBetInput" value="1.00" min="0.10" max="500" step="0.10" placeholder="0.00">
+          </div>
+          <button class="battle-bet-btn" id="battleBetBtn">Поставить</button>
+        </div>
+        <div class="battle-quick-amounts">
+          <button class="battle-quick-btn" data-amount="0.1"><span class="bq-dollar">$</span>+0.1</button>
+          <button class="battle-quick-btn" data-amount="1"><span class="bq-dollar">$</span>+1</button>
+          <button class="battle-quick-btn" data-amount="5"><span class="bq-dollar">$</span>+5</button>
+          <button class="battle-quick-btn" data-amount="10"><span class="bq-dollar">$</span>+10</button>
+        </div>
+        <div class="battle-stake-controls">
+          <button class="battle-stake-btn" id="battleHalfBtn">½</button>
+          <button class="battle-stake-btn" id="battleDoubleBtn">×2</button>
+        </div>
+      </div>
+
+      <!-- Bank info -->
+      <div class="battle-bank-section">
+        <div class="battle-bank-info">
+          <span class="battle-bank-label">Банк</span>
+          <span class="battle-bank-value" id="battleBank">$0.00</span>
+        </div>
+      </div>
+
+      <!-- Players list -->
+      <div class="battle-players-section">
+        <div class="battle-players-grid" id="battlePlayersGrid"></div>
+      </div>
+
+      <!-- My bets -->
+      <div class="battle-my-bets" id="battleMyBets" style="display:none">
+        <div class="battle-section-title">Мои ставки</div>
+        <div class="battle-my-bets-list" id="battleMyBetsList"></div>
+      </div>
+
+      <!-- Game status -->
+      <div class="battle-status" id="battleStatus">Подключение...</div>
+
+    </div>
+  </main>
+
+  <nav class="bottom-nav">
+    <a href="games.html" class="nav-item" data-name="games"><span class="icon">🎮</span><span class="label">Games</span></a>
+    <a href="wallet.html" class="nav-item" data-name="wallet"><span class="icon">💼</span><span class="label">Wallet</span></a>
+    <a href="home.html" class="nav-item center" data-name=""><span class="icon">💎</span></a>
+    <a href="bonus.html" class="nav-item" data-name="bonus"><span class="icon">🎁</span><span class="label">Bonus</span></a>
+    <a href="menu.html" class="nav-item" data-name="menu"><span class="icon">☰</span><span class="label">Menu</span></a>
+  </nav>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="js/balance.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/telegram-user.js"></script>
+  <script src="js/promo-modal.js"></script>
+  <script src="js/wallet-modal.js"></script>
+  <script src="js/profile-dropdown.js"></script>
+  <script src="js/battle.js"></script>
+  <script>
+    function joinBattle(){
+      var socket = (window.Balance && Balance.getSocket) ? Balance.getSocket() : null;
+      if(socket && socket.connected){
+        socket.emit('join_game', 'battle');
+        window.addEventListener('beforeunload', function(){ socket.emit('leave_game', 'battle'); });
+      } else {
+        setTimeout(joinBattle, 500);
+      }
+    }
+    setTimeout(joinBattle, 1000);
+  </script>
+</body>
+</html>

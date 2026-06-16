@@ -1,6 +1,6 @@
 /* ===== UNDER 7 GAME ===== */
 .under7{display:flex;justify-content:center;padding:16px 0}
-.under7-board{width:100%;max-width:500px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:16px;border-radius:14px;box-shadow:0 18px 40px rgba(0,0,0,0.6)}
+.under7-board{width:100%;max-width:500px;background:linear-gradient(180deg,rgba(12,14,32,0.9),rgba(8,10,26,0.95));padding:16px;border-radius:14px;box-shadow:0 18px 40px rgba(0,0,0,0.6)}
 
 /* History */
 .history-header{font-size:13px;color:var(--muted);margin-bottom:8px;padding:0 4px}
@@ -48,8 +48,8 @@
 /* Stake */
 .stake-section{margin-bottom:10px}
 .stake-row{display:flex;align-items:center;gap:8px}
-.stake-row input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);color:var(--text);font-size:16px;text-align:center;font-weight:700;outline:none}
-.stake-row input:focus{border-color:rgba(255,255,255,0.2)}
+.stake-row input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.1);color:var(--text);font-size:16px;text-align:center;font-weight:700;outline:none}
+.stake-row input:focus{border-color:rgba(255,255,255,0.3)}
 .stake-btns{display:flex;gap:6px}
 .modify-btn{width:40px;height:40px;border-radius:8px;border:none;background:linear-gradient(180deg,#374151,#1f2937);color:#fff;font-weight:700;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center}
 .modify-btn:hover{background:linear-gradient(180deg,#4b5563,#374151)}
@@ -57,8 +57,8 @@
 
 /* Quick bet */
 .quick-bet-btns{display:flex;gap:6px;margin-bottom:12px}
-.quick-btn{flex:1;padding:9px;border-radius:8px;border:none;background:rgba(255,255,255,0.05);color:var(--text);font-weight:600;cursor:pointer;font-size:13px}
-.quick-btn:hover{background:rgba(255,255,255,0.1)}
+.quick-btn{flex:1;padding:9px;border-radius:8px;border:none;background:rgba(255,255,255,0.15);color:var(--text);font-weight:600;cursor:pointer;font-size:13px}
+.quick-btn:hover{background:rgba(255,255,255,0.2)}
 .quick-btn:active{transform:scale(0.97)}
 
 /* Repeat */
