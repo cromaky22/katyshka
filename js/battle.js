@@ -350,11 +350,29 @@ document.addEventListener('DOMContentLoaded', function() {
     requestAnimationFrame(tick);
   }
 
+  // === TELEGRAM USER INFO ===
+  try {
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+      const u = tg.initDataUnsafe.user;
+      playerName = u.first_name + (u.last_name ? ' ' + u.last_name : '');
+      playerAvatar = u.photo_url || '';
+      localStorage.setItem('player_name', playerName);
+      if (u.photo_url) localStorage.setItem('player_avatar', u.photo_url);
+    }
+  } catch(e) {}
+  if (!playerName || playerName === 'Player') {
+    playerName = localStorage.getItem('player_name') || 'Player';
+    playerAvatar = localStorage.getItem('player_avatar') || '';
+  }
+
   // === SOCKET ===
   const socket = Balance.getSocket();
   const userId = Balance.getUserId();
 
+  let socketReady = false;
   function onSocketReady() {
+    socketReady = true;
     statusEl.textContent = 'Подключено';
     statusEl.className = 'battle-status';
   }
@@ -376,7 +394,7 @@ document.addEventListener('DOMContentLoaded', function() {
     updateBank();
     updateMyBets();
 
-    if (state.history) loadHistory(state.history);
+    if (state.history && state.history.length) loadHistory(state.history);
     if (state.balance !== undefined) Balance.sync(state.balance);
 
     if (state.phase) {
@@ -508,6 +526,11 @@ document.addEventListener('DOMContentLoaded', function() {
   // === BET ACTION ===
   function placeBet() {
     if (isSpinning) return;
+    if (!socketReady) {
+      statusEl.textContent = 'Ожидание подключения...';
+      statusEl.className = 'battle-status error';
+      return;
+    }
     const amount = parseFloat(betInput.value) || 0;
     if (amount < 0.1) {
       statusEl.textContent = 'Мин. ставка $0.10';
