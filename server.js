@@ -1529,7 +1529,7 @@ app.get('/api/tg-photo/:id', async (req, res) => {
     for (const rid in referredIds) {
       if (users[rid] && (users[rid].wager_total || 0) > 0) active++;
     }
-    const link = `https://t.me/katyshka_casino_bot?start=${uid}`;
+    const link = `https://t.me/Katyshkacasino_bot?start=${uid}`;
     res.json({
       ok: true,
       link,
