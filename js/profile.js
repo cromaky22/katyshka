@@ -24,18 +24,6 @@ document.addEventListener('DOMContentLoaded', function(){
 
   if(idDisplay) idDisplay.textContent = userId;
 
-  // Set initial name from TG if available
-  if(tgUser){
-    const tgName = tgUser.username || ((tgUser.first_name||'') + (tgUser.last_name?' '+tgUser.last_name:'')).trim() || 'Игрок';
-    if(nameEl) nameEl.textContent = tgName;
-    if(tgUser.photo_url && avatarImg){
-      avatarImg.src = tgUser.photo_url;
-      avatarImg.style.display = '';
-      avatarImg.onerror = function(){ this.style.display='none'; };
-    }
-  }
-
-  // Set initials fallback
   function setInitials(name){
     if(!avatarWrap) return;
     let el = avatarWrap.querySelector('.avatar-initials');
@@ -45,42 +33,33 @@ document.addEventListener('DOMContentLoaded', function(){
     el.style.display = (avatarImg && avatarImg.src && avatarImg.style.display !== 'none') ? 'none' : 'flex';
   }
 
-  setInitials(tgUser ? (tgUser.first_name || tgUser.username || 'Игрок') : 'Игрок');
+  function applyUser(name, photoUrl){
+    if(name && nameEl) nameEl.textContent = name;
+    if(photoUrl && avatarImg){
+      avatarImg.src = photoUrl;
+      avatarImg.style.display = '';
+      avatarImg.onerror = function(){ this.style.display='none'; };
+    }
+    setInitials(name);
+  }
 
-  // Load profile data from server (name, avatar, balance)
+  // Set initial from TG
+  if(tgUser){
+    const tgName = tgUser.username || ((tgUser.first_name||'') + (tgUser.last_name?' '+tgUser.last_name:'')).trim() || 'Игрок';
+    applyUser(tgName, tgUser.photo_url);
+  }
+
+  // Load profile data from server — only update if server has newer data
   async function loadUserProfile(){
     try{
       const res = await fetch('/api/users?id=' + encodeURIComponent(userId));
       const data = await res.json();
-      console.log('👤 Profile data:', data);
-
       if(data && data.balance !== undefined){
         const serverName = data.first_name || data.username;
-        if(serverName && nameEl){ nameEl.textContent = serverName; }
-
-        // Server avatar from saved user data
-        if(data.avatar && avatarImg){
-          avatarImg.src = data.avatar;
-          avatarImg.style.display = '';
-          avatarImg.onerror = function(){ this.style.display='none'; };
-          setInitials(serverName || 'Игрок');
-        }
-
-        // Balance display
+        if(serverName && nameEl && nameEl.textContent === 'Игрок') applyUser(serverName, null);
+        if(data.avatar && avatarImg && !avatarImg.src) applyUser(null, data.avatar);
         const balEl = document.querySelector('.balance-value');
         if(balEl) balEl.textContent = Number(data.balance).toFixed(2);
-      }
-
-      // Retry with TG data if available (in case WebApp loaded late)
-      const lateTg = getUser();
-      if(lateTg && lateTg.first_name){
-        const lateName = lateTg.username || ((lateTg.first_name||'') + (lateTg.last_name?' '+lateTg.last_name:'')).trim();
-        if(lateName && nameEl) nameEl.textContent = lateName;
-        if(lateTg.photo_url && avatarImg){
-          avatarImg.src = lateTg.photo_url;
-          avatarImg.style.display = '';
-          setInitials(lateName);
-        }
       }
     }catch(e){
       console.error('Profile load error:', e);
