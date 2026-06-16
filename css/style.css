@@ -1,17 +1,11 @@
 /* Базовые стили */
 :root{
-  --bg:#0a0118;
+  --bg:#060012;
   --card:#0b1320;
   --accent:#ffb86b;
   --accent-green:#2ee36b;
   --muted:#9aa4b2;
   --text:#e6eef6;
-  --glow-purple:rgba(139,92,246,0.3);
-  --glow-green:rgba(46,227,107,0.25);
-  --glow-orange:rgba(255,184,107,0.2);
-  --glow-pink:rgba(236,72,153,0.2);
-  --glow-blue:rgba(33,150,243,0.2);
-  --glow-red:rgba(239,83,80,0.15);
 }
 *{box-sizing:border-box}
 html,body{
@@ -19,16 +13,92 @@ html,body{
   font-family:Inter,Arial,Helvetica,sans-serif;
   color:var(--text);
   overflow-x:hidden;
-  background:linear-gradient(135deg,#0a0118 0%,#1a0a3e 12%,#2d1b69 25%,#0f2a4a 40%,#6b2fa0 55%,#1b4d3e 70%,#0d1f3c 85%,#0a0118 100%);
-  background-size:400% 400%;
-  animation:gradientShift 15s ease infinite;
+  background:linear-gradient(160deg,#060012 0%,#0d0520 20%,#150a35 40%,#0a1525 60%,#1a0a2e 80%,#060012 100%);
+  background-size:300% 300%;
+  animation:bgShift 20s ease infinite;
 }
-@keyframes gradientShift{
+@keyframes bgShift{
   0%{background-position:0% 50%}
-  25%{background-position:50% 0%}
   50%{background-position:100% 50%}
-  75%{background-position:50% 100%}
   100%{background-position:0% 50%}
+}
+
+/* ===== COSMIC BACKGROUND ===== */
+.cosmic-bg{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+
+/* Nebula glow blobs */
+.nebula{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.4;animation:nebulaFloat 25s ease-in-out infinite}
+.nebula.n1{width:500px;height:500px;background:radial-gradient(circle,rgba(139,92,246,0.5),transparent 70%);top:-10%;left:-5%;animation-delay:0s}
+.nebula.n2{width:600px;height:600px;background:radial-gradient(circle,rgba(46,227,107,0.3),transparent 70%);bottom:-15%;right:-10%;animation-delay:-8s}
+.nebula.n3{width:400px;height:400px;background:radial-gradient(circle,rgba(236,72,153,0.4),transparent 70%);top:40%;left:60%;animation-delay:-15s}
+.nebula.n4{width:350px;height:350px;background:radial-gradient(circle,rgba(33,150,243,0.35),transparent 70%);top:10%;right:20%;animation-delay:-5s}
+.nebula.n5{width:450px;height:450px;background:radial-gradient(circle,rgba(255,184,107,0.3),transparent 70%);bottom:20%;left:30%;animation-delay:-12s}
+@keyframes nebulaFloat{
+  0%,100%{transform:translate(0,0) scale(1);opacity:0.35}
+  25%{transform:translate(30px,-20px) scale(1.1);opacity:0.5}
+  50%{transform:translate(-20px,30px) scale(0.9);opacity:0.3}
+  75%{transform:translate(15px,15px) scale(1.05);opacity:0.45}
+}
+
+/* Stars layer */
+.stars-layer{position:absolute;inset:0}
+.star{position:absolute;border-radius:50%;background:#fff;animation:starTwinkle 4s ease-in-out infinite alternate}
+.star.s1{width:2px;height:2px;top:10%;left:15%;animation-delay:0s;opacity:0.6}
+.star.s2{width:1.5px;height:1.5px;top:25%;left:45%;animation-delay:-1s;opacity:0.4}
+.star.s3{width:2px;height:2px;top:35%;left:75%;animation-delay:-2s;opacity:0.7}
+.star.s4{width:1px;height:1px;top:50%;left:25%;animation-delay:-0.5s;opacity:0.5}
+.star.s5{width:2px;height:2px;top:65%;left:55%;animation-delay:-1.5s;opacity:0.6}
+.star.s6{width:1.5px;height:1.5px;top:75%;left:85%;animation-delay:-3s;opacity:0.4}
+.star.s7{width:2px;height:2px;top:15%;left:90%;animation-delay:-2.5s;opacity:0.7}
+.star.s8{width:1px;height:1px;top:45%;left:10%;animation-delay:-0.8s;opacity:0.5}
+.star.s9{width:2px;height:2px;top:85%;left:35%;animation-delay:-1.2s;opacity:0.6}
+.star.s10{width:1.5px;height:1.5px;top:5%;left:60%;animation-delay:-3.5s;opacity:0.4}
+.star.s11{width:2px;height:2px;top:55%;left:95%;animation-delay:-0.3s;opacity:0.7}
+.star.s12{width:1px;height:1px;top:95%;left:50%;animation-delay:-2.2s;opacity:0.5}
+@keyframes starTwinkle{
+  0%{opacity:0.2;transform:scale(1)}
+  100%{opacity:0.8;transform:scale(1.3)}
+}
+
+/* Comets / meteors */
+.comet{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;box-shadow:0 0 6px 2px rgba(255,255,255,0.8);opacity:0}
+.comet::after{content:'';position:absolute;top:0;right:0;width:60px;height:1px;background:linear-gradient(90deg,rgba(255,255,255,0.8),transparent);transform-origin:right center}
+.comet.c1{top:20%;left:10%;animation:cometFly 8s linear infinite;animation-delay:0s}
+.comet.c2{top:40%;left:5%;animation:cometFly 10s linear infinite;animation-delay:3s}
+.comet.c3{top:60%;left:15%;animation:cometFly 7s linear infinite;animation-delay:6s}
+.comet.c4{top:30%;left:20%;animation:cometFly 12s linear infinite;animation-delay:9s}
+@keyframes cometFly{
+  0%{opacity:0;transform:translate(0,0) rotate(35deg)}
+  5%{opacity:1}
+  30%{opacity:0.8}
+  50%{opacity:0;transform:translate(400px,200px) rotate(35deg)}
+  100%{opacity:0;transform:translate(400px,200px) rotate(35deg)}
+}
+
+/* Shooting stars */
+.shooting-star{position:absolute;width:1px;height:1px;background:#fff;border-radius:50%;opacity:0}
+.shooting-star::after{content:'';position:absolute;top:0;left:0;width:80px;height:1px;background:linear-gradient(270deg,rgba(255,255,255,0.9),rgba(139,92,246,0.5),transparent);transform-origin:left center}
+.shooting-star.ss1{top:15%;left:20%;animation:shootStar 6s linear infinite;animation-delay:2s}
+.shooting-star.ss2{top:35%;left:10%;animation:shootStar 8s linear infinite;animation-delay:5s}
+.shooting-star.ss3{top:55%;left:25%;animation:shootStar 7s linear infinite;animation-delay:8s}
+@keyframes shootStar{
+  0%{opacity:0;transform:translate(0,0) rotate(-30deg)}
+  3%{opacity:1}
+  15%{opacity:0.6}
+  25%{opacity:0;transform:translate(500px,300px) rotate(-30deg)}
+  100%{opacity:0;transform:translate(500px,300px) rotate(-30deg)}
+}
+
+/* Page-specific backgrounds */
+.page-home{
+  background:linear-gradient(160deg,#060012 0%,#0d0520 20%,#150a35 40%,#0a1525 60%,#1a0a2e 80%,#060012 100%);
+  background-size:300% 300%;
+  animation:bgShift 20s ease infinite;
+}
+.page-games{
+  background:linear-gradient(160deg,#050010 0%,#0b0418 25%,#120828 50%,#081020 75%,#050010 100%);
+  background-size:300% 300%;
+  animation:bgShift 25s ease infinite;
 }
 
 /* Widget blocks */
