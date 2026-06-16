@@ -3,32 +3,27 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Mini Casino — Games</title>
+  <title>KATYSHKA — Игры</title>
   <link rel="stylesheet" href="css/style.css">
-
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-<body>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="page-games">
   <header class="app-header">
     <div class="left-controls">
-      <button class="btn-icon" aria-label="back">❀</button>
       <img src="assets/logo.png" alt="Logo" class="logo-small" onerror="this.style.display='none'">
     </div>
-    <div class="header-title">KATYSHKA</div>
+    <div class="header-title">ИГРЫ</div>
     <div class="right-controls" style="position:relative">
       <div class="balance-pill">
         <span class="wallet-icon">💠</span>
-        <span class="balance-value">0.00</span>
+        <span class="balance-value" id="gbal">0.00</span>
         <span class="currency">$</span>
-        <span class="caret">▾</span>
       </div>
       <button class="profile" id="profileBtn" title="Профиль" aria-label="Профиль"><img class="profile-icon" src="" alt="Аватар" onerror="this.style.display='none'"></button>
       <div class="profile-dropdown" id="profileDropdown">
         <div class="pd-header">
           <div class="pd-id-label">ID игрока</div>
-          <div class="pd-id-value">
-            <span id="pdUserId">—</span>
-          </div>
+          <div class="pd-id-value"><span id="pdUserId">—</span></div>
         </div>
         <div class="pd-body">
           <a href="profile.html" class="pd-btn"><span class="pd-btn-icon">👤</span>Профиль<span class="pd-btn-arrow">→</span></a>
@@ -38,23 +33,125 @@
       <div class="pd-overlay" id="pdOverlay"></div>
     </div>
   </header>
-  <main class="content">
-    <script>
-      // redirect to unified home+games page
-      location.replace('home.html#games');
-    </script>
-    <noscript>
-      <p>Пожалуйста, включите JavaScript. Перейдите на <a href="home.html#games">главную</a>.</p>
-    </noscript>
+
+  <main class="content" style="position:relative;z-index:1">
+    <div class="games-grid">
+
+      <div class="game-card">
+        <a href="double.html" class="game-card-inner">
+          <div class="game-card-glow" style="background:radial-gradient(circle,rgba(139,92,246,0.25),transparent 70%)"></div>
+          <div class="game-card-img"><img src="assets/double.jpg" alt="Double" onerror="this.style.display='none'"></div>
+          <div class="game-card-info"><span class="game-card-name">Double</span><span class="game-card-online"><span class="online-dot"></span><span class="online-count">0</span></span></div>
+        </a>
+      </div>
+
+      <div class="game-card">
+        <a href="dreamcatcher.html" class="game-card-inner">
+          <div class="game-card-glow" style="background:radial-gradient(circle,rgba(236,72,153,0.25),transparent 70%)"></div>
+          <div class="game-card-img"><img src="assets/dreamCatcher.jpg" alt="DreamCatcher" onerror="this.style.display='none'"></div>
+          <div class="game-card-info"><span class="game-card-name">DreamCatcher</span><span class="game-card-online"><span class="online-dot"></span><span class="online-count">0</span></span></div>
+        </a>
+      </div>
+
+      <div class="game-card">
+        <a href="nvuti.html" class="game-card-inner">
+          <div class="game-card-glow" style="background:radial-gradient(circle,rgba(46,227,107,0.25),transparent 70%)"></div>
+          <div class="game-card-img"><img src="assets/nvuti.jpg" alt="Nvuti" onerror="this.style.display='none'"></div>
+          <div class="game-card-info"><span class="game-card-name">Nvuti</span><span class="game-card-online"><span class="online-dot"></span><span class="online-count">0</span></span></div>
+        </a>
+      </div>
+
+      <div class="game-card">
+        <a href="crash.html" class="game-card-inner">
+          <div class="game-card-glow" style="background:radial-gradient(circle,rgba(255,184,107,0.25),transparent 70%)"></div>
+          <div class="game-card-img"><img src="assets/crash.jpg" alt="Crash" onerror="this.style.display='none'"></div>
+          <div class="game-card-info"><span class="game-card-name">Crash</span><span class="game-card-online"><span class="online-dot"></span><span class="online-count">0</span></span></div>
+        </a>
+      </div>
+
+      <div class="game-card">
+        <a href="mines.html" class="game-card-inner">
+          <div class="game-card-glow" style="background:radial-gradient(circle,rgba(239,83,80,0.25),transparent 70%)"></div>
+          <div class="game-card-img"><img src="assets/mines.jpg" alt="Mines" onerror="this.style.display='none'"></div>
+          <div class="game-card-info"><span class="game-card-name">Mines</span><span class="game-card-online"><span class="online-dot"></span><span class="online-count">0</span></span></div>
+        </a>
+      </div>
+
+      <div class="game-card">
+        <a href="coinflip.html" class="game-card-inner">
+          <div class="game-card-glow" style="background:radial-gradient(circle,rgba(255,213,79,0.25),transparent 70%)"></div>
+          <div class="game-card-img"><img src="assets/coinflip.jpg" alt="Coinflip" onerror="this.style.display='none'"></div>
+          <div class="game-card-info"><span class="game-card-name">Coinflip</span><span class="game-card-online"><span class="online-dot"></span><span class="online-count">0</span></span></div>
+        </a>
+      </div>
+
+      <div class="game-card">
+        <a href="tower.html" class="game-card-inner">
+          <div class="game-card-glow" style="background:radial-gradient(circle,rgba(33,150,243,0.25),transparent 70%)"></div>
+          <div class="game-card-img"><img src="assets/tower.jpg" alt="Tower" onerror="this.style.display='none'"></div>
+          <div class="game-card-info"><span class="game-card-name">Tower</span><span class="game-card-online"><span class="online-dot"></span><span class="online-count">0</span></span></div>
+        </a>
+      </div>
+
+      <div class="game-card">
+        <a href="wheel.html" class="game-card-inner">
+          <div class="game-card-glow" style="background:radial-gradient(circle,rgba(171,71,188,0.25),transparent 70%)"></div>
+          <div class="game-card-img"><img src="assets/wheel.jpg" alt="Wheel" onerror="this.style.display='none'"></div>
+          <div class="game-card-info"><span class="game-card-name">Wheel</span><span class="game-card-online"><span class="online-dot"></span><span class="online-count">0</span></span></div>
+        </a>
+      </div>
+
+      <div class="game-card">
+        <a href="under7.html" class="game-card-inner">
+          <div class="game-card-glow" style="background:radial-gradient(circle,rgba(67,160,71,0.3),transparent 70%)"></div>
+          <div class="game-card-img"><img src="assets/under7.jpg" alt="Under 7" onerror="this.style.display='none'"></div>
+          <div class="game-card-info"><span class="game-card-name">Under 7</span><span class="game-card-online"><span class="online-dot"></span><span class="online-count">0</span></span></div>
+        </a>
+      </div>
+
+      <div class="game-card">
+        <a href="dice.html" class="game-card-inner">
+          <div class="game-card-glow" style="background:radial-gradient(circle,rgba(0,188,212,0.25),transparent 70%)"></div>
+          <div class="game-card-img"><img src="assets/dice.jpg" alt="Dice" onerror="this.style.display='none'"></div>
+          <div class="game-card-info"><span class="game-card-name">Dice</span><span class="game-card-online"><span class="online-dot"></span><span class="online-count">0</span></span></div>
+        </a>
+      </div>
+
+      <div class="game-card">
+        <a href="plinko.html" class="game-card-inner">
+          <div class="game-card-glow" style="background:radial-gradient(circle,rgba(255,152,0,0.25),transparent 70%)"></div>
+          <div class="game-card-img"><img src="assets/plinko.jpg" alt="Plinko" onerror="this.style.display='none'"></div>
+          <div class="game-card-info"><span class="game-card-name">Plinko</span><span class="game-card-online"><span class="online-dot"></span><span class="online-count">0</span></span></div>
+        </a>
+      </div>
+
+      <div class="game-card">
+        <a href="goldwest.html" class="game-card-inner">
+          <div class="game-card-glow" style="background:radial-gradient(circle,rgba(255,193,7,0.25),transparent 70%)"></div>
+          <div class="game-card-img"><img src="assets/goldWest.jpg" alt="GoldWest" onerror="this.style.display='none'"></div>
+          <div class="game-card-info"><span class="game-card-name">GoldWest</span><span class="game-card-online"><span class="online-dot"></span><span class="online-count">0</span></span></div>
+        </a>
+      </div>
+
+    </div>
   </main>
+
   <nav class="bottom-nav">
-    <a href="games.html" class="nav-item" data-name="games"><span class="icon">🎮</span><span class="label">Games</span></a>
+    <a href="games.html" class="nav-item active" data-name="games"><span class="icon">🎮</span><span class="label">Games</span></a>
     <a href="wallet.html" class="nav-item" data-name="wallet"><span class="icon">💼</span><span class="label">Wallet</span></a>
     <a href="home.html" class="nav-item center" data-name=""><span class="icon">💎</span></a>
     <a href="bonus.html" class="nav-item" data-name="bonus"><span class="icon">🎁</span><span class="label">Bonus</span></a>
     <a href="menu.html" class="nav-item" data-name="menu"><span class="icon">☰</span><span class="label">Menu</span></a>
   </nav>
+
   <script src="js/balance.js"></script>
   <script src="js/app.js"></script>
+  <script>
+    // Update balance display
+    setTimeout(function(){
+      var balEl = document.getElementById('gbal');
+      if(balEl && window.Balance) balEl.textContent = Balance.get().toFixed(2);
+    }, 500);
+  </script>
 </body>
 </html>
