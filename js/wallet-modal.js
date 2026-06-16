@@ -237,17 +237,24 @@ window._invChk=setInterval(function(){
       .then(function(d){
         if(!d.ok||!d.transactions||d.transactions.length===0){ el.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:12px">История пуста</div>'; return; }
         el.innerHTML='';
-        // Filter: only deposits, promos and withdrawals
         var filtered = d.transactions.filter(function(tx){ return tx.type==='deposit'||tx.type==='promo'||tx.type==='withdraw'; });
         if(filtered.length===0){ el.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:12px">Нет операций</div>'; return; }
         filtered.forEach(function(tx){
-          var row=document.createElement('div'); row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:9px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:6px';
+          var row=document.createElement('div');
+          row.style.cssText='display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,0.04);border-radius:12px;margin-bottom:8px;border:1px solid rgba(255,255,255,0.06)';
           var isDep=tx.type==='deposit', isPromo=tx.type==='promo', isWd=tx.type==='withdraw';
-          var label, clr, sign;
-          if(isDep){ label='📥 Пополнение'; clr='#4caf50'; sign='+'; }
-          else if(isPromo){ label='🎟 Промокод'; clr='#4caf50'; sign='+'; }
-          else if(isWd){ label='📤 Вывод'; clr='#f44336'; sign='-'; }
-          row.innerHTML='<div><div style="font-size:12px;font-weight:700;color:#fff">'+label+'</div><div style="font-size:10px;color:var(--muted)">'+new Date(tx.time||tx.date).toLocaleDateString('ru')+'</div></div><div style="font-size:13px;font-weight:800;color:'+clr+'">'+sign+'$'+Number(tx.amount).toFixed(2)+'</div>';
+          var icon, label, clr, sign;
+          if(isDep){ icon='📥'; label='Пополнение'; clr='#4caf50'; sign='+'; }
+          else if(isPromo){ icon='🎟'; label='Промокод'; clr='#4caf50'; sign='+'; }
+          else if(isWd){ icon='📤'; label='Вывод'; clr='#f44336'; sign='-'; }
+          var dt=new Date(tx.time||tx.date);
+          var dateStr=dt.toLocaleDateString('ru',{day:'2-digit',month:'2-digit',year:'numeric'});
+          var timeStr=dt.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
+          var status=tx.status||'completed';
+          var statusIcon=status==='completed'?'✅':status==='pending'?'⏳':'❌';
+          var statusText=status==='completed'?'Выполнено':status==='pending'?'В обработке':'Отклонено';
+          var statusClr=status==='completed'?'#4caf50':status==='pending'?'#ffc107':'#f44336';
+          row.innerHTML='<div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">'+icon+'</div><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:6px"><span style="font-size:13px;font-weight:700;color:#fff">'+label+'</span><span style="font-size:10px;padding:2px 6px;border-radius:4px;background:'+statusClr+'20;color:'+statusClr+';font-weight:600">'+statusIcon+' '+statusText+'</span></div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+dateStr+' в '+timeStr+'</div></div><div style="font-size:14px;font-weight:800;color:'+clr+';white-space:nowrap">'+sign+'$'+Number(tx.amount).toFixed(2)+'</div>';
           el.appendChild(row);
         });
       })
