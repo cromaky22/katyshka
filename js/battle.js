@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-
   // === DOM ===
   const canvas = document.getElementById('battleWheelCanvas');
   const ctx = canvas.getContext('2d');
@@ -35,15 +34,13 @@ document.addEventListener('DOMContentLoaded', function() {
   let localTimer = null;
 
   // === CANVAS SETUP ===
-  let canvasSize = 600;
   function setupCanvas() {
     const wrapper = document.getElementById('wheelWrapper');
     if (!wrapper) return;
     const size = wrapper.offsetWidth;
     if (size < 50) return;
-    canvasSize = size * 2;
-    canvas.width = canvasSize;
-    canvas.height = canvasSize;
+    canvas.width = size * 2;
+    canvas.height = size * 2;
     drawWheel();
   }
   setupCanvas();
@@ -96,7 +93,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const endAngle = startAngle + sliceAngle;
       const color = getPlayerColor(i);
 
-      // Segment
       ctx.beginPath();
       ctx.moveTo(cx, cy);
       ctx.arc(cx, cy, r, startAngle, endAngle);
@@ -104,15 +100,6 @@ document.addEventListener('DOMContentLoaded', function() {
       ctx.fillStyle = color;
       ctx.fill();
 
-      // Border
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + r * Math.cos(startAngle), cy + r * Math.sin(startAngle));
-      ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      // Text (player name + chance)
       if (sliceAngle > 0.12) {
         const midAngle = startAngle + sliceAngle / 2;
         const textR = r * 0.65;
@@ -136,18 +123,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         ctx.restore();
       }
-
       startAngle = endAngle;
     });
 
-    // Outer ring
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.strokeStyle = 'rgba(255,255,255,0.12)';
     ctx.lineWidth = 3;
     ctx.stroke();
 
-    // Center circle
     ctx.beginPath();
     ctx.arc(cx, cy, r * 0.12, 0, Math.PI * 2);
     ctx.fillStyle = '#0d0d1a';
@@ -162,55 +146,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!audioCtx) {
       try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
     }
-  }
-  function tickSfx() {
-    if (!audioCtx) return;
-    try {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.type = 'sine';
-      o.frequency.setValueAtTime(500 + Math.random() * 400, audioCtx.currentTime);
-      g.gain.setValueAtTime(0.03, audioCtx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
-      o.connect(g).connect(audioCtx.destination);
-      o.start();
-      o.stop(audioCtx.currentTime + 0.04);
-    } catch(e) {}
-  }
-  function winSfx() {
-    if (!audioCtx) return;
-    try {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      [523, 659, 784, 1047].forEach((f, i) => {
-        setTimeout(() => {
-          const o = audioCtx.createOscillator();
-          const g = audioCtx.createGain();
-          o.type = 'sine';
-          o.frequency.setValueAtTime(f, audioCtx.currentTime);
-          g.gain.setValueAtTime(0.06, audioCtx.currentTime);
-          g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
-          o.connect(g).connect(audioCtx.destination);
-          o.start();
-          o.stop(audioCtx.currentTime + 0.2);
-        }, i * 100);
-      });
-    } catch(e) {}
-  }
-  function loseSfx() {
-    if (!audioCtx) return;
-    try {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.type = 'sawtooth';
-      o.frequency.setValueAtTime(120, audioCtx.currentTime);
-      g.gain.setValueAtTime(0.04, audioCtx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
-      o.connect(g).connect(audioCtx.destination);
-      o.start();
-      o.stop(audioCtx.currentTime + 0.4);
-    } catch(e) {}
   }
 
   // === UI UPDATES ===
@@ -228,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
       card.id = 'player-card-' + player.userId;
 
       const avatarHtml = player.avatar
-        ? `<img class="battle-player-avatar" src="${player.avatar}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        ? `<img class="battle-player-avatar" src="${player.avatar}" alt="" onerror="this.style.display='none'">`
         : '';
       const placeholderHtml = `<div class="battle-player-avatar-placeholder" style="background:${color}">${(player.name || '?')[0].toUpperCase()}</div>`;
 
@@ -263,7 +198,6 @@ document.addEventListener('DOMContentLoaded', function() {
   function updatePhase(phase, timer) {
     timerEl.textContent = timer;
     timerEl.classList.toggle('urgent', timer <= 5);
-
     phaseEl.classList.remove('betting', 'spinning', 'result');
 
     if (phase === 'betting') {
@@ -306,7 +240,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const total = allPlayers.reduce((s, p) => s + p.amount, 0);
     if (total === 0 || allPlayers.length === 0) { done(); return; }
 
-    // Calculate the angle range for the winner's segment
     let startAngle = 0;
     for (let i = 0; i < winnerIndex; i++) {
       startAngle += (allPlayers[i].amount / total) * 360;
@@ -314,8 +247,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const winnerAngle = (allPlayers[winnerIndex].amount / total) * 360;
     const targetMid = startAngle + winnerAngle / 2;
 
-    // The pointer is at top (270 degrees in canvas coords, but we use -90 offset)
-    // We need rotation so that targetMid aligns with the top
     const currentNorm = (((-rotation) % 360) + 360) % 360;
     let diff = (270 - targetMid) - currentNorm;
     while (diff < 0) diff += 360;
@@ -330,13 +261,11 @@ document.addEventListener('DOMContentLoaded', function() {
       rotation = startRot - totalRot * ease;
       drawWheel();
 
-      // Tick sound based on segment crossing
       const norm = ((-rotation % 360) + 360) % 360;
       const segSize = allPlayers.length > 0 ? 360 / allPlayers.length : 30;
       const seg = Math.floor(norm / segSize);
       if (seg !== lastTick && p < 0.92) {
         lastTick = seg;
-        tickSfx();
       }
 
       if (p < 1) {
@@ -366,39 +295,36 @@ document.addEventListener('DOMContentLoaded', function() {
     playerAvatar = localStorage.getItem('player_avatar') || '';
   }
 
-// === SOCKET ===
-   const socket = Balance.getSocket();
-   const userId = Balance.getUserId();
+  // === SOCKET ===
+  const socket = Balance.getSocket();
+  const myUserId = Balance.getUserId();
 
-   let socketReady = false;
-   let stateReceived = false;
+  let socketReady = false;
 
-   function onSocketReady() {
-     socketReady = true;
-     statusEl.textContent = 'Подключено';
-     statusEl.className = 'battle-status';
-     socket.emit('battle:getState');
-   }
+  function onSocketReady() {
+    socketReady = true;
+    statusEl.textContent = 'Подключено';
+    statusEl.className = 'battle-status';
+    socket.emit('battle:getState');
+  }
 
-   if (socket && socket.connected) {
-     onSocketReady();
-   } else if (socket) {
-     socket.on('connect', onSocketReady);
-   } else {
-     statusEl.textContent = 'Ошибка: нет соединения';
-     statusEl.className = 'battle-status error';
-   }
+  if (socket && socket.connected) {
+    onSocketReady();
+  } else if (socket) {
+    socket.on('connect', onSocketReady);
+  } else {
+    statusEl.textContent = 'Ошибка: нет соединения';
+    statusEl.className = 'battle-status error';
+  }
 
-   // Fallback timer check
-   setTimeout(() => {
-     if (!socketReady) {
-       statusEl.textContent = 'Ошибка соединения';
-       statusEl.className = 'battle-status error';
-     }
-   }, 5000);
+  setTimeout(() => {
+    if (!socketReady) {
+      statusEl.textContent = 'Ошибка соединения';
+      statusEl.className = 'battle-status error';
+    }
+  }, 5000);
 
   socket.on('battle:state', (state) => {
-    stateReceived = true;
     roundId = state.roundId || 0;
     allPlayers = state.players || [];
     totalBank = state.totalBank || 0;
@@ -418,7 +344,6 @@ document.addEventListener('DOMContentLoaded', function() {
         startLocalTimer(state.timer, 'betting');
       }
     }
-
     drawWheel();
   });
 
@@ -457,45 +382,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const color = getPlayerColor(winnerIdx);
     spinToWinner(winnerIdx, 5000, () => {
-      // Show result
-      const isMe = winner.userId === userId;
-      const myBet = currentBets.find(b => b.userId === userId);
+      const isMe = winner.userId === myUserId;
+      const myBet = currentBets.find(b => b.userId === myUserId);
 
       if (isMe && data.payout) {
-        statusEl.textContent = `🎉 Вы выиграли $${data.payout.toFixed(2)}!`;
+        statusEl.textContent = `Вы выиграли $${data.payout.toFixed(2)}!`;
         statusEl.className = 'battle-status success';
-        winSfx();
-        if (window.mcStats) mcStats.addWin(data.payout, 'Battle Wheel', 'Победа в раунде');
+        if (window.mcStats) mcStats.addWin(data.payout, 'Battle Wheel', 'Победа');
       } else {
         statusEl.textContent = `Победитель: ${winner.name}`;
         statusEl.className = 'battle-status';
         if (myBet) {
-          loseSfx();
-          if (window.mcStats) mcStats.addLoss(myBet.amount, 'Battle Wheel', 'Проигрыш в раунде');
+          if (window.mcStats) mcStats.addLoss(myBet.amount, 'Battle Wheel', 'Проигрыш');
         }
       }
 
-      // Show winner display
       winnerDisplay.style.display = 'flex';
       winnerNameEl.textContent = winner.name;
       winnerAmountEl.textContent = '+$' + (data.payout || 0).toFixed(2);
 
-      // Show result in center
       resultEl.innerHTML = '👑<br><span style="font-size:9px">' + winner.name.substring(0, 10) + '</span>';
       resultEl.style.background = color;
       resultEl.classList.remove('show');
       void resultEl.offsetWidth;
       resultEl.classList.add('show');
 
-      // Add to history
       addHistory(winner.name, data.payout || 0, color);
 
-      // Update balance
-      if (data.balances && data.balances[userId] !== undefined) {
-        Balance.sync(data.balances[userId]);
+      if (data.balances && data.balances[myUserId] !== undefined) {
+        Balance.sync(data.balances[myUserId]);
       }
 
-      // Highlight winner card
       document.querySelectorAll('.battle-player-card').forEach(c => c.classList.remove('is-winner'));
       const winnerCard = document.getElementById('player-card-' + winner.userId);
       if (winnerCard) winnerCard.classList.add('is-winner');
@@ -540,7 +457,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // === BET ACTION ===
   function placeBet() {
-    console.log('[BATTLE] placeBet called, isSpinning:', isSpinning, 'socketReady:', socketReady, 'balance:', Balance.get());
     if (isSpinning) return;
     if (!socketReady) {
       statusEl.textContent = 'Ожидание подключения...';
@@ -559,62 +475,37 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     if (amount > Balance.get()) {
-      statusEl.textContent = 'Недостаточно средств (нужно: $' + amount + ', есть: $' + Balance.get().toFixed(2) + ')';
+      statusEl.textContent = 'Недостаточно средств';
       statusEl.className = 'battle-status error';
       return;
     }
 
     socket.emit('battle:bet', { amount, playerName, playerAvatar });
-    if (window.mcStats) mcStats.addBet(amount, 'Battle Wheel', 'Ставка в раунде');
-    const uid = (window.Balance && Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
-    if (uid) fetch('/api/wager/bet', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ userId: uid, amount })
-    }).catch(function(){});
+    if (window.mcStats) mcStats.addBet(amount, 'Battle Wheel', 'Ставка');
   }
 
   // === UI EVENTS ===
-  if (betBtn) betBtn.addEventListener('click', placeBet);
+  betBtn.addEventListener('click', placeBet);
 
   quickBtns.forEach(btn => {
-    if (btn) btn.addEventListener('click', () => {
+    btn.addEventListener('click', () => {
       const a = parseFloat(btn.dataset.amount);
       const cur = parseFloat(betInput.value) || 0;
       betInput.value = Math.min(500, Math.max(0.1, cur + a)).toFixed(2);
     });
   });
 
-  if (halfBtn) halfBtn.addEventListener('click', () => {
+  halfBtn.addEventListener('click', () => {
     const v = parseFloat(betInput.value) || 0;
     betInput.value = Math.max(0.1, v / 2).toFixed(2);
   });
 
-  if (doubleBtn) doubleBtn.addEventListener('click', () => {
+  doubleBtn.addEventListener('click', () => {
     const v = parseFloat(betInput.value) || 0;
     betInput.value = Math.min(500, v * 2).toFixed(2);
   });
 
-  // Tab switching
-  document.querySelectorAll('.battle-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.battle-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-    });
-  });
-
   document.addEventListener('click', () => initAudio(), { once: true });
 
-  // === TELEGRAM USER INFO ===
-  try {
-    const tg = window.Telegram && window.Telegram.WebApp;
-    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-      const u = tg.initDataUnsafe.user;
-      playerName = u.first_name + (u.last_name ? ' ' + u.last_name : '');
-      playerAvatar = u.photo_url || '';
-    }
-  } catch(e) {}
-
-  // Initial draw
   drawWheel();
 });
