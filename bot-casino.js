@@ -4,7 +4,7 @@ const token = process.env.BOT_TOKEN;
   if(!token){ console.error('BOT_TOKEN not set'); process.exit(1); }
 const bot = new Telegraf(token);
 
-const SERVER_URL = process.env.SERVER_URL || 'http://localhost:3000';
+const SERVER_URL = process.env.SERVER_URL || 'https://katyshka-production.up.railway.app';
 
 bot.start(async (ctx) => {
   const userId = ctx.from.id;
