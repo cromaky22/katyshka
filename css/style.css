@@ -343,8 +343,8 @@ body::after{
 
 /* Wallet modal styles removed - now inline in wallet-modal.js */
 
-.games-count{font-size:13px;color:var(--muted);margin-bottom:12px;padding:0 4px}
-.games-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.page-home .games-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.page-games .games-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 
 /* Hero section */
 .hero-section{text-align:center;padding:32px 0 20px;position:relative}
@@ -392,7 +392,10 @@ body::after{
 
 /* Game cards */
 .games-section{margin-top:8px}
-.games-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.page-home .games-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.page-games .games-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.page-home .games-grid{grid-template-columns:repeat(3,1fr)}
+.page-games .games-grid{grid-template-columns:repeat(2,1fr)}
 .game-card{position:relative;border-radius:14px;overflow:hidden}
 .game-card-inner{display:block;text-decoration:none;color:var(--text);position:relative;border-radius:14px;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));transition:transform 0.25s ease,box-shadow 0.25s ease}
 .game-card-inner:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,0.4)}
