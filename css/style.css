@@ -31,6 +31,17 @@ html,body{
   100%{background-position:0% 50%}
 }
 
+/* Widget blocks */
+.widget-block{margin:0 0 16px;border-radius:18px;padding:16px;background:linear-gradient(180deg,rgba(12,14,32,0.8),rgba(8,10,26,0.9));border:1px solid rgba(255,255,255,0.05);box-shadow:0 4px 20px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.03);position:relative}
+.widget-block::before{content:'';position:absolute;inset:0;border-radius:18px;background:linear-gradient(135deg,rgba(139,92,246,0.04),transparent 50%,rgba(46,227,107,0.03));pointer-events:none}
+.widget-block > *{position:relative;z-index:1}
+.widget-title{font-size:16px;font-weight:800;margin:0 0 12px;padding:0;display:flex;align-items:center;gap:6px}
+
+/* Games widget */
+.games-widget{margin:0 0 24px;border-radius:20px;overflow:hidden;background:linear-gradient(180deg,rgba(10,12,30,0.85),rgba(8,10,25,0.95));border:1px solid rgba(255,255,255,0.06);box-shadow:0 8px 32px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04);position:relative}
+.games-widget::before{content:'';position:absolute;inset:0;border-radius:20px;background:linear-gradient(135deg,rgba(139,92,246,0.05),transparent 40%,rgba(46,227,107,0.03) 60%,transparent);pointer-events:none}
+.games-widget-inner{padding:16px;position:relative;z-index:1}
+
 /* Page-specific backgrounds */
 .page-home{
   background:linear-gradient(135deg,#0a0118 0%,#1a0a3e 12%,#2d1b69 25%,#0f2a4a 40%,#6b2fa0 55%,#1b4d3e 70%,#0d1f3c 85%,#0a0118 100%);
