@@ -305,7 +305,6 @@ document.addEventListener('DOMContentLoaded', function() {
     socketReady = true;
     statusEl.textContent = 'Подключено';
     statusEl.className = 'battle-status';
-    socket.emit('battle:getState');
   }
 
   if (socket && socket.connected) {
