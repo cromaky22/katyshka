@@ -35,7 +35,7 @@
   100%{transform:rotateX(0deg) rotateY(0deg) scale(1)}
 }
 
-.face{position:absolute;width:60px;height:60px;background:linear-gradient(145deg, rgba(199, 125, 255, 0.3), rgba(90, 152, 232, 0.2));border-radius:10px;box-shadow:inset 0 0 15px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.2), 0 0 15px rgba(199, 125, 255, 0.15);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:2px;padding:6px;box-sizing:border-box;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid rgba(199, 125, 255, 0.3);align-items:center;justify-items:center}
+.face{position:absolute;width:60px;height:60px;background:linear-gradient(145deg, rgba(199, 125, 255, 0.3), rgba(90, 152, 232, 0.2));border-radius:10px;box-shadow:inset 0 0 15px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.2), 0 0 15px rgba(199, 125, 255, 0.15);display:flex;align-items:center;justify-content:center;padding:3px;box-sizing:border-box;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid rgba(199, 125, 255, 0.3)}
 
 /* Standard dice layout: opposite sides sum to 7 (1-6, 2-5, 3-4) */
 .face.f1{transform:rotateY(0deg) translateZ(30px)}
@@ -45,7 +45,7 @@
 .face.f3{transform:rotateX(90deg) translateZ(30px)}
 .face.f4{transform:rotateX(-90deg) translateZ(30px)}
 
-.pip{width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 30% 30%, var(--accent-green), rgba(46, 227, 107, 0.6));box-shadow:inset 1px 1px 2px rgba(255,255,255,0.3), 0 0 5px rgba(46, 227, 107, 0.3);align-self:center;justify-self:center;display:block}
+.pip{width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 30% 30%, var(--accent-green), rgba(46, 227, 107, 0.6));box-shadow:inset 1px 1px 2px rgba(255,255,255,0.3), 0 0 5px rgba(46, 227, 107, 0.3);position:absolute}
 
 /* Result */
 .result-area{margin:8px 0 14px;text-align:center;min-height:50px;padding:12px;background:linear-gradient(135deg, rgba(199, 125, 255, 0.1), rgba(90, 152, 232, 0.08));border-radius:10px;border:1px solid rgba(199, 125, 255, 0.2)}
