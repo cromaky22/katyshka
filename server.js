@@ -1526,10 +1526,7 @@ io.on('connection', (socket) => {
 
 startWheel();
   io.emit('battle:timer', { timer: 0, phase: 'waiting' });
-  setInterval(addBotPlayer, 8000);
-
-// Battle bot
-setInterval(addBotPlayer, 8000);
+});
 
 // === TELEGRAM BOT ===
 const CHANNEL_ID = '@milfacasino';
