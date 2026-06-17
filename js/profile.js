@@ -527,10 +527,10 @@ function applyUser(name, photoUrl){
        if(isNaN(wagerMult) || wagerMult < 1 || wagerMult > 10){ msgEl.textContent = '❌ Вагер: от 1 до 10'; msgEl.classList.add('show'); return; }
        
 try{
-          const res = await fetch('/api/admin/promos', {
+          const res = await fetch('/api/promos', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({secret: 'obnul2026', code, amount, maxUses, wager_mult})
+            body: JSON.stringify({code, amount, maxUses})
           });
           const data = await res.json();
          if(data.ok){
@@ -552,7 +552,7 @@ try{
        const listEl = document.getElementById('adminPromosList');
        listEl.innerHTML = '⏳ Загрузка...';
        try{
-         const res = await fetch('/api/admin/promos?secret=obnul2026');
+         const res = await fetch('/api/promos');
          const data = await res.json();
          if(data.ok && data.promos && data.promos.length > 0){
            listEl.innerHTML = '';
@@ -575,7 +575,7 @@ try{
                const delCode = this.dataset.code;
                if(!confirm(`Удалить промокод ${delCode}?`)) return;
                try{
-                 const res = await fetch('/api/admin/promos/' + delCode + '?secret=obnul2026', {method: 'DELETE'});
+                 const res = await fetch('/api/promos/' + delCode, {method: 'DELETE'});
                  const data = await res.json();
                  if(data.ok){
                    alert('✅ Промокод удалён');
