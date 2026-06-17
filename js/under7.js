@@ -48,10 +48,11 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function setDice(diceEl, value){
     const r = rotations[value];
-    // Add random full spins for variety
-    const spins = 360 * (3 + Math.floor(Math.random() * 3));
-    diceEl.style.setProperty('--rx', (r.rx + spins) + 'deg');
-    diceEl.style.setProperty('--ry', (r.ry + spins) + 'deg');
+    // Add independent random spins for realistic rolling
+    const spinsX = 360 * (3 + Math.floor(Math.random() * 3));
+    const spinsY = 360 * (3 + Math.floor(Math.random() * 3));
+    diceEl.style.setProperty('--rx', (r.rx + spinsX) + 'deg');
+    diceEl.style.setProperty('--ry', (r.ry + spinsY) + 'deg');
   }
 
   function rollDice(){
@@ -70,6 +71,9 @@ document.addEventListener('DOMContentLoaded', function(){
         setDice(dice2, d2);
         dice1.style.transform = 'rotateX(' + dice1.style.getPropertyValue('--rx') + ') rotateY(' + dice1.style.getPropertyValue('--ry') + ')';
         dice2.style.transform = 'rotateX(' + dice2.style.getPropertyValue('--rx') + ') rotateY(' + dice2.style.getPropertyValue('--ry') + ')';
+        // Update display with actual result
+        document.getElementById('numberDisplay').textContent = sum;
+        console.log('Dice result: ' + d1 + ' + ' + d2 + ' = ' + sum);
         resolve({ d1, d2, sum });
       }, 1200);
     });
@@ -87,6 +91,7 @@ document.addEventListener('DOMContentLoaded', function(){
     lastStake = stake;
     resultMessage.textContent = '';
     resultMessage.className = 'result-message';
+    document.getElementById('numberDisplay').textContent = '?';
 
     const { sum } = await rollDice();
 
