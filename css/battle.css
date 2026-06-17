@@ -179,7 +179,7 @@
 }
 .page-battle .battle-wheel-result.show {
   opacity: 1;
-  animation: popIn 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 
 /* === WINNER === */
@@ -189,9 +189,21 @@
   align-items: center;
   gap: 4px;
   padding: 8px 0;
-  animation: popIn 0.4s ease;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
-.page-battle .battle-winner-crown { font-size: 28px; }
+.page-battle .battle-winner-display[style*="flex"] {
+  opacity: 1;
+}
+.page-battle .battle-winner-crown {
+  font-size: 28px;
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+  animation: crownGlow 2s ease-in-out infinite;
+}
+@keyframes crownGlow {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.5)); }
+  50% { filter: drop-shadow(0 0 14px rgba(255, 215, 0, 0.8)); }
+}
 .page-battle .battle-winner-name {
   font-size: 16px;
   font-weight: 800;
