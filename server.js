@@ -1350,11 +1350,13 @@ function spinBattle() {
 
   // History
   const BATTLE_COLORS = ['#e53935','#8b5cf6','#2196f3','#4caf50','#ff9800','#00bcd4','#e91e63','#3f51b5','#009688','#ff5722','#607d8b','#795548','#9c27b0','#03a9f4','#cddc39','#f44336','#673ab7','#00acc1','#8bc34a','#ffc107'];
+  const winnerChance = players.length > 0 ? Math.round((winner.amount / total) * 100) : 0;
   battle.history.unshift({
     winnerName: winner.name,
     winnerAmount: payout,
     winnerId: winner.userId,
-    totalBank: total,
+    bank: total,
+    chance: winnerChance,
     players: players.length,
     color: BATTLE_COLORS[Math.floor(Math.random() * BATTLE_COLORS.length)]
   });
@@ -1384,6 +1386,7 @@ function spinBattle() {
     battle.phase = 'waiting';
     battle.timer = 0;
     battleTimerStarted = false;
+    addBotPlayer();
     io.emit('battle:newRound', { roundId: battle.roundId, history: battle.history });
     io.emit('battle:timer', { timer: 0, phase: 'waiting' });
   }, 7000);
@@ -1514,19 +1517,17 @@ io.on('connection', (socket) => {
     });
   });
 
-  socket.on('battle:getTop', () => {
-    const topPlayers = battle.history.slice(0, 10).map((h, i) => ({
-      winnerName: h.winnerName,
-      winnerAmount: h.winnerAmount,
-      color: h.color
-    }));
-    socket.emit('battle:top', { players: topPlayers });
-  });
+socket.on('battle:getTop', () => {
+  const topPlayers = battle.history.slice(0, 10).map((h, i) => ({
+    winnerName: h.winnerName,
+    winnerAmount: h.winnerAmount,
+    color: h.color
+  }));
+  socket.emit('battle:top', { players: topPlayers });
 });
-
+});
 startWheel();
-  io.emit('battle:timer', { timer: 0, phase: 'waiting' });
-});
+  addBotPlayer();
 
 // === TELEGRAM BOT ===
 const CHANNEL_ID = '@milfacasino';
