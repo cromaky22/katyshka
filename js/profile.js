@@ -154,7 +154,9 @@ function applyUser(name, photoUrl){
   
   async function loadPlayersList(){
     try{
-      const res = await fetch('/api/users?adminKey=admin123');
+      const res = await fetch('/api/users?userId=' + userId, {
+        headers: {'x-user-id': userId}
+      });
       const users = await res.json();
       
       const playersEmpty = document.getElementById('playersEmpty');
@@ -257,7 +259,7 @@ function applyUser(name, photoUrl){
         
         const res = await fetch('/api/users/' + targetId + '/balance', {
           method: 'PUT',
-          headers: {'Content-Type': 'application/json', 'x-admin-key': 'admin123'},
+          headers: {'Content-Type': 'application/json', 'x-user-id': userId},
           body: JSON.stringify({balance: newBal})
         });
         const data = await res.json();
@@ -287,7 +289,7 @@ function applyUser(name, photoUrl){
         
         const res = await fetch('/api/users/' + targetId + '/balance', {
           method: 'PUT',
-          headers: {'Content-Type': 'application/json', 'x-admin-key': 'admin123'},
+          headers: {'Content-Type': 'application/json', 'x-user-id': userId},
           body: JSON.stringify({balance: newBal})
         });
         const data = await res.json();
@@ -326,7 +328,9 @@ function applyUser(name, photoUrl){
      document.getElementById('adminStatsBtn').addEventListener('click', async function(){
        const resultEl = document.getElementById('adminStatsResult');
        try{
-         const res = await fetch('/api/users?adminKey=admin123');
+         const res = await fetch('/api/users?userId=' + userId, {
+           headers: {'x-user-id': userId}
+         });
          const users = await res.json();
          if(Array.isArray(users)){
            const total = users.length;
@@ -342,7 +346,9 @@ function applyUser(name, photoUrl){
       const listEl = document.getElementById('adminPlayersList');
       listEl.innerHTML = '⏳ Загрузка...';
       try{
-        const res = await fetch('/api/users?adminKey=admin123');
+        const res = await fetch('/api/users?userId=' + userId, {
+          headers: {'x-user-id': userId}
+        });
         const users = await res.json();
         if(Array.isArray(users) && users.length > 0){
           // Save to localStorage
@@ -450,7 +456,7 @@ function applyUser(name, photoUrl){
           const newBal = (userData && userData.balance ? Number(userData.balance) : 0) + amount;
           const res = await fetch('/api/users/' + targetId + '/balance', {
             method: 'PUT',
-            headers: {'Content-Type': 'application/json', 'x-admin-key': 'admin123'},
+            headers: {'Content-Type': 'application/json', 'x-user-id': userId},
             body: JSON.stringify({balance: newBal})
           });
           const data = await res.json();
@@ -468,7 +474,7 @@ function applyUser(name, photoUrl){
           const newBal = Math.max(0, (userData && userData.balance ? Number(userData.balance) : 0) - amount);
           const res = await fetch('/api/users/' + targetId + '/balance', {
             method: 'PUT',
-            headers: {'Content-Type': 'application/json', 'x-admin-key': 'admin123'},
+            headers: {'Content-Type': 'application/json', 'x-user-id': userId},
             body: JSON.stringify({balance: newBal})
           });
           const data = await res.json();
@@ -544,7 +550,7 @@ function applyUser(name, photoUrl){
 try{
           const res = await fetch('/api/promos', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json', 'x-admin-key': 'admin123'},
+            headers: {'Content-Type': 'application/json', 'x-user-id': userId},
             body: JSON.stringify({code, amount, maxUses})
           });
           
@@ -573,7 +579,9 @@ try{
        const listEl = document.getElementById('adminPromosList');
        listEl.innerHTML = '⏳ Загрузка...';
        try{
-         const res = await fetch('/api/promos?adminKey=admin123');
+         const res = await fetch('/api/promos?userId=' + userId, {
+           headers: {'x-user-id': userId}
+         });
          const data = await res.json();
          if(Array.isArray(data) && data.length > 0){
            listEl.innerHTML = '';
@@ -596,7 +604,10 @@ try{
                const delCode = this.dataset.code;
                if(!confirm(`Удалить промокод ${delCode}?`)) return;
                try{
-                 const res = await fetch('/api/promos/' + delCode + '?adminKey=admin123', {method: 'DELETE'});
+                 const res = await fetch('/api/promos/' + delCode + '?userId=' + userId, {
+                   method: 'DELETE',
+                   headers: {'x-user-id': userId}
+                 });
                  const data = await res.json();
                  if(data.ok){
                    alert('✅ Промокод удалён');
