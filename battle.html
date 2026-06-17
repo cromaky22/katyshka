@@ -43,13 +43,12 @@
 
     <div class="battle-board">
 
-      <!-- Top / History bar -->
+      <!-- Top bar -->
       <div class="battle-top-bar">
         <div class="battle-tabs">
           <button class="battle-tab active" data-tab="top">Топ</button>
           <button class="battle-tab" data-tab="history">История</button>
         </div>
-        <div class="battle-history-scroll" id="battleHistory"></div>
       </div>
 
       <!-- Wheel section -->
@@ -128,6 +127,17 @@
     <a href="bonus.html" class="nav-item" data-name="bonus"><span class="icon">🎁</span><span class="label">Bonus</span></a>
     <a href="menu.html" class="nav-item" data-name="menu"><span class="icon">☰</span><span class="label">Menu</span></a>
   </nav>
+
+  <!-- History Modal -->
+  <div class="battle-history-modal" id="battleHistoryModal" style="display:none">
+    <div class="battle-history-modal-content">
+      <div class="battle-history-modal-header">
+        <span>История игр</span>
+        <button id="battleHistoryClose">✕</button>
+      </div>
+      <div class="battle-history-modal-body" id="battleHistoryModalBody"></div>
+    </div>
+  </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="js/balance.js"></script>

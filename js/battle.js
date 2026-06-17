@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const myBetsList = document.getElementById('battleMyBetsList');
   const statusEl = document.getElementById('battleStatus');
   const gameNumberEl = document.getElementById('gameNumber');
-  const historyEl = document.getElementById('battleHistory');
   const winnerDisplay = document.getElementById('battleWinnerDisplay');
   const winnerNameEl = document.getElementById('battleWinnerName');
   const winnerAmountEl = document.getElementById('battleWinnerAmount');
@@ -27,11 +26,12 @@ document.addEventListener('DOMContentLoaded', function() {
   let currentBets = [];
   let allPlayers = [];
   let totalBank = 0;
-  let roundId = 0;
-  let playerName = 'Player';
-  let playerAvatar = '';
-  let audioCtx = null;
-  let localTimer = null;
+let roundId = 0;
+   let playerName = 'Player';
+   let playerAvatar = '';
+   let audioCtx = null;
+   let localTimer = null;
+   let battleHistory = [];
 
   // === CANVAS SETUP (moved after DOM but before drawWheel) ===
   function setupCanvas() {
@@ -225,21 +225,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  function addHistory(winnerName, winnerAmount, color) {
-    const el = document.createElement('div');
-    el.className = 'battle-history-item';
-    el.style.background = color || 'rgba(255,255,255,0.1)';
-    el.innerHTML = `<span class="hi-winner">${winnerName}</span> $${winnerAmount.toFixed(0)}`;
-    historyEl.prepend(el);
-    while (historyEl.children.length > 15) {
-      historyEl.removeChild(historyEl.lastChild);
-    }
+  function addToHistory(winnerName, winnerAmount, bank, chance, avatar, roundId) {
+    battleHistory.unshift({ winnerName, winnerAmount, bank, chance, avatar, roundId });
+    while (battleHistory.length > 50) battleHistory.pop();
   }
 
   function loadHistory(history) {
-    historyEl.innerHTML = '';
-    if (!history || !history.length) return;
-    history.forEach(h => addHistory(h.winnerName, h.winnerAmount, h.color));
+    battleHistory = history || [];
   }
 
   // === SPIN WHEEL ===
@@ -389,6 +381,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     const color = getPlayerColor(winnerIdx);
+    const chance = allPlayers.length > 0 ? Math.round((winner.amount / allPlayers.reduce((s, p) => s + p.amount, 0)) * 100) : 0;
+
     spinToWinner(winnerIdx, 5000, () => {
       const isMe = winner.userId === myUserId;
       const myBet = currentBets.find(b => b.userId === myUserId);
@@ -415,7 +409,7 @@ document.addEventListener('DOMContentLoaded', function() {
       void resultEl.offsetWidth;
       resultEl.classList.add('show');
 
-      addHistory(winner.name, data.payout || 0, color);
+      addToHistory(winner.name, data.payout || 0, totalBank, chance, winner.avatar, roundId);
 
       if (data.balances && data.balances[myUserId] !== undefined) {
         Balance.sync(data.balances[myUserId]);
@@ -516,20 +510,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const tabs = document.querySelectorAll('.battle-tab');
   let topPlayers = [];
-  let currentTab = 'top';
 
-  function renderTop() {
-    historyEl.innerHTML = '';
-    if (topPlayers.length === 0) {
-      historyEl.innerHTML = '<div style="color:rgba(255,255,255,0.4); font-size:12px; padding:8px;">Ожидание данных...</div>';
+  function renderHistoryModal() {
+    const modalBody = document.getElementById('battleHistoryModalBody');
+    if (!modalBody) return;
+    modalBody.innerHTML = '';
+    if (battleHistory.length === 0) {
+      modalBody.innerHTML = '<div style="color:rgba(255,255,255,0.4); font-size:14px; padding:20px; text-align:center;">История пуста</div>';
       return;
     }
-    topPlayers.slice(0, 10).forEach((p, i) => {
+    battleHistory.forEach((h) => {
       const el = document.createElement('div');
-      el.className = 'battle-history-item';
-      el.style.background = 'rgba(139,92,246,0.15)';
-      el.innerHTML = `<span>#${i+1}</span> <span>${p.winnerName || p.name}</span> $${p.winnerAmount.toFixed(0)}`;
-      historyEl.appendChild(el);
+      el.className = 'battle-history-modal-item';
+      const avatarHtml = h.avatar ? '<img class="battle-history-modal-avatar" src="' + h.avatar + '" alt="">' : '';
+      const placeholderHtml = '<div class="battle-history-modal-avatar-placeholder">' + (h.winnerName || '?')[0].toUpperCase() + '</div>';
+      el.innerHTML = '<div>' + avatarHtml + placeholderHtml + '</div>' + '<div class="battle-history-modal-info">' + '<div class="battle-history-modal-game">Игра #' + (h.roundId + 1) + '</div>' + '<div class="battle-history-modal-name">' + (h.winnerName || '—') + '</div>' + '<div class="battle-history-modal-details">' + '<span class="battle-history-modal-bank">Банк: $' + (h.bank || 0).toFixed(2) + '</span>' + '<span class="battle-history-modal-chance">Шанс: ' + (h.chance || 0) + '%</span>' + '</div>' + '</div>' + '<button class="battle-history-detail-btn" data-round="' + h.roundId + '">Детали</button>';
+      modalBody.appendChild(el);
     });
   }
 
@@ -537,18 +533,41 @@ document.addEventListener('DOMContentLoaded', function() {
     tab.addEventListener('click', () => {
       tabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
-      currentTab = tab.dataset.tab;
-      if (currentTab === 'top') {
-        renderTop();
+      if (tab.dataset.tab === 'history') {
+        renderHistoryModal();
+        const modal = document.getElementById('battleHistoryModal');
+        if (modal) modal.style.display = 'flex';
       } else {
-        loadHistory(battle.history);
+        const modal = document.getElementById('battleHistoryModal');
+        if (modal) modal.style.display = 'none';
       }
     });
   });
 
+  const historyClose = document.getElementById('battleHistoryClose');
+  if (historyClose) {
+    historyClose.addEventListener('click', () => {
+      const modal = document.getElementById('battleHistoryModal');
+      if (modal) modal.style.display = 'none';
+      document.querySelector('.battle-tab[data-tab="top"]').click();
+    });
+  }
+
+  const modalBody = document.getElementById('battleHistoryModalBody');
+  if (modalBody) {
+    modalBody.addEventListener('click', (e) => {
+      if (e.target.classList.contains('battle-history-detail-btn')) {
+        const roundId = e.target.dataset.round;
+        const item = battleHistory.find(h => h.roundId == roundId);
+        if (item) {
+          alert('Раунд ' + roundId + ': ' + item.winnerName + ' выиграл $' + (item.winnerAmount || 0).toFixed(2));
+        }
+      }
+    });
+  }
+
   socket.on('battle:top', (data) => {
     topPlayers = data.players || [];
-    if (currentTab === 'top') renderTop();
   });
 
   document.addEventListener('click', () => initAudio(), { once: true });
