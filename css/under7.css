@@ -21,15 +21,16 @@
 .dice-scene{display:flex;justify-content:center;gap:28px;margin-bottom:8px}
 
 .dice-cube{width:60px;height:60px;position:relative;transform-style:preserve-3d;transition:transform 0.05s linear}
-.dice-cube.rolling{animation:spinDice 0.7s ease-out forwards}
+.dice-cube.rolling{animation:spinDice 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards}
 
 @keyframes spinDice{
   0%{transform:rotateX(0deg) rotateY(0deg) scale(1)}
-  15%{transform:rotateX(120deg) rotateY(80deg) scale(1.08)}
-  30%{transform:rotateX(240deg) rotateY(160deg) scale(1.12)}
-  50%{transform:rotateX(360deg) rotateY(240deg) scale(1.08)}
-  70%{transform:rotateX(480deg) rotateY(320deg) scale(1.03)}
-  85%{transform:rotateX(600deg) rotateY(400deg) scale(1)}
+  10%{transform:rotateX(180deg) rotateY(120deg) scale(1.05)}
+  20%{transform:rotateX(360deg) rotateY(240deg) scale(1.1)}
+  35%{transform:rotateX(540deg) rotateY(360deg) scale(1.12)}
+  50%{transform:rotateX(720deg) rotateY(480deg) scale(1.1)}
+  65%{transform:rotateX(900deg) rotateY(600deg) scale(1.08)}
+  80%{transform:rotateX(1080deg) rotateY(720deg) scale(1.04)}
   100%{transform:rotateX(var(--rx)) rotateY(var(--ry)) scale(1)}
 }
 

@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function(){
         dice1.style.transform = 'rotateX(' + dice1.style.getPropertyValue('--rx') + ') rotateY(' + dice1.style.getPropertyValue('--ry') + ')';
         dice2.style.transform = 'rotateX(' + dice2.style.getPropertyValue('--rx') + ') rotateY(' + dice2.style.getPropertyValue('--ry') + ')';
         resolve({ d1, d2, sum });
-      }, 650);
+      }, 1200);
     });
   }
 
@@ -123,7 +123,12 @@ document.addEventListener('DOMContentLoaded', function(){
   btnExact.addEventListener('click', ()=>play('exact'));
 
   repeatBtn.addEventListener('click', ()=>{
-    if(lastStake > 0) stakeInput.value = lastStake.toFixed(2);
+    if(lastStake > 0 && lastChoice){
+      stakeInput.value = lastStake.toFixed(2);
+      play(lastChoice);
+    } else if(lastStake > 0){
+      stakeInput.value = lastStake.toFixed(2);
+    }
   });
 
   document.addEventListener('keydown', (e)=>{
