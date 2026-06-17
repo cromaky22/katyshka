@@ -1238,21 +1238,20 @@ let battleTimerStarted = false;
 const BOT_NAMES = ['LuckyBot', 'SpinMaster', 'WheelKing', 'BetPro', 'WinStreak'];
 
 function addBotPlayer() {
-  if (battle.phase !== 'waiting') return;
-  if (battle.players['bot_1']) return;
+  if (battle.phase !== 'waiting' && battle.phase !== 'betting') return;
+  
   const botName = 'LuckyBot';
   const botId = 'bot_1';
   const botAmount = (1 + Math.random() * 3).toFixed(2);
   
-  battle.players[botId] = { name: botName, avatar: '', amount: Math.round(parseFloat(botAmount) * 100) / 100 };
+  if (!battle.players[botId]) {
+    battle.players[botId] = { name: botName, avatar: '', amount: 0 };
+  }
+  battle.players[botId].amount = Math.round((parseFloat(battle.players[botId].amount || 0) + parseFloat(botAmount)) * 100) / 100;
   
   const playersList = getBattlePlayersList();
   const total = getBattleTotalBank();
   io.emit('battle:playersUpdate', { players: playersList, totalBank: total });
-  
-  if (!battleTimerStarted) {
-    startBattle();
-  }
 }
 
 function getBattlePlayersList() {
