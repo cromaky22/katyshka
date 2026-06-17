@@ -1326,7 +1326,8 @@ function spinBattle() {
     if (rand <= 0) { winner = players[i]; winnerIndex = i; break; }
   }
 
-  const payout = Math.round(total * 0.95 * 100) / 100;
+  const houseFee = (total - winner.amount) * 0.05;
+  const payout = Math.round((total - houseFee) * 100) / 100;
 
   // Credit winner
   addTx('bet', winner.userId, winner.amount, 'completed', { game: 'Battle Wheel', detail: `Battle bet $${winner.amount.toFixed(2)}` });
