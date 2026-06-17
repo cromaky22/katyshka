@@ -1336,7 +1336,7 @@ function spinBattle() {
   
   console.log('[BATTLE] Winner:', winner.name, 'index:', winnerIndex, 'amount:', winner.amount);
 
-  const houseFee = (total - winner.amount) * 0.05;
+  const houseFee = (total - winner.amount) * 0.07;
   const payout = Math.round((total - houseFee) * 100) / 100;
 
   // Credit winner
