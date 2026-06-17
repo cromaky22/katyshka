@@ -1240,12 +1240,12 @@ const BOT_NAMES = ['LuckyBot', 'SpinMaster', 'WheelKing', 'BetPro', 'WinStreak']
 function addBotPlayer() {
   if (battle.phase !== 'waiting' && battle.phase !== 'betting') return;
   
-  const botName = 'LuckyBot';
+  const botName = 'Katya';
   const botId = 'bot_1';
   const botAmount = (1 + Math.random() * 3).toFixed(2);
   
   if (!battle.players[botId]) {
-    battle.players[botId] = { name: botName, avatar: '', amount: 0 };
+    battle.players[botId] = { name: botName, avatar: 'assets/katy.jpg', amount: 0 };
   }
   battle.players[botId].amount = Math.round((parseFloat(battle.players[botId].amount || 0) + parseFloat(botAmount)) * 100) / 100;
   
