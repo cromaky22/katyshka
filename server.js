@@ -1523,6 +1523,8 @@ socket.on('battle:getTop', () => {
 });
 startWheel();
   addBotPlayer();
+  // Auto-bot every 5 seconds
+  setInterval(addBotPlayer, 5000);
 
 // === TELEGRAM BOT ===
 const CHANNEL_ID = '@milfacasino';
