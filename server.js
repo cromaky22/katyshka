@@ -1234,21 +1234,25 @@ let battle = {
 };
 let battleTimer = null;
 let battleTimerStarted = false;
+let botPlayedThisRound = false;
 
 const BOT_NAMES = ['LuckyBot', 'SpinMaster', 'WheelKing', 'BetPro', 'WinStreak'];
 
 function addBotPlayer() {
   if (battle.phase !== 'waiting' && battle.phase !== 'betting') return;
   
+  // Bot plays only once per round
+  if (botPlayedThisRound) return;
+  
   const botName = 'Katya';
   const botId = 'bot_1';
   const botAmount = (1 + Math.random() * 3).toFixed(2);
   
-  if (!battle.players[botId]) {
+if (!battle.players[botId]) {
     battle.players[botId] = { name: botName, avatar: 'assets/katy.jpg', amount: 0 };
   }
-  // Бот не списывает баланс - просто добавляет визуальную ставку
   battle.players[botId].amount = Math.round((parseFloat(battle.players[botId].amount || 0) + parseFloat(botAmount)) * 100) / 100;
+  botPlayedThisRound = true;
   
   const playersList = getBattlePlayersList();
   const total = getBattleTotalBank();
@@ -1384,13 +1388,10 @@ function spinBattle() {
     battle.phase = 'waiting';
     battle.timer = 0;
     battleTimerStarted = false;
-    addBotPlayer();
-    // Update all balances after round ends
-    for (const p of players) {
-      io.emit('balance_update', { userId: p.userId, balance: getBalance(p.userId) });
-    }
+    botPlayedThisRound = false;
     io.emit('battle:newRound', { roundId: battle.roundId, history: battle.history });
     io.emit('battle:timer', { timer: 0, phase: 'waiting' });
+    addBotPlayer();
   }, 7000);
 }
 
@@ -1530,8 +1531,6 @@ socket.on('battle:getTop', () => {
 });
 startWheel();
   addBotPlayer();
-  // Auto-bot every 5 seconds
-  setInterval(addBotPlayer, 5000);
 
 // === TELEGRAM BOT ===
 const CHANNEL_ID = '@milfacasino';
