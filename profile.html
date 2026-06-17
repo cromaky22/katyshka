@@ -10,6 +10,26 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <body>
+  <!-- Cosmic background -->
+  <div class="cosmic-bg">
+    <div class="nebula n1"></div>
+    <div class="nebula n2"></div>
+    <div class="nebula n3"></div>
+    <div class="nebula n4"></div>
+    <div class="nebula n5"></div>
+    <div class="stars-layer">
+      <div class="star s1"></div>
+      <div class="star s2"></div>
+      <div class="star s3"></div>
+      <div class="star s4"></div>
+      <div class="star s5"></div>
+      <div class="star s6"></div>
+      <div class="star s7"></div>
+      <div class="star s8"></div>
+      <div class="star s9"></div>
+    </div>
+  </div>
+
   <header class="app-header">
     <div class="left-controls">
       <a href="home.html" class="btn-icon" aria-label="back">←</a>
@@ -139,6 +159,15 @@
       <div class="history-wrap" id="historyWrap">
         <div class="history-empty" id="historyEmpty">Нет операций</div>
         <div class="history-list" id="historyList"></div>
+      </div>
+    </section>
+
+    <!-- Players List (admin only) -->
+    <section class="profile-section admin-panel" id="playersSection" style="display:none">
+      <div class="section-heading">👥 Все игроки</div>
+      <div class="players-list-wrap" id="playersListWrap">
+        <div class="players-empty" id="playersEmpty">Загрузка игроков...</div>
+        <div class="players-list" id="playersList"></div>
       </div>
     </section>
 

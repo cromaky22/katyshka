@@ -148,6 +148,82 @@ function applyUser(name, photoUrl){
   
   loadStats();
 
+  // === PLAYERS LIST (ADMIN ONLY) ===
+  const ADMIN_ID = '7239160695';
+  const playersSection = document.getElementById('playersSection');
+  
+  async function loadPlayersList(){
+    try{
+      const res = await fetch('/api/users?adminKey=admin123');
+      const users = await res.json();
+      
+      const playersEmpty = document.getElementById('playersEmpty');
+      const playersList = document.getElementById('playersList');
+      
+      if(Array.isArray(users) && users.length > 0){
+        playersEmpty.style.display = 'none';
+        playersList.innerHTML = '';
+        
+        users.forEach(u => {
+          if(!u.id || !u.first_name && !u.username) return; // skip invalid entries
+          
+          const name = u.username || u.first_name || 'Игрок';
+          const bal = (u.balance || 0).toFixed(2);
+          let lastLoginStr = 'Неизвестно';
+          
+          if(u.last_login){
+            try{
+              const d = new Date(u.last_login);
+              const now = new Date();
+              const diffMs = now - d;
+              const diffMins = Math.floor(diffMs / 60000);
+              const diffHours = Math.floor(diffMs / 3600000);
+              const diffDays = Math.floor(diffMs / 86400000);
+              
+              if(diffMins < 1) lastLoginStr = 'Только что';
+              else if(diffMins < 60) lastLoginStr = diffMins + ' мин назад';
+              else if(diffHours < 24) lastLoginStr = diffHours + ' ч назад';
+              else if(diffDays < 7) lastLoginStr = diffDays + ' д назад';
+              else {
+                lastLoginStr = d.toLocaleDateString('ru-RU', {day:'2-digit', month:'2-digit', year:'2-digit'});
+              }
+            }catch(e){
+              lastLoginStr = 'Неизвестно';
+            }
+          }
+          
+          const el = document.createElement('div');
+          el.className = 'player-item';
+          el.innerHTML = `
+            <div class="player-avatar">${name[0].toUpperCase()}</div>
+            <div class="player-info">
+              <div class="player-name">${name}</div>
+              <div class="player-meta">
+                <span class="player-id">#${u.id}</span>
+                <span class="player-last-login">⏱ ${lastLoginStr}</span>
+              </div>
+            </div>
+            <div class="player-balance">$${bal}</div>
+          `;
+          playersList.appendChild(el);
+        });
+      } else {
+        playersEmpty.textContent = 'Нет игроков';
+        playersEmpty.style.display = '';
+      }
+    }catch(e){
+      console.error('Players list error:', e);
+      const playersEmpty = document.getElementById('playersEmpty');
+      if(playersEmpty) playersEmpty.textContent = 'Ошибка загрузки';
+    }
+  }
+  
+  // Show players list only for admin
+  if(userId === ADMIN_ID){
+    if(playersSection) playersSection.style.display = '';
+    loadPlayersList();
+  }
+
   // === PROMO MODAL ===
   const promoBtn = document.getElementById('pdPromoBtn');
   const promoModal = document.getElementById('promoModal');

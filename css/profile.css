@@ -76,7 +76,24 @@
 .admin-user-actions .btn{width:100%}
 .admin-balance-input{display:flex;gap:8px;margin-top:12px}
 .admin-balance-input input{flex:1}
+
+/* Players List (non-admin) */
+.players-list-wrap{width:100%;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;overflow:hidden}
+.players-empty{padding:28px;text-align:center;color:var(--muted);font-size:13px}
+.players-list{display:flex;flex-direction:column;max-height:500px;overflow-y:auto}
+.player-item{display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid rgba(255,255,255,0.03);transition:background 0.15s ease}
+.player-item:hover{background:rgba(255,255,255,0.04)}
+.player-item:last-child{border-bottom:none}
+.player-avatar{width:44px;height:44px;border-radius:50%;background:#222;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:#fff;overflow:hidden;flex-shrink:0}
+.player-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.player-info{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.player-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player-meta{display:flex;gap:8px;font-size:10px;color:var(--muted)}
+.player-id{font-family:monospace;opacity:0.8}
+.player-last-login{opacity:0.8}
+.player-balance{font-size:14px;font-weight:700;color:var(--accent-green);flex-shrink:0}
   
+@media(max-width:600px){
   .profile-stats{grid-template-columns:1fr}
   .stat-card-wide{grid-column:auto}
   .profile-card{padding:18px 14px}
