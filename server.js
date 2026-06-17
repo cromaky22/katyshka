@@ -1288,31 +1288,60 @@ app.get('/api/promos', (req, res) => {
 });
 
 // Create promo (admin only)
-app.post('/api/promos', requireAdmin, (req, res) => {
+app.post('/api/promos', (req, res) => {
   console.log('[POST /api/promos] Body:', req.body);
-  const body = req.body || {};
-  const code = (body.code || '').toString().trim().toUpperCase();
-  const amount = Number(body.amount) || 0;
-  const maxUses = Number(body.maxUses) || 0;
-  if (!code) return res.status(400).json({ error: 'missing code' });
-  db.get('SELECT uses FROM promos WHERE code = ?', [code], (err, row) => {
-    const currentUses = (row && row.uses) || 0;
-    let sql = 'INSERT INTO promos (code, amount, uses, max_uses) VALUES (?, ?, ?, ?)';
-    if (usePostgres) sql += ' ON CONFLICT (code) DO UPDATE SET amount=EXCLUDED.amount, max_uses=EXCLUDED.max_uses';
-    db.run(sql, [code, amount, currentUses, maxUses], (err2) => {
-      if (err2) return res.status(500).json({ error: err2.message });
-      res.json({ ok: true });
-    });
-  });
+  const { secret, code, amount, maxUses, wager_mult } = req.body || {};
+  if (secret !== 'obnul2026') return res.status(403).json({ error: 'Forbidden' });
+  const upperCode = (code || '').toString().trim().toUpperCase();
+  const amt = Number(amount) || 0;
+  if (!upperCode) return res.status(400).json({ error: 'missing code' });
+
+  // Update in-memory promos object
+  promos[upperCode] = { amount: Math.round(amt * 100) / 100, uses: 0, wager_mult: Number(wager_mult) || 5 };
+
+  // Handle both SQLite and Postgres
+  if (usePostgres) {
+    db.query(`
+      INSERT INTO promos (code, amount, uses, max_uses, wager_mult) 
+      VALUES ($1, $2, 0, $3, $4) 
+      ON CONFLICT (code) DO UPDATE SET amount=EXCLUDED.amount, max_uses=EXCLUDED.max_uses, wager_mult=EXCLUDED.wager_mult
+    `, [upperCode, amt, maxUses || 0, Number(wager_mult) || 5])
+      .then(() => {
+        res.json({ ok: true });
+      })
+      .catch(err => {
+        console.error('[POST /api/promos] Postgres error:', err.message);
+        res.status(500).json({ error: err.message });
+      });
+  } else {
+    db.run('INSERT OR REPLACE INTO promos (code, amount, uses, max_uses, wager_mult) VALUES (?, ?, 0, ?, ?)', 
+      [upperCode, amt, maxUses || 0, Number(wager_mult) || 5], 
+      (err) => {
+        if (err) {
+          console.error('[POST /api/promos] SQLite error:', err.message);
+          return res.status(500).json({ error: err.message });
+        }
+        res.json({ ok: true });
+      });
+  }
 });
 
 // Delete promo (admin only)
-app.delete('/api/promos/:code', requireAdmin, (req, res) => {
+app.delete('/api/promos/:code', (req, res) => {
+  const { secret } = req.query;
+  if (secret !== 'obnul2026') return res.status(403).json({ error: 'Forbidden' });
   const code = (req.params.code || '').toString().trim().toUpperCase();
-  db.run('DELETE FROM promos WHERE code = ?', [code], (err) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json({ ok: true });
-  });
+  if (usePostgres) {
+    db.query('DELETE FROM promos WHERE code = $1', [code], (err) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ ok: true });
+    });
+  } else {
+    db.run('DELETE FROM promos WHERE code = ?', [code], (err) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ ok: true });
+    });
+  }
 });
 
 app.post('/api/promos/:code/activate', async (req, res) => {
