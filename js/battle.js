@@ -369,6 +369,10 @@ let roundId = 0;
     updatePlayersGrid();
     updateBank();
     drawWheel();
+    // Sync balance if provided
+    if (data.balances && data.balances[myUserId] !== undefined) {
+      Balance.sync(data.balances[myUserId]);
+    }
   });
 
   socket.on('battle:myBet', (data) => {

@@ -1480,11 +1480,8 @@ io.on('connection', (socket) => {
 
     const existing = battle.players[userId]?.amount || 0;
     const serverBalance = getBalance(userId);
-    if (existing + amount > serverBalance) {
-      socket.emit('battle:myBet', { myBets: battle.players[userId] ? [{ userId, amount: existing }] : [], balance: serverBalance });
-      return;
-    }
-
+    
+    // Check if already placed bet this round
     if (!battle.players[userId]) {
       battle.players[userId] = { name: playerName || 'Player', avatar: playerAvatar || '', amount: 0 };
     }
@@ -1496,7 +1493,7 @@ io.on('connection', (socket) => {
 
     const playersList = getBattlePlayersList();
     const total = getBattleTotalBank();
-    io.emit('battle:playersUpdate', { players: playersList, totalBank: total });
+    io.emit('battle:playersUpdate', { players: playersList, totalBank: total, balances: { [userId]: getBalance(userId) } });
     socket.emit('battle:myBet', {
       myBets: [{ userId, amount: battle.players[userId].amount }],
       balance: getBalance(userId)
