@@ -1318,43 +1318,31 @@ function spinBattle() {
   // Weighted random selection - among all players
   let rand = Math.random() * total;
   let winner = players[0];
-  for (const p of players) {
-    rand -= p.amount;
-    if (rand <= 0) { winner = p; break; }
+  let winnerIndex = 0;
+  for (let i = 0; i < players.length; i++) {
+    rand -= players[i].amount;
+    if (rand <= 0) { winner = players[i]; winnerIndex = i; break; }
   }
 
   const payout = Math.round(total * 0.95 * 100) / 100;
 
-  // If bot won, skip payout and start new round immediately
-  if (winner.userId.startsWith('bot_')) {
-    setTimeout(() => {
-      battle.players = {};
-      battle.roundId++;
-      battle.phase = 'waiting';
-      battle.timer = 0;
-      battleTimerStarted = false;
-      io.emit('battle:newRound', { roundId: battle.roundId, history: battle.history });
-      io.emit('battle:timer', { timer: 0, phase: 'waiting' });
-      addBotPlayer();
-    }, 2000);
-    return;
-  }
-
   // Credit winner
-  const winnerBal = getBalance(winner.userId) + payout;
-  setBalance(winner.userId, winnerBal);
   addTx('bet', winner.userId, winner.amount, 'completed', { game: 'Battle Wheel', detail: `Battle bet $${winner.amount.toFixed(2)}` });
   addTx('win', winner.userId, payout, 'completed', { game: 'Battle Wheel', detail: `Battle winner! Won $${payout.toFixed(2)}` });
-  applyBet(winner.userId, winner.amount);
+  if (!winner.userId.startsWith('bot_')) {
+    applyBet(winner.userId, winner.amount);
+  }
+  const winnerBal = getBalance(winner.userId) + payout;
+  setBalance(winner.userId, winnerBal);
 
   // Referral commission
-  if (users[winner.userId] && users[winner.userId].referredBy) {
+  if (!winner.userId.startsWith('bot_') && users[winner.userId] && users[winner.userId].referredBy) {
     addRefCommission(users[winner.userId].referredBy, winner.amount);
   }
 
-  // Record losses for others
+  // Record losses for others (not bot)
   for (const p of players) {
-    if (p.userId !== winner.userId) {
+    if (p.userId !== winner.userId && !p.userId.startsWith('bot_')) {
       addTx('bet', p.userId, p.amount, 'completed', { game: 'Battle Wheel', detail: `Battle bet $${p.amount.toFixed(2)}` });
       addTx('loss', p.userId, p.amount, 'completed', { game: 'Battle Wheel', detail: `Battle lost to ${winner.name}` });
       applyBet(p.userId, p.amount);
@@ -1385,7 +1373,7 @@ function spinBattle() {
   if (battle.history.length > 20) battle.history.pop();
 
   io.emit('battle:spin', {
-    winner: { userId: winner.userId, name: winner.name, avatar: winner.avatar, amount: winner.amount },
+    winner: { userId: winner.userId, name: winner.name, avatar: winner.avatar, amount: winner.amount, index: winnerIndex },
     payout,
     totalBank: total,
     players

@@ -383,16 +383,16 @@ let roundId = 0;
     updatePhase('spinning', 0);
 
     const winner = data.winner;
-    const winnerIdx = allPlayers.findIndex(p => p.userId === winner.userId);
+    const winnerIdx = data.winner.index;
 
-    if (winnerIdx === -1) {
+    if (winnerIdx === undefined || winnerIdx < 0) {
       statusEl.textContent = 'Ошибка: победитель не найден';
       statusEl.className = 'battle-status error';
       return;
     }
 
     const color = getPlayerColor(winnerIdx);
-    const chance = allPlayers.length > 0 ? Math.round((winner.amount / allPlayers.reduce((s, p) => s + p.amount, 0)) * 100) : 0;
+    const chance = data.totalBank > 0 ? Math.round((winner.amount / data.totalBank) * 100) : 0;
 
     spinToWinner(winnerIdx, 5000, () => {
       const isMe = winner.userId === myUserId;
