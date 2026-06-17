@@ -51,8 +51,9 @@ document.addEventListener('DOMContentLoaded', function(){
     // Add independent random spins for realistic rolling
     const spinsX = 360 * (3 + Math.floor(Math.random() * 3));
     const spinsY = 360 * (3 + Math.floor(Math.random() * 3));
-    diceEl.style.setProperty('--rx', (r.rx + spinsX) + 'deg');
-    diceEl.style.setProperty('--ry', (r.ry + spinsY) + 'deg');
+    const finalRx = r.rx + spinsX;
+    const finalRy = r.ry + spinsY;
+    diceEl.style.transform = 'rotateX(' + finalRx + 'deg) rotateY(' + finalRy + 'deg)';
   }
 
   function rollDice(){
@@ -69,8 +70,6 @@ document.addEventListener('DOMContentLoaded', function(){
         dice2.classList.remove('rolling');
         setDice(dice1, d1);
         setDice(dice2, d2);
-        dice1.style.transform = 'rotateX(' + dice1.style.getPropertyValue('--rx') + ') rotateY(' + dice1.style.getPropertyValue('--ry') + ')';
-        dice2.style.transform = 'rotateX(' + dice2.style.getPropertyValue('--rx') + ') rotateY(' + dice2.style.getPropertyValue('--ry') + ')';
         // Update display with actual result
         document.getElementById('numberDisplay').textContent = sum;
         console.log('Dice result: ' + d1 + ' + ' + d2 + ' = ' + sum);

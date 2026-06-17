@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const resultNum = document.getElementById('resultNum');
   const resultStake = document.getElementById('resultStake');
   const resultWin = document.getElementById('resultWin');
-  const continueBtn = document.getElementById('continueBtn');
   const historyScroll = document.getElementById('historyScroll');
   const dreamStake = document.getElementById('dreamStake');
   const halfBtn = document.getElementById('halfBtn');
@@ -63,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let rotation = 0;
   let soundEnabled = true;
   let audioCtx = null;
-  const baseSize = 340;
+  const baseSize = 260;
 
   function initAudio() {
     if (!audioCtx) {
@@ -99,6 +98,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   canvas.width = baseSize * dpr;
   canvas.height = baseSize * dpr;
+  canvas.style.width = baseSize + 'px';
+  canvas.style.height = baseSize + 'px';
   ctx.scale(dpr, dpr);
   const size = baseSize;
 
@@ -280,7 +281,6 @@ document.addEventListener('DOMContentLoaded', function() {
         resultStake.textContent = '$' + currentStake.toFixed(2);
         resultWin.textContent = 'БОНУСНОЕ ВРАЩЕНИЕ!';
         resultWin.className = 'result-detail-value';
-        continueBtn.style.display = 'none';
         resultPanel.style.display = 'flex';
 
         const multValue = parseInt(firstResult.num);
@@ -346,16 +346,19 @@ document.addEventListener('DOMContentLoaded', function() {
     return map[num] || '';
   }
 
-  continueBtn.addEventListener('click', () => {
-    resultPanel.style.display = 'none';
-    betsPanel.style.display = 'flex';
-    betsPanel.style.opacity = '1';
-    betsPanel.style.pointerEvents = 'auto';
-    playBtn.disabled = false;
-    gameState = 'betting';
-    rotation = 0;
-    drawWheel();
-  });
+  // Auto reset when result is shown (since we removed continue button)
+  function autoResetAfterResult() {
+    setTimeout(() => {
+      resultPanel.style.display = 'none';
+      betsPanel.style.display = 'flex';
+      betsPanel.style.opacity = '1';
+      betsPanel.style.pointerEvents = 'auto';
+      playBtn.disabled = false;
+      gameState = 'betting';
+      rotation = 0;
+      drawWheel();
+    }, 2000);
+  }
 
   setBalance(getBalance());
   gameState = 'betting';
