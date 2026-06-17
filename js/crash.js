@@ -292,8 +292,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const now = Date.now();
       const elapsed = now - startTime;
       
-      // Base duration calculation: crashPoint * 800ms for normal speed
-      const baseDuration = Math.max(3000, currentGameData.crashPoint * 2000);
+      // Base duration calculation: increased to 3500ms per crash point for slower gameplay
+      const baseDuration = Math.max(4000, currentGameData.crashPoint * 3500);
       const duration = baseDuration / speedMultiplier;
 
       // Pre-calculate target multiplier at current progress
