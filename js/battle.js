@@ -62,12 +62,15 @@ let roundId = 0;
     return PLAYER_COLORS[index % PLAYER_COLORS.length];
   }
 
-  // === DRAW WHEEL ===
-function drawWheel(playersToUse) {
+// === DRAW WHEEL ===
+  function drawWheel(playersToUse) {
     const players = playersToUse || allPlayers;
     const total = players.reduce((s, p) => s + p.amount, 0);
-    if (total === 0) return;
+    if (total === 0 || !canvas || !ctx) return;
 
+    const cx = CX();
+    const cy = CY();
+    const r = R();
     let startAngle = rotation * Math.PI / 180 - Math.PI / 2;
 
     // Draw wheel background with gradient
@@ -226,41 +229,41 @@ function drawWheel(playersToUse) {
     battleHistory = history || [];
   }
 
-  // === SPIN WHEEL ===
-  function spinToWinner(winnerIndex, dur, players, done) {
-    const total = players.reduce((s, p) => s + p.amount, 0);
-    if (total === 0 || players.length === 0) { done(); return; }
+// === SPIN WHEEL ===
+   function spinToWinner(winnerIndex, dur, players, done) {
+     const total = players.reduce((s, p) => s + p.amount, 0);
+     if (total === 0 || players.length === 0) { done(); return; }
 
-    let startAngle = 0;
-    for (let i = 0; i < winnerIndex; i++) {
-      startAngle += (players[i].amount / total) * 360;
-    }
-    const winnerAngle = (players[winnerIndex].amount / total) * 360;
-    const targetMid = startAngle + winnerAngle / 2;
-
-    const currentNorm = (((-rotation) % 360) + 360) % 360;
-    let diff = (270 - targetMid) - currentNorm;
-    while (diff < 0) diff += 360;
-    const totalRot = 360 * 6 + diff;
-    const startRot = rotation;
-    const t0 = performance.now();
-
-function tick(now) {
-       const p = Math.min((now - t0) / dur, 1);
-       const ease = 1 - Math.pow(1 - p, 4);
-       rotation = startRot - totalRot * ease;
-       drawWheel(players);
-
-       if (p < 1) {
-         requestAnimationFrame(tick);
-       } else {
-         rotation = startRot - totalRot;
-         drawWheel(players);
-         done();
-       }
+     let startAngle = 0;
+     for (let i = 0; i < winnerIndex; i++) {
+       startAngle += (players[i].amount / total) * 360;
      }
-    requestAnimationFrame(tick);
-  }
+     const winnerAngle = (players[winnerIndex].amount / total) * 360;
+     const targetMid = startAngle + winnerAngle / 2;
+
+     const currentNorm = (((-rotation) % 360) + 360) % 360;
+     let diff = (270 - targetMid) - currentNorm;
+     while (diff < 0) diff += 360;
+     const totalRot = 360 * 6 + diff;
+     const startRot = rotation;
+     const t0 = performance.now();
+
+     function tick(now) {
+        const p = Math.min((now - t0) / dur, 1);
+        const ease = 1 - Math.pow(1 - p, 4);
+        rotation = startRot - totalRot * ease;
+        drawWheel(players);
+
+        if (p < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          rotation = startRot - totalRot;
+          drawWheel(players);
+          done();
+        }
+     }
+     requestAnimationFrame(tick);
+   }
 
   // === TELEGRAM USER INFO ===
   try {
