@@ -70,13 +70,23 @@
       localStorage.setItem('mc_total_win_amount', totalWin.toFixed(2));
       localStorage.setItem('mc_max_win', maxWin.toFixed(2));
       this._addHistory('win', amount, game, detail);
+      this._reportResult(game, 'win', amount);
     },
     addLoss: function(amount, game, detail){
       amount = Math.abs(parseFloat(amount)||0);
       var losses = parseInt(localStorage.getItem('mc_losses_count')||'0') + 1;
       localStorage.setItem('mc_losses_count', losses);
       this._addHistory('loss', amount, game, detail);
+      this._reportResult(game, 'loss', amount);
     },
+    _reportResult: function(game, result, amount){
+      var uid = (window.Balance && window.Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
+      if(!uid || !amount) return;
+      fetch('/api/game/result', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({userId: uid, game: game, result: result, amount: Math.abs(amount)})
+      }).catch(function(){});
     addDeposit: function(amount, detail){
       amount = Math.abs(parseFloat(amount)||0);
       var total = parseFloat(localStorage.getItem('mc_deposits_total')||'0') + amount;

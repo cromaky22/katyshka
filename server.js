@@ -72,10 +72,25 @@ app.get('/api/stats', async (req, res) => {
   if (!userId) return res.status(400).json({ error: 'Missing userId' });
 
   const userTx = await dbGetUserTx(userId);
+  const gameStats = await dbLoadGameStats(userId);
 
   let deposits = 0, withdraws = 0, totalWin = 0, maxWin = 0, totalBets = 0;
   let wins = 0, losses = 0;
   const history = [];
+
+  // Per-game stats from DB
+  const byGame = {};
+  for (const [game, gs] of Object.entries(gameStats)) {
+    byGame[game] = {
+      games: gs.games,
+      wins: gs.wins,
+      losses: gs.losses,
+      totalBets: gs.totalBets,
+      totalWins: gs.totalWins,
+      maxWin: gs.maxWin,
+      winRate: gs.games > 0 ? Math.round((gs.wins / gs.games) * 100) : 0
+    };
+  }
 
   userTx.forEach(t => {
     if (t.type === 'deposit') { deposits += t.amount; history.push({ type: 'deposit', amount: t.amount, time: t.time, title: 'Пополнение' }); }
@@ -94,10 +109,39 @@ app.get('/api/stats', async (req, res) => {
     }
   }
 
+  // Referral info
+  const refData = getRefData(userId);
+  const referredIds = referrals[userId] || {};
+  const referredCount = Object.keys(referredIds).length;
+  let activeRefs = 0;
+  const referredUsers = [];
+  for (const rid in referredIds) {
+    const ru = users[rid] || {};
+    const hasActivity = (ru.wager_total || 0) > 0;
+    if (hasActivity) activeRefs++;
+    referredUsers.push({
+      userId: rid,
+      name: ru.username || ru.first_name || rid,
+      active: hasActivity
+    });
+  }
+
   const games = Math.max(wins + losses);
   const winRate = games > 0 ? Math.round((wins / games) * 100) : 0;
 
-  res.json({ deposits, withdraws, totalWin, maxWin, totalBets, games, wins, losses, winRate, history, ip: lastIp });
+  res.json({
+    deposits, withdraws, totalWin, maxWin, totalBets, games, wins, losses, winRate,
+    history, ip: lastIp,
+    byGame,
+    referral: {
+      available: refData.available,
+      earned: refData.earned,
+      volume: refData.volume,
+      count: referredCount,
+      active: activeRefs,
+      users: referredUsers
+    }
+  });
 });
 
 // === SET/REGISTER USER ===
@@ -120,6 +164,7 @@ app.post('/api/users', async (req, res) => {
     users[id].referredBy = referredBy;
     if (!referrals[referredBy]) referrals[referredBy] = {};
     referrals[referredBy][id] = true;
+    dbSaveReferral(referredBy, id);
   }
 
   await dbSetUser(id, users[id]);
@@ -225,6 +270,7 @@ let transactions = [];
 let paidInvoices = {};
 let referrals = {};
 let referralEarnings = {};
+let gameStatsMap = {}; // key: "userId:game" -> { games, wins, losses, totalBets, totalWins, maxWin }
 
 // Load promos from PG on start
 async function loadPromosFromPG() {
@@ -263,6 +309,109 @@ async function deletePromoFromDB(code) {
   } catch(e) { console.error('[DB] deletePromo error:', e.message); }
 }
 
+async function loadReferralsFromPG() {
+  if (!usePostgres) return;
+  try {
+    const refRes = await db.query('SELECT referrer_id, referred_id FROM referrals');
+    refRes.rows.forEach(row => {
+      if (!referrals[row.referrer_id]) referrals[row.referrer_id] = {};
+      referrals[row.referrer_id][row.referred_id] = true;
+    });
+    const earnRes = await db.query('SELECT user_id, available, earned, volume FROM referral_earnings');
+    earnRes.rows.forEach(row => {
+      referralEarnings[row.user_id] = {
+        available: parseFloat(row.available) || 0,
+        earned: parseFloat(row.earned) || 0,
+        volume: parseFloat(row.volume) || 0
+      };
+    });
+    console.log('🐘 Loaded referrals:', refRes.rows.length, 'pairs,', earnRes.rows.length, 'earnings');
+  } catch(e) { console.error('PG load referrals error:', e.message); }
+}
+
+async function dbSaveReferral(referrerId, referredId) {
+  if (!usePostgres) return;
+  try {
+    await db.query(
+      'INSERT INTO referrals (referrer_id, referred_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+      [referrerId, referredId]
+    );
+  } catch(e) { console.error('[DB] saveReferral error:', e.message); }
+}
+
+async function dbSaveReferralEarnings(userId) {
+  if (!usePostgres) return;
+  const e = referralEarnings[userId] || { available: 0, earned: 0, volume: 0 };
+  try {
+    await db.query(`
+      INSERT INTO referral_earnings (user_id, available, earned, volume)
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT (user_id) DO UPDATE SET
+        available = EXCLUDED.available,
+        earned = EXCLUDED.earned,
+        volume = EXCLUDED.volume
+    `, [userId, e.available, e.earned, e.volume]);
+  } catch(e) { console.error('[DB] saveReferralEarnings error:', e.message); }
+}
+
+async function dbSaveGameStats(userId, game) {
+  if (!usePostgres) return;
+  const key = `${userId}:${game}`;
+  const s = gameStatsMap[key];
+  if (!s) return;
+  try {
+    await db.query(`
+      INSERT INTO game_stats (user_id, game, games, wins, losses, total_bets, total_wins, max_win)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      ON CONFLICT (user_id, game) DO UPDATE SET
+        games = EXCLUDED.games,
+        wins = EXCLUDED.wins,
+        losses = EXCLUDED.losses,
+        total_bets = EXCLUDED.total_bets,
+        total_wins = EXCLUDED.total_wins,
+        max_win = EXCLUDED.max_win
+    `, [userId, game, s.games, s.wins, s.losses, s.totalBets, s.totalWins, s.maxWin]);
+  } catch(e) { console.error('[DB] saveGameStats error:', e.message); }
+}
+
+async function dbLoadGameStats(userId) {
+  if (!usePostgres) return {};
+  try {
+    const res = await db.query('SELECT * FROM game_stats WHERE user_id = $1', [userId]);
+    const result = {};
+    res.rows.forEach(row => {
+      result[row.game] = {
+        games: parseInt(row.games) || 0,
+        wins: parseInt(row.wins) || 0,
+        losses: parseInt(row.losses) || 0,
+        totalBets: parseFloat(row.total_bets) || 0,
+        totalWins: parseFloat(row.total_wins) || 0,
+        maxWin: parseFloat(row.max_win) || 0
+      };
+    });
+    return result;
+  } catch(e) { return {}; }
+}
+
+function updateGameStats(userId, game, type, amount) {
+  const key = `${userId}:${game}`;
+  if (!gameStatsMap[key]) {
+    gameStatsMap[key] = { games: 0, wins: 0, losses: 0, totalBets: 0, totalWins: 0, maxWin: 0 };
+  }
+  const s = gameStatsMap[key];
+  if (type === 'bet') {
+    s.games++;
+    s.totalBets += amount;
+  } else if (type === 'win') {
+    s.wins++;
+    s.totalWins += amount;
+    if (amount > s.maxWin) s.maxWin = amount;
+  } else if (type === 'loss') {
+    s.losses++;
+  }
+  dbSaveGameStats(userId, game);
+}
+
 // Load data from file on start (fallback)
 try {
   if (fs.existsSync(DATA_FILE)) {
@@ -272,6 +421,8 @@ try {
     activated = data.activated || {};
     transactions = data.transactions || [];
     paidInvoices = data.paidInvoices || {};
+    referrals = data.referrals || {};
+    referralEarnings = data.referralEarnings || {};
     console.log('📂 Loaded data from file:', Object.keys(users).length, 'users');
   }
 } catch (e) {
@@ -308,7 +459,7 @@ async function loadUsersFromPG() {
 
 function saveData() {
   try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify({ users, promos, activated, transactions }));
+    fs.writeFileSync(DATA_FILE, JSON.stringify({ users, promos, activated, transactions, referrals, referralEarnings }));
   } catch (e) {
     console.error('Failed to save data:', e);
   }
@@ -1176,11 +1327,14 @@ function spinWheel() {
     results[uid] = win;
     setBalance(uid, getBalance(uid) + win);
     addTx('bet', uid, totalBet, 'completed', { game: 'Wheel', detail: `Bet ${totalBet.toFixed(2)}` });
+    updateGameStats(uid, 'Wheel', 'bet', totalBet);
     applyBet(uid, totalBet);
     if (win > 0) {
       addTx('win', uid, win, 'completed', { game: 'Wheel', detail: `Won ${win.toFixed(2)} on ${num}` });
+      updateGameStats(uid, 'Wheel', 'win', win);
     } else {
       addTx('loss', uid, totalBet, 'completed', { game: 'Wheel', detail: `Lost on ${num}` });
+      updateGameStats(uid, 'Wheel', 'loss', totalBet);
       if (getBalance(uid) <= 0.001 && (users[uid]?.wager_required || 0) > 0) {
         console.log(`[WAGER] Reset wager for ${uid} after wheel loss — balance depleted ($${getBalance(uid).toFixed(2)})`);
         users[uid].wager_required = 0;
@@ -1341,7 +1495,9 @@ function spinBattle() {
 
   // Credit winner
   addTx('bet', winner.userId, winner.amount, 'completed', { game: 'Battle Wheel', detail: `Battle bet $${winner.amount.toFixed(2)}` });
+  updateGameStats(winner.userId, 'Battle Wheel', 'bet', winner.amount);
   addTx('win', winner.userId, payout, 'completed', { game: 'Battle Wheel', detail: `Battle winner! Won $${payout.toFixed(2)}` });
+  updateGameStats(winner.userId, 'Battle Wheel', 'win', payout);
   if (!winner.userId.startsWith('bot_')) {
     applyBet(winner.userId, winner.amount);
   }
@@ -1357,7 +1513,9 @@ function spinBattle() {
   for (const p of players) {
     if (p.userId !== winner.userId && !p.userId.startsWith('bot_')) {
       addTx('bet', p.userId, p.amount, 'completed', { game: 'Battle Wheel', detail: `Battle bet $${p.amount.toFixed(2)}` });
+      updateGameStats(p.userId, 'Battle Wheel', 'bet', p.amount);
       addTx('loss', p.userId, p.amount, 'completed', { game: 'Battle Wheel', detail: `Battle lost to ${winner.name}` });
+      updateGameStats(p.userId, 'Battle Wheel', 'loss', p.amount);
       applyBet(p.userId, p.amount);
       if (getBalance(p.userId) <= 0.001 && (users[p.userId]?.wager_required || 0) > 0) {
         users[p.userId].wager_required = 0;
@@ -1749,6 +1907,7 @@ function addRefCommission(referrerId, betAmount) {
   ref.earned = Math.round((ref.earned + commission) * 100) / 100;
   ref.volume = Math.round((ref.volume + betAmount) * 100) / 100;
   saveData();
+  dbSaveReferralEarnings(referrerId);
 }
 
 // Get referral info
@@ -1799,6 +1958,7 @@ app.post('/api/referral/track', (req, res) => {
   if (!referrals[referrerId]) referrals[referrerId] = {};
   referrals[referrerId][referredId] = true;
   saveData();
+  dbSaveReferral(referrerId, referredId);
   res.json({ ok: true });
 });
 
@@ -1809,6 +1969,7 @@ app.post('/api/game/bet', async (req, res) => {
   const amt = Math.abs(parseFloat(amount) || 0);
   if (amt <= 0) return res.json({ ok: false });
   await addTx('bet', userId, amt, 'completed', { game, detail: 'bet' });
+  updateGameStats(userId, game, 'bet', amt);
   applyBet(userId, amt);
   if (users[userId] && users[userId].referredBy) {
     addRefCommission(users[userId].referredBy, amt);
@@ -1816,7 +1977,23 @@ app.post('/api/game/bet', async (req, res) => {
   res.json({ ok: true });
 });
 
-// === END REFERRAL SYSTEM ===
+// Report game result from client-side games
+app.post('/api/game/result', async (req, res) => {
+  const { userId, game, result, amount } = req.body;
+  if (!userId || !game || !result) return res.status(400).json({ error: 'Missing params' });
+  const amt = Math.abs(parseFloat(amount) || 0);
+  if (amt <= 0) return res.json({ ok: false });
+
+  if (result === 'win') {
+    await addTx('win', userId, amt, 'completed', { game, detail: 'win' });
+    updateGameStats(userId, game, 'win', amt);
+    setBalance(userId, getBalance(userId) + amt);
+  } else if (result === 'loss') {
+    await addTx('loss', userId, amt, 'completed', { game, detail: 'loss' });
+    updateGameStats(userId, game, 'loss', amt);
+  }
+  res.json({ ok: true, balance: getBalance(userId) });
+});
 
 // === START ===
 const PORT = process.env.PORT || 3000;
@@ -1871,10 +2048,46 @@ async function startServer() {
           PRIMARY KEY (provider, invoice_id)
         )
       `);
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS referrals (
+          referrer_id TEXT NOT NULL,
+          referred_id TEXT NOT NULL,
+          created_at TIMESTAMP DEFAULT NOW(),
+          PRIMARY KEY (referrer_id, referred_id)
+        )
+      `);
+      console.log('✅ referrals table ready');
+
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS referral_earnings (
+          user_id TEXT PRIMARY KEY,
+          available REAL DEFAULT 0,
+          earned REAL DEFAULT 0,
+          volume REAL DEFAULT 0
+        )
+      `);
+      console.log('✅ referral_earnings table ready');
+
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS game_stats (
+          user_id TEXT NOT NULL,
+          game TEXT NOT NULL,
+          games INTEGER DEFAULT 0,
+          wins INTEGER DEFAULT 0,
+          losses INTEGER DEFAULT 0,
+          total_bets REAL DEFAULT 0,
+          total_wins REAL DEFAULT 0,
+          max_win REAL DEFAULT 0,
+          PRIMARY KEY (user_id, game)
+        )
+      `);
+      console.log('✅ game_stats table ready');
+
       console.log('✅ All tables ready');
 
       await loadUsersFromPG();
       await loadPromosFromPG();
+      await loadReferralsFromPG();
       console.log('🐘 Startup complete — users:', Object.keys(users).length, 'promos:', Object.keys(promos).length);
     } catch(e) {
       console.error('❌ Startup DB error:', e.message);
@@ -1890,8 +2103,8 @@ startServer();
 
 // Graceful shutdown — save all users to DB before exit
 async function gracefulShutdown(signal) {
-  console.log(`\n⚠️  Received ${signal} — saving all users to DB...`);
-  if (usePostgres && Object.keys(users).length > 0) {
+  console.log(`\n⚠️  Received ${signal} — saving all data to DB...`);
+  if (usePostgres) {
     try {
       for (const id in users) {
         const u = users[id];
@@ -1913,6 +2126,34 @@ async function gracefulShutdown(signal) {
         `, [id, u.balance||0, u.bonus_balance||0, u.wager_required||0, u.wager_total||0, u.deposit_total||0, u.wager_multiplier||3, u.first_name||null, u.last_name||null, u.username||null, u.avatar||null, u.sub_claimed||false]);
       }
       console.log(`✅ Saved ${Object.keys(users).length} users to DB`);
+
+      // Save referrals
+      for (const refId in referrals) {
+        for (const rid in referrals[refId]) {
+          await db.query('INSERT INTO referrals (referrer_id, referred_id) VALUES ($1, $2) ON CONFLICT DO NOTHING', [refId, rid]);
+        }
+      }
+      // Save referral earnings
+      for (const uid in referralEarnings) {
+        const e = referralEarnings[uid];
+        await db.query(`
+          INSERT INTO referral_earnings (user_id, available, earned, volume) VALUES ($1, $2, $3, $4)
+          ON CONFLICT (user_id) DO UPDATE SET available = EXCLUDED.available, earned = EXCLUDED.earned, volume = EXCLUDED.volume
+        `, [uid, e.available||0, e.earned||0, e.volume||0]);
+      }
+      // Save game stats
+      for (const key in gameStatsMap) {
+        const s = gameStatsMap[key];
+        const [uid, game] = key.split(':');
+        await db.query(`
+          INSERT INTO game_stats (user_id, game, games, wins, losses, total_bets, total_wins, max_win)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          ON CONFLICT (user_id, game) DO UPDATE SET
+            games = EXCLUDED.games, wins = EXCLUDED.wins, losses = EXCLUDED.losses,
+            total_bets = EXCLUDED.total_bets, total_wins = EXCLUDED.total_wins, max_win = EXCLUDED.max_win
+        `, [uid, game, s.games||0, s.wins||0, s.losses||0, s.totalBets||0, s.totalWins||0, s.maxWin||0]);
+      }
+      console.log('✅ Saved referrals, earnings, game stats to DB');
     } catch(e) {
       console.error('❌ Shutdown save error:', e.message);
     }
