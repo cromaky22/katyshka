@@ -77,9 +77,11 @@
 }
 .page-battle .battle-history-scroll {
   display: flex;
-  overflow-x: auto;
+  flex-direction: column;
   gap: 5px;
-  padding-bottom: 2px;
+  max-height: 120px;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 .page-battle .battle-history-item {
   flex-shrink: 0;
