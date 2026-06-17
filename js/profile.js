@@ -532,13 +532,14 @@ function applyUser(name, photoUrl){
        const code = document.getElementById('adminPromoCode').value.trim().toUpperCase();
        const amount = parseFloat(document.getElementById('adminPromoAmount').value);
        const maxUses = parseInt(document.getElementById('adminPromoMaxUses').value) || 1;
-       const wagerMult = parseFloat(document.getElementById('adminPromoWager').value) || 1;
        const msgEl = document.getElementById('adminPromoMsg');
        
        if(!code){ msgEl.textContent = '❌ Введите код'; msgEl.classList.add('show'); return; }
        if(isNaN(amount) || amount <= 0){ msgEl.textContent = '❌ Неверная сумма'; msgEl.classList.add('show'); return; }
        if(isNaN(maxUses) || maxUses <= 0){ msgEl.textContent = '❌ Неверное кол-во активаций'; msgEl.classList.add('show'); return; }
-       if(isNaN(wagerMult) || wagerMult < 1 || wagerMult > 10){ msgEl.textContent = '❌ Вагер: от 1 до 10'; msgEl.classList.add('show'); return; }
+       
+       msgEl.textContent = '⏳ Отправка...';
+       msgEl.classList.add('show');
        
 try{
           const res = await fetch('/api/promos', {
@@ -546,19 +547,25 @@ try{
             headers: {'Content-Type': 'application/json', 'x-admin-key': 'admin123'},
             body: JSON.stringify({code, amount, maxUses})
           });
+          
           const data = await res.json();
-         if(data.ok){
-           msgEl.textContent = `✅ Промокод ${code} создан! Сумма: $${amount} | Активаций: ${maxUses} | Вагер: x${wagerMult}`;
+          console.log('Promo response:', res.status, data);
+          
+         if(res.ok && data.ok){
+           msgEl.textContent = `✅ Промокод ${code} создан! Сумма: $${amount} | Активаций: ${maxUses}`;
            msgEl.classList.add('show');
            document.getElementById('adminPromoCode').value = '';
            document.getElementById('adminPromoAmount').value = '';
            document.getElementById('adminPromoMaxUses').value = '1';
-           document.getElementById('adminPromoWager').value = '1';
          } else {
-           msgEl.textContent = '❌ Ошибка: ' + (data.error || 'unknown');
+           msgEl.textContent = '❌ Ошибка: ' + (data.error || res.statusText || 'unknown');
            msgEl.classList.add('show');
          }
-       }catch(e){ msgEl.textContent = '❌ Ошибка сети'; msgEl.classList.add('show'); }
+       }catch(e){ 
+         console.error('Promo error:', e);
+         msgEl.textContent = '❌ Ошибка: ' + e.message; 
+         msgEl.classList.add('show'); 
+       }
      });
      
      // List promos
