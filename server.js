@@ -847,12 +847,13 @@ async function applyDeposit(userId, amount) {
   }
 }
 
-async function applyPromo(userId, amount) {
+async function applyPromo(userId, amount, wagerMult) {
   if (!users[userId]) users[userId] = { balance: 0, wager_required: 0, wager_total: 0, deposit_total: 0, wager_multiplier: 5 };
   var u = users[userId];
-  u.wager_required = Math.round((u.wager_required + amount * WAGER_MULT_PROMO) * 100) / 100;
-  u.wager_total = Math.round((u.wager_total + amount * WAGER_MULT_PROMO) * 100) / 100;
-  u.wager_multiplier = WAGER_MULT_PROMO;
+  var mult = wagerMult || WAGER_MULT_PROMO;
+  u.wager_required = Math.round((u.wager_required + amount * mult) * 100) / 100;
+  u.wager_total = Math.round((u.wager_total + amount * mult) * 100) / 100;
+  u.wager_multiplier = mult;
   saveData();
   if (usePostgres) {
     try {
@@ -1397,8 +1398,9 @@ app.post('/api/promos/:code/activate', async (req, res) => {
     await savePromoToDB(code, promos[code]);
   }
   var promoAmount = promos[code].amount || promos[code];
+  var wagerMult = (typeof promos[code] === 'object' && promos[code].wager_mult) ? promos[code].wager_mult : WAGER_MULT_PROMO;
   setBalance(userId, getBalance(userId) + promoAmount);
-  await applyPromo(userId, promoAmount);
+  await applyPromo(userId, promoAmount, wagerMult);
   res.json({ ok: true, amount: promoAmount, balance: getBalance(userId) });
 });
 
