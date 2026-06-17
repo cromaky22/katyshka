@@ -1385,12 +1385,21 @@ function spinBattle() {
   });
   if (battle.history.length > 20) battle.history.pop();
 
+  const balances = {};
+  balances[winner.userId] = getBalance(winner.userId);
+  for (const p of players) {
+    if (p.userId !== winner.userId) {
+      balances[p.userId] = getBalance(p.userId);
+    }
+  }
+
   io.emit('battle:spin', {
     winnerIndex: winnerIndex,
     winner: { userId: winner.userId, name: winner.name, avatar: winner.avatar, amount: winner.amount },
     payout,
     totalBank: total,
-    players
+    players,
+    balances
   });
 
   setTimeout(() => {

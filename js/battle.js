@@ -442,8 +442,17 @@ let roundId = 0;
 
       addToHistory(winner.name, data.payout || 0, totalBank, chance, winner.avatar, roundId);
 
+      // Update balance immediately from server data
       if (data.balances && data.balances[myUserId] !== undefined) {
         Balance.sync(data.balances[myUserId]);
+      } else if (isMe && data.payout) {
+        // Fallback: calculate locally if server didn't send balance
+        const oldBalance = Balance.get();
+        Balance.sync(oldBalance + data.payout);
+      } else if (myBet) {
+        // Lost — subtract bet
+        const oldBalance = Balance.get();
+        Balance.sync(Math.max(0, oldBalance - myBet.amount));
       }
 
       document.querySelectorAll('.battle-player-card').forEach(c => c.classList.remove('is-winner'));
