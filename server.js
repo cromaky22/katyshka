@@ -272,6 +272,44 @@ let referrals = {};
 let referralEarnings = {};
 let gameStatsMap = {}; // key: "userId:game" -> { games, wins, losses, totalBets, totalWins, maxWin }
 
+// Load activated promos from PG on start
+async function loadActivatedFromPG() {
+  if (!usePostgres) return;
+  try {
+    const res = await db.query('SELECT user_id, code FROM activated_promos');
+    res.rows.forEach(row => {
+      if (!activated[row.user_id]) activated[row.user_id] = [];
+      activated[row.user_id].push(row.code);
+    });
+    console.log('🐘 Loaded', res.rows.length, 'activated promos from PG');
+  } catch(e) { console.error('PG load activated promos error:', e.message); }
+}
+
+async function saveActivatedToDB(userId, code) {
+  if (!usePostgres) return;
+  try {
+    await db.query(
+      'INSERT INTO activated_promos (user_id, code) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+      [userId, code]
+    );
+  } catch(e) { console.error('[DB] saveActivated error:', e.message); }
+}
+
+async function hasUserActivatedPromo(userId, code) {
+  if (!usePostgres) {
+    return activated[userId] && activated[userId].includes(code);
+  }
+  try {
+    const res = await db.query(
+      'SELECT 1 FROM activated_promos WHERE user_id = $1 AND code = $2',
+      [userId, code]
+    );
+    return res.rows.length > 0;
+  } catch(e) {
+    return activated[userId] && activated[userId].includes(code);
+  }
+}
+
 // Load promos from PG on start
 async function loadPromosFromPG() {
   if (!usePostgres) return;
@@ -1390,9 +1428,16 @@ app.post('/api/promos/:code/activate', async (req, res) => {
   const code = (req.params.code || '').toUpperCase();
   const userId = req.body?.userId;
   if (!promos[code]) return res.status(404).json({ error: 'Promo not found' });
+  
+  // Check if already activated (from DB for Postgres)
+  const alreadyActivated = await hasUserActivatedPromo(userId, code);
+  if (alreadyActivated) return res.status(400).json({ error: 'Already activated' });
+  
+  // Mark as activated
   if (!activated[userId]) activated[userId] = [];
-  if (activated[userId].includes(code)) return res.status(400).json({ error: 'Already activated' });
   activated[userId].push(code);
+  await saveActivatedToDB(userId, code);
+  
   if (typeof promos[code] === 'object') {
     promos[code].uses = (promos[code].uses || 0) + 1;
     await savePromoToDB(code, promos[code]);
@@ -2284,6 +2329,7 @@ console.log('✅ users table ready');
       await loadUsersFromPG();
       await loadPromosFromPG();
       await loadReferralsFromPG();
+      await loadActivatedFromPG();
       await loadGameHistoryFromPG();
       console.log('🐘 Startup complete — users:', Object.keys(users).length, 'promos:', Object.keys(promos).length);
     } catch(e) {
