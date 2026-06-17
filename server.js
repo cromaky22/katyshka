@@ -1270,6 +1270,8 @@ function getBattlePlayersList() {
       amount: p.amount || 0
     });
   }
+  // Sort by userId to ensure consistent order between server and client
+  list.sort((a, b) => a.userId.localeCompare(b.userId));
   return list;
 }
 
