@@ -1385,9 +1385,6 @@ function spinBattle() {
   });
   if (battle.history.length > 20) battle.history.pop();
 
-  console.log('[SERVER_SPIN] players:', JSON.stringify(players.map((p, i) => ({ i, name: p.name, userId: p.userId, amount: p.amount }))));
-  console.log('[SERVER_SPIN] winnerIndex:', winnerIndex, 'winner:', winner.name, winner.userId);
-
   io.emit('battle:spin', {
     winnerIndex: winnerIndex,
     winner: { userId: winner.userId, name: winner.name, avatar: winner.avatar, amount: winner.amount },

@@ -234,20 +234,39 @@ let roundId = 0;
     const total = players.reduce((s, p) => s + p.amount, 0);
     if (total === 0 || players.length === 0) { done(); return; }
 
-    let startAngle = 0;
+    // Calculate the target angle: midpoint of winner's segment in degrees
+    // Segments are drawn clockwise starting from angle 0 (in wheel space)
+    // drawWheel offsets by -90deg (PI/2) so segment 0 starts at top
+    // Arrow is fixed at top of wheel (canvas angle -PI/2 or 270deg)
+    let segStart = 0;
     for (let i = 0; i < winnerIndex; i++) {
-      startAngle += (players[i].amount / total) * 360;
+      segStart += (players[i].amount / total) * 360;
     }
     const winnerAngle = (players[winnerIndex].amount / total) * 360;
-    const targetMid = startAngle + winnerAngle / 2;
+    const targetMid = segStart + winnerAngle / 2; // midpoint in wheel degrees
 
-    const currentNorm = (((-rotation) % 360) + 360) % 360;
-    let diff = (90 - targetMid) - currentNorm; // Arrow at top: drawWheel offsets first segment by -90deg, so arrow is at 90deg in wheel coords
-    while (diff < 0) diff += 360;
-    const totalRot = 360 * 6 + diff;
+    // drawWheel: startAngle = rotation * PI/180 - PI/2
+    // The wheel degree that appears at the top (arrow position) is:
+    //   topDegree = (-rotation) mod 360
+    // Because when rotation=0, startAngle=-PI/2 (top), so wheel degree 0 is at top
+    // When rotation=-90, startAngle=-PI, so wheel degree 90 is at top
+    // General: topDegree = (-rotation) mod 360
+    //
+    // We need topDegree = targetMid (mod 360)
+    // So: (-endRotation) mod 360 = targetMid
+    // endRotation = -targetMid + 360*k for some integer k
+
     const startRot = rotation;
+    // Normalize current top degree
+    const currentTop = (((-startRot) % 360) + 360) % 360;
+    // How many degrees to rotate so that targetMid is at top
+    let diff = targetMid - currentTop;
+    while (diff < 0) diff += 360;
+    // Add 6 full rotations for visual effect
+    const totalRot = 360 * 6 + diff;
+    const endRot = startRot - totalRot; // negative = wheel spins counter-clockwise
 
-    console.log('[SPIN_CALC] winnerIndex:', winnerIndex, 'targetMid:', targetMid, 'currentNorm:', currentNorm, 'diff:', diff, 'startRot:', startRot, 'endRot:', startRot - totalRot);
+    console.log('[SPIN_CALC] winnerIndex:', winnerIndex, 'targetMid:', targetMid, 'currentTop:', currentTop, 'diff:', diff, 'startRot:', startRot, 'endRot:', endRot);
 
     const t0 = performance.now();
 
@@ -260,7 +279,7 @@ let roundId = 0;
       if (p < 1) {
         requestAnimationFrame(tick);
       } else {
-        rotation = startRot - totalRot;
+        rotation = endRot;
         drawWheel(players);
         done();
       }
@@ -397,7 +416,7 @@ let roundId = 0;
     spinToWinner(winnerIdx, 5000, allPlayers, () => {
       const isMe = winner.userId === myUserId;
       const myBet = allPlayers.find(b => b.userId === myUserId);
-      console.log('[SPIN DONE] isMe:', isMe, 'myBet:', myBet, 'final rotation:', rotation);
+      console.log('[SPIN DONE] isMe:', isMe, 'myBet:', myBet, 'final rotation:', rotation, 'final topDegree:', (((-rotation) % 360) + 360) % 360);
 
       if (isMe && data.payout) {
         statusEl.textContent = `Вы выиграли $${data.payout.toFixed(2)}!`;
