@@ -230,40 +230,40 @@ let roundId = 0;
   }
 
 // === SPIN WHEEL ===
-   function spinToWinner(winnerIndex, dur, players, done) {
-     const total = players.reduce((s, p) => s + p.amount, 0);
-     if (total === 0 || players.length === 0) { done(); return; }
+  function spinToWinner(winnerIndex, dur, players, done) {
+    const total = players.reduce((s, p) => s + p.amount, 0);
+    if (total === 0 || players.length === 0) { done(); return; }
 
-     let startAngle = 0;
-     for (let i = 0; i < winnerIndex; i++) {
-       startAngle += (players[i].amount / total) * 360;
-     }
-const winnerAngle = (players[winnerIndex].amount / total) * 360;
-      const targetMid = startAngle + winnerAngle / 2;
+    let startAngle = 0;
+    for (let i = 0; i < winnerIndex; i++) {
+      startAngle += (players[i].amount / total) * 360;
+    }
+    const winnerAngle = (players[winnerIndex].amount / total) * 360;
+    const targetMid = startAngle + winnerAngle / 2;
 
-      const currentNorm = (((-rotation) % 360) + 360) % 360;
-      let diff = (0 - targetMid) - currentNorm; // Arrow points UP (0 deg after -PI/2 offset)
-      while (diff < 0) diff += 360;
-     const totalRot = 360 * 6 + diff;
-     const startRot = rotation;
-     const t0 = performance.now();
+    const currentNorm = (((-rotation) % 360) + 360) % 360;
+    let diff = (90 - targetMid) - currentNorm; // Arrow at top: drawWheel offsets first segment by -90deg, so arrow is at 90deg in wheel coords
+    while (diff < 0) diff += 360;
+    const totalRot = 360 * 6 + diff;
+    const startRot = rotation;
+    const t0 = performance.now();
 
-     function tick(now) {
-        const p = Math.min((now - t0) / dur, 1);
-        const ease = 1 - Math.pow(1 - p, 4);
-        rotation = startRot - totalRot * ease;
+    function tick(now) {
+      const p = Math.min((now - t0) / dur, 1);
+      const ease = 1 - Math.pow(1 - p, 4);
+      rotation = startRot - totalRot * ease;
+      drawWheel(players);
+
+      if (p < 1) {
+        requestAnimationFrame(tick);
+      } else {
+        rotation = startRot - totalRot;
         drawWheel(players);
-
-        if (p < 1) {
-          requestAnimationFrame(tick);
-        } else {
-          rotation = startRot - totalRot;
-          drawWheel(players);
-          done();
-        }
-     }
-     requestAnimationFrame(tick);
-   }
+        done();
+      }
+    }
+    requestAnimationFrame(tick);
+  }
 
   // === TELEGRAM USER INFO ===
   try {
