@@ -165,11 +165,10 @@ let roundId = 0;
 
       const avatarHtml = player.avatar
         ? `<img class="battle-player-avatar" src="${player.avatar}" alt="" onerror="this.style.display='none'">`
-        : '';
-      const placeholderHtml = `<div class="battle-player-avatar-placeholder" style="background:${color}">${(player.name || '?')[0].toUpperCase()}</div>`;
+        : `<div class="battle-player-avatar-placeholder" style="background:${color}">${(player.name || '?')[0].toUpperCase()}</div>`;
 
       card.innerHTML =
-        `${avatarHtml}${placeholderHtml}` +
+        avatarHtml +
         `<span class="battle-player-name">${player.name}</span>` +
         `<span class="battle-player-amount">$${player.amount.toFixed(2)}</span>` +
         `<span class="battle-player-chance">${chance}%</span>`;
@@ -522,9 +521,8 @@ let roundId = 0;
     battleHistory.forEach((h) => {
       const el = document.createElement('div');
       el.className = 'battle-history-modal-item';
-      const avatarHtml = h.avatar ? '<img class="battle-history-modal-avatar" src="' + h.avatar + '" alt="">' : '';
-      const placeholderHtml = '<div class="battle-history-modal-avatar-placeholder">' + (h.winnerName || '?')[0].toUpperCase() + '</div>';
-      el.innerHTML = '<div>' + avatarHtml + placeholderHtml + '</div>' + '<div class="battle-history-modal-info">' + '<div class="battle-history-modal-game">Игра #' + (h.roundId + 1) + '</div>' + '<div class="battle-history-modal-name">' + (h.winnerName || '—') + '</div>' + '<div class="battle-history-modal-details">' + '<span class="battle-history-modal-bank">Банк: $' + (h.bank || 0).toFixed(2) + '</span>' + '<span class="battle-history-modal-chance">Шанс: ' + (h.chance || 0) + '%</span>' + '</div>' + '</div>' + '<button class="battle-history-detail-btn" data-round="' + h.roundId + '">Детали</button>';
+      const avatarHtml = h.avatar ? '<img class="battle-history-modal-avatar" src="' + h.avatar + '" alt="">' : '<div class="battle-history-modal-avatar-placeholder">' + (h.winnerName || '?')[0].toUpperCase() + '</div>';
+      el.innerHTML = '<div>' + avatarHtml + '</div>' + '<div class="battle-history-modal-info">' + '<div class="battle-history-modal-game">Игра #' + (h.roundId + 1) + '</div>' + '<div class="battle-history-modal-name">' + (h.winnerName || '—') + '</div>' + '<div class="battle-history-modal-details">' + '<span class="battle-history-modal-bank">Банк: $' + (h.bank || 0).toFixed(2) + '</span>' + '<span class="battle-history-modal-chance">Шанс: ' + (h.chance || 0) + '%</span>' + '</div>' + '</div>' + '<button class="battle-history-detail-btn" data-round="' + h.roundId + '">Детали</button>';
       modalBody.appendChild(el);
     });
   }
