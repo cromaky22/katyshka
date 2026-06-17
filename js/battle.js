@@ -382,9 +382,6 @@ let roundId = 0;
     betBtn.disabled = true;
     updatePhase('spinning', 0);
 
-    // Use players from server to ensure correct order
-    allPlayers = data.players || [];
-
     const winner = data.winner;
     const winnerIdx = data.winnerIndex;
 
@@ -394,8 +391,12 @@ let roundId = 0;
       return;
     }
 
+    // Use players from server to ensure correct order
+    allPlayers = data.players || [];
+    totalBank = data.totalBank || 0;
+
     const color = getPlayerColor(winnerIdx);
-    const chance = data.totalBank > 0 ? Math.round((winner.amount / data.totalBank) * 100) : 0;
+    const chance = totalBank > 0 ? Math.round((winner.amount / totalBank) * 100) : 0;
 
     spinToWinner(winnerIdx, 5000, () => {
       const isMe = winner.userId === myUserId;
