@@ -1,7 +1,15 @@
-/* Coinflip page styles separated from main stylesheet */
+/* Coinflip page styles - COSMIC DESIGN */
+.page-coinflip {
+  background: transparent;
+  color: var(--text);
+  min-height: 100vh;
+  position: relative;
+  z-index: 2;
+}
+
 /* Coinflip mode styles */
-.coinflip{display:flex;justify-content:center;padding:24px 0}
-.coinflip-board{width:920px;max-width:96%;background:linear-gradient(180deg, rgba(12,14,32,0.95), rgba(8,10,26,0.97));padding:28px;border-radius:14px;box-shadow:0 18px 40px rgba(0,0,0,0.6)}
+.coinflip{display:flex;justify-content:center;padding:24px 0 100px;min-height:100vh}
+.coinflip-board{width:920px;max-width:96%;background:linear-gradient(135deg, rgba(199, 125, 255, 0.12), rgba(90, 152, 232, 0.08));border:1px solid rgba(199, 125, 255, 0.3);padding:28px;border-radius:14px;box-shadow:0 0 40px rgba(199, 125, 255, 0.2), 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);backdrop-filter:blur(10px)}
 .coin-wrap{display:flex;justify-content:center;margin:0 0 0 0;position:relative;z-index:5}
 .coin{width:170px;height:170px;position:relative;perspective:1200px;margin-top:-110px;z-index:6;box-shadow:0 14px 38px rgba(2,6,23,0.45)}
 .coin{width:170px;height:170px;position:relative;perspective:1200px;margin-top:-110px;z-index:6;box-shadow:0 14px 38px rgba(2,6,23,0.45);transform-style:preserve-3d;border-radius:50%;overflow:hidden;background:transparent}
@@ -22,7 +30,7 @@
 
 .controls{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:6px}
 .buttons{display:flex;gap:12px}
-.buttons .btn{min-width:260px;height:64px;display:inline-flex;align-items:center;gap:18px;padding:12px 28px;border-radius:999px;background:linear-gradient(180deg,#2f78ff,#1a5fff);color:#fff;border:3px solid rgba(32,120,255,0.18);box-shadow:0 12px 34px rgba(20,90,200,0.22);font-weight:900;position:relative;transition:box-shadow .18s ease,transform .14s ease,filter .12s ease}
+.buttons .btn{min-width:260px;height:64px;display:inline-flex;align-items:center;gap:18px;padding:12px 28px;border-radius:999px;background:linear-gradient(135deg, var(--accent-green), #1fb853);color:#fff;border:2px solid rgba(46, 227, 107, 0.3);box-shadow:0 0 30px rgba(46, 227, 107, 0.2);font-weight:900;position:relative;transition:box-shadow .18s ease,transform .14s ease,filter .12s ease}
 .buttons .btn:first-child{border-top-left-radius:999px;border-bottom-left-radius:999px}
 .buttons .btn:last-child{border-top-right-radius:999px;border-bottom-right-radius:999px}
 
@@ -33,9 +41,9 @@
 
 /* white glow on hover/focus for head/tail buttons */
 .buttons .btn:hover, .buttons .btn:focus{
-  box-shadow:0 18px 44px rgba(255,255,255,0.12), 0 12px 30px rgba(20,90,200,0.18);
+  box-shadow:0 0 50px rgba(46, 227, 107, 0.3), 0 12px 30px rgba(46, 227, 107, 0.2);
   transform:translateY(-4px) scale(1.02);
-  filter:brightness(1.06);
+  filter:brightness(1.08);
   outline:none;
 }
 
@@ -48,9 +56,9 @@
 .coin-badge{width:56px;height:56px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 8px 20px rgba(2,6,23,0.45);border:4px solid rgba(20,110,255,0.12);background:linear-gradient(180deg,#ffd97b,#ffcf59);overflow:hidden}
 .coin-badge img{width:100%;height:100%;object-fit:cover;display:block}
 .coin-badge.coin-tail{background:linear-gradient(180deg,#e6f0ff,#cfe0ff)}
-.stake-row{display:flex;align-items:center;gap:8px;margin-top:8px}
-.stake-row input{width:80px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text)}
-.coinflip-result{margin-top:12px;color:var(--accent);font-weight:800;text-align:center}
+.stake-row{display:flex;align-items:center;gap:8px;margin-top:8px;padding:12px 14px;background:linear-gradient(135deg, rgba(199, 125, 255, 0.1), rgba(90, 152, 232, 0.08));border:1px solid rgba(199, 125, 255, 0.25);border-radius:12px}
+.stake-row input{width:80px;padding:8px;border-radius:8px;border:1px solid rgba(90, 152, 232, 0.25);background:linear-gradient(135deg, rgba(90, 152, 232, 0.1), rgba(46, 227, 107, 0.05));color:var(--text)}
+.coinflip-result{margin-top:12px;color:var(--accent-green);font-weight:800;text-align:center;font-size:16px;animation:resultPulse 0.4s ease}
 
 /* Multipliers / x-row under coin */
 .multipliers-row{margin-top:20px;padding:6px 8px}
@@ -58,8 +66,8 @@
 .multipliers{display:flex;gap:10px;align-items:center;overflow-x:auto;padding:6px 4px;flex:1}
 .multipliers{scrollbar-width:none;-ms-overflow-style:none}
 .multipliers::-webkit-scrollbar{display:none}
-.mult-nav{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);color:var(--muted);width:36px;height:36px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
-.mult-nav:hover{background:rgba(255,255,255,0.04);color:var(--text)}
+.mult-nav{background:linear-gradient(135deg, rgba(199, 125, 255, 0.15), rgba(90, 152, 232, 0.1));border:1px solid rgba(199, 125, 255, 0.25);color:var(--accent-green);width:36px;height:36px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s ease}
+.mult-nav:hover{background:linear-gradient(135deg, rgba(199, 125, 255, 0.25), rgba(90, 152, 232, 0.15));border-color:rgba(199, 125, 255, 0.4);color:var(--accent-green)}
 .mult-nav:disabled{opacity:0.35;cursor:default}
 .mult-item{width:64px;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;background:transparent;padding:6px;opacity:0.6}
 .mult-item .mult-icon{width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:transparent;margin-bottom:6px;font-size:14px}
@@ -86,10 +94,53 @@
 .multipliers::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.03);border-radius:8px}
 
 /* Multipliers row positioned under controls for coinflip */
-.coinflip .multipliers-row{
-  position:relative;
-  left:auto;
-  transform:none;
+.score-bar{
+  display:flex;
+  align-items:center;
+  justify-content:space-around;
+  margin-bottom:18px;
+  padding:14px 16px;
+  background:linear-gradient(135deg, rgba(199, 125, 255, 0.15), rgba(90, 152, 232, 0.1));
+  border:1px solid rgba(199, 125, 255, 0.25);
+  border-radius:12px;
+  backdrop-filter:blur(5px);
+}
+.score-main{
+  font-size:20px;
+  font-weight:900;
+  color:var(--accent-green);
+}
+.score-sub{
+  font-size:11px;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  font-weight:700;
+  margin-top:4px;
+}
+
+/* Play button */
+.controls .btn:not(.btn-primary){
+  background:linear-gradient(135deg, var(--accent-green), #1fb853);
+  color:#fff;
+  border:2px solid rgba(46, 227, 107, 0.3);
+  box-shadow:0 0 30px rgba(46, 227, 107, 0.2);
+  padding:12px 32px;
+  border-radius:10px;
+  min-width:140px;
+  transition:all 0.2s ease;
+}
+.controls .btn:not(.btn-primary):hover{
+  box-shadow:0 0 50px rgba(46, 227, 107, 0.3);
+  transform:translateY(-2px);
+}
+
+.collect-btn{
+  background:linear-gradient(135deg, var(--accent), #ff9b00) !important;
+  color:#000 !important;
+  border:2px solid rgba(255, 184, 107, 0.3) !important;
+  box-shadow:0 0 30px rgba(255, 184, 107, 0.2) !important;
+}
   bottom:auto;
   width:100%;
   max-width:720px;
@@ -290,4 +341,10 @@
   .coinflip-board{padding-bottom:90px}
   main{padding-bottom:12px;overflow-x:hidden}
   body{overflow-x:hidden;margin:0;padding:0}
+}
+
+@keyframes resultPulse {
+  0% { opacity: 0; transform: scale(0.8); }
+  50% { opacity: 1; }
+  100% { opacity: 1; transform: scale(1); }
 }

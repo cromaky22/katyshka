@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function(){
   btnHead.addEventListener('click', updateStakeDisplays);
   btnTail.addEventListener('click', updateStakeDisplays);
 
-  function randomResult(){ return Math.random() < 0.47 ? 'head' : 'tail'; }
+  function randomResult(){ return Math.random() < 0.5 ? 'head' : 'tail'; }
 
   function showResult(res){
     resultEl.textContent = res === 'head' ? 'Выпал ОРЕЛ' : 'Выпала РЕШКА';
@@ -102,8 +102,9 @@ document.addEventListener('DOMContentLoaded', function(){
       if(win){
         markPassed(currentMultiplierIdx);
         const mult = multipliersValues[currentMultiplierIdx] || 1;
-        // payout should be stake * current multiplier (do not compound or sum previous accumulated)
-        chainPayout = Number((baseStake * mult).toFixed(2));
+        // Apply house edge and payout
+        const rawPayout = baseStake * mult;
+        chainPayout = Number((rawPayout * (1 - COINFLIP_HOUSE_EDGE)).toFixed(2));
         accumulated = chainPayout;
         // keep original stake for subsequent chain rounds
         chainBaseStake = baseStake;
@@ -111,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function(){
         if(currentMultiplierIdx < multipliersValues.length - 1) currentMultiplierIdx++;
         highlightCurrent(currentMultiplierIdx);
         updateScoreDisplay();
-        resultEl.textContent += ' — Вы выиграли!';
+        resultEl.textContent += ' — ✓ Выигрыш!';;
         // enter chain mode: allow continuing by clicking side buttons
         inChain = true;
         // ensure play button is hidden while in chain mode (fade-out)
@@ -130,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function(){
           setTimeout(()=>{ endChain(); }, 800);
         }
       } else {
-         resultEl.textContent += ' — Проигрыш';
+         resultEl.textContent += ' — ✗ Проигрыш';
          recordStat('loss', baseStake, `Coinflip lost`);
          if(window.mcStats) mcStats.addLoss(Math.abs(baseStake), 'Coinflip', `Выбор: ${choice === 'head' ? 'Орел' : 'Решка'}, выпал ${pendingResult === 'head' ? 'Орел' : 'Решка'}`);
          var _uCfLoss = (window.Balance && window.Balance.getUserId()) || localStorage.getItem('tg_uid') || '';
