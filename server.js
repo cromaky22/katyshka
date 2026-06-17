@@ -473,6 +473,18 @@ async function loadGameHistoryFromPG() {
       color: r.color || 'red'
     }));
     console.log('🐘 Loaded', wheel.history.length, 'wheel history entries from PG');
+
+    // Restore roundId from PG (max round_id + 1)
+    const maxBattleRound = await db.query('SELECT MAX(round_id) as max_round FROM game_history WHERE game = $1', ['Battle Wheel']);
+    if (maxBattleRound.rows[0]?.max_round !== null) {
+      battle.roundId = parseInt(maxBattleRound.rows[0].max_round) + 1;
+      console.log('🐘 Restored battle.roundId:', battle.roundId);
+    }
+    const maxWheelRound = await db.query('SELECT MAX(round_id) as max_round FROM game_history WHERE game = $1', ['Wheel']);
+    if (maxWheelRound.rows[0]?.max_round !== null) {
+      wheel.roundId = parseInt(maxWheelRound.rows[0].max_round) + 1;
+      console.log('🐘 Restored wheel.roundId:', wheel.roundId);
+    }
   } catch(e) { console.error('PG load game history error:', e.message); }
 }
 

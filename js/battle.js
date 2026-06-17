@@ -328,7 +328,7 @@ let roundId = 0;
     totalBank = state.totalBank || 0;
     currentBets = state.myBets || [];
 
-    gameNumberEl.textContent = 'Игра #' + (roundId + 1);
+    gameNumberEl.textContent = 'Игра #' + roundId;
     updatePlayersGrid();
     updateBank();
     updateMyBets();
@@ -452,7 +452,7 @@ let roundId = 0;
     totalBank = 0;
     currentBets = [];
 
-    gameNumberEl.textContent = 'Игра #' + (roundId + 1);
+    gameNumberEl.textContent = 'Игра #' + roundId;
     updatePlayersGrid();
     updateBank();
     updateMyBets();
@@ -548,7 +548,7 @@ let roundId = 0;
       const el = document.createElement('div');
       el.className = 'battle-history-modal-item';
       const avatarHtml = h.avatar ? '<img class="battle-history-modal-avatar" src="' + h.avatar + '" alt="">' : '<div class="battle-history-modal-avatar-placeholder">' + (h.winnerName || '?')[0].toUpperCase() + '</div>';
-      el.innerHTML = '<div>' + avatarHtml + '</div>' + '<div class="battle-history-modal-info">' + '<div class="battle-history-modal-game">Игра #' + (h.roundId + 1) + '</div>' + '<div class="battle-history-modal-name">' + (h.winnerName || '—') + '</div>' + '<div class="battle-history-modal-details">' + '<span class="battle-history-modal-bank">Банк: $' + (h.bank || 0).toFixed(2) + '</span>' + '<span class="battle-history-modal-chance">Шанс: ' + (h.chance || 0) + '%</span>' + '</div>' + '</div>' + '<button class="battle-history-detail-btn" data-round="' + h.roundId + '">Детали</button>';
+      el.innerHTML = '<div>' + avatarHtml + '</div>' + '<div class="battle-history-modal-info">' + '<div class="battle-history-modal-game">Игра #' + h.roundId + '</div>' + '<div class="battle-history-modal-name">' + (h.winnerName || '—') + '</div>' + '<div class="battle-history-modal-details">' + '<span class="battle-history-modal-bank">Банк: $' + (h.bank || 0).toFixed(2) + '</span>' + '<span class="battle-history-modal-chance">Шанс: ' + (h.chance || 0) + '%</span>' + '</div>' + '</div>' + '<button class="battle-history-detail-btn" data-round="' + h.roundId + '">Детали</button>';
       modalBody.appendChild(el);
     });
   }
