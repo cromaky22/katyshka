@@ -1,12 +1,4 @@
 /* Coinflip page styles - COSMIC DESIGN */
-.page-coinflip {
-  background: transparent;
-  color: var(--text);
-  min-height: 100vh;
-  position: relative;
-  z-index: 2;
-}
-
 /* Coinflip mode styles */
 .coinflip{display:flex;justify-content:center;padding:24px 0 100px;min-height:100vh}
 .coinflip-board{width:920px;max-width:96%;background:linear-gradient(135deg, rgba(199, 125, 255, 0.12), rgba(90, 152, 232, 0.08));border:1px solid rgba(199, 125, 255, 0.3);padding:28px;border-radius:14px;box-shadow:0 0 40px rgba(199, 125, 255, 0.2), 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);backdrop-filter:blur(10px)}

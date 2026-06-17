@@ -103,13 +103,14 @@ body::after{
 .page-menu{background:transparent}
 .page-battle{background:transparent}
 .page-wheel{background:transparent}
+.page-coinflip{background:transparent}
 .page-dice{background:transparent}
 .page-double{background:transparent}
 .page-mines{background:transparent}
 .page-crash{background:transparent}
-.page-coinflip{background:transparent}
 .page-tower{background:transparent}
 .page-plinko{background:transparent}
+.page-bonus{background:transparent}
 .wallet-content,.menu-content{position:relative;z-index:2}
 
 /* Background floating stars */
@@ -120,6 +121,8 @@ body::after{
   100%{transform:translateY(110vh) rotate(720deg);opacity:0}
 }
 .home-content,.games-content{position:relative;z-index:2}
+main.content{position:relative;z-index:2}
+main{position:relative;z-index:2}
 
 /* Widget blocks */
 .widget-block{margin:0 0 16px;border-radius:18px;padding:16px;background:linear-gradient(180deg,rgba(12,14,32,0.8),rgba(8,10,26,0.9));border:1px solid rgba(255,255,255,0.05);box-shadow:0 4px 20px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.03);position:relative}
