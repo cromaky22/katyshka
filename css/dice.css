@@ -1,27 +1,29 @@
-/* ======= DICE GAME ======= */
+/* ======= DICE GAME - COSMIC DESIGN ======= */
 .page-dice{background:transparent;color:var(--text);min-height:100vh}
 .page-dice .dice-game{display:flex;justify-content:center;padding:10px 0 80px;position:relative;z-index:2}
 .page-dice .dice-board{width:100%;max-width:480px;display:flex;flex-direction:column;gap:12px;padding:0 12px}
 
 /* Mode selector */
-.page-dice .dice-mode-selector{display:flex;gap:8px;background:var(--card);padding:8px;border-radius:12px}
-.page-dice .mode-btn{flex:1;padding:10px;border-radius:8px;border:2px solid rgba(255,255,255,0.1);background:transparent;color:#fff;cursor:pointer;font-weight:600;font-size:13px;transition:all 0.2s}
-.page-dice .mode-btn:hover{background:rgba(255,255,255,0.05)}
-.page-dice .mode-btn.active{background:var(--accent);border-color:var(--accent)}
+.page-dice .dice-mode-selector{display:flex;gap:8px;background:linear-gradient(135deg, rgba(199, 125, 255, 0.12), rgba(90, 152, 232, 0.08));border:1px solid rgba(199, 125, 255, 0.3);padding:8px;border-radius:12px;backdrop-filter:blur(10px)}
+.page-dice .mode-btn{flex:1;padding:10px;border-radius:8px;border:2px solid rgba(199, 125, 255, 0.2);background:transparent;color:#fff;cursor:pointer;font-weight:600;font-size:13px;transition:all 0.2s}
+.page-dice .mode-btn:hover{background:rgba(46, 227, 107, 0.1);border-color:rgba(46, 227, 107, 0.4)}
+.page-dice .mode-btn.active{background:linear-gradient(135deg, var(--accent-green), #1fb853);border-color:rgba(46, 227, 107, 0.4);box-shadow:0 0 15px rgba(46, 227, 107, 0.2)}
 
 /* History */
-.page-dice .history-section{background:var(--card);padding:10px 14px;border-radius:12px}
+.page-dice .history-section{background:linear-gradient(135deg, rgba(199, 125, 255, 0.12), rgba(90, 152, 232, 0.08));border:1px solid rgba(199, 125, 255, 0.3);padding:10px 14px;border-radius:12px;backdrop-filter:blur(10px)}
 .page-dice .history-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
 .page-dice .history-scroll{display:flex;overflow-x:auto;gap:6px;padding-bottom:4px}
 .page-dice .history-item{flex-shrink:0;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.3)}
+.page-dice .history-item.even{background:linear-gradient(135deg, rgba(46, 227, 107, 0.8), rgba(31, 184, 83, 0.8))}
+.page-dice .history-item.odd{background:linear-gradient(135deg, rgba(239, 68, 68, 0.8), rgba(198, 40, 40, 0.8))}
 
 /* Dice display area */
-.page-dice .dice-display{background:var(--card);border-radius:12px;padding:24px 16px;position:relative;min-height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+.page-dice .dice-display{background:linear-gradient(135deg, rgba(199, 125, 255, 0.12), rgba(90, 152, 232, 0.08));border:1px solid rgba(199, 125, 255, 0.3);border-radius:12px;padding:24px 16px;position:relative;min-height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;backdrop-filter:blur(10px)}
 .page-dice .dice-container{display:flex;gap:20px;justify-content:center;align-items:center;flex-wrap:wrap}
 .page-dice .dice-wrapper{perspective:800px}
 .page-dice .dice-wrapper.hidden{display:none}
 
-/* ===== 3D CUBE DICE ===== */
+/* ===== 3D CUBE DICE - COSMIC STYLE ===== */
 .page-dice .dice{
   width:70px;height:70px;position:relative;
   transform-style:preserve-3d;
@@ -30,18 +32,19 @@
 
 .page-dice .dice .face{
   position:absolute;width:70px;height:70px;
-  background:linear-gradient(135deg,#ffffff 0%,#e8e8e8 100%);
-  border-radius:10px;border:1px solid #bbb;
+  background:linear-gradient(145deg, rgba(199, 125, 255, 0.3), rgba(90, 152, 232, 0.2));
+  border-radius:10px;border:1px solid rgba(199, 125, 255, 0.3);
   display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
   padding:8px;box-sizing:border-box;
-  box-shadow:inset 0 0 15px rgba(0,0,0,0.08);
+  box-shadow:inset 0 0 15px rgba(0,0,0,0.1), 0 0 15px rgba(199, 125, 255, 0.15);
   backface-visibility:hidden;
 }
 
 .page-dice .dice .dot{
-  width:14px;height:14px;background:#1a1a2e;border-radius:50%;
+  width:14px;height:14px;background:radial-gradient(circle at 30% 30%, var(--accent-green), rgba(46, 227, 107, 0.6));
+  border-radius:50%;
   align-self:center;justify-self:center;
-  box-shadow:inset 1px 2px 3px rgba(0,0,0,0.4);
+  box-shadow:inset 1px 1px 2px rgba(255,255,255,0.3), 0 0 5px rgba(46, 227, 107, 0.3);
 }
 
 /* Face transforms - cube with 70px size, translateZ = 35px */
@@ -106,73 +109,74 @@
   100%{transform:rotateX(360deg) rotateY(180deg)}
 }
 
-.page-dice .dice-result{font-size:24px;font-weight:900;color:#fff;margin-top:16px;opacity:0;transition:opacity 0.3s}
+.dice-result{font-size:24px;font-weight:900;color:var(--accent-green);margin-top:16px;opacity:0;transition:opacity 0.3s;text-shadow:0 0 20px rgba(46, 227, 107, 0.4)}
 .page-dice .dice-result.show{opacity:1}
 
-.page-dice .dice-timer-overlay{position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.6);padding:6px 12px;border-radius:16px}
-.page-dice .timer-value{font-size:16px;font-weight:800;color:#fff}
+.page-dice .dice-timer-overlay{position:absolute;top:10px;right:10px;background:linear-gradient(135deg, rgba(199, 125, 255, 0.3), rgba(90, 152, 232, 0.2));border:1px solid rgba(199, 125, 255, 0.3);padding:6px 12px;border-radius:16px;backdrop-filter:blur(10px)}
+.page-dice .timer-value{font-size:16px;font-weight:800;color:var(--accent-green)}
 .page-dice .timer-value.urgent{color:#f44336;animation:pulse 0.5s infinite}
 
 /* Betting section */
-.page-dice .betting-section{background:var(--card);padding:14px;border-radius:12px}
+.page-dice .betting-section{background:linear-gradient(135deg, rgba(199, 125, 255, 0.12), rgba(90, 152, 232, 0.08));border:1px solid rgba(199, 125, 255, 0.3);padding:14px;border-radius:12px;backdrop-filter:blur(10px)}
 .page-dice .section-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px}
 .page-dice .betting-grid{display:flex;flex-direction:column;gap:8px}
 .page-dice .betting-row{display:flex;gap:8px}
-.page-dice .bet-btn{flex:1;padding:12px 6px;border-radius:10px;border:2px solid rgba(255,255,255,0.1);color:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all 0.2s;font-weight:600;font-size:14px;background:rgba(255,255,255,0.03)}
-.page-dice .bet-btn:hover{transform:scale(1.02);filter:brightness(1.2)}
+.page-dice .bet-btn{flex:1;padding:12px 6px;border-radius:10px;border:2px solid rgba(199, 125, 255, 0.25);color:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all 0.2s;font-weight:600;font-size:14px;background:linear-gradient(135deg, rgba(199, 125, 255, 0.1), rgba(90, 152, 232, 0.08));backdrop-filter:blur(5px)}
+.page-dice .bet-btn:hover{background:linear-gradient(135deg, rgba(46, 227, 107, 0.15), rgba(46, 227, 107, 0.1));border-color:rgba(46, 227, 107, 0.4);transform:scale(1.02)}
 .page-dice .bet-btn:active{transform:scale(0.98)}
 .page-dice .bet-btn:disabled{opacity:0.3;cursor:not-allowed;transform:none!important}
 .page-dice .bet-btn .coef{font-size:10px;opacity:0.7;font-weight:800}
-.page-dice .bet-btn.btn-odd{border-color:#2196f3;background:rgba(33,150,243,0.15)}
-.page-dice .bet-btn.btn-notodd{border-color:#607d8b;background:rgba(96,125,139,0.15)}
-.page-dice .bet-btn.btn-number{border-color:#4caf50;background:rgba(76,175,80,0.15)}
-.page-dice .bet-btn.btn-sum{border-color:#ff9800;background:rgba(255,152,0,0.15)}
+.page-dice .bet-btn.btn-odd{border-color:rgba(46, 227, 107, 0.4);background:linear-gradient(135deg, rgba(46, 227, 107, 0.15), rgba(46, 227, 107, 0.08))}
+.page-dice .bet-btn.btn-notodd{border-color:rgba(239, 68, 68, 0.4);background:linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.08))}
+.page-dice .bet-btn.btn-number{border-color:rgba(255, 184, 107, 0.4);background:linear-gradient(135deg, rgba(255, 184, 107, 0.15), rgba(255, 184, 107, 0.08))}
+.page-dice .bet-btn.btn-sum{border-color:rgba(90, 152, 232, 0.4);background:linear-gradient(135deg, rgba(90, 152, 232, 0.15), rgba(90, 152, 232, 0.08))}
 
 /* Active bets */
-.page-dice .active-bets{display:flex;flex-direction:column;gap:6px;background:var(--card);border-radius:10px;padding:10px}
+.page-dice .active-bets{display:flex;flex-direction:column;gap:6px;background:linear-gradient(135deg, rgba(199, 125, 255, 0.12), rgba(90, 152, 232, 0.08));border:1px solid rgba(199, 125, 255, 0.3);border-radius:10px;padding:10px;backdrop-filter:blur(10px)}
 .page-dice .active-bets-list{display:flex;flex-wrap:wrap;gap:6px}
-.page-dice .active-bet-item{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;font-size:12px;font-weight:700;color:#fff;border:1px solid rgba(255,255,255,0.15)}
+.page-dice .active-bet-item{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;font-size:12px;font-weight:700;color:#fff;border:1px solid rgba(199, 125, 255, 0.25);background:linear-gradient(135deg, rgba(46, 227, 107, 0.15), rgba(90, 152, 232, 0.1))}
 
 /* Win announcement */
-.page-dice .win-announcement{display:flex;flex-direction:column;gap:8px;background:rgba(76,175,80,0.12);border-radius:10px;padding:12px;border:1px solid rgba(76,175,80,0.25)}
-.page-dice .win-title{font-size:15px;font-weight:800;text-align:center}
+.page-dice .win-announcement{display:flex;flex-direction:column;gap:8px;background:linear-gradient(135deg, rgba(46, 227, 107, 0.15), rgba(46, 227, 107, 0.08));border:1px solid rgba(46, 227, 107, 0.3);border-radius:10px;padding:12px;backdrop-filter:blur(10px)}
+.page-dice .win-title{font-size:15px;font-weight:800;text-align:center;color:var(--accent-green)}
 .page-dice .win-details{display:flex;flex-direction:column;gap:4px}
-.page-dice .win-row{display:flex;justify-content:space-between;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.06);font-size:13px;font-weight:600}
+.page-dice .win-row{display:flex;justify-content:space-between;padding:6px 10px;border-radius:8px;background:linear-gradient(135deg, rgba(199, 125, 255, 0.1), rgba(90, 152, 232, 0.08));font-size:13px;font-weight:600;border:1px solid rgba(199, 125, 255, 0.2)}
 .page-dice .win-row span:last-child{color:var(--accent-green);font-weight:800}
 .page-dice .win-row.lose span:last-child{color:#f44336}
 
 /* All players bets */
-.page-dice .all-players-bets{display:flex;flex-direction:column;gap:8px;background:var(--card);border-radius:10px;padding:10px}
+.page-dice .all-players-bets{display:flex;flex-direction:column;gap:8px;background:linear-gradient(135deg, rgba(199, 125, 255, 0.12), rgba(90, 152, 232, 0.08));border:1px solid rgba(199, 125, 255, 0.3);border-radius:10px;padding:10px;backdrop-filter:blur(10px)}
 .page-dice .all-bets-list{display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto}
-.page-dice .player-bet-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:rgba(255,255,255,0.04);border-left:3px solid #666}
+.page-dice .player-bet-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:linear-gradient(135deg, rgba(199, 125, 255, 0.1), rgba(90, 152, 232, 0.08));border-left:3px solid rgba(46, 227, 107, 0.4)}
 .page-dice .player-bet-left{display:flex;align-items:center;gap:8px}
 .page-dice .player-bet-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0}
-.page-dice .player-bet-avatar-empty{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
+.page-dice .player-bet-avatar-empty{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,rgba(199, 125, 255, 0.4),rgba(90, 152, 232, 0.4));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
 .page-dice .player-bet-info{display:flex;flex-direction:column;gap:1px}
 .page-dice .player-bet-name{font-size:11px;font-weight:700;color:#fff}
 .page-dice .player-bet-type{font-size:10px;color:rgba(255,255,255,0.5)}
 .page-dice .player-bet-amount{font-weight:800;color:var(--accent-green);font-size:12px}
 
 /* Stake panel */
-.page-dice .stake-panel{background:var(--card);padding:14px;border-radius:12px;display:flex;flex-direction:column;gap:10px}
+.page-dice .stake-panel{background:linear-gradient(135deg, rgba(199, 125, 255, 0.12), rgba(90, 152, 232, 0.08));border:1px solid rgba(199, 125, 255, 0.3);padding:14px;border-radius:12px;display:flex;flex-direction:column;gap:10px;backdrop-filter:blur(10px)}
 .page-dice .stake-header{font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
 .page-dice .quick-bet-buttons{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.page-dice .quick-bet-btn{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.2s}
-.page-dice .quick-bet-btn:hover{background:rgba(255,255,255,0.1)}
+.page-dice .quick-bet-btn{padding:8px;border-radius:8px;border:1px solid rgba(46, 227, 107, 0.3);background:linear-gradient(135deg, rgba(46, 227, 107, 0.12), rgba(46, 227, 107, 0.08));color:#fff;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.2s}
+.page-dice .quick-bet-btn:hover{background:linear-gradient(135deg, rgba(46, 227, 107, 0.2), rgba(46, 227, 107, 0.15));border-color:rgba(46, 227, 107, 0.5)}
 .page-dice .quick-bet-btn .dollar{color:var(--accent-green);font-weight:800;margin-right:2px}
 .page-dice .stake-input-group{display:flex;gap:8px;align-items:center}
-.page-dice .stake-input-group input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:16px;font-weight:600}
+.page-dice .stake-input-group input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(90, 152, 232, 0.25);background:linear-gradient(135deg, rgba(90, 152, 232, 0.1), rgba(46, 227, 107, 0.05));color:#fff;font-size:16px;font-weight:600}
+.page-dice .stake-input-group input:focus{border-color:rgba(46, 227, 107, 0.5);background:rgba(46, 227, 107, 0.1);box-shadow:0 0 15px rgba(46, 227, 107, 0.15)}
 .page-dice .stake-controls{display:flex;gap:4px}
-.page-dice .stake-btn{padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.08);color:#fff;cursor:pointer;font-weight:600;font-size:14px}
+.page-dice .stake-btn{padding:8px 12px;border-radius:8px;border:1px solid rgba(199, 125, 255, 0.25);background:linear-gradient(135deg, rgba(199, 125, 255, 0.1), rgba(90, 152, 232, 0.08));color:#fff;cursor:pointer;font-weight:600;font-size:14px;transition:all 0.2s}
+.page-dice .stake-btn:hover{background:linear-gradient(135deg, rgba(46, 227, 107, 0.15), rgba(46, 227, 107, 0.1));border-color:rgba(46, 227, 107, 0.4)}
 
 /* Game status */
-.page-dice .game-status{padding:10px;border-radius:10px;text-align:center;font-weight:600;font-size:13px;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7)}
-.page-dice .game-status.success{background:rgba(76,175,80,0.15);color:var(--accent-green)}
-.page-dice .game-status.error{background:rgba(244,67,54,0.15);color:#f44336}
+.page-dice .game-status{padding:10px;border-radius:10px;text-align:center;font-weight:600;font-size:13px;background:linear-gradient(135deg, rgba(199, 125, 255, 0.1), rgba(90, 152, 232, 0.08));border:1px solid rgba(199, 125, 255, 0.2);color:rgba(255,255,255,0.7)}
+.page-dice .game-status.success{background:linear-gradient(135deg, rgba(46, 227, 107, 0.15), rgba(46, 227, 107, 0.08));border-color:rgba(46, 227, 107, 0.3);color:var(--accent-green)}
+.page-dice .game-status.error{background:linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.08));border-color:rgba(239, 68, 68, 0.3);color:#f44336}
 
 /* Hash display */
-.page-dice .hash-display{background:var(--card);padding:10px 14px;border-radius:12px;font-size:11px;color:var(--muted);word-break:break-all}
-.page-dice .hash-label{font-weight:600;margin-right:6px}
+.page-dice .hash-display{background:linear-gradient(135deg, rgba(199, 125, 255, 0.12), rgba(90, 152, 232, 0.08));border:1px solid rgba(199, 125, 255, 0.3);padding:10px 14px;border-radius:12px;font-size:11px;color:var(--muted);word-break:break-all;backdrop-filter:blur(10px)}
 
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
 
