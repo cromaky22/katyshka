@@ -13,8 +13,9 @@
 .history-header{font-size:13px;color:var(--muted);margin-bottom:8px;padding:0 4px;text-transform:uppercase;letter-spacing:0.5px}
 .history-scroll{display:flex;overflow-x:auto;gap:6px;padding-bottom:4px;min-height:36px;scrollbar-width:thin;scrollbar-color:rgba(46, 227, 107, 0.3) transparent}
 .history-item{flex-shrink:0;width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.3)}
-.history-item.win{background:linear-gradient(135deg, rgba(46, 227, 107, 0.8), rgba(31, 184, 83, 0.8))}
-.history-item.lose{background:linear-gradient(135deg, rgba(239, 68, 68, 0.8), rgba(198, 40, 40, 0.8))}
+.history-item.under{background:linear-gradient(135deg, rgba(46, 227, 107, 0.8), rgba(31, 184, 83, 0.8));box-shadow:0 0 12px rgba(46, 227, 107, 0.4)}
+.history-item.exact{background:linear-gradient(135deg, rgba(255, 184, 107, 0.8), rgba(255, 152, 0, 0.8));box-shadow:0 0 12px rgba(255, 184, 107, 0.4)}
+.history-item.over{background:linear-gradient(135deg, rgba(239, 68, 68, 0.8), rgba(198, 40, 40, 0.8));box-shadow:0 0 12px rgba(239, 68, 68, 0.4)}
 
 /* ===== DICE ===== */
 .game-field{margin:20px 0 12px;text-align:center;perspective:500px}

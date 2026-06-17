@@ -96,16 +96,22 @@ document.addEventListener('DOMContentLoaded', function(){
     else if(choice === 'over'){ win = sum > 7; multiplier = 2.3; }
     else if(choice === 'exact'){ win = sum === 7; multiplier = 5.8; }
 
+    // Determine history color by result
+    let historyClass;
+    if(sum === 7) historyClass = 'exact';
+    else if(sum < 7) historyClass = 'under';
+    else historyClass = 'over';
+
     if(win){
       const winAmount = stake * multiplier;
       setBalance(getBalance() + winAmount);
       resultMessage.textContent = 'Выигрыш! +$' + winAmount.toFixed(2);
       resultMessage.className = 'result-message win';
-      addToHistory(winAmount, 'win', sum);
+      addToHistory(winAmount, historyClass, sum);
     } else {
       resultMessage.textContent = 'Проигрыш';
       resultMessage.className = 'result-message lose';
-      addToHistory(0, 'lose', sum);
+      addToHistory(0, historyClass, sum);
     }
     isRolling = false;
   }
