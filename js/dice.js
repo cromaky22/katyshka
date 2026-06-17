@@ -289,8 +289,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function addHistory(sum) {
     const el = document.createElement('div');
-    el.className = 'history-item';
-    el.style.backgroundColor = sum % 2 === 0 ? '#2196f3' : '#607d8b';
+    el.className = 'history-item ' + (sum % 2 === 0 ? 'even' : 'odd');
     el.textContent = sum;
     historyScroll.insertBefore(el, historyScroll.firstChild);
     while (historyScroll.children.length > 20) historyScroll.removeChild(historyScroll.lastChild);
