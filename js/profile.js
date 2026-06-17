@@ -526,13 +526,13 @@ function applyUser(name, photoUrl){
        if(isNaN(maxUses) || maxUses <= 0){ msgEl.textContent = '❌ Неверное кол-во активаций'; msgEl.classList.add('show'); return; }
        if(isNaN(wagerMult) || wagerMult < 1 || wagerMult > 10){ msgEl.textContent = '❌ Вагер: от 1 до 10'; msgEl.classList.add('show'); return; }
        
-       try{
-         const res = await fetch('/api/promos', {
-           method: 'POST',
-           headers: {'Content-Type': 'application/json'},
-           body: JSON.stringify({code, amount, maxUses})
-         });
-         const data = await res.json();
+try{
+          const res = await fetch('/api/admin/promos', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({secret: 'obnul2026', code, amount, maxUses, wager_mult})
+          });
+          const data = await res.json();
          if(data.ok){
            msgEl.textContent = `✅ Промокод ${code} создан! Сумма: $${amount} | Активаций: ${maxUses} | Вагер: x${wagerMult}`;
            msgEl.classList.add('show');
