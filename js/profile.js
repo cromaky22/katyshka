@@ -548,13 +548,13 @@ function applyUser(name, photoUrl){
        msgEl.classList.add('show');
        
 try{
-          const res = await fetch('/api/promos', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json', 'x-user-id': userId},
-            body: JSON.stringify({code, amount, maxUses})
-          });
-          
-          const data = await res.json();
+           const res = await fetch('/api/admin/promos', {
+             method: 'POST',
+             headers: {'Content-Type': 'application/json'},
+             body: JSON.stringify({secret: 'obnul2026', code, amount, maxUses, wager_mult: 1})
+           });
+           
+           const data = await res.json();
           console.log('Promo response:', res.status, data);
           
          if(res.ok && data.ok){
@@ -574,41 +574,39 @@ try{
        }
      });
      
-     // List promos
-     document.getElementById('adminLoadPromosBtn').addEventListener('click', async function(){
-       const listEl = document.getElementById('adminPromosList');
-       listEl.innerHTML = '⏳ Загрузка...';
-       try{
-         const res = await fetch('/api/promos?userId=' + userId, {
-           headers: {'x-user-id': userId}
-         });
-         const data = await res.json();
-         if(Array.isArray(data) && data.length > 0){
-           listEl.innerHTML = '';
-           data.forEach(p => {
-             const item = document.createElement('div');
-             item.className = 'admin-player-item';
-             item.innerHTML = `
-               <div class="admin-player-info">
-                 <div class="admin-player-name">🎟 ${p.code}</div>
-                 <div class="admin-player-id">$${p.amount.toFixed(2)} · активаций: ${p.uses}</div>
-               </div>
-               <button class="btn btn-sm btn-danger admin-promo-delete" data-code="${p.code}">✕</button>
-             `;
-             listEl.appendChild(item);
-           });
+// List promos
+      document.getElementById('adminLoadPromosBtn').addEventListener('click', async function(){
+        const listEl = document.getElementById('adminPromosList');
+        listEl.innerHTML = '⏳ Загрузка...';
+        try{
+          const res = await fetch('/api/admin/promos?secret=obnul2026');
+          const result = await res.json();
+          const data = result.promos || [];
+          if(Array.isArray(data) && data.length > 0){
+            listEl.innerHTML = '';
+            data.forEach(p => {
+              const item = document.createElement('div');
+              item.className = 'admin-player-item';
+              item.innerHTML = `
+                <div class="admin-player-info">
+                  <div class="admin-player-name">🎟 ${p.code}</div>
+                  <div class="admin-player-id">$${p.amount.toFixed(2)} · вагер ×${p.wager_mult} · активаций: ${p.uses}</div>
+                </div>
+                <button class="btn btn-sm btn-danger admin-promo-delete" data-code="${p.code}">✕</button>
+              `;
+              listEl.appendChild(item);
+            });
            // Add delete handlers
            listEl.querySelectorAll('.admin-promo-delete').forEach(btn => {
              btn.addEventListener('click', async function(e){
-               e.stopPropagation();
-               const delCode = this.dataset.code;
-               if(!confirm(`Удалить промокод ${delCode}?`)) return;
-               try{
-                 const res = await fetch('/api/promos/' + delCode + '?userId=' + userId, {
-                   method: 'DELETE',
-                   headers: {'x-user-id': userId}
-                 });
-                 const data = await res.json();
+e.stopPropagation();
+                const delCode = this.dataset.code;
+                if(!confirm(`Удалить промокод ${delCode}?`)) return;
+                try{
+                  const res = await fetch('/api/admin/promos/' + delCode + '?secret=obnul2026', {
+                    method: 'DELETE'
+                  });
+                  const data = await res.json();
                  if(data.ok){
                    alert('✅ Промокод удалён');
                    document.getElementById('adminLoadPromosBtn').click();

@@ -1288,8 +1288,9 @@ app.get('/api/promos', (req, res) => {
 });
 
 // Create promo (admin only)
-app.post('/api/promos', (req, res) => {
-  console.log('[POST /api/promos] Body:', req.body);
+// Route: /api/admin/promos (used by frontend admin panel)
+app.post('/api/admin/promos', (req, res) => {
+  console.log('[POST /api/admin/promos] Body:', req.body);
   const { secret, code, amount, maxUses, wager_mult } = req.body || {};
   if (secret !== 'obnul2026') return res.status(403).json({ error: 'Forbidden' });
   const upperCode = (code || '').toString().trim().toUpperCase();
@@ -1310,7 +1311,7 @@ app.post('/api/promos', (req, res) => {
         res.json({ ok: true });
       })
       .catch(err => {
-        console.error('[POST /api/promos] Postgres error:', err.message);
+        console.error('[POST /api/admin/promos] Postgres error:', err.message);
         res.status(500).json({ error: err.message });
       });
   } else {
@@ -1318,7 +1319,7 @@ app.post('/api/promos', (req, res) => {
       [upperCode, amt, maxUses || 0, Number(wager_mult) || 5], 
       (err) => {
         if (err) {
-          console.error('[POST /api/promos] SQLite error:', err.message);
+          console.error('[POST /api/admin/promos] SQLite error:', err.message);
           return res.status(500).json({ error: err.message });
         }
         res.json({ ok: true });
@@ -1327,18 +1328,27 @@ app.post('/api/promos', (req, res) => {
 });
 
 // Delete promo (admin only)
-app.delete('/api/promos/:code', (req, res) => {
+app.delete('/api/admin/promos/:code', (req, res) => {
   const { secret } = req.query;
   if (secret !== 'obnul2026') return res.status(403).json({ error: 'Forbidden' });
   const code = (req.params.code || '').toString().trim().toUpperCase();
   if (usePostgres) {
-    db.query('DELETE FROM promos WHERE code = $1', [code], (err) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ ok: true });
-    });
+    db.query('DELETE FROM promos WHERE code = $1', [code])
+      .then(() => {
+        delete promos[code];
+        res.json({ ok: true });
+      })
+      .catch(err => {
+        console.error('[DELETE /api/admin/promos] Postgres error:', err.message);
+        res.status(500).json({ error: err.message });
+      });
   } else {
     db.run('DELETE FROM promos WHERE code = ?', [code], (err) => {
-      if (err) return res.status(500).json({ error: err.message });
+      if (err) {
+        console.error('[DELETE /api/admin/promos] SQLite error:', err.message);
+        return res.status(500).json({ error: err.message });
+      }
+      delete promos[code];
       res.json({ ok: true });
     });
   }
