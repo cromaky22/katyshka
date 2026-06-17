@@ -1335,7 +1335,7 @@ app.post('/api/admin/promos', (req, res) => {
   if (usePostgres) {
     db.query(`
       INSERT INTO promos (code, amount, uses, max_uses, wager_mult) 
-      VALUES ($1, $2, 0, $3, $4) 
+      VALUES ($1, $2, $3, $4, $5) 
       ON CONFLICT (code) DO UPDATE SET amount=EXCLUDED.amount, max_uses=EXCLUDED.max_uses, wager_mult=EXCLUDED.wager_mult
     `, [upperCode, amt, 0, (maxUses || 0), (wager_mult || 5)])
       .then(() => {
