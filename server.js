@@ -1358,6 +1358,8 @@ function spinBattle() {
     bank: total,
     chance: winnerChance,
     players: players.length,
+    roundId: battle.roundId,
+    avatar: winner.avatar || '',
     color: BATTLE_COLORS[Math.floor(Math.random() * BATTLE_COLORS.length)]
   });
   if (battle.history.length > 20) battle.history.pop();
