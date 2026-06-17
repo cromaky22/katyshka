@@ -1,66 +1,60 @@
 /* ======= GOLDWEST GAME ======= */
-.page-goldwest{background:transparent;color:var(--text);min-height:100vh}
+.page-goldwest{background:transparent;color:var(--text);min-height:100vh;position:relative;z-index:2}
 .page-goldwest .goldwest-game{display:flex;justify-content:center;padding:10px 0 80px;position:relative;z-index:2}
 .page-goldwest .gw-board{width:100%;max-width:480px;display:flex;flex-direction:column;gap:12px;padding:0 12px}
 
 /* Bomb select */
-.page-goldwest .gw-bomb-select{display:flex;gap:10px;background:var(--card);border-radius:12px;padding:12px}
-.page-goldwest .gw-bomb-option{flex:1;text-align:center;padding:12px;border-radius:10px;border:2px solid rgba(255,255,255,0.1);cursor:pointer;transition:all 0.2s}
-.page-goldwest .gw-bomb-option.active{border-color:#ffc107;background:rgba(255,193,7,0.15)}
+.page-goldwest .gw-bomb-select{display:flex;gap:10px;background:linear-gradient(135deg, rgba(199, 125, 255, 0.15), rgba(90, 152, 232, 0.1));backdrop-filter:blur(10px);border-radius:12px;padding:12px;border:1px solid rgba(199, 125, 255, 0.2)}
+.page-goldwest .gw-bomb-option{flex:1;text-align:center;padding:12px;border-radius:10px;border:2px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);cursor:pointer;transition:all 0.2s;backdrop-filter:blur(5px)}
+.page-goldwest .gw-bomb-option.active{border-color:#ffc107;background:linear-gradient(135deg, rgba(255, 193, 7, 0.25), rgba(255, 193, 7, 0.1));box-shadow:0 0 12px rgba(255, 193, 7, 0.2)}
 .page-goldwest .gw-bomb-label{font-size:11px;color:var(--muted);margin-bottom:4px}
-.page-goldwest .gw-bomb-coef{font-size:22px;font-weight:800}
+.page-goldwest .gw-bomb-coef{font-size:22px;font-weight:800;color:var(--text)}
 
 /* Buttons */
 .page-goldwest .gw-btn{width:100%;padding:12px;border-radius:10px;border:none;font-weight:600;font-size:14px;cursor:pointer;transition:all 0.2s;margin-top:8px}
 .page-goldwest .gw-btn:hover{transform:translateY(-1px);filter:brightness(1.1)}
-.page-goldwest .gw-play-btn{background:linear-gradient(135deg,#4caf50,#2e7d32);color:#fff;font-size:16px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;padding:14px;box-shadow:0 8px 20px rgba(76,175,80,0.25)}
+.page-goldwest .gw-play-btn{background:linear-gradient(135deg,#4caf50,#2e7d32);color:#fff;font-size:16px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;padding:14px;box-shadow:0 8px 20px rgba(76,175,80,0.25);backdrop-filter:blur(5px)}
 .page-goldwest .gw-play-btn:disabled{opacity:0.5;cursor:not-allowed}
-.page-goldwest .gw-collect-btn{background:linear-gradient(135deg,#ffc107,#ff9800);color:#000}
-.page-goldwest .gw-levels{background:var(--card);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px}
-.page-goldwest .gw-level{display:flex;align-items:center;gap:10px;opacity:0.4;transition:all 0.3s}
-.page-goldwest .gw-level.gw-level-current{opacity:1}
-.page-goldwest .gw-level.gw-level-opened{opacity:0.7}
-.page-goldwest .gw-level-info{width:65px;flex-shrink:0;text-align:center;padding:6px;background:rgba(0,0,0,0.3);border-radius:8px}
+.page-goldwest .gw-collect-btn{background:linear-gradient(135deg,#ffc107,#ff9800);color:#000;font-weight:800}
+.page-goldwest .gw-levels{background:linear-gradient(135deg, rgba(199, 125, 255, 0.15), rgba(90, 152, 232, 0.1));backdrop-filter:blur(10px);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;border:1px solid rgba(199, 125, 255, 0.2)}
+.page-goldwest .gw-level{display:flex;align-items:center;gap:10px;opacity:0.4;transition:all 0.3s;background:rgba(255,255,255,0.02);padding:8px;border-radius:8px}
+.page-goldwest .gw-level.gw-level-current{opacity:1;background:rgba(199, 125, 255, 0.15)}
+.page-goldwest .gw-level.gw-level-opened{opacity:0.7;background:rgba(199, 125, 255, 0.08)}
+.page-goldwest .gw-level-info{width:65px;flex-shrink:0;text-align:center;padding:6px;background:linear-gradient(135deg, rgba(100, 80, 200, 0.2), rgba(100, 150, 200, 0.15));border-radius:8px;border:1px solid rgba(199, 125, 255, 0.2)}
 .page-goldwest .gw-level-num{font-size:10px;color:var(--muted);font-weight:300}
-.page-goldwest .gw-level-coef{font-size:13px;font-weight:700}
+.page-goldwest .gw-level-coef{font-size:13px;font-weight:700;color:var(--accent)}
 .page-goldwest .gw-cells{flex:1;display:flex;gap:4px}
-.page-goldwest .gw-cell{flex:1;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all 0.2s;cursor:default}
-.page-goldwest .gw-cell-closed{background:rgba(255,255,255,0.08);cursor:pointer}
-.page-goldwest .gw-cell-closed:hover{background:rgba(255,255,255,0.15);transform:scale(1.05)}
-.page-goldwest .gw-cell-coin{background:rgba(76,175,80,0.3)}
-.page-goldwest .gw-cell-bomb{background:rgba(244,67,54,0.3)}
-.page-goldwest .gw-cell-empty{background:rgba(255,255,255,0.02)}
+.page-goldwest .gw-cell{flex:1;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all 0.2s;cursor:default;background:rgba(255,255,255,0.04);backdrop-filter:blur(5px)}
+.page-goldwest .gw-cell-closed{background:linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));border:1px solid rgba(255, 255, 255, 0.15);cursor:pointer;backdrop-filter:blur(5px)}
+.page-goldwest .gw-cell-closed:hover{background:linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.12));transform:scale(1.05);border-color:rgba(255, 255, 255, 0.25)}
+.page-goldwest .gw-cell-coin{background:linear-gradient(135deg, rgba(76, 175, 80, 0.35), rgba(76, 175, 80, 0.15));border:1px solid rgba(76, 175, 80, 0.4);box-shadow:inset 0 0 8px rgba(76, 175, 80, 0.2)}
+.page-goldwest .gw-cell-bomb{background:linear-gradient(135deg, rgba(244, 67, 54, 0.35), rgba(244, 67, 54, 0.15));border:1px solid rgba(244, 67, 54, 0.4);box-shadow:inset 0 0 8px rgba(244, 67, 54, 0.2)}
+.page-goldwest .gw-cell-empty{background:linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));border:1px solid rgba(255, 255, 255, 0.08)}
 
 /* Result */
-.page-goldwest .gw-result{background:var(--card);border-radius:12px;padding:16px;text-align:center}
-.page-goldwest .gw-result-text{font-size:18px;font-weight:700;margin-bottom:4px}
+.page-goldwest .gw-result{background:linear-gradient(135deg, rgba(199, 125, 255, 0.15), rgba(90, 152, 232, 0.1));backdrop-filter:blur(10px);border-radius:12px;padding:16px;text-align:center;border:1px solid rgba(199, 125, 255, 0.2)}
+.page-goldwest .gw-result-text{font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px}
 .page-goldwest .gw-result-coef{font-size:14px;color:var(--muted)}
 
-/* Buttons */
-.page-goldwest .gw-btn{width:100%;padding:12px;border-radius:10px;border:none;font-weight:600;font-size:14px;cursor:pointer;transition:all 0.2s;margin-top:8px}
-.page-goldwest .gw-btn:hover{transform:translateY(-1px);filter:brightness(1.1)}
-.page-goldwest .gw-play-btn{background:linear-gradient(135deg,#4caf50,#2e7d32);color:#fff;font-size:16px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;padding:14px;box-shadow:0 8px 20px rgba(76,175,80,0.25)}
-.page-goldwest .gw-play-btn:disabled{opacity:0.5;cursor:not-allowed}
-.page-goldwest .gw-collect-btn{background:linear-gradient(135deg,#ffc107,#ff9800);color:#000}
-.page-goldwest .gw-continue-btn{background:linear-gradient(135deg,#2196f3,#1565c0);color:#fff}
-
 /* Stake */
-.page-goldwest .gw-stake-panel{background:var(--card);padding:14px;border-radius:12px;display:flex;flex-direction:column;gap:10px}
+.page-goldwest .gw-stake-panel{background:linear-gradient(135deg, rgba(199, 125, 255, 0.15), rgba(90, 152, 232, 0.1));backdrop-filter:blur(10px);padding:14px;border-radius:12px;display:flex;flex-direction:column;gap:10px;border:1px solid rgba(199, 125, 255, 0.2)}
 .page-goldwest .gw-stake-header{font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
 .page-goldwest .gw-stake-range{color:rgba(255,255,255,0.4)}
 .page-goldwest .gw-quick-bets{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.page-goldwest .gw-quick-btn{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;cursor:pointer;font-size:12px;font-weight:600}
-.page-goldwest .gw-quick-btn:hover{background:rgba(255,255,255,0.1)}
+.page-goldwest .gw-quick-btn{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:linear-gradient(135deg, rgba(255, 184, 107, 0.15), rgba(255, 184, 107, 0.05));color:var(--text);cursor:pointer;font-size:12px;font-weight:600;transition:all 0.2s;backdrop-filter:blur(5px)}
+.page-goldwest .gw-quick-btn:hover{background:linear-gradient(135deg, rgba(255, 184, 107, 0.25), rgba(255, 184, 107, 0.12));border-color:rgba(255, 184, 107, 0.3)}
 .page-goldwest .gw-quick-btn .dollar{color:var(--accent-green);font-weight:800;margin-right:2px}
 .page-goldwest .gw-stake-row{display:flex;gap:8px;align-items:center}
-.page-goldwest .gw-stake-row input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:16px;font-weight:600}
+.page-goldwest .gw-stake-row input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(199, 125, 255, 0.3);background:rgba(255,255,255,0.08);color:var(--text);font-size:16px;font-weight:600;outline:none;backdrop-filter:blur(5px)}
+.page-goldwest .gw-stake-row input:focus{border-color:rgba(255,184,107,0.4);background:rgba(255,255,255,0.12)}
 .page-goldwest .gw-stake-btns{display:flex;gap:4px}
-.page-goldwest .gw-stake-btn{padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.08);color:#fff;cursor:pointer;font-weight:600;font-size:14px}
+.page-goldwest .gw-stake-btn{padding:8px 12px;border-radius:8px;border:1px solid rgba(255,184,107,0.2);background:rgba(255, 184, 107, 0.08);color:var(--accent);cursor:pointer;font-weight:600;font-size:14px;transition:all 0.2s}
+.page-goldwest .gw-stake-btn:hover{background:rgba(255, 184, 107, 0.15);border-color:rgba(255,184,107,0.4)}
 
 /* Status */
-.page-goldwest .gw-status{padding:10px;border-radius:10px;text-align:center;font-weight:600;font-size:13px;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7)}
-.page-goldwest .gw-status.success{background:rgba(76,175,80,0.15);color:var(--accent-green)}
-.page-goldwest .gw-status.error{background:rgba(244,67,54,0.15);color:#f44336}
+.page-goldwest .gw-status{padding:10px;border-radius:10px;text-align:center;font-weight:600;font-size:13px;background:linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(5px)}
+.page-goldwest .gw-status.success{background:linear-gradient(135deg, rgba(76, 175, 80, 0.25), rgba(76, 175, 80, 0.1));color:var(--accent-green);border-color:rgba(76, 175, 80, 0.3)}
+.page-goldwest .gw-status.error{background:linear-gradient(135deg, rgba(244, 67, 54, 0.25), rgba(244, 67, 54, 0.1));color:#f44336;border-color:rgba(244, 67, 54, 0.3)}
 
 @media(max-width:400px){
   .page-goldwest .gw-bomb-coef{font-size:18px}
