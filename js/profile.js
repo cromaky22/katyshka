@@ -251,21 +251,15 @@ function applyUser(name, photoUrl){
       if(!targetId) return alert('Введите ID');
       if(isNaN(amount) || amount <= 0) return alert('Неверная сумма');
       try{
-        // First get current balance
-        const getRes = await fetch('/api/users?id=' + targetId);
-        const userData = await getRes.json();
-        const currentBal = userData && userData.balance ? Number(userData.balance) : 0;
-        const newBal = currentBal + amount;
-        
-        const res = await fetch('/api/users/' + targetId + '/balance', {
-          method: 'PUT',
-          headers: {'Content-Type': 'application/json', 'x-user-id': userId},
-          body: JSON.stringify({balance: newBal})
+        const res = await fetch('/api/admin/give', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({secret: 'obnul2026', userId: targetId, amount: amount})
         });
         const data = await res.json();
         if(data.ok){
-          if(targetId === userId && window.Balance) Balance.sync(newBal);
-          alert(`✅ Выдано $${amount.toFixed(2)} пользователю ${targetId}\nТекущий баланс: $${newBal.toFixed(2)}`);
+          if(targetId === userId && window.Balance) Balance.sync(data.balance);
+          alert(`✅ Выдано $${amount.toFixed(2)} пользователю ${targetId}\nТекущий баланс: $${data.balance.toFixed(2)}`);
           document.getElementById('adminGiveId').value = '';
           document.getElementById('adminGiveAmount').value = '';
         } else {
@@ -281,21 +275,15 @@ function applyUser(name, photoUrl){
       if(!targetId) return alert('Введите ID');
       if(isNaN(amount) || amount <= 0) return alert('Неверная сумма');
       try{
-        // First get current balance
-        const getRes = await fetch('/api/users?id=' + targetId);
-        const userData = await getRes.json();
-        const currentBal = userData && userData.balance ? Number(userData.balance) : 0;
-        const newBal = Math.max(0, currentBal - amount);
-        
-        const res = await fetch('/api/users/' + targetId + '/balance', {
-          method: 'PUT',
-          headers: {'Content-Type': 'application/json', 'x-user-id': userId},
-          body: JSON.stringify({balance: newBal})
+        const res = await fetch('/api/admin/take', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({secret: 'obnul2026', userId: targetId, amount: amount})
         });
         const data = await res.json();
         if(data.ok){
-          if(targetId === userId && window.Balance) Balance.sync(newBal);
-          alert(`💸 Списано $${amount.toFixed(2)} у ${targetId}\nТекущий баланс: $${newBal.toFixed(2)}`);
+          if(targetId === userId && window.Balance) Balance.sync(data.balance);
+          alert(`💸 Списано $${amount.toFixed(2)} у ${targetId}\nТекущий баланс: $${data.balance.toFixed(2)}`);
           document.getElementById('adminTakeId').value = '';
           document.getElementById('adminTakeAmount').value = '';
         } else {
@@ -450,41 +438,39 @@ function applyUser(name, photoUrl){
           </div>
         `;
         
-        document.getElementById('modalGiveBtn').addEventListener('click', async function(){
-          const amount = parseFloat(document.getElementById('modalAmount').value);
-          if(isNaN(amount) || amount <= 0) return alert('Неверная сумма');
-          const newBal = (userData && userData.balance ? Number(userData.balance) : 0) + amount;
-          const res = await fetch('/api/users/' + targetId + '/balance', {
-            method: 'PUT',
-            headers: {'Content-Type': 'application/json', 'x-user-id': userId},
-            body: JSON.stringify({balance: newBal})
-          });
-          const data = await res.json();
-          if(data.ok){
-            alert(`✅ Выдано $${amount.toFixed(2)}`);
-            showUserModal(targetId); // Refresh
-          } else {
-            alert('❌ Ошибка: ' + (data.error || 'unknown'));
-          }
-        });
-        
-        document.getElementById('modalTakeBtn').addEventListener('click', async function(){
-          const amount = parseFloat(document.getElementById('modalAmount').value);
-          if(isNaN(amount) || amount <= 0) return alert('Неверная сумма');
-          const newBal = Math.max(0, (userData && userData.balance ? Number(userData.balance) : 0) - amount);
-          const res = await fetch('/api/users/' + targetId + '/balance', {
-            method: 'PUT',
-            headers: {'Content-Type': 'application/json', 'x-user-id': userId},
-            body: JSON.stringify({balance: newBal})
-          });
-          const data = await res.json();
-          if(data.ok){
-            alert(`💸 Списано $${amount.toFixed(2)}`);
-            showUserModal(targetId); // Refresh
-          } else {
-            alert('❌ Ошибка: ' + (data.error || 'unknown'));
-          }
-        });
+         document.getElementById('modalGiveBtn').addEventListener('click', async function(){
+           const amount = parseFloat(document.getElementById('modalAmount').value);
+           if(isNaN(amount) || amount <= 0) return alert('Неверная сумма');
+           const res = await fetch('/api/admin/give', {
+             method: 'POST',
+             headers: {'Content-Type': 'application/json'},
+             body: JSON.stringify({secret: 'obnul2026', userId: targetId, amount: amount})
+           });
+           const data = await res.json();
+           if(data.ok){
+             alert(`✅ Выдано $${amount.toFixed(2)}`);
+             showUserModal(targetId); // Refresh
+           } else {
+             alert('❌ Ошибка: ' + (data.error || 'unknown'));
+           }
+         });
+         
+         document.getElementById('modalTakeBtn').addEventListener('click', async function(){
+           const amount = parseFloat(document.getElementById('modalAmount').value);
+           if(isNaN(amount) || amount <= 0) return alert('Неверная сумма');
+           const res = await fetch('/api/admin/take', {
+             method: 'POST',
+             headers: {'Content-Type': 'application/json'},
+             body: JSON.stringify({secret: 'obnul2026', userId: targetId, amount: amount})
+           });
+           const data = await res.json();
+           if(data.ok){
+             alert(`💸 Списано $${amount.toFixed(2)}`);
+             showUserModal(targetId); // Refresh
+           } else {
+             alert('❌ Ошибка: ' + (data.error || 'unknown'));
+           }
+         });
         
       }catch(e){
         body.innerHTML = '❌ Ошибка загрузки';
@@ -538,31 +524,34 @@ function applyUser(name, photoUrl){
        const code = document.getElementById('adminPromoCode').value.trim().toUpperCase();
        const amount = parseFloat(document.getElementById('adminPromoAmount').value);
        const maxUses = parseInt(document.getElementById('adminPromoMaxUses').value) || 1;
+       const wagerMult = parseInt(document.getElementById('adminPromoWager').value) || 1;
        const msgEl = document.getElementById('adminPromoMsg');
        
        if(!code){ msgEl.textContent = '❌ Введите код'; msgEl.classList.add('show'); return; }
        if(isNaN(amount) || amount <= 0){ msgEl.textContent = '❌ Неверная сумма'; msgEl.classList.add('show'); return; }
        if(isNaN(maxUses) || maxUses <= 0){ msgEl.textContent = '❌ Неверное кол-во активаций'; msgEl.classList.add('show'); return; }
+       if(isNaN(wagerMult) || wagerMult < 1 || wagerMult > 10){ msgEl.textContent = '❌ Вагер от 1 до 10'; msgEl.classList.add('show'); return; }
        
        msgEl.textContent = '⏳ Отправка...';
        msgEl.classList.add('show');
        
-try{
+       try{
            const res = await fetch('/api/admin/promos', {
              method: 'POST',
              headers: {'Content-Type': 'application/json'},
-             body: JSON.stringify({secret: 'obnul2026', code, amount, maxUses, wager_mult: 1})
+             body: JSON.stringify({secret: 'obnul2026', code, amount, maxUses, wager_mult: wagerMult})
            });
            
            const data = await res.json();
           console.log('Promo response:', res.status, data);
           
          if(res.ok && data.ok){
-           msgEl.textContent = `✅ Промокод ${code} создан! Сумма: $${amount} | Активаций: ${maxUses}`;
+           msgEl.textContent = `✅ Промокод ${code} создан! Сумма: $${amount} | Активаций: ${maxUses} | Вагер: ×${wagerMult}`;
            msgEl.classList.add('show');
            document.getElementById('adminPromoCode').value = '';
            document.getElementById('adminPromoAmount').value = '';
            document.getElementById('adminPromoMaxUses').value = '1';
+           document.getElementById('adminPromoWager').value = '1';
          } else {
            msgEl.textContent = '❌ Ошибка: ' + (data.error || res.statusText || 'unknown');
            msgEl.classList.add('show');
@@ -575,31 +564,31 @@ try{
      });
      
 // List promos
-      document.getElementById('adminLoadPromosBtn').addEventListener('click', async function(){
-        const listEl = document.getElementById('adminPromosList');
-        listEl.innerHTML = '⏳ Загрузка...';
-        try{
-          const res = await fetch('/api/admin/promos?secret=obnul2026');
-          const result = await res.json();
-          const data = result.promos || [];
-          if(Array.isArray(data) && data.length > 0){
-            listEl.innerHTML = '';
-            data.forEach(p => {
-              const item = document.createElement('div');
-              item.className = 'admin-player-item';
-              item.innerHTML = `
-                <div class="admin-player-info">
-                  <div class="admin-player-name">🎟 ${p.code}</div>
-                  <div class="admin-player-id">$${p.amount.toFixed(2)} · вагер ×${p.wager_mult} · активаций: ${p.uses}</div>
-                </div>
-                <button class="btn btn-sm btn-danger admin-promo-delete" data-code="${p.code}">✕</button>
-              `;
-              listEl.appendChild(item);
-            });
-           // Add delete handlers
-           listEl.querySelectorAll('.admin-promo-delete').forEach(btn => {
-             btn.addEventListener('click', async function(e){
-e.stopPropagation();
+       document.getElementById('adminLoadPromosBtn').addEventListener('click', async function(){
+         const listEl = document.getElementById('adminPromosList');
+         listEl.innerHTML = '⏳ Загрузка...';
+         try{
+           const res = await fetch('/api/admin/promos?secret=obnul2026');
+           const result = await res.json();
+           const data = result.promos || result || [];
+           if(Array.isArray(data) && data.length > 0){
+             listEl.innerHTML = '';
+             data.forEach(p => {
+               const item = document.createElement('div');
+               item.className = 'admin-player-item';
+               item.innerHTML = `
+                 <div class="admin-player-info">
+                   <div class="admin-player-name">🎟 ${p.code}</div>
+                   <div class="admin-player-id">$${Number(p.amount).toFixed(2)} · вагер ×${p.wager_mult || 5} · активаций: ${p.uses || 0}/${p.max_uses || '∞'}</div>
+                 </div>
+                 <button class="btn btn-sm btn-danger admin-promo-delete" data-code="${p.code}">✕</button>
+               `;
+               listEl.appendChild(item);
+             });
+            // Add delete handlers
+            listEl.querySelectorAll('.admin-promo-delete').forEach(btn => {
+              btn.addEventListener('click', async function(e){
+                e.stopPropagation();
                 const delCode = this.dataset.code;
                 if(!confirm(`Удалить промокод ${delCode}?`)) return;
                 try{
@@ -607,19 +596,19 @@ e.stopPropagation();
                     method: 'DELETE'
                   });
                   const data = await res.json();
-                 if(data.ok){
-                   alert('✅ Промокод удалён');
-                   document.getElementById('adminLoadPromosBtn').click();
-                 } else {
-                   alert('❌ Ошибка: ' + (data.error || 'unknown'));
-                 }
-               }catch(e){ alert('❌ Ошибка сети'); }
-             });
-           });
-         } else {
-           listEl.innerHTML = '<div class="tx-empty">Промокодов нет</div>';
-         }
-       }catch(e){ listEl.innerHTML = '<div class="tx-empty">Ошибка загрузки</div>'; }
-     });
+                  if(data.ok){
+                    alert('✅ Промокод удалён');
+                    document.getElementById('adminLoadPromosBtn').click();
+                  } else {
+                    alert('❌ Ошибка: ' + (data.error || 'unknown'));
+                  }
+                }catch(e){ alert('❌ Ошибка сети'); }
+              });
+            });
+          } else {
+            listEl.innerHTML = '<div class="tx-empty">Промокодов нет</div>';
+          }
+        }catch(e){ listEl.innerHTML = '<div class="tx-empty">Ошибка загрузки</div>'; }
+      });
    }
  });

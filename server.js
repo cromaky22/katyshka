@@ -1277,14 +1277,45 @@ app.post('/api/withdraw/cryptobot', async (req, res) => {
 });
 
 // === PROMO SYSTEM ===
-// Get promos list
-app.get('/api/promos', (req, res) => {
+// Get promos list (public - for activation)
+app.get('/api/promos', async (req, res) => {
   const userId = req.query.userId || req.headers['x-user-id'] || '';
   console.log('[GET /api/promos] userId:', userId);
-  db.all('SELECT code, amount, uses, max_uses, created_at FROM promos', [], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows || []);
-  });
+  if (usePostgres) {
+    try {
+      const result = await db.query('SELECT code, amount, uses, max_uses, wager_mult FROM promos');
+      res.json(result.rows || []);
+    } catch (e) {
+      console.error('[GET /api/promos] PG error:', e.message);
+      res.status(500).json({ error: e.message });
+    }
+  } else {
+    db.all('SELECT code, amount, uses, max_uses, wager_mult FROM promos', [], (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(rows || []);
+    });
+  }
+});
+
+// Admin: Get promos list (with secret)
+app.get('/api/admin/promos', async (req, res) => {
+  const { secret } = req.query;
+  if (secret !== 'obnul2026') return res.status(403).json({ error: 'Forbidden' });
+  
+  if (usePostgres) {
+    try {
+      const result = await db.query('SELECT code, amount, uses, max_uses, wager_mult FROM promos');
+      res.json({ ok: true, promos: result.rows || [] });
+    } catch (e) {
+      console.error('[GET /api/admin/promos] PG error:', e.message);
+      res.status(500).json({ error: e.message });
+    }
+  } else {
+    db.all('SELECT code, amount, uses, max_uses, wager_mult FROM promos', [], (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ ok: true, promos: rows || [] });
+    });
+  }
 });
 
 // Create promo (admin only)
@@ -1306,7 +1337,7 @@ app.post('/api/admin/promos', (req, res) => {
       INSERT INTO promos (code, amount, uses, max_uses, wager_mult) 
       VALUES ($1, $2, 0, $3, $4) 
       ON CONFLICT (code) DO UPDATE SET amount=EXCLUDED.amount, max_uses=EXCLUDED.max_uses, wager_mult=EXCLUDED.wager_mult
-    `, [upperCode, amt, maxUses || 0, Number(wager_mult) || 5])
+    `, [upperCode, amt, 0, (maxUses || 0), (wager_mult || 5)])
       .then(() => {
         res.json({ ok: true });
       })
