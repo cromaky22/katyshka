@@ -1429,6 +1429,13 @@ app.post('/api/promos/:code/activate', async (req, res) => {
   const userId = req.body?.userId;
   if (!promos[code]) return res.status(404).json({ error: 'Promo not found' });
   
+  // Check max uses limit
+  if (typeof promos[code] === 'object' && promos[code].max_uses > 0) {
+    if ((promos[code].uses || 0) >= promos[code].max_uses) {
+      return res.status(400).json({ error: 'Promo limit reached' });
+    }
+  }
+  
   // Check if already activated (from DB for Postgres)
   const alreadyActivated = await hasUserActivatedPromo(userId, code);
   if (alreadyActivated) return res.status(400).json({ error: 'Already activated' });

@@ -60,7 +60,8 @@
         if(d.error){
           var ruErrors = {
             'Promo not found': 'Промокод не найден',
-            'Already activated': 'Промокод уже активирован'
+            'Already activated': 'Промокод уже активирован',
+            'Promo limit reached': 'Достигнут лимит активаций'
           };
           showMessage('❌ ' + (ruErrors[d.error] || d.error), false);
           return;
