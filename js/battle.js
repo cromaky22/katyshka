@@ -99,25 +99,68 @@ let roundId = 0;
 
       if (sliceAngle > 0.12) {
         const midAngle = startAngle + sliceAngle / 2;
-        const textR = r * 0.65;
-        ctx.save();
-        ctx.translate(cx + textR * Math.cos(midAngle), cy + textR * Math.sin(midAngle));
-        ctx.rotate(midAngle + Math.PI / 2);
-
         const chance = Math.round((player.amount / total) * 100);
-        const name = player.name.length > 8 ? player.name.substring(0, 8) + '..' : player.name;
 
-        ctx.fillStyle = '#fff';
+        // Draw avatar circle
+        const avatarR = Math.round(r * 0.12);
+        const avatarDist = r * 0.62;
+        const ax = cx + avatarDist * Math.cos(midAngle);
+        const ay = cy + avatarDist * Math.sin(midAngle);
+
+        ctx.save();
+        // Draw colored ring behind avatar
+        ctx.beginPath();
+        ctx.arc(ax, ay, avatarR + 3, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+
+        // If player has avatar, draw clipped circle image
+        if (player.avatar) {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          const drawClipped = () => {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(ax, ay, avatarR, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(img, ax - avatarR, ay - avatarR, avatarR * 2, avatarR * 2);
+            ctx.restore();
+          };
+          img.onload = () => {
+            drawClipped();
+            requestAnimationFrame(() => drawWheel(players));
+          };
+          img.src = player.avatar;
+        } else {
+          // No avatar — draw first letter of name
+          ctx.beginPath();
+          ctx.arc(ax, ay, avatarR, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+          ctx.fillStyle = '#fff';
+          ctx.font = `bold ${avatarR}px Arial`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText((player.name || '?')[0].toUpperCase(), ax, ay);
+        }
+        ctx.restore();
+
+        // Draw percentage below avatar
+        ctx.save();
+        const pctDist = r * 0.82;
+        const px = cx + pctDist * Math.cos(midAngle);
+        const py = cy + pctDist * Math.sin(midAngle);
+
+        ctx.translate(px, py);
+        ctx.rotate(midAngle + Math.PI / 2);
         ctx.font = `bold ${Math.round(r * 0.065)}px Arial`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.shadowColor = 'rgba(0,0,0,0.8)';
-        ctx.shadowBlur = 3;
-        ctx.fillText(name, 0, -Math.round(r * 0.035));
-        ctx.font = `bold ${Math.round(r * 0.08)}px Arial`;
+        ctx.shadowColor = 'rgba(0,0,0,0.9)';
+        ctx.shadowBlur = 4;
         ctx.fillStyle = '#ffd700';
-        ctx.fillText(chance + '%', 0, Math.round(r * 0.045));
-
+        ctx.fillText(chance + '%', 0, 0);
         ctx.restore();
       }
       startAngle = endAngle;
