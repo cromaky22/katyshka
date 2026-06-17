@@ -1476,7 +1476,7 @@ function addBotPlayer() {
   // Bot plays only once per round
   if (botPlayedThisRound) return;
   
-  const botName = 'Katya';
+  const botName = 'Katya(bot)';
   const botId = 'bot_1';
   const botAmount = (1 + Math.random() * 3).toFixed(2);
   
