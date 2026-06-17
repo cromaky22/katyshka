@@ -224,7 +224,7 @@ function applyUser(name, photoUrl){
         const res = await fetch('/api/users?id=' + targetId);
         const data = await res.json();
         if(data && data.balance !== undefined){
-          const name = data.first_name || data.username || targetId;
+          const name = data.username || data.first_name || targetId;
           const bal = (data.balance || 0).toFixed(2);
           resultEl.innerHTML = `<div class="admin-user-info"><div>👤 <strong>${name}</strong></div><div class="uid">ID: ${targetId}</div><div class="admin-user-balance">💰 $${bal}</div></div>`;
           resultEl.classList.add('show');
@@ -272,7 +272,7 @@ function applyUser(name, photoUrl){
       const listEl = document.getElementById('adminPlayersList');
       listEl.innerHTML = '';
       users.forEach(u => {
-        const name = u.first_name || u.username || u.id;
+        const name = u.username || u.first_name || u.id;
         const bal = (u.balance || 0).toFixed(2);
         const item = document.createElement('div');
         item.className = 'admin-player-item';
@@ -315,7 +315,7 @@ function applyUser(name, photoUrl){
         
         // Get IP from server response
         const ipInfo = stats.ip || 'Неизвестно';
-        const name = userData.first_name || userData.username || targetId;
+        const name = userData.username || userData.first_name || targetId;
         const bal = (userData.balance || 0).toFixed(2);
         
         body.innerHTML = `
