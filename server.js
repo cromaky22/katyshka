@@ -2159,18 +2159,21 @@ async function startServer() {
           created_at TIMESTAMP DEFAULT NOW()
         )
       `);
-      console.log('✅ users table ready');
+console.log('✅ users table ready');
 
-      await db.query(`
-        CREATE TABLE IF NOT EXISTS promos (
-          code TEXT PRIMARY KEY,
-          amount REAL DEFAULT 0,
-          uses INTEGER DEFAULT 0,
-          wager_mult REAL DEFAULT 5
-        )
-      `);
+       await db.query(`
+         CREATE TABLE IF NOT EXISTS promos (
+           code TEXT PRIMARY KEY,
+           amount REAL DEFAULT 0,
+           uses INTEGER DEFAULT 0,
+           max_uses INTEGER DEFAULT 0,
+           wager_mult REAL DEFAULT 5
+         )
+       `);
+       // Add missing column if not exists (migration)
+       await db.query(`ALTER TABLE promos ADD COLUMN IF NOT EXISTS max_uses INTEGER`).catch(()=>{});
 
-      await db.query(`
+       await db.query(`
         CREATE TABLE IF NOT EXISTS activated (
           user_id TEXT,
           code TEXT,
