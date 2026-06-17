@@ -328,7 +328,131 @@ let roundId = 0;
     totalBank = state.totalBank || 0;
     currentBets = state.myBets || [];
 
-    gameNumberEl.textContent = 'Игра #' + roundId;
+    gameNumberEl.textContent = 'Игра #' + (roundId + 1);
+    updatePlayersGrid();
+    updateBank();
+    updateMyBets();
+
+    if (state.history && state.history.length) loadHistory(state.history);
+    if (state.balance !== undefined) Balance.sync(state.balance);
+
+    if (state.phase) {
+      updatePhase(state.phase, state.timer || 0);
+      if (state.phase === 'betting' && state.timer > 0) {
+        startLocalTimer(state.timer, 'betting');
+      }
+    } else {
+      updatePhase('waiting', 0);
+    }
+    drawWheel();
+  });
+
+  socket.on('battle:timer', (data) => {
+    updatePhase(data.phase, data.timer);
+    if (data.phase !== 'waiting') {
+      startLocalTimer(data.timer, data.phase);
+    }
+  });
+
+  socket.on('battle:playersUpdate', (data) => {
+    allPlayers = data.players || [];
+    totalBank = data.totalBank || 0;
+    updatePlayersGrid();
+    updateBank();
+    drawWheel();
+    // Sync balance if provided
+    if (data.balances && data.balances[myUserId] !== undefined) {
+      Balance.sync(data.balances[myUserId]);
+    }
+  });
+
+  socket.on('battle:myBet', (data) => {
+    currentBets = data.myBets || [];
+    updateMyBets();
+    if (data.balance !== undefined) Balance.sync(data.balance);
+  });
+
+  socket.on('battle:spin', (data) => {
+    isSpinning = true;
+    betBtn.disabled = true;
+    updatePhase('spinning', 0);
+
+    const winner = data.winner;
+    const winnerIdx = data.winnerIndex;
+    // Server already sends sorted players - just use them
+    allPlayers = data.players || [];
+
+    if (winnerIdx === undefined || winnerIdx < 0) {
+      statusEl.textContent = 'Ошибка: победитель не найден';
+      statusEl.className = 'battle-status error';
+      return;
+    }
+
+    // Use server players to ensure correct index mapping
+    allPlayers = data.players || [];
+    const totalBank = data.totalBank || 0;
+
+    const color = getPlayerColor(winnerIdx);
+    const chance = totalBank > 0 ? Math.round((winner.amount / totalBank) * 100) : 0;
+
+    console.log('[SPIN] players:', JSON.stringify(allPlayers.map(p => ({ name: p.name, userId: p.userId, amount: p.amount }))));
+    console.log('[SPIN] winner:', winner.name, 'winnerIdx:', winnerIdx, 'myUserId:', myUserId);
+
+    spinToWinner(winnerIdx, 5000, allPlayers, () => {
+      const isMe = winner.userId === myUserId;
+      const myBet = allPlayers.find(b => b.userId === myUserId);
+      console.log('[SPIN DONE] isMe:', isMe, 'myBet:', myBet, 'final rotation:', rotation.toFixed(1), 'final topDegree:', (((-rotation) % 360) + 360) % 360);
+
+      if (isMe && data.payout) {
+        statusEl.textContent = `Вы выиграли $${data.payout.toFixed(2)}!`;
+        statusEl.className = 'battle-status success';
+        if (window.mcStats) mcStats.addWin(data.payout, 'Battle Wheel', 'Победа');
+      } else {
+        statusEl.textContent = `Победитель: ${winner.name}`;
+        statusEl.className = 'battle-status';
+        if (myBet) {
+          if (window.mcStats) mcStats.addLoss(myBet.amount, 'Battle Wheel', 'Проигрыш');
+        }
+      }
+
+      winnerDisplay.style.display = 'flex';
+      winnerNameEl.textContent = winner.name;
+      winnerAmountEl.textContent = '+$' + (data.payout || 0).toFixed(2);
+
+      resultEl.innerHTML = '👑<br><span style="font-size:9px">' + winner.name.substring(0, 10) + '</span>';
+      resultEl.style.background = color;
+      resultEl.classList.remove('show');
+      void resultEl.offsetWidth;
+      resultEl.classList.add('show');
+
+      addToHistory(winner.name, data.payout || 0, totalBank, chance, winner.avatar, roundId);
+
+      // Update balance immediately from server data
+      if (data.balances && data.balances[myUserId] !== undefined) {
+        Balance.sync(data.balances[myUserId]);
+      } else if (isMe && data.payout) {
+        // Fallback: calculate locally if server didn't send balance
+        const oldBalance = Balance.get();
+        Balance.sync(oldBalance + data.payout);
+      } else if (myBet) {
+        // Lost — subtract bet
+        const oldBalance = Balance.get();
+        Balance.sync(Math.max(0, oldBalance - myBet.amount));
+      }
+
+      document.querySelectorAll('.battle-player-card').forEach(c => c.classList.remove('is-winner'));
+      const winnerCard = document.getElementById('player-card-' + winner.userId);
+      if (winnerCard) winnerCard.classList.add('is-winner');
+    });
+  });
+
+  socket.on('battle:newRound', (data) => {
+    roundId = data.roundId || 0;
+    allPlayers = [];
+    totalBank = 0;
+    currentBets = [];
+
+    gameNumberEl.textContent = 'Игра #' + (roundId + 1);
     updatePlayersGrid();
     updateBank();
     updateMyBets();
@@ -424,7 +548,7 @@ let roundId = 0;
       const el = document.createElement('div');
       el.className = 'battle-history-modal-item';
       const avatarHtml = h.avatar ? '<img class="battle-history-modal-avatar" src="' + h.avatar + '" alt="">' : '<div class="battle-history-modal-avatar-placeholder">' + (h.winnerName || '?')[0].toUpperCase() + '</div>';
-      el.innerHTML = '<div>' + avatarHtml + '</div>' + '<div class="battle-history-modal-info">' + '<div class="battle-history-modal-game">Игра #' + h.roundId + '</div>' + '<div class="battle-history-modal-name">' + (h.winnerName || '—') + '</div>' + '<div class="battle-history-modal-details">' + '<span class="battle-history-modal-bank">Банк: $' + (h.bank || 0).toFixed(2) + '</span>' + '<span class="battle-history-modal-chance">Шанс: ' + (h.chance || 0) + '%</span>' + '</div>' + '</div>' + '<button class="battle-history-detail-btn" data-round="' + h.roundId + '">Детали</button>';
+      el.innerHTML = '<div>' + avatarHtml + '</div>' + '<div class="battle-history-modal-info">' + '<div class="battle-history-modal-game">Игра #' + (h.roundId + 1) + '</div>' + '<div class="battle-history-modal-name">' + (h.winnerName || '—') + '</div>' + '<div class="battle-history-modal-details">' + '<span class="battle-history-modal-bank">Банк: $' + (h.bank || 0).toFixed(2) + '</span>' + '<span class="battle-history-modal-chance">Шанс: ' + (h.chance || 0) + '%</span>' + '</div>' + '</div>' + '<button class="battle-history-detail-btn" data-round="' + h.roundId + '">Детали</button>';
       modalBody.appendChild(el);
     });
   }
