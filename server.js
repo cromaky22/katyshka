@@ -1277,6 +1277,44 @@ app.post('/api/withdraw/cryptobot', async (req, res) => {
 });
 
 // === PROMO SYSTEM ===
+// Get promos list
+app.get('/api/promos', (req, res) => {
+  const userId = req.query.userId || req.headers['x-user-id'] || '';
+  console.log('[GET /api/promos] userId:', userId);
+  db.all('SELECT code, amount, uses, max_uses, created_at FROM promos', [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows || []);
+  });
+});
+
+// Create promo (admin only)
+app.post('/api/promos', requireAdmin, (req, res) => {
+  console.log('[POST /api/promos] Body:', req.body);
+  const body = req.body || {};
+  const code = (body.code || '').toString().trim().toUpperCase();
+  const amount = Number(body.amount) || 0;
+  const maxUses = Number(body.maxUses) || 0;
+  if (!code) return res.status(400).json({ error: 'missing code' });
+  db.get('SELECT uses FROM promos WHERE code = ?', [code], (err, row) => {
+    const currentUses = (row && row.uses) || 0;
+    let sql = 'INSERT INTO promos (code, amount, uses, max_uses) VALUES (?, ?, ?, ?)';
+    if (usePostgres) sql += ' ON CONFLICT (code) DO UPDATE SET amount=EXCLUDED.amount, max_uses=EXCLUDED.max_uses';
+    db.run(sql, [code, amount, currentUses, maxUses], (err2) => {
+      if (err2) return res.status(500).json({ error: err2.message });
+      res.json({ ok: true });
+    });
+  });
+});
+
+// Delete promo (admin only)
+app.delete('/api/promos/:code', requireAdmin, (req, res) => {
+  const code = (req.params.code || '').toString().trim().toUpperCase();
+  db.run('DELETE FROM promos WHERE code = ?', [code], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ ok: true });
+  });
+});
+
 app.post('/api/promos/:code/activate', async (req, res) => {
   const code = (req.params.code || '').toUpperCase();
   const userId = req.body?.userId;
@@ -1297,46 +1335,6 @@ app.post('/api/promos/:code/activate', async (req, res) => {
 // === ADMIN: PROMO MANAGEMENT ===
 
 // List all promos
-app.get('/api/admin/promos', async (req, res) => {
-  const { secret } = req.query;
-  if (secret !== 'obnul2026') return res.status(403).json({ error: 'Forbidden' });
-  const promoList = Object.entries(promos).map(([code, data]) => ({
-    code,
-    amount: data.amount || data,
-    uses: data.uses || 0,
-    wager_mult: data.wager_mult || 5
-  }));
-  res.json({ ok: true, promos: promoList });
-});
-
-// Create promo
-app.post('/api/admin/promos', async (req, res) => {
-  const { secret, code, amount, wager_mult } = req.body;
-  if (secret !== 'obnul2026') return res.status(403).json({ error: 'Forbidden' });
-  if (!code || !amount) return res.status(400).json({ error: 'Missing code or amount' });
-  const upperCode = code.toUpperCase();
-  promos[upperCode] = {
-    amount: Math.round(parseFloat(amount) * 100) / 100,
-    uses: 0,
-    wager_mult: parseFloat(wager_mult) || 5
-  };
-  await savePromoToDB(upperCode, promos[upperCode]);
-  saveData();
-  res.json({ ok: true, code: upperCode, amount: promos[upperCode].amount });
-});
-
-// Delete promo
-app.delete('/api/admin/promos/:code', async (req, res) => {
-  const { secret } = req.query;
-  if (secret !== 'obnul2026') return res.status(403).json({ error: 'Forbidden' });
-  const code = req.params.code.toUpperCase();
-  if (!promos[code]) return res.status(404).json({ error: 'Promo not found' });
-  delete promos[code];
-  await deletePromoFromDB(code);
-  saveData();
-  res.json({ ok: true });
-});
-
 // === WHEEL GAME ===
 const WHEEL = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
 const RED = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
