@@ -249,15 +249,21 @@ function applyUser(name, photoUrl){
       if(!targetId) return alert('Введите ID');
       if(isNaN(amount) || amount <= 0) return alert('Неверная сумма');
       try{
-        const res = await fetch('/api/admin/balance', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({secret: 'obnul2026', targetId, amount, action: 'give'})
+        // First get current balance
+        const getRes = await fetch('/api/users?id=' + targetId);
+        const userData = await getRes.json();
+        const currentBal = userData && userData.balance ? Number(userData.balance) : 0;
+        const newBal = currentBal + amount;
+        
+        const res = await fetch('/api/users/' + targetId + '/balance', {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json', 'x-admin-key': 'admin123'},
+          body: JSON.stringify({balance: newBal})
         });
         const data = await res.json();
         if(data.ok){
-          if(targetId === userId && window.Balance) Balance.sync(data.balance);
-          alert(`✅ Выдано $${amount.toFixed(2)} пользователю ${targetId}\nТекущий баланс: $${data.balance.toFixed(2)}`);
+          if(targetId === userId && window.Balance) Balance.sync(newBal);
+          alert(`✅ Выдано $${amount.toFixed(2)} пользователю ${targetId}\nТекущий баланс: $${newBal.toFixed(2)}`);
           document.getElementById('adminGiveId').value = '';
           document.getElementById('adminGiveAmount').value = '';
         } else {
@@ -273,15 +279,21 @@ function applyUser(name, photoUrl){
       if(!targetId) return alert('Введите ID');
       if(isNaN(amount) || amount <= 0) return alert('Неверная сумма');
       try{
-        const res = await fetch('/api/admin/balance', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({secret: 'obnul2026', targetId, amount, action: 'take'})
+        // First get current balance
+        const getRes = await fetch('/api/users?id=' + targetId);
+        const userData = await getRes.json();
+        const currentBal = userData && userData.balance ? Number(userData.balance) : 0;
+        const newBal = Math.max(0, currentBal - amount);
+        
+        const res = await fetch('/api/users/' + targetId + '/balance', {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json', 'x-admin-key': 'admin123'},
+          body: JSON.stringify({balance: newBal})
         });
         const data = await res.json();
         if(data.ok){
-          if(targetId === userId && window.Balance) Balance.sync(data.balance);
-          alert(`💸 Списано $${amount.toFixed(2)} у ${targetId}\nТекущий баланс: $${data.balance.toFixed(2)}`);
+          if(targetId === userId && window.Balance) Balance.sync(newBal);
+          alert(`💸 Списано $${amount.toFixed(2)} у ${targetId}\nТекущий баланс: $${newBal.toFixed(2)}`);
           document.getElementById('adminTakeId').value = '';
           document.getElementById('adminTakeAmount').value = '';
         } else {
@@ -314,7 +326,7 @@ function applyUser(name, photoUrl){
      document.getElementById('adminStatsBtn').addEventListener('click', async function(){
        const resultEl = document.getElementById('adminStatsResult');
        try{
-         const res = await fetch('/api/users');
+         const res = await fetch('/api/users?adminKey=admin123');
          const users = await res.json();
          if(Array.isArray(users)){
            const total = users.length;
@@ -330,7 +342,7 @@ function applyUser(name, photoUrl){
       const listEl = document.getElementById('adminPlayersList');
       listEl.innerHTML = '⏳ Загрузка...';
       try{
-        const res = await fetch('/api/users');
+        const res = await fetch('/api/users?adminKey=admin123');
         const users = await res.json();
         if(Array.isArray(users) && users.length > 0){
           // Save to localStorage
@@ -435,10 +447,11 @@ function applyUser(name, photoUrl){
         document.getElementById('modalGiveBtn').addEventListener('click', async function(){
           const amount = parseFloat(document.getElementById('modalAmount').value);
           if(isNaN(amount) || amount <= 0) return alert('Неверная сумма');
-          const res = await fetch('/api/admin/balance', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({secret: 'obnul2026', targetId, amount, action: 'give'})
+          const newBal = (userData && userData.balance ? Number(userData.balance) : 0) + amount;
+          const res = await fetch('/api/users/' + targetId + '/balance', {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json', 'x-admin-key': 'admin123'},
+            body: JSON.stringify({balance: newBal})
           });
           const data = await res.json();
           if(data.ok){
@@ -452,10 +465,11 @@ function applyUser(name, photoUrl){
         document.getElementById('modalTakeBtn').addEventListener('click', async function(){
           const amount = parseFloat(document.getElementById('modalAmount').value);
           if(isNaN(amount) || amount <= 0) return alert('Неверная сумма');
-          const res = await fetch('/api/admin/balance', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({secret: 'obnul2026', targetId, amount, action: 'take'})
+          const newBal = Math.max(0, (userData && userData.balance ? Number(userData.balance) : 0) - amount);
+          const res = await fetch('/api/users/' + targetId + '/balance', {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json', 'x-admin-key': 'admin123'},
+            body: JSON.stringify({balance: newBal})
           });
           const data = await res.json();
           if(data.ok){
@@ -529,7 +543,7 @@ function applyUser(name, photoUrl){
 try{
           const res = await fetch('/api/promos', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: {'Content-Type': 'application/json', 'x-admin-key': 'admin123'},
             body: JSON.stringify({code, amount, maxUses})
           });
           const data = await res.json();
@@ -552,17 +566,17 @@ try{
        const listEl = document.getElementById('adminPromosList');
        listEl.innerHTML = '⏳ Загрузка...';
        try{
-         const res = await fetch('/api/promos');
+         const res = await fetch('/api/promos?adminKey=admin123');
          const data = await res.json();
-         if(data.ok && data.promos && data.promos.length > 0){
+         if(Array.isArray(data) && data.length > 0){
            listEl.innerHTML = '';
-           data.promos.forEach(p => {
+           data.forEach(p => {
              const item = document.createElement('div');
              item.className = 'admin-player-item';
              item.innerHTML = `
                <div class="admin-player-info">
                  <div class="admin-player-name">🎟 ${p.code}</div>
-                 <div class="admin-player-id">$${p.amount.toFixed(2)} · вагер ×${p.wager_mult} · активаций: ${p.uses}</div>
+                 <div class="admin-player-id">$${p.amount.toFixed(2)} · активаций: ${p.uses}</div>
                </div>
                <button class="btn btn-sm btn-danger admin-promo-delete" data-code="${p.code}">✕</button>
              `;
@@ -575,7 +589,7 @@ try{
                const delCode = this.dataset.code;
                if(!confirm(`Удалить промокод ${delCode}?`)) return;
                try{
-                 const res = await fetch('/api/promos/' + delCode, {method: 'DELETE'});
+                 const res = await fetch('/api/promos/' + delCode + '?adminKey=admin123', {method: 'DELETE'});
                  const data = await res.json();
                  if(data.ok){
                    alert('✅ Промокод удалён');
