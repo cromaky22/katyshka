@@ -57,7 +57,14 @@
       })
       .then(function(r){ return r.json(); })
       .then(function(d){
-        if(d.error){ showMessage('❌ ' + d.error, false); return; }
+        if(d.error){
+          var ruErrors = {
+            'Promo not found': 'Промокод не найден',
+            'Already activated': 'Промокод уже активирован'
+          };
+          showMessage('❌ ' + (ruErrors[d.error] || d.error), false);
+          return;
+        }
         if(window.Balance) Balance.sync(d.balance);
         if(window.mcStats) mcStats.addPromo(d.amount, code);
         showMessage('✅ Промокод активирован! +$' + Number(d.amount).toFixed(2), true);
