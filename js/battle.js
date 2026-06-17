@@ -246,6 +246,9 @@ let roundId = 0;
     while (diff < 0) diff += 360;
     const totalRot = 360 * 6 + diff;
     const startRot = rotation;
+
+    console.log('[SPIN_CALC] winnerIndex:', winnerIndex, 'targetMid:', targetMid, 'currentNorm:', currentNorm, 'diff:', diff, 'startRot:', startRot, 'endRot:', startRot - totalRot);
+
     const t0 = performance.now();
 
     function tick(now) {
@@ -388,9 +391,13 @@ let roundId = 0;
     const color = getPlayerColor(winnerIdx);
     const chance = totalBank > 0 ? Math.round((winner.amount / totalBank) * 100) : 0;
 
+    console.log('[SPIN] players:', JSON.stringify(allPlayers.map(p => ({ name: p.name, userId: p.userId, amount: p.amount }))));
+    console.log('[SPIN] winner:', winner.name, 'winnerIdx:', winnerIdx, 'myUserId:', myUserId);
+
     spinToWinner(winnerIdx, 5000, allPlayers, () => {
       const isMe = winner.userId === myUserId;
       const myBet = allPlayers.find(b => b.userId === myUserId);
+      console.log('[SPIN DONE] isMe:', isMe, 'myBet:', myBet, 'final rotation:', rotation);
 
       if (isMe && data.payout) {
         statusEl.textContent = `Вы выиграли $${data.payout.toFixed(2)}!`;
