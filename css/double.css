@@ -38,7 +38,7 @@
 
 /* Stake */
 .page-double .stake-panel{background:linear-gradient(135deg,rgba(153,78,221,0.2),rgba(90,152,232,0.15));border:1px solid rgba(153,78,221,0.4);padding:14px;border-radius:12px;display:flex;flex-direction:column;gap:10px;backdrop-filter:blur(8px);box-shadow:0 8px 24px rgba(153,78,221,0.2)}
-.page-double .stake-header{font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
+.page-double .stake-header{font-size:12px;color:var(--muted);display:flex;justify-content:flex-start}
 .page-double .currency-sign-green{color:var(--accent-green)}
 .page-double .quick-bet-buttons{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .page-double .quick-bet-btn{padding:8px;border-radius:8px;border:1px solid rgba(90,152,232,0.4);background:linear-gradient(135deg,rgba(90,152,232,0.15),rgba(153,78,221,0.1));color:#fff;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.2s;backdrop-filter:blur(4px)}
