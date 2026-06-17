@@ -290,10 +290,11 @@ document.addEventListener('DOMContentLoaded', function() {
           const secondResult = wheelData[secondIndex];
           const finalNum = secondResult.num * multValue;
 
-          spinToIndex(secondIndex, 4000, () => {
-            addHistoryItem(finalNum);
-            showFinalResult(finalNum, firstResult.num);
-          });
+spinToIndex(secondIndex, 4000, () => {
+             addHistoryItem(finalNum);
+             showFinalResult(finalNum, firstResult.num);
+             autoResetAfterResult();
+           });
         }, 1200);
 
       } else {
@@ -339,6 +340,7 @@ document.addEventListener('DOMContentLoaded', function() {
     betsPanel.style.display = 'none';
 
     won ? sfxWin() : sfxLose();
+    autoResetAfterResult();
   }
 
   function getResultClassForNum(num) {
@@ -357,7 +359,7 @@ document.addEventListener('DOMContentLoaded', function() {
       gameState = 'betting';
       rotation = 0;
       drawWheel();
-    }, 2000);
+    }, 3000);
   }
 
   setBalance(getBalance());
