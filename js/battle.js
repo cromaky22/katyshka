@@ -382,8 +382,11 @@ let roundId = 0;
     betBtn.disabled = true;
     updatePhase('spinning', 0);
 
+    // Use players from server to ensure correct order
+    allPlayers = data.players || [];
+
     const winner = data.winner;
-    const winnerIdx = data.winner.index;
+    const winnerIdx = data.winnerIndex;
 
     if (winnerIdx === undefined || winnerIdx < 0) {
       statusEl.textContent = 'Ошибка: победитель не найден';

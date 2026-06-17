@@ -1373,7 +1373,8 @@ function spinBattle() {
   if (battle.history.length > 20) battle.history.pop();
 
   io.emit('battle:spin', {
-    winner: { userId: winner.userId, name: winner.name, avatar: winner.avatar, amount: winner.amount, index: winnerIndex },
+    winnerIndex: winnerIndex,
+    winner: { userId: winner.userId, name: winner.name, avatar: winner.avatar, amount: winner.amount },
     payout,
     totalBank: total,
     players
