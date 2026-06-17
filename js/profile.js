@@ -517,22 +517,29 @@ function applyUser(name, photoUrl){
      document.getElementById('adminPromoCreateBtn').addEventListener('click', async function(){
        const code = document.getElementById('adminPromoCode').value.trim().toUpperCase();
        const amount = parseFloat(document.getElementById('adminPromoAmount').value);
-       const wagerMult = parseFloat(document.getElementById('adminPromoWager').value) || 5;
+       const maxUses = parseInt(document.getElementById('adminPromoMaxUses').value) || 1;
+       const wagerMult = parseFloat(document.getElementById('adminPromoWager').value) || 1;
        const msgEl = document.getElementById('adminPromoMsg');
+       
        if(!code){ msgEl.textContent = '❌ Введите код'; msgEl.classList.add('show'); return; }
        if(isNaN(amount) || amount <= 0){ msgEl.textContent = '❌ Неверная сумма'; msgEl.classList.add('show'); return; }
+       if(isNaN(maxUses) || maxUses <= 0){ msgEl.textContent = '❌ Неверное кол-во активаций'; msgEl.classList.add('show'); return; }
+       if(isNaN(wagerMult) || wagerMult < 1 || wagerMult > 10){ msgEl.textContent = '❌ Вагер: от 1 до 10'; msgEl.classList.add('show'); return; }
+       
        try{
-         const res = await fetch('/api/admin/promos', {
+         const res = await fetch('/api/promos', {
            method: 'POST',
            headers: {'Content-Type': 'application/json'},
-           body: JSON.stringify({secret: 'obnul2026', code, amount, wager_mult: wagerMult})
+           body: JSON.stringify({code, amount, maxUses})
          });
          const data = await res.json();
          if(data.ok){
-           msgEl.textContent = `✅ Промокод ${code} создан! Сумма: $${data.amount}`;
+           msgEl.textContent = `✅ Промокод ${code} создан! Сумма: $${amount} | Активаций: ${maxUses} | Вагер: x${wagerMult}`;
            msgEl.classList.add('show');
            document.getElementById('adminPromoCode').value = '';
            document.getElementById('adminPromoAmount').value = '';
+           document.getElementById('adminPromoMaxUses').value = '1';
+           document.getElementById('adminPromoWager').value = '1';
          } else {
            msgEl.textContent = '❌ Ошибка: ' + (data.error || 'unknown');
            msgEl.classList.add('show');

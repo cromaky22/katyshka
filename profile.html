@@ -225,9 +225,12 @@
       <div class="admin-section">
         <div class="admin-section-title">🎟 Промокоды</div>
         <div class="admin-row">
-          <input type="text" class="admin-input" id="adminPromoCode" placeholder="Код">
-          <input type="number" class="admin-input admin-input-sm" id="adminPromoAmount" placeholder="Сумма">
-          <input type="number" class="admin-input admin-input-sm" id="adminPromoWager" placeholder="Вагер" value="5">
+          <input type="text" class="admin-input" id="adminPromoCode" placeholder="Код (например KATYSHKA)">
+          <input type="number" class="admin-input admin-input-sm" id="adminPromoAmount" placeholder="Сумма ($)">
+        </div>
+        <div class="admin-row">
+          <input type="number" class="admin-input admin-input-sm" id="adminPromoMaxUses" placeholder="Макс активаций" value="1">
+          <input type="number" class="admin-input admin-input-sm" id="adminPromoWager" placeholder="Вагер (x1-x10)" value="1" min="1" max="10">
           <button class="btn btn-sm" id="adminPromoCreateBtn">Создать</button>
         </div>
         <div id="adminPromoMsg" class="admin-search-result"></div>
