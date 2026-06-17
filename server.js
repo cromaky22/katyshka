@@ -412,6 +412,70 @@ function updateGameStats(userId, game, type, amount) {
   dbSaveGameStats(userId, game);
 }
 
+async function dbSaveGameHistory(entry) {
+  if (!usePostgres) return;
+  try {
+    await db.query(`
+      INSERT INTO game_history (game, user_id, winner_name, winner_id, payout, bank, chance, players, round_id, avatar, color)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    `, [entry.game, entry.userId || null, entry.winnerName || null, entry.winnerId || null,
+        entry.payout || 0, entry.bank || 0, entry.chance || 0, entry.players || 0,
+        entry.roundId || 0, entry.avatar || '', entry.color || '']);
+  } catch(e) { console.error('[DB] saveGameHistory error:', e.message); }
+}
+
+async function dbLoadGameHistory(game, limit = 50) {
+  if (!usePostgres) return [];
+  try {
+    const res = await db.query(
+      'SELECT * FROM game_history WHERE game = $1 ORDER BY created_at DESC LIMIT $2',
+      [game, limit]
+    );
+    return res.rows.map(r => ({
+      game: r.game,
+      userId: r.user_id,
+      winnerName: r.winner_name,
+      winnerId: r.winner_id,
+      payout: parseFloat(r.payout) || 0,
+      bank: parseFloat(r.bank) || 0,
+      chance: parseInt(r.chance) || 0,
+      players: parseInt(r.players) || 0,
+      roundId: r.round_id,
+      avatar: r.avatar || '',
+      color: r.color || '',
+      time: r.created_at ? new Date(r.created_at).getTime() : Date.now()
+    }));
+  } catch(e) { return []; }
+}
+
+async function loadGameHistoryFromPG() {
+  if (!usePostgres) return;
+  try {
+    // Load battle history
+    const battleRes = await db.query('SELECT * FROM game_history WHERE game = $1 ORDER BY created_at DESC LIMIT 20', ['Battle Wheel']);
+    battle.history = battleRes.rows.map(r => ({
+      winnerName: r.winner_name,
+      winnerAmount: parseFloat(r.payout) || 0,
+      winnerId: r.winner_id,
+      bank: parseFloat(r.bank) || 0,
+      chance: parseInt(r.chance) || 0,
+      players: parseInt(r.players) || 0,
+      roundId: r.round_id,
+      avatar: r.avatar || '',
+      color: r.color || ''
+    }));
+    console.log('🐘 Loaded', battle.history.length, 'battle history entries from PG');
+
+    // Load wheel history
+    const wheelRes = await db.query('SELECT * FROM game_history WHERE game = $1 ORDER BY created_at DESC LIMIT 20', ['Wheel']);
+    wheel.history = wheelRes.rows.map(r => ({
+      num: r.winner_name,
+      color: r.color || 'red'
+    }));
+    console.log('🐘 Loaded', wheel.history.length, 'wheel history entries from PG');
+  } catch(e) { console.error('PG load game history error:', e.message); }
+}
+
 // Load data from file on start (fallback)
 try {
   if (fs.existsSync(DATA_FILE)) {
@@ -1350,6 +1414,19 @@ function spinWheel() {
   wheel.history.unshift({ num, color });
   if (wheel.history.length > 20) wheel.history.pop();
 
+  // Save to PG
+  dbSaveGameHistory({
+    game: 'Wheel',
+    winnerName: String(num),
+    winnerId: '',
+    payout: 0,
+    bank: 0,
+    chance: 0,
+    players: Object.keys(wheel.bets).length,
+    roundId: wheel.roundId,
+    color: color
+  });
+
   const balances = {};
   for (const uid in wheel.bets) { balances[uid] = getBalance(uid); }
   io.emit('wheel:spin', { result: wheel.result, allBets, results, history: wheel.history, balances });
@@ -1542,6 +1619,21 @@ function spinBattle() {
     color: BATTLE_COLORS[Math.floor(Math.random() * BATTLE_COLORS.length)]
   });
   if (battle.history.length > 20) battle.history.pop();
+
+  // Save to PG
+  dbSaveGameHistory({
+    game: 'Battle Wheel',
+    userId: winner.userId,
+    winnerName: winner.name,
+    winnerId: winner.userId,
+    payout,
+    bank: total,
+    chance: winnerChance,
+    players: players.length,
+    roundId: battle.roundId,
+    avatar: winner.avatar || '',
+    color: BATTLE_COLORS[Math.floor(Math.random() * BATTLE_COLORS.length)]
+  });
 
   const balances = {};
   balances[winner.userId] = getBalance(winner.userId);
@@ -2083,11 +2175,31 @@ async function startServer() {
       `);
       console.log('✅ game_stats table ready');
 
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS game_history (
+          id SERIAL PRIMARY KEY,
+          game TEXT NOT NULL,
+          user_id TEXT,
+          winner_name TEXT,
+          winner_id TEXT,
+          payout REAL DEFAULT 0,
+          bank REAL DEFAULT 0,
+          chance INTEGER DEFAULT 0,
+          players INTEGER DEFAULT 0,
+          round_id INTEGER DEFAULT 0,
+          avatar TEXT,
+          color TEXT,
+          created_at TIMESTAMP DEFAULT NOW()
+        )
+      `);
+      console.log('✅ game_history table ready');
+
       console.log('✅ All tables ready');
 
       await loadUsersFromPG();
       await loadPromosFromPG();
       await loadReferralsFromPG();
+      await loadGameHistoryFromPG();
       console.log('🐘 Startup complete — users:', Object.keys(users).length, 'promos:', Object.keys(promos).length);
     } catch(e) {
       console.error('❌ Startup DB error:', e.message);
@@ -2154,6 +2266,15 @@ async function gracefulShutdown(signal) {
         `, [uid, game, s.games||0, s.wins||0, s.losses||0, s.totalBets||0, s.totalWins||0, s.maxWin||0]);
       }
       console.log('✅ Saved referrals, earnings, game stats to DB');
+
+      // Save battle history
+      for (const h of battle.history.slice(0, 20)) {
+        await db.query(`
+          INSERT INTO game_history (game, winner_name, winner_id, payout, bank, chance, players, round_id, avatar, color)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          ON CONFLICT DO NOTHING
+        `, ['Battle Wheel', h.winnerName, h.winnerId, h.winnerAmount, h.bank, h.chance, h.players, h.roundId, h.avatar, h.color]);
+      }
     } catch(e) {
       console.error('❌ Shutdown save error:', e.message);
     }
