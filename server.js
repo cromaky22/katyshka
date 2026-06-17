@@ -1362,23 +1362,12 @@ function spinBattle() {
   });
   if (battle.history.length > 20) battle.history.pop();
 
-  const balances = {};
-  for (const p of players) {
-    balances[p.userId] = getBalance(p.userId);
-  }
-
   io.emit('battle:spin', {
     winner: { userId: winner.userId, name: winner.name, avatar: winner.avatar },
     payout,
     totalBank: total,
-    players,
-    balances,
-    history: battle.history
+    players
   });
-
-  for (const uid in balances) {
-    io.emit('balance_update', { userId: uid, balance: balances[uid] });
-  }
 
   setTimeout(() => {
     battle.players = {};
@@ -1387,6 +1376,10 @@ function spinBattle() {
     battle.timer = 0;
     battleTimerStarted = false;
     addBotPlayer();
+    // Update all balances after round ends
+    for (const p of players) {
+      io.emit('balance_update', { userId: p.userId, balance: getBalance(p.userId) });
+    }
     io.emit('battle:newRound', { roundId: battle.roundId, history: battle.history });
     io.emit('battle:timer', { timer: 0, phase: 'waiting' });
   }, 7000);
