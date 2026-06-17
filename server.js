@@ -1230,7 +1230,8 @@ let battle = {
   timer: 20,
   roundId: 0,
   players: {},
-  history: []
+  history: [],
+  currentPlayersList: []
 };
 let battleTimer = null;
 let battleTimerStarted = false;
@@ -1270,8 +1271,12 @@ function getBattlePlayersList() {
       amount: p.amount || 0
     });
   }
-  // Sort by userId to ensure consistent order between server and client
-  list.sort((a, b) => a.userId.localeCompare(b.userId));
+  // Sort by userId numerically to ensure consistent order between server and client
+  list.sort((a, b) => {
+    const ai = parseInt(a.userId) || 0;
+    const bi = parseInt(b.userId) || 0;
+    return ai - bi;
+  });
   return list;
 }
 
@@ -1306,6 +1311,9 @@ function spinBattle() {
 
   const players = getBattlePlayersList();
   const total = getBattleTotalBank();
+  
+  // Save current players list for reference
+  battle.currentPlayersList = players.map(p => ({ ...p }));
 
   if (players.length < 2 || total === 0) {
     setTimeout(() => {
@@ -1325,6 +1333,8 @@ function spinBattle() {
     rand -= players[i].amount;
     if (rand <= 0) { winner = players[i]; winnerIndex = i; break; }
   }
+  
+  console.log('[BATTLE] Winner:', winner.name, 'index:', winnerIndex, 'amount:', winner.amount);
 
   const houseFee = (total - winner.amount) * 0.05;
   const payout = Math.round((total - houseFee) * 100) / 100;

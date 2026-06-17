@@ -63,28 +63,9 @@ let roundId = 0;
   }
 
   // === DRAW WHEEL ===
-  function drawWheel() {
-    if (!canvas || !ctx) return;
-    const cx = CX(), cy = CY(), r = R();
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    if (allPlayers.length === 0) {
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255,255,255,0.03)';
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.fillStyle = 'rgba(255,255,255,0.15)';
-      ctx.font = `bold ${Math.round(r * 0.08)}px Arial`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('Ожидание игроков...', cx, cy);
-      return;
-    }
-
-    const total = allPlayers.reduce((s, p) => s + p.amount, 0);
+function drawWheel(playersToUse) {
+    const players = playersToUse || allPlayers;
+    const total = players.reduce((s, p) => s + p.amount, 0);
     if (total === 0) return;
 
     let startAngle = rotation * Math.PI / 180 - Math.PI / 2;
@@ -98,7 +79,7 @@ let roundId = 0;
     ctx.fillStyle = bgGrad;
     ctx.fill();
 
-    allPlayers.forEach((player, i) => {
+    players.forEach((player, i) => {
       const sliceAngle = (player.amount / total) * Math.PI * 2;
       const endAngle = startAngle + sliceAngle;
       const color = getPlayerColor(i);
@@ -246,15 +227,15 @@ let roundId = 0;
   }
 
   // === SPIN WHEEL ===
-  function spinToWinner(winnerIndex, dur, done) {
-    const total = allPlayers.reduce((s, p) => s + p.amount, 0);
-    if (total === 0 || allPlayers.length === 0) { done(); return; }
+  function spinToWinner(winnerIndex, dur, players, done) {
+    const total = players.reduce((s, p) => s + p.amount, 0);
+    if (total === 0 || players.length === 0) { done(); return; }
 
     let startAngle = 0;
     for (let i = 0; i < winnerIndex; i++) {
-      startAngle += (allPlayers[i].amount / total) * 360;
+      startAngle += (players[i].amount / total) * 360;
     }
-    const winnerAngle = (allPlayers[winnerIndex].amount / total) * 360;
+    const winnerAngle = (players[winnerIndex].amount / total) * 360;
     const targetMid = startAngle + winnerAngle / 2;
 
     const currentNorm = (((-rotation) % 360) + 360) % 360;
@@ -264,20 +245,20 @@ let roundId = 0;
     const startRot = rotation;
     const t0 = performance.now();
 
-    function tick(now) {
-      const p = Math.min((now - t0) / dur, 1);
-      const ease = 1 - Math.pow(1 - p, 4);
-      rotation = startRot - totalRot * ease;
-      drawWheel();
+function tick(now) {
+       const p = Math.min((now - t0) / dur, 1);
+       const ease = 1 - Math.pow(1 - p, 4);
+       rotation = startRot - totalRot * ease;
+       drawWheel(players);
 
-      if (p < 1) {
-        requestAnimationFrame(tick);
-      } else {
-        rotation = startRot - totalRot;
-        drawWheel();
-        done();
-      }
-    }
+       if (p < 1) {
+         requestAnimationFrame(tick);
+       } else {
+         rotation = startRot - totalRot;
+         drawWheel(players);
+         done();
+       }
+     }
     requestAnimationFrame(tick);
   }
 
@@ -388,6 +369,8 @@ let roundId = 0;
 
     const winner = data.winner;
     const winnerIdx = data.winnerIndex;
+    // Server already sends sorted players - just use them
+    allPlayers = data.players || [];
 
     if (winnerIdx === undefined || winnerIdx < 0) {
       statusEl.textContent = 'Ошибка: победитель не найден';
@@ -395,16 +378,16 @@ let roundId = 0;
       return;
     }
 
-    // Use players from server to ensure correct order
+    // Use server players to ensure correct index mapping
     allPlayers = data.players || [];
-    totalBank = data.totalBank || 0;
+    const totalBank = data.totalBank || 0;
 
     const color = getPlayerColor(winnerIdx);
     const chance = totalBank > 0 ? Math.round((winner.amount / totalBank) * 100) : 0;
 
-    spinToWinner(winnerIdx, 5000, () => {
+    spinToWinner(winnerIdx, 5000, allPlayers, () => {
       const isMe = winner.userId === myUserId;
-      const myBet = currentBets.find(b => b.userId === myUserId);
+      const myBet = allPlayers.find(b => b.userId === myUserId);
 
       if (isMe && data.payout) {
         statusEl.textContent = `Вы выиграли $${data.payout.toFixed(2)}!`;
