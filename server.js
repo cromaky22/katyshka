@@ -1315,37 +1315,46 @@ function spinBattle() {
     return;
   }
 
-  // Weighted random selection - only real players
-  const realPlayers = players.filter(p => !p.userId.startsWith('bot_'));
-  let winner = realPlayers.length > 0 ? realPlayers[0] : players[0];
-  
-  if (realPlayers.length > 0) {
-    let rand = Math.random() * total;
-    for (const p of realPlayers) {
-      rand -= p.amount;
-      if (rand <= 0) { winner = p; break; }
-    }
+  // Weighted random selection - among all players
+  let rand = Math.random() * total;
+  let winner = players[0];
+  for (const p of players) {
+    rand -= p.amount;
+    if (rand <= 0) { winner = p; break; }
   }
 
   const payout = Math.round(total * 0.95 * 100) / 100;
 
-  // Credit winner (not bot)
-  if (!winner.userId.startsWith('bot_')) {
-    const winnerBal = getBalance(winner.userId) + payout;
-    setBalance(winner.userId, winnerBal);
-    addTx('bet', winner.userId, winner.amount, 'completed', { game: 'Battle Wheel', detail: `Battle bet $${winner.amount.toFixed(2)}` });
-    addTx('win', winner.userId, payout, 'completed', { game: 'Battle Wheel', detail: `Battle winner! Won $${payout.toFixed(2)}` });
-    applyBet(winner.userId, winner.amount);
+  // If bot won, skip payout and start new round immediately
+  if (winner.userId.startsWith('bot_')) {
+    setTimeout(() => {
+      battle.players = {};
+      battle.roundId++;
+      battle.phase = 'waiting';
+      battle.timer = 0;
+      battleTimerStarted = false;
+      io.emit('battle:newRound', { roundId: battle.roundId, history: battle.history });
+      io.emit('battle:timer', { timer: 0, phase: 'waiting' });
+      addBotPlayer();
+    }, 2000);
+    return;
+  }
 
-    // Referral commission
-    if (users[winner.userId] && users[winner.userId].referredBy) {
-      addRefCommission(users[winner.userId].referredBy, winner.amount);
-    }
+  // Credit winner
+  const winnerBal = getBalance(winner.userId) + payout;
+  setBalance(winner.userId, winnerBal);
+  addTx('bet', winner.userId, winner.amount, 'completed', { game: 'Battle Wheel', detail: `Battle bet $${winner.amount.toFixed(2)}` });
+  addTx('win', winner.userId, payout, 'completed', { game: 'Battle Wheel', detail: `Battle winner! Won $${payout.toFixed(2)}` });
+  applyBet(winner.userId, winner.amount);
+
+  // Referral commission
+  if (users[winner.userId] && users[winner.userId].referredBy) {
+    addRefCommission(users[winner.userId].referredBy, winner.amount);
   }
 
   // Record losses for others
   for (const p of players) {
-    if (p.userId !== winner.userId && !p.userId.startsWith('bot_')) {
+    if (p.userId !== winner.userId) {
       addTx('bet', p.userId, p.amount, 'completed', { game: 'Battle Wheel', detail: `Battle bet $${p.amount.toFixed(2)}` });
       addTx('loss', p.userId, p.amount, 'completed', { game: 'Battle Wheel', detail: `Battle lost to ${winner.name}` });
       applyBet(p.userId, p.amount);
