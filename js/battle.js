@@ -89,6 +89,15 @@ let roundId = 0;
 
     let startAngle = rotation * Math.PI / 180 - Math.PI / 2;
 
+    // Draw wheel background with gradient
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    bgGrad.addColorStop(0, '#1a1a2e');
+    bgGrad.addColorStop(1, '#0a0a1a');
+    ctx.fillStyle = bgGrad;
+    ctx.fill();
+
     allPlayers.forEach((player, i) => {
       const sliceAngle = (player.amount / total) * Math.PI * 2;
       const endAngle = startAngle + sliceAngle;
@@ -98,8 +107,11 @@ let roundId = 0;
       ctx.moveTo(cx, cy);
       ctx.arc(cx, cy, r, startAngle, endAngle);
       ctx.closePath();
-      ctx.fillStyle = color;
-      ctx.fill();
+      
+      // Create gradient stroke instead of full fill
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 12;
+      ctx.stroke();
 
       if (sliceAngle > 0.12) {
         const midAngle = startAngle + sliceAngle / 2;
