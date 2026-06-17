@@ -237,7 +237,6 @@ function applyUser(name, photoUrl){
   }
 
   // === ADMIN PANEL ===
-  const ADMIN_ID = '7239160695';
   const adminPanel = document.getElementById('adminPanel');
   
   if(adminPanel && userId === ADMIN_ID){
