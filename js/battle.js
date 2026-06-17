@@ -238,12 +238,12 @@ let roundId = 0;
      for (let i = 0; i < winnerIndex; i++) {
        startAngle += (players[i].amount / total) * 360;
      }
-     const winnerAngle = (players[winnerIndex].amount / total) * 360;
-     const targetMid = startAngle + winnerAngle / 2;
+const winnerAngle = (players[winnerIndex].amount / total) * 360;
+      const targetMid = startAngle + winnerAngle / 2;
 
-     const currentNorm = (((-rotation) % 360) + 360) % 360;
-     let diff = (270 - targetMid) - currentNorm;
-     while (diff < 0) diff += 360;
+      const currentNorm = (((-rotation) % 360) + 360) % 360;
+      let diff = (0 - targetMid) - currentNorm; // Arrow points UP (0 deg after -PI/2 offset)
+      while (diff < 0) diff += 360;
      const totalRot = 360 * 6 + diff;
      const startRot = rotation;
      const t0 = performance.now();
