@@ -46,6 +46,16 @@
 .face.f4{transform:rotateX(-90deg) translateZ(30px)}
 
 .pip{width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 30% 30%, var(--accent-green), rgba(46, 227, 107, 0.6));box-shadow:inset 1px 1px 2px rgba(255,255,255,0.3), 0 0 5px rgba(46, 227, 107, 0.3);position:absolute}
+.pip.h{display:none}
+.face .pip:nth-child(1){left:7px;top:7px}
+.face .pip:nth-child(2){left:25px;top:7px}
+.face .pip:nth-child(3){left:43px;top:7px}
+.face .pip:nth-child(4){left:7px;top:25px}
+.face .pip:nth-child(5){left:25px;top:25px}
+.face .pip:nth-child(6){left:43px;top:25px}
+.face .pip:nth-child(7){left:7px;top:43px}
+.face .pip:nth-child(8){left:25px;top:43px}
+.face .pip:nth-child(9){left:43px;top:43px}
 
 /* Result */
 .result-area{margin:8px 0 14px;text-align:center;min-height:50px;padding:12px;background:linear-gradient(135deg, rgba(199, 125, 255, 0.1), rgba(90, 152, 232, 0.08));border-radius:10px;border:1px solid rgba(199, 125, 255, 0.2)}
@@ -97,6 +107,15 @@
   .face.f3{transform:rotateX(90deg) translateZ(26px)}
   .face.f4{transform:rotateX(-90deg) translateZ(26px)}
   .pip{width:8px;height:8px}
+  .face .pip:nth-child(1){left:6px;top:6px}
+  .face .pip:nth-child(2){left:22px;top:6px}
+  .face .pip:nth-child(3){left:38px;top:6px}
+  .face .pip:nth-child(4){left:6px;top:22px}
+  .face .pip:nth-child(5){left:22px;top:22px}
+  .face .pip:nth-child(6){left:38px;top:22px}
+  .face .pip:nth-child(7){left:6px;top:38px}
+  .face .pip:nth-child(8){left:22px;top:38px}
+  .face .pip:nth-child(9){left:38px;top:38px}
   .dice-scene{gap:20px}
   .choice-btn{height:54px}
   .choice-btn .choice-text{font-size:13px}
