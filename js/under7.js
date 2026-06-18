@@ -41,8 +41,8 @@ document.addEventListener('DOMContentLoaded', function(){
   const rotations = {
     1: { rx: 0, ry: 0 },
     2: { rx: 0, ry: -90 },
-    3: { rx: -90, ry: 0 },
-    4: { rx: 90, ry: 0 },
+    3: { rx: 90, ry: 0 },
+    4: { rx: -90, ry: 0 },
     5: { rx: 0, ry: 90 },
     6: { rx: 0, ry: 180 }
   };
