@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function(){
   const quickBtns = document.querySelectorAll('.quick-btn');
   const dice1 = document.getElementById('dice1');
   const dice2 = document.getElementById('dice2');
+  const numberDisplay = document.getElementById('numberDisplay');
 
   let lastChoice = null;
   let lastStake = 0;
@@ -71,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function(){
         setDice(dice1, d1);
         setDice(dice2, d2);
         // Update display with actual result
-        document.getElementById('numberDisplay').textContent = sum;
+        if(numberDisplay) numberDisplay.textContent = sum;
         console.log('Dice result: ' + d1 + ' + ' + d2 + ' = ' + sum);
         resolve({ d1, d2, sum });
       }, 1200);
@@ -90,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function(){
     lastStake = stake;
     resultMessage.textContent = '';
     resultMessage.className = 'result-message';
-    document.getElementById('numberDisplay').textContent = '?';
+    if(numberDisplay) numberDisplay.textContent = '?';
 
     const { sum } = await rollDice();
 
