@@ -48,13 +48,20 @@ document.addEventListener('DOMContentLoaded', function(){
   };
 
   function setDice(diceEl, value){
-    const r = rotations[value];
+    const r = rotations[value] || rotations[1];
     // Add independent random spins for realistic rolling
     const spinsX = 360 * (3 + Math.floor(Math.random() * 3));
     const spinsY = 360 * (3 + Math.floor(Math.random() * 3));
     const finalRx = r.rx + spinsX;
     const finalRy = r.ry + spinsY;
-    diceEl.style.transform = 'rotateX(' + finalRx + 'deg) rotateY(' + finalRy + 'deg)';
+
+    diceEl.style.animation = 'none';
+    void diceEl.offsetWidth;
+    diceEl.style.animation = '';
+
+    requestAnimationFrame(() => {
+      diceEl.style.transform = 'rotateX(' + finalRx + 'deg) rotateY(' + finalRy + 'deg)';
+    });
   }
 
   function rollDice(){
